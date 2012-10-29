@@ -42,7 +42,7 @@ import java.util.concurrent.Callable;
 import sun.awt.*;
 import sun.lwawt.*;
 import sun.lwawt.LWWindowPeer.PeerType;
-
+import sun.security.action.GetBooleanAction;
 
 class NamedCursor extends Cursor {
     NamedCursor(String name) {
@@ -63,9 +63,7 @@ public class LWCToolkit extends LWToolkit {
 
     private static native void initIDs();
 
-    static native void startNativeNestedEventLoop();
-
-    static native void stopNativeNestedEventLoop();
+    static native void executeNextAppKitEvent();
 
     private static CInputMethodDescriptor sInputMethodDescriptor;
 
@@ -81,14 +79,6 @@ public class LWCToolkit extends LWToolkit {
         if (!GraphicsEnvironment.isHeadless()) {
             initIDs();
         }
-    }
-
-    static String getSystemProperty(final String name, final String deflt) {
-        return AccessController.doPrivileged (new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty(name, deflt);
-            }
-        });
     }
 
     public LWCToolkit() {
@@ -218,7 +208,6 @@ public class LWCToolkit extends LWToolkit {
     @Override
     public SystemTrayPeer createSystemTray(SystemTray target) {
         SystemTrayPeer peer = new CSystemTray();
-        targetCreatedPeer(target, peer);
         return peer;
     }
 
@@ -361,9 +350,11 @@ public class LWCToolkit extends LWToolkit {
             CWrapper.NSObject.release(screen);
         }
         // Convert between Cocoa's coordinate system and Java.
-        return new Insets(fullScreen.height - workArea.height - workArea.y,
-                          workArea.x, workArea.y,
-                          fullScreen.width - workArea.width - workArea.x);
+        int bottom = workArea.y - fullScreen.y;
+        int top = fullScreen.height - workArea.height - bottom;
+        int left = workArea.x - fullScreen.x;
+        int right = fullScreen.width - workArea.width - left;
+        return  new Insets(top, left, bottom, right);
     }
 
     @Override
@@ -545,7 +536,7 @@ public class LWCToolkit extends LWToolkit {
             SunToolkit.postEvent(appContext, invocationEvent);
 
             // 3746956 - flush events from PostEventQueue to prevent them from getting stuck and causing a deadlock
-            sun.awt.SunToolkitSubclass.flushPendingEvents(appContext);
+            SunToolkit.flushPendingEvents(appContext);
         } else {
             // This should be the equivalent to EventQueue.invokeAndWait
             ((LWCToolkit)Toolkit.getDefaultToolkit()).getSystemEventQueueForInvokeAndWait().postEvent(invocationEvent);
@@ -570,7 +561,7 @@ public class LWCToolkit extends LWToolkit {
             SunToolkit.postEvent(appContext, invocationEvent);
 
             // 3746956 - flush events from PostEventQueue to prevent them from getting stuck and causing a deadlock
-            sun.awt.SunToolkitSubclass.flushPendingEvents(appContext);
+            SunToolkit.flushPendingEvents(appContext);
         } else {
             // This should be the equivalent to EventQueue.invokeAndWait
             ((LWCToolkit)Toolkit.getDefaultToolkit()).getSystemEventQueueForInvokeAndWait().postEvent(invocationEvent);
@@ -701,8 +692,8 @@ public class LWCToolkit extends LWToolkit {
      */
     public synchronized static boolean getSunAwtDisableCALayers() {
         if (sunAwtDisableCALayers == null) {
-            sunAwtDisableCALayers =
-            getBooleanSystemProperty("sun.awt.disableCALayers");
+            sunAwtDisableCALayers = AccessController.doPrivileged(
+                new GetBooleanAction("sun.awt.disableCALayers"));
         }
         return sunAwtDisableCALayers.booleanValue();
     }
@@ -751,12 +742,21 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
+    public boolean isWindowShapingSupported() {
+        return true;
+    }
+
+    @Override
     public boolean isWindowTranslucencySupported() {
         return true;
     }
 
     @Override
     public boolean isTranslucencyCapable(GraphicsConfiguration gc) {
+        return true;
+    }
+
+    public boolean isSwingBackbufferTranslucencySupported() {
         return true;
     }
 

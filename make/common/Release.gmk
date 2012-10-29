@@ -156,7 +156,6 @@ JDK_MAN_PAGES =            \
         jstack.1           \
         jstat.1            \
         jstatd.1           \
-        jvisualvm.1        \
 	native2ascii.1     \
 	rmic.1             \
         schemagen.1        \
@@ -164,6 +163,10 @@ JDK_MAN_PAGES =            \
         wsgen.1            \
         wsimport.1         \
         xjc.1
+
+ifndef OPENJDK
+  JDK_MAN_PAGES += jvisualvm.1
+endif
 
 ifeq ($(PLATFORM), solaris)
   MANBASEDIRS=$(JDK_TOPDIR)/src/solaris/doc $(IMPORTDOCDIR)
@@ -305,8 +308,7 @@ SOURCES = \
 	org/ietf			\
 	org/omg				\
 	org/w3c/dom			\
-	org/xml/sax			\
-	sunw
+	org/xml/sax
 #
 # Directories where sources may be found.  If a file with the same path
 # name exists in more than one of these places, the one found last on this
@@ -747,10 +749,6 @@ $(RT_JAR): $(RT_JAR_FILELIST) $(RT_JAR_MANIFEST_FILE)
 # Meta-index construction to make core class loaders lazier
 
 BUILDMETAINDEX_JARFILE = $(ABS_BUILDTOOLJARDIR)/buildmetaindex.jar
-
-# SE-Embedded targets if enabled
-include $(JDK_TOPDIR)/make/common/Release-embedded.gmk
-
 
 ######################################################
 # JRE Image

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -87,8 +87,10 @@ public final class ECParameters extends AlgorithmParametersSpi {
         if ((data.length == 0) || (data[0] != 4)) {
             throw new IOException("Only uncompressed point format supported");
         }
-        int n = data.length / 2;
-        if (n > ((curve.getField().getFieldSize() + 7 ) >> 3)) {
+        // Per ANSI X9.62, an encoded point is a 1 byte type followed by
+        // ceiling(log base 2 field-size / 8) bytes of x and the same of y.
+        int n = (data.length - 1) / 2;
+        if (n != ((curve.getField().getFieldSize() + 7 ) >> 3)) {
             throw new IOException("Point does not match field size");
         }
         byte[] xb = new byte[n];
@@ -276,8 +278,8 @@ public final class ECParameters extends AlgorithmParametersSpi {
     static AlgorithmParameters getAlgorithmParameters(ECParameterSpec spec)
             throws InvalidKeyException {
         try {
-            AlgorithmParameters params = AlgorithmParameters.getInstance
-                                        ("EC", ECKeyFactory.ecInternalProvider);
+            AlgorithmParameters params =
+                AlgorithmParameters.getInstance("EC", "SunEC");
             params.init(spec);
             return params;
         } catch (GeneralSecurityException e) {

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1995, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@
 #
 
 BUILDDIR=.
+
 include $(BUILDDIR)/common/Defs.gmk
 
 #
@@ -237,7 +238,7 @@ ifeq ($(PLATFORM), macosx)
   SUBDIRS += apple
 endif
 SUBDIRS_tools = launchers
-SUBDIRS_misc  = org sunw jpda
+SUBDIRS_misc  = org jpda
 
 # demos
 ifndef NO_DEMOS
@@ -273,6 +274,7 @@ docs:: sanity-docs post-sanity-docs
 # Release engineering targets.
 #
 include $(BUILDDIR)/common/Release.gmk
+-include $(CUSTOM_MAKE_DIR)/Release.gmk
 
 #
 # Cscope targets.

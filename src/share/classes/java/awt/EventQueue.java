@@ -36,6 +36,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 import java.util.EmptyStackException;
+
+import sun.awt.dnd.SunDropTargetEvent;
 import sun.util.logging.PlatformLogger;
 
 import sun.awt.AppContext;
@@ -50,7 +52,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.security.AccessControlContext;
-import java.security.ProtectionDomain;
 
 import sun.misc.SharedSecrets;
 import sun.misc.JavaSecurityAccess;
@@ -161,6 +162,11 @@ public class EventQueue {
      */
     private long mostRecentEventTime = System.currentTimeMillis();
 
+    /*
+     * The time stamp of the last KeyEvent .
+     */
+    private long mostRecentKeyEventTime = System.currentTimeMillis();
+
     /**
      * The modifiers field of the current event, if the current event is an
      * InputEvent or ActionEvent.
@@ -185,6 +191,17 @@ public class EventQueue {
                 }
                 public boolean isDispatchThreadImpl(EventQueue eventQueue) {
                     return eventQueue.isDispatchThreadImpl();
+                }
+                public void removeSourceEvents(EventQueue eventQueue,
+                                               Object source,
+                                               boolean removeAllEvents) {
+                    eventQueue.removeSourceEvents(source, removeAllEvents);
+                }
+                public boolean noEvents(EventQueue eventQueue) {
+                    return eventQueue.noEvents();
+                }
+                public void wakeup(EventQueue eventQueue, boolean isShutdown) {
+                    eventQueue.wakeup(isShutdown);
                 }
             });
     }
@@ -464,7 +481,9 @@ public class EventQueue {
         case MouseEvent.MOUSE_MOVED:
             return MOVE;
         case MouseEvent.MOUSE_DRAGGED:
-            return DRAG;
+            // Return -1 for SunDropTargetEvent since they are usually synchronous
+            // and we don't want to skip them by coalescing with MouseEvent or other drag events
+            return e instanceof SunDropTargetEvent ? -1 : DRAG;
         default:
             return e instanceof PeerEvent ? PEER : -1;
         }
@@ -1028,6 +1047,10 @@ public class EventQueue {
 
     final boolean detachDispatchThread(EventDispatchThread edt, boolean forceDetach) {
         /*
+         * Minimize discard possibility for non-posted events
+         */
+        SunToolkit.flushPendingEvents();
+        /*
          * This synchronized block is to secure that the event dispatch
          * thread won't die in the middle of posting a new event to the
          * associated event queue. It is important because we notify
@@ -1041,11 +1064,8 @@ public class EventQueue {
                 /*
                  * Don't detach the thread if any events are pending. Not
                  * sure if it's a possible scenario, though.
-                 *
-                 * Fix for 4648733. Check both the associated java event
-                 * queue and the PostEventQueue.
                  */
-                if (!forceDetach && (peekEvent() != null) || !SunToolkit.isPostEventQueueEmpty()) {
+                if (!forceDetach && (peekEvent() != null)) {
                     return false;
                 }
                 dispatchThread = null;
@@ -1128,6 +1148,15 @@ public class EventQueue {
         }
     }
 
+    synchronized long getMostRecentKeyEventTime() {
+        pushPopLock.lock();
+        try {
+            return mostRecentKeyEventTime;
+        } finally {
+            pushPopLock.unlock();
+        }
+    }
+
     static void setCurrentEventAndMostRecentTime(AWTEvent e) {
         Toolkit.getEventQueue().setCurrentEventAndMostRecentTimeImpl(e);
     }
@@ -1152,6 +1181,9 @@ public class EventQueue {
             if (e instanceof InputEvent) {
                 InputEvent ie = (InputEvent)e;
                 mostRecentEventTime2 = ie.getWhen();
+                if (e instanceof KeyEvent) {
+                    mostRecentKeyEventTime = ie.getWhen();
+                }
             } else if (e instanceof InputMethodEvent) {
                 InputMethodEvent ime = (InputMethodEvent)e;
                 mostRecentEventTime2 = ime.getWhen();

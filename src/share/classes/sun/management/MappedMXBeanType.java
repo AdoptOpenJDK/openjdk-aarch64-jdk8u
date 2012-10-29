@@ -703,7 +703,7 @@ public abstract class MappedMXBeanType {
                 if (data instanceof java.lang.management.MonitorInfo) {
                     return MonitorInfoCompositeData.toCompositeData((MonitorInfo) data);
                 }
-                return LockDataConverter.toLockInfoCompositeData((LockInfo) data);
+                return LockInfoCompositeData.toCompositeData((LockInfo) data);
             }
 
             if (data instanceof MemoryNotificationInfo) {
@@ -803,7 +803,7 @@ public abstract class MappedMXBeanType {
                 Class<?> c;
                 try {
                     c = Class.forName(t.getClassName(), false,
-                                      String.class.getClassLoader());
+                                      MappedMXBeanType.class.getClassLoader());
                     MappedMXBeanType.newBasicType(c, t);
                 } catch (ClassNotFoundException e) {
                     // the classes that these predefined types declare

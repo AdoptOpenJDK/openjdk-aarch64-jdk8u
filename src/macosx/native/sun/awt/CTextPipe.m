@@ -36,6 +36,10 @@
 #import "QuartzSurfaceData.h"
 #include "AWTStrike.h"
 
+/* Use THIS_FILE when it is available. */
+#ifndef THIS_FILE
+    #define THIS_FILE __FILE__
+#endif
 
 static const CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
 
@@ -235,9 +239,22 @@ void JavaCT_DrawTextUsingQSD(JNIEnv *env, const QuartzSDOps *qsdo, const AWTStri
     CGContextSetTextMatrix(cgRef, CGAffineTransformIdentity); // resets the damage from CoreText
 
     NSString *string = [NSString stringWithCharacters:chars length:length];
+    /*
+       The calls below were used previously but for unknown reason did not 
+       render using the right font (see bug 7183516) when attribString is not 
+       initialized with font dictionary attributes.  It seems that "options" 
+       in CTTypesetterCreateWithAttributedStringAndOptions which contains the 
+       font dictionary is ignored.
+
     NSAttributedString *attribString = [[NSAttributedString alloc] initWithString:string];
 
     CTTypesetterRef typeSetterRef = CTTypesetterCreateWithAttributedStringAndOptions((CFAttributedStringRef) attribString, (CFDictionaryRef) ctsDictionaryFor(nsFont, JRSFontStyleUsesFractionalMetrics(strike->fStyle)));
+    */
+    NSAttributedString *attribString = [[NSAttributedString alloc]
+        initWithString:string
+        attributes:ctsDictionaryFor(nsFont, JRSFontStyleUsesFractionalMetrics(strike->fStyle))];
+    
+    CTTypesetterRef typeSetterRef = CTTypesetterCreateWithAttributedString((CFAttributedStringRef) attribString);
 
     CFRange range = {0, length};
     CTLineRef lineRef = CTTypesetterCreateLine(typeSetterRef, range);
@@ -488,7 +505,7 @@ static inline void doDrawGlyphsPipe_getGlyphVectorLengthAndAlloc
         if (glyphs == NULL || advances == NULL)
         {
             (*env)->DeleteLocalRef(env, glyphsArray);
-            [NSException raise:NSMallocException format:@"%s-%s:%d", __FILE__, __FUNCTION__, __LINE__];
+            [NSException raise:NSMallocException format:@"%s-%s:%d", THIS_FILE, __FUNCTION__, __LINE__];
             return;
         }
 

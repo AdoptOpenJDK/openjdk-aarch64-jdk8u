@@ -32,6 +32,7 @@ import java.math.BigInteger;
 import java.security.Principal;
 import java.security.PublicKey;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.Signature;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
@@ -52,7 +53,7 @@ import sun.misc.HexDumpEncoder;
 
 /**
  * <p>
- * An implmentation for X509 CRL (Certificate Revocation List).
+ * An implementation for X509 CRL (Certificate Revocation List).
  * <p>
  * The X.509 v2 CRL format is described below in ASN.1:
  * <pre>
@@ -103,7 +104,8 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
     private X500Principal    issuerPrincipal = null;
     private Date             thisUpdate = null;
     private Date             nextUpdate = null;
-    private Map<X509IssuerSerial,X509CRLEntry> revokedCerts = new LinkedHashMap<X509IssuerSerial,X509CRLEntry>();
+    private Map<X509IssuerSerial,X509CRLEntry> revokedMap = new TreeMap<>();
+    private List<X509CRLEntry> revokedList = new LinkedList<>();
     private CRLExtensions    extensions = null;
     private final static boolean isExplicit = true;
     private static final long YR_2050 = 2524636800000L;
@@ -222,7 +224,8 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
                 badCert.setCertificateIssuer(crlIssuer, badCertIssuer);
                 X509IssuerSerial issuerSerial = new X509IssuerSerial
                     (badCertIssuer, badCert.getSerialNumber());
-                this.revokedCerts.put(issuerSerial, badCert);
+                this.revokedMap.put(issuerSerial, badCert);
+                this.revokedList.add(badCert);
                 if (badCert.hasExtensions()) {
                     this.version = 1;
                 }
@@ -304,8 +307,8 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
                     tmp.putGeneralizedTime(nextUpdate);
             }
 
-            if (!revokedCerts.isEmpty()) {
-                for (X509CRLEntry entry : revokedCerts.values()) {
+            if (!revokedList.isEmpty()) {
+                for (X509CRLEntry entry : revokedList) {
                     ((X509CRLEntryImpl)entry).encode(rCerts);
                 }
                 tmp.write(DerValue.tag_Sequence, rCerts);
@@ -394,6 +397,61 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
         }
         verifiedPublicKey = key;
         verifiedProvider = sigProvider;
+    }
+
+    /**
+     * Verifies that this CRL was signed using the
+     * private key that corresponds to the given public key,
+     * and that the signature verification was computed by
+     * the given provider. Note that the specified Provider object
+     * does not have to be registered in the provider list.
+     *
+     * @param key the PublicKey used to carry out the verification.
+     * @param sigProvider the signature provider.
+     *
+     * @exception NoSuchAlgorithmException on unsupported signature
+     * algorithms.
+     * @exception InvalidKeyException on incorrect key.
+     * @exception SignatureException on signature errors.
+     * @exception CRLException on encoding errors.
+     */
+    public synchronized void verify(PublicKey key, Provider sigProvider)
+            throws CRLException, NoSuchAlgorithmException, InvalidKeyException,
+            SignatureException {
+
+        if (signedCRL == null) {
+            throw new CRLException("Uninitialized CRL");
+        }
+        Signature sigVerf = null;
+        if (sigProvider == null) {
+            sigVerf = Signature.getInstance(sigAlgId.getName());
+        } else {
+            sigVerf = Signature.getInstance(sigAlgId.getName(), sigProvider);
+        }
+        sigVerf.initVerify(key);
+
+        if (tbsCertList == null) {
+            throw new CRLException("Uninitialized CRL");
+        }
+
+        sigVerf.update(tbsCertList, 0, tbsCertList.length);
+
+        if (!sigVerf.verify(signature)) {
+            throw new SignatureException("Signature does not match.");
+        }
+        verifiedPublicKey = key;
+    }
+
+    /**
+     * This static method is the default implementation of the
+     * verify(PublicKey key, Provider sigProvider) method in X509CRL.
+     * Called from java.security.cert.X509CRL.verify(PublicKey key,
+     * Provider sigProvider)
+     */
+    public static void verify(X509CRL crl, PublicKey key,
+            Provider sigProvider) throws CRLException,
+            NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        crl.verify(key, sigProvider);
     }
 
     /**
@@ -489,14 +547,14 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
             sb.append("\nThis Update: " + thisUpdate.toString() + "\n");
         if (nextUpdate != null)
             sb.append("Next Update: " + nextUpdate.toString() + "\n");
-        if (revokedCerts.isEmpty())
+        if (revokedList.isEmpty())
             sb.append("\nNO certificates have been revoked\n");
         else {
-            sb.append("\nRevoked Certificates: " + revokedCerts.size());
+            sb.append("\nRevoked Certificates: " + revokedList.size());
             int i = 1;
-            for (Iterator<X509CRLEntry> iter = revokedCerts.values().iterator();
-                                             iter.hasNext(); i++)
-                sb.append("\n[" + i + "] " + iter.next().toString());
+            for (X509CRLEntry entry: revokedList) {
+                sb.append("\n[" + i++ + "] " + entry.toString());
+            }
         }
         if (extensions != null) {
             Collection<Extension> allExts = extensions.getAllExtensions();
@@ -542,12 +600,12 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
      * false otherwise.
      */
     public boolean isRevoked(Certificate cert) {
-        if (revokedCerts.isEmpty() || (!(cert instanceof X509Certificate))) {
+        if (revokedMap.isEmpty() || (!(cert instanceof X509Certificate))) {
             return false;
         }
         X509Certificate xcert = (X509Certificate) cert;
         X509IssuerSerial issuerSerial = new X509IssuerSerial(xcert);
-        return revokedCerts.containsKey(issuerSerial);
+        return revokedMap.containsKey(issuerSerial);
     }
 
     /**
@@ -637,24 +695,24 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
      * @see X509CRLEntry
      */
     public X509CRLEntry getRevokedCertificate(BigInteger serialNumber) {
-        if (revokedCerts.isEmpty()) {
+        if (revokedMap.isEmpty()) {
             return null;
         }
         // assume this is a direct CRL entry (cert and CRL issuer are the same)
         X509IssuerSerial issuerSerial = new X509IssuerSerial
             (getIssuerX500Principal(), serialNumber);
-        return revokedCerts.get(issuerSerial);
+        return revokedMap.get(issuerSerial);
     }
 
     /**
      * Gets the CRL entry for the given certificate.
      */
     public X509CRLEntry getRevokedCertificate(X509Certificate cert) {
-        if (revokedCerts.isEmpty()) {
+        if (revokedMap.isEmpty()) {
             return null;
         }
         X509IssuerSerial issuerSerial = new X509IssuerSerial(cert);
-        return revokedCerts.get(issuerSerial);
+        return revokedMap.get(issuerSerial);
     }
 
     /**
@@ -666,10 +724,10 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
      * @see X509CRLEntry
      */
     public Set<X509CRLEntry> getRevokedCertificates() {
-        if (revokedCerts.isEmpty()) {
+        if (revokedList.isEmpty()) {
             return null;
         } else {
-            return new HashSet<X509CRLEntry>(revokedCerts.values());
+            return new TreeSet<X509CRLEntry>(revokedList);
         }
     }
 
@@ -905,7 +963,7 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
         if (extensions == null) {
             return null;
         }
-        Set<String> extSet = new HashSet<String>();
+        Set<String> extSet = new TreeSet<>();
         for (Extension ex : extensions.getAllExtensions()) {
             if (ex.isCritical()) {
                 extSet.add(ex.getExtensionId().toString());
@@ -926,7 +984,7 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
         if (extensions == null) {
             return null;
         }
-        Set<String> extSet = new HashSet<String>();
+        Set<String> extSet = new TreeSet<>();
         for (Extension ex : extensions.getAllExtensions()) {
             if (!ex.isCritical()) {
                 extSet.add(ex.getExtensionId().toString());
@@ -1103,7 +1161,8 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
                 entry.setCertificateIssuer(crlIssuer, badCertIssuer);
                 X509IssuerSerial issuerSerial = new X509IssuerSerial
                     (badCertIssuer, entry.getSerialNumber());
-                revokedCerts.put(issuerSerial, entry);
+                revokedMap.put(issuerSerial, entry);
+                revokedList.add(entry);
             }
         }
 
@@ -1207,7 +1266,8 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
     /**
      * Immutable X.509 Certificate Issuer DN and serial number pair
      */
-    private final static class X509IssuerSerial {
+    private final static class X509IssuerSerial
+            implements Comparable<X509IssuerSerial> {
         final X500Principal issuer;
         final BigInteger serial;
         volatile int hashcode = 0;
@@ -1285,6 +1345,14 @@ public class X509CRLImpl extends X509CRL implements DerEncoder {
                 hashcode = result;
             }
             return hashcode;
+        }
+
+        @Override
+        public int compareTo(X509IssuerSerial another) {
+            int cissuer = issuer.toString()
+                    .compareTo(another.issuer.toString());
+            if (cissuer != 0) return cissuer;
+            return this.serial.compareTo(another.serial);
         }
     }
 }

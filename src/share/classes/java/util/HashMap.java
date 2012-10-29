@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -230,7 +230,7 @@ public class HashMap<K,V>
 
         this.loadFactor = loadFactor;
         threshold = (int)Math.min(capacity * loadFactor, MAXIMUM_CAPACITY + 1);
-        table = new Entry[capacity];
+        table = new Entry<?,?>[capacity];
         init();
     }
 
@@ -288,12 +288,11 @@ public class HashMap<K,V>
      * in lower bits.
      */
     final int hash(Object k) {
-        int h = hashSeed;
         if (k instanceof String) {
-            return ((String)k).hash32();
+            return ((String) k).hash32();
         }
 
-        h ^= k.hashCode();
+        int  h = hashSeed ^ k.hashCode();
 
         // This function ensures that hashCodes that differ only by
         // constant multiples at each bit position have a bounded
@@ -1079,7 +1078,7 @@ public class HashMap<K,V>
             capacity <<= 1;
         }
 
-        table = new Entry[capacity];
+        table = new Entry<?,?>[capacity];
         threshold = (int) Math.min(capacity * loadFactor, MAXIMUM_CAPACITY + 1);
         init();  // Give subclass a chance to do its thing.
 

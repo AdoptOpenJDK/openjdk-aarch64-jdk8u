@@ -453,6 +453,62 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
     }
 
     /**
+     * Throws an exception if the certificate was not signed using the
+     * verification key provided.  This method uses the signature verification
+     * engine supplied by the specified provider. Note that the specified
+     * Provider object does not have to be registered in the provider list.
+     * Successfully verifying a certificate does <em>not</em> indicate that one
+     * should trust the entity which it represents.
+     *
+     * @param key the public key used for verification.
+     * @param sigProvider the provider.
+     *
+     * @exception NoSuchAlgorithmException on unsupported signature
+     * algorithms.
+     * @exception InvalidKeyException on incorrect key.
+     * @exception SignatureException on signature errors.
+     * @exception CertificateException on encoding errors.
+     */
+    public synchronized void verify(PublicKey key, Provider sigProvider)
+            throws CertificateException, NoSuchAlgorithmException,
+            InvalidKeyException, SignatureException {
+        if (signedCert == null) {
+            throw new CertificateEncodingException("Uninitialized certificate");
+        }
+        // Verify the signature ...
+        Signature sigVerf = null;
+        if (sigProvider == null) {
+            sigVerf = Signature.getInstance(algId.getName());
+        } else {
+            sigVerf = Signature.getInstance(algId.getName(), sigProvider);
+        }
+        sigVerf.initVerify(key);
+
+        byte[] rawCert = info.getEncodedInfo();
+        sigVerf.update(rawCert, 0, rawCert.length);
+
+        // verify may throw SignatureException for invalid encodings, etc.
+        verificationResult = sigVerf.verify(signature);
+        verifiedPublicKey = key;
+
+        if (verificationResult == false) {
+            throw new SignatureException("Signature does not match.");
+        }
+    }
+
+     /**
+     * This static method is the default implementation of the
+     * verify(PublicKey key, Provider sigProvider) method in X509Certificate.
+     * Called from java.security.cert.X509Certificate.verify(PublicKey key,
+     * Provider sigProvider)
+     */
+    public static void verify(X509Certificate cert, PublicKey key,
+            Provider sigProvider) throws CertificateException,
+            NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        cert.verify(key, sigProvider);
+    }
+
+    /**
      * Creates an X.509 certificate, and signs it using the given key
      * (associating a signature algorithm and an X.500 name).
      * This operation is used to implement the certificate generation
@@ -1014,8 +1070,7 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
             return null;
         try {
             UniqueIdentity id = (UniqueIdentity)info.get(
-                                 CertificateIssuerUniqueIdentity.NAME
-                            + DOT + CertificateIssuerUniqueIdentity.ID);
+                                 X509CertInfo.ISSUER_ID);
             if (id == null)
                 return null;
             else
@@ -1035,8 +1090,7 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
             return null;
         try {
             UniqueIdentity id = (UniqueIdentity)info.get(
-                                 CertificateSubjectUniqueIdentity.NAME
-                            + DOT + CertificateSubjectUniqueIdentity.ID);
+                                 X509CertInfo.SUBJECT_ID);
             if (id == null)
                 return null;
             else
@@ -1202,7 +1256,7 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
             if (exts == null) {
                 return null;
             }
-            Set<String> extSet = new HashSet<String>();
+            Set<String> extSet = new TreeSet<>();
             for (Extension ex : exts.getAllExtensions()) {
                 if (ex.isCritical()) {
                     extSet.add(ex.getExtensionId().toString());
@@ -1232,7 +1286,7 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
             if (exts == null) {
                 return null;
             }
-            Set<String> extSet = new HashSet<String>();
+            Set<String> extSet = new TreeSet<>();
             for (Extension ex : exts.getAllExtensions()) {
                 if (!ex.isCritical()) {
                     extSet.add(ex.getExtensionId().toString());
@@ -1266,10 +1320,14 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
             if (extensions == null) {
                 return null;
             } else {
-                for (Extension ex : extensions.getAllExtensions()) {
-                    if (ex.getExtensionId().equals((Object)oid)) {
+                Extension ex = extensions.getExtension(oid.toString());
+                if (ex != null) {
+                    return ex;
+                }
+                for (Extension ex2: extensions.getAllExtensions()) {
+                    if (ex2.getExtensionId().equals((Object)oid)) {
                         //XXXX May want to consider cloning this
-                        return ex;
+                        return ex2;
                     }
                 }
                 /* no such extension in this certificate */
@@ -1465,10 +1523,10 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
         if (names.isEmpty()) {
             return Collections.<List<?>>emptySet();
         }
-        Set<List<?>> newNames = new HashSet<List<?>>();
+        List<List<?>> newNames = new ArrayList<>();
         for (GeneralName gname : names.names()) {
             GeneralNameInterface name = gname.getName();
-            List<Object> nameEntry = new ArrayList<Object>(2);
+            List<Object> nameEntry = new ArrayList<>(2);
             nameEntry.add(Integer.valueOf(name.getType()));
             switch (name.getType()) {
             case GeneralNameInterface.NAME_RFC822:
@@ -1526,12 +1584,12 @@ public class X509CertImpl extends X509Certificate implements DerEncoder {
             }
         }
         if (mustClone) {
-            Set<List<?>> namesCopy = new HashSet<List<?>>();
+            List<List<?>> namesCopy = new ArrayList<>();
             for (List<?> nameEntry : altNames) {
                 Object nameObject = nameEntry.get(1);
                 if (nameObject instanceof byte[]) {
                     List<Object> nameEntryCopy =
-                                        new ArrayList<Object>(nameEntry);
+                                        new ArrayList<>(nameEntry);
                     nameEntryCopy.set(1, ((byte[])nameObject).clone());
                     namesCopy.add(Collections.unmodifiableList(nameEntryCopy));
                 } else {

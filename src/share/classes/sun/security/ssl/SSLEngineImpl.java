@@ -1119,6 +1119,7 @@ final public class SSLEngineImpl extends SSLEngine {
                  * handle a few more records, so the sequence number
                  * of the last record cannot be wrapped.
                  */
+                hsStatus = getHSStatus(hsStatus);
                 if (connectionState < cs_ERROR && !isInboundDone() &&
                         (hsStatus == HandshakeStatus.NOT_HANDSHAKING)) {
                     if (checkSequenceNumber(readMAC,
@@ -1287,6 +1288,7 @@ final public class SSLEngineImpl extends SSLEngine {
          * handle a few more records, so the sequence number
          * of the last record cannot be wrapped.
          */
+        hsStatus = getHSStatus(hsStatus);
         if (connectionState < cs_ERROR && !isOutboundDone() &&
                 (hsStatus == HandshakeStatus.NOT_HANDSHAKING)) {
             if (checkSequenceNumber(writeMAC, eor.contentType())) {
@@ -1976,7 +1978,7 @@ final public class SSLEngineImpl extends SSLEngine {
      * @return an array of cipher suite names
      */
     public String[] getSupportedCipherSuites() {
-        return sslContext.getSuportedCipherSuiteList().toStringArray();
+        return sslContext.getSupportedCipherSuiteList().toStringArray();
     }
 
     /**

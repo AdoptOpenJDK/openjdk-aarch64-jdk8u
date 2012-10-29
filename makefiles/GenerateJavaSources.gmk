@@ -65,7 +65,7 @@ GENSRC += $(GENSRC_BUFFER)
 include GensrcExceptions.gmk
 GENSRC += $(GENSRC_EXCEPTIONS)
 
-ifneq ($(HOST_OS),windows)
+ifneq ($(OPENJDK_TARGET_OS),windows)
 include GensrcIcons.gmk
 GENSRC += $(GENSRC_ICONS)
 
@@ -73,9 +73,17 @@ include GensrcX11Wrappers.gmk
 GENSRC += $(GENSRC_X11WRAPPERS)
 endif
 
+include GensrcCLDR.gmk
+GENSRC += $(GENSRC_CLDR)
+
 include GensrcSwing.gmk
 ifndef DISABLE_NIMBUS
   GENSRC += $(GENSRC_SWING_NIMBUS)
+endif
+
+ifeq ($(OPENJDK_TARGET_OS), macosx)
+     include GensrcJObjC.gmk
+     GENSRC += $(GENSRC_JOBJC)
 endif
 
 $(GENSRC) : $(BUILD_TOOLS)
@@ -94,13 +102,17 @@ all: $(GENSRC) $(GENSRC_SWING_BEANINFO)
 		$(CP) -rp gensrc_charsetmapping/* gensrc && \
 		$(CP) -rp gensrc_charsetcoder/* gensrc && \
 		$(CP) -rp gensrc_exceptions/* gensrc && \
-		$(CP) -rp gensrc_buffer/* gensrc)
+		$(CP) -rp gensrc_buffer/* gensrc && \
+		$(CP) -rp gensrc_cldr/* gensrc)
 	if [ -d  $(JDK_OUTPUTDIR)/gensrc_swing/javax/swing/plaf ] ; then \
 		(cd $(JDK_OUTPUTDIR) && \
 		$(MKDIR) -p gensrc/javax/swing/plaf && \
 		$(CP) -rp gensrc_swing/javax/swing/plaf/* gensrc/javax/swing/plaf) \
 	fi
-ifneq ($(HOST_OS),windows)
+	if [ -d $(JDK_OUTPUTDIR)/gensrc_jobjc ] ; then \
+		(cd $(JDK_OUTPUTDIR) && cp -rp gensrc_jobjc/src/* gensrc) \
+	fi
+ifneq ($(OPENJDK_TARGET_OS),windows)
 	(cd $(JDK_OUTPUTDIR) && \
 		$(CP) -rp gensrc_icons/* gensrc && \
 		$(CP) -rp gensrc_x11wrappers/classes/* gensrc)
