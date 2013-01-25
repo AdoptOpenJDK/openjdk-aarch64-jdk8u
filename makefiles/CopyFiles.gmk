@@ -263,16 +263,16 @@ endif
 
 ##########################################################################################
 
-# Copy msvcr100.dll on windows
+# Copy msvcrXX.dll on windows
 
 ifeq ($(OPENJDK_TARGET_OS),windows)
-    MSVCRNN_TARGET := $(JDK_OUTPUTDIR)/bin/$(notdir $(MSVCRNN_DLL))
-    $(MSVCRNN_TARGET): $(MSVCRNN_DLL)
+    MSVCR_TARGET := $(JDK_OUTPUTDIR)/bin/$(notdir $(MSVCR_DLL))
+    $(MSVCR_TARGET): $(MSVCR_DLL)
 	$(MKDIR) -p $(@D)
 	$(RM) $@
 	$(CP) $< $@
 
-    COPY_FILES += $(MSVCRNN_TARGET)
+    COPY_FILES += $(MSVCR_TARGET)
 endif
 
 ##########################################################################################
@@ -356,20 +356,8 @@ COPY_FILES += $(JVMCFG)
 
 ##########################################################################################
 
-PROPS_SRC := $(JDK_TOPDIR)/src/share/lib/security/java.security
+PROPS_SRC := $(JDK_TOPDIR)/src/share/lib/security/java.security-$(OPENJDK_TARGET_OS)
 PROPS_DST := $(JDK_OUTPUTDIR)/lib/security/java.security
-
-ifeq ($(OPENJDK_TARGET_OS), solaris)
-	PROPS_SRC := $(JDK_TOPDIR)/src/share/lib/security/java.security-solaris
-endif
-
-ifeq ($(OPENJDK_TARGET_OS), windows)
-	PROPS_SRC := $(JDK_TOPDIR)/src/share/lib/security/java.security-windows
-endif
-
-ifeq ($(OPENJDK_TARGET_OS), macosx)
-	PROPS_SRC := $(JDK_TOPDIR)/src/share/lib/security/java.security-macosx
-endif
 
 $(PROPS_DST): $(PROPS_SRC)
 	$(MKDIR) -p $(@D)
@@ -553,7 +541,7 @@ $(JDK_OUTPUTDIR)/lib$(OPENJDK_TARGET_CPU_LIBDIR)/libjdgaSUNW%.so: $(JDK_TOPDIR)/
 $(JDK_OUTPUTDIR)/lib$(OPENJDK_TARGET_CPU_LIBDIR)/libjdgaSUNWafb.so: $(JDK_OUTPUTDIR)/lib$(OPENJDK_TARGET_CPU_LIBDIR)/libjdgaSUNWffb.so
 	$(MKDIR) -p $(@D)
 	$(RM) $@
-	$(LN) -s $< $@
+	$(LN) -s $(<F) $@
 
 COPY_FILES += $(DGALIBS)
 

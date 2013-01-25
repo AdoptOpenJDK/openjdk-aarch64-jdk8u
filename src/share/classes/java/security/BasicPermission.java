@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -46,8 +46,8 @@ import java.io.IOException;
  * convention follows the  hierarchical property naming convention.
  * An asterisk may appear by itself, or if immediately preceded by a "."
  * may appear at the end of the name, to signify a wildcard match.
- * For example, "*" and "java.*" are valid, while "*java", "a*b",
- * and "java*" are not valid.
+ * For example, "*" and "java.*" signify a wildcard match, while "*java", "a*b",
+ * and "java*" do not.
  * <P>
  * The action string (inherited from Permission) is unused.
  * Thus, BasicPermission is commonly used as the base class for
@@ -68,7 +68,7 @@ import java.io.IOException;
  */
 
 public abstract class BasicPermission extends Permission
-implements java.io.Serializable
+    implements java.io.Serializable
 {
 
     private static final long serialVersionUID = 6279438298436773498L;
@@ -84,10 +84,8 @@ implements java.io.Serializable
 
     /**
      * initialize a BasicPermission object. Common to all constructors.
-     *
      */
-    private void init(String name)
-    {
+    private void init(String name) {
         if (name == null)
             throw new NullPointerException("name can't be null");
 
@@ -129,9 +127,7 @@ implements java.io.Serializable
      * @throws NullPointerException if <code>name</code> is <code>null</code>.
      * @throws IllegalArgumentException if <code>name</code> is empty.
      */
-
-    public BasicPermission(String name)
-    {
+    public BasicPermission(String name) {
         super(name);
         init(name);
     }
@@ -148,8 +144,7 @@ implements java.io.Serializable
      * @throws NullPointerException if <code>name</code> is <code>null</code>.
      * @throws IllegalArgumentException if <code>name</code> is empty.
      */
-    public BasicPermission(String name, String actions)
-    {
+    public BasicPermission(String name, String actions) {
         super(name);
         init(name);
     }
@@ -238,8 +233,7 @@ implements java.io.Serializable
      *
      * @return the empty string "".
      */
-    public String getActions()
-    {
+    public String getActions() {
         return "";
     }
 
@@ -296,7 +290,6 @@ implements java.io.Serializable
  *
  * @see java.security.Permission
  * @see java.security.Permissions
- * @see java.security.PermissionsImpl
  *
  *
  * @author Roland Schemers
@@ -305,8 +298,8 @@ implements java.io.Serializable
  */
 
 final class BasicPermissionCollection
-extends PermissionCollection
-implements java.io.Serializable
+    extends PermissionCollection
+    implements java.io.Serializable
 {
 
     private static final long serialVersionUID = 739301742472979399L;
@@ -360,9 +353,7 @@ implements java.io.Serializable
      * @exception SecurityException - if this BasicPermissionCollection object
      *                                has been marked readonly
      */
-
-    public void add(Permission permission)
-    {
+    public void add(Permission permission) {
         if (! (permission instanceof BasicPermission))
             throw new IllegalArgumentException("invalid permission: "+
                                                permission);
@@ -398,16 +389,14 @@ implements java.io.Serializable
      * Check and see if this set of permissions implies the permissions
      * expressed in "permission".
      *
-     * @param p the Permission object to compare
+     * @param permission the Permission object to compare
      *
      * @return true if "permission" is a proper subset of a permission in
      * the set, false if not.
      */
-
-    public boolean implies(Permission permission)
-    {
+    public boolean implies(Permission permission) {
         if (! (permission instanceof BasicPermission))
-                return false;
+            return false;
 
         BasicPermission bp = (BasicPermission) permission;
 
@@ -468,7 +457,6 @@ implements java.io.Serializable
      *
      * @return an enumeration of all the BasicPermission objects.
      */
-
     public Enumeration<Permission> elements() {
         // Convert Iterator of Map values into an Enumeration
         synchronized (this) {

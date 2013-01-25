@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,51 +26,34 @@
 
 package sun.lwawt;
 
-import java.awt.BufferCapabilities;
-import java.awt.Canvas;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GraphicsConfiguration;
-import java.awt.Image;
 import java.awt.peer.CanvasPeer;
 
 import javax.swing.JComponent;
 
-final class LWCanvasPeer extends LWComponentPeer<Component, JComponent>
-        implements CanvasPeer {
+class LWCanvasPeer<T extends Component, D extends JComponent>
+        extends LWComponentPeer<T, D> implements CanvasPeer {
 
-    LWCanvasPeer(final Canvas target, PlatformComponent platformComponent) {
+    LWCanvasPeer(final T target, final PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
-    // ---- PEER METHODS ---- //
-
     @Override
-    public void createBuffers(int numBuffers, BufferCapabilities caps) {
-        // TODO
-    }
-
-    @Override
-    public Image getBackBuffer() {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public void flip(int x1, int y1, int x2, int y2,
-                     BufferCapabilities.FlipContents flipAction) {
-        // TODO
-    }
-
-    @Override
-    public void destroyBuffers() {
-        // TODO
-    }
-
-    @Override
-    public GraphicsConfiguration getAppropriateGraphicsConfiguration(
-            GraphicsConfiguration gc)
-    {
+    public final GraphicsConfiguration getAppropriateGraphicsConfiguration(
+            final GraphicsConfiguration gc) {
         // TODO
         return gc;
+    }
+
+    @Override
+    public final Dimension getPreferredSize() {
+        return getMinimumSize();
+    }
+
+    @Override
+    public final Dimension getMinimumSize() {
+        return getBounds().getSize();
     }
 }

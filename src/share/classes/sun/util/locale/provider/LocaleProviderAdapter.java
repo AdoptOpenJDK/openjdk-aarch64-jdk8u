@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.spi.CalendarDataProvider;
+import java.util.spi.CalendarNameProvider;
 import java.util.spi.CurrencyNameProvider;
 import java.util.spi.LocaleNameProvider;
 import java.util.spi.LocaleServiceProvider;
@@ -59,7 +60,8 @@ public abstract class LocaleProviderAdapter {
         JRE("sun.util.resources", "sun.text.resources"),
         CLDR("sun.util.resources.cldr", "sun.text.resources.cldr"),
         SPI,
-        HOST;
+        HOST,
+        FALLBACK("sun.util.resources", "sun.text.resources");
 
         private final String UTIL_RESOURCES_PACKAGE;
         private final String TEXT_RESOURCES_PACKAGE;
@@ -111,41 +113,49 @@ public abstract class LocaleProviderAdapter {
      */
     private static LocaleProviderAdapter hostLocaleProviderAdapter = null;
 
+    /**
+     * FALLBACK Locale Data Adapter instance. It's basically the same with JRE, but only kicks
+     * in for the root locale.
+     */
+    private static LocaleProviderAdapter fallbackLocaleProviderAdapter = null;
+
     static {
         String order = AccessController.doPrivileged(
                            new sun.security.action.GetPropertyAction("java.locale.providers"));
-                    // Override adapterPreference with the properties one
-                    if (order != null && order.length() != 0) {
-                        String[] types = order.split(",");
-                        List<Type> typeList = new ArrayList<>();
-                        for (String type : types) {
-                            try {
-                            Type aType = Type.valueOf(type.trim().toUpperCase(Locale.ROOT));
+        // Override adapterPreference with the properties one
+        if (order != null && order.length() != 0) {
+            String[] types = order.split(",");
+            List<Type> typeList = new ArrayList<>();
+            for (String type : types) {
+                try {
+                    Type aType = Type.valueOf(type.trim().toUpperCase(Locale.ROOT));
 
-                                // load adapter if necessary
-                                switch (aType) {
-                                case CLDR:
-                        cldrLocaleProviderAdapter = new CLDRLocaleProviderAdapter();
-                                    break;
-                                case HOST:
-                        hostLocaleProviderAdapter = new HostLocaleProviderAdapter();
-                                    break;
-                                }
-                                typeList.add(aType);
-                } catch (// could be caused by the user specifying wrong
-                                     // provider name or format in the system property
-                                     IllegalArgumentException |
-                                     UnsupportedOperationException e) {
-                                LocaleServiceProviderPool.config(LocaleProviderAdapter.class, e.toString());
-                            }
-                        }
-
-                        if (!typeList.contains(Type.JRE)) {
-                            // Append JRE as the last resort.
-                            typeList.add(Type.JRE);
-                        }
-                        adapterPreference = typeList.toArray(new Type[0]);
+                    // load adapter if necessary
+                    switch (aType) {
+                        case CLDR:
+                            cldrLocaleProviderAdapter = new CLDRLocaleProviderAdapter();
+                            break;
+                        case HOST:
+                            hostLocaleProviderAdapter = new HostLocaleProviderAdapter();
+                            break;
                     }
+                    typeList.add(aType);
+                } catch (IllegalArgumentException | UnsupportedOperationException e) {
+                    // could be caused by the user specifying wrong
+                    // provider name or format in the system property
+                    LocaleServiceProviderPool.config(LocaleProviderAdapter.class, e.toString());
+                }
+            }
+
+            if (!typeList.isEmpty()) {
+                if (!typeList.contains(Type.JRE)) {
+                    // Append FALLBACK as the last resort.
+                    fallbackLocaleProviderAdapter = new FallbackLocaleProviderAdapter();
+                    typeList.add(Type.FALLBACK);
+                }
+                adapterPreference = typeList.toArray(new Type[0]);
+            }
+        }
     }
 
 
@@ -162,6 +172,8 @@ public abstract class LocaleProviderAdapter {
             return spiLocaleProviderAdapter;
         case HOST:
             return hostLocaleProviderAdapter;
+        case FALLBACK:
+            return fallbackLocaleProviderAdapter;
         default:
             throw new InternalError("unknown locale data adapter type");
         }
@@ -173,7 +185,7 @@ public abstract class LocaleProviderAdapter {
 
     public static LocaleProviderAdapter getResourceBundleBased() {
         for (Type type : getAdapterPreference()) {
-            if (type == Type.JRE || type == Type.CLDR) {
+            if (type == Type.JRE || type == Type.CLDR || type == Type.FALLBACK) {
                 return forType(type);
             }
         }
@@ -218,8 +230,8 @@ public abstract class LocaleProviderAdapter {
             }
         }
 
-        // returns the adapter for JRE as the last resort
-        return jreLocaleProviderAdapter;
+        // returns the adapter for FALLBACK as the last resort
+        return fallbackLocaleProviderAdapter;
     }
 
     private static LocaleProviderAdapter findAdapter(Class<? extends LocaleServiceProvider> providerClass,
@@ -238,18 +250,24 @@ public abstract class LocaleProviderAdapter {
 
     /**
      * A utility method for implementing the default LocaleServiceProvider.isSupportedLocale
-     * for the JRE and CLDR adapters.
+     * for the JRE, CLDR, and FALLBACK adapters.
      */
     static boolean isSupportedLocale(Locale locale, LocaleProviderAdapter.Type type, Set<String> langtags) {
-        assert type == Type.JRE || type == Type.CLDR;
-        if (locale == Locale.ROOT) {
+        assert type == Type.JRE || type == Type.CLDR || type == Type.FALLBACK;
+        if (Locale.ROOT.equals(locale)) {
             return true;
         }
+
+        if (type == Type.FALLBACK) {
+            // no other locales except ROOT are supported for FALLBACK
+            return false;
+        }
+
         locale = locale.stripExtensions();
         if (langtags.contains(locale.toLanguageTag())) {
             return true;
         }
-        if (type == LocaleProviderAdapter.Type.JRE) {
+        if (type == Type.JRE) {
             String oldname = locale.toString().replace('_', '-');
             return langtags.contains(oldname);
         }
@@ -369,6 +387,14 @@ public abstract class LocaleProviderAdapter {
      * @return a CalendarDataProvider
      */
     public abstract CalendarDataProvider getCalendarDataProvider();
+
+    /**
+     * Returns a CalendarNameProvider for this LocaleProviderAdapter, or null if no
+     * CalendarNameProvider is available.
+     *
+     * @return a CalendarNameProvider
+     */
+    public abstract CalendarNameProvider getCalendarNameProvider();
 
     public abstract LocaleResources getLocaleResources(Locale locale);
 

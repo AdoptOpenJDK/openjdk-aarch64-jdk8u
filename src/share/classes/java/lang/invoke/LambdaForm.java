@@ -457,7 +457,7 @@ class LambdaForm {
             isCompiled = true;
             return vmentry;
         } catch (Error | Exception ex) {
-            throw new InternalError(this.toString(), ex);
+            throw newInternalError(this.toString(), ex);
         }
     }
 
@@ -592,6 +592,7 @@ class LambdaForm {
     private int invocationCounter = 0;
 
     @Hidden
+    @DontInline
     /** Interpretively invoke this form on the given arguments. */
     Object interpretWithArguments(Object... argumentValues) throws Throwable {
         if (TRACE_INTERPRETER)
@@ -606,6 +607,7 @@ class LambdaForm {
     }
 
     @Hidden
+    @DontInline
     /** Evaluate a single Name within this form, applying its function to its arguments. */
     Object interpretName(Name name, Object[] values) throws Throwable {
         if (TRACE_INTERPRETER)
@@ -1547,7 +1549,7 @@ class LambdaForm {
             try {
                 zmem = IMPL_NAMES.resolveOrFail(REF_invokeStatic, zmem, null, NoSuchMethodException.class);
             } catch (IllegalAccessException|NoSuchMethodException ex) {
-                throw new InternalError(ex);
+                throw newInternalError(ex);
             }
             NamedFunction zcon = new NamedFunction(zmem);
             Name n = new Name(zcon).newIndex(0);

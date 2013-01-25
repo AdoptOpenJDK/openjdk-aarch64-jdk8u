@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -92,7 +92,7 @@ class XmlSupport {
      * @throws BackingStoreException if preference data cannot be read from
      *         backing store.
      * @throws IllegalStateException if this node (or an ancestor) has been
-     *         removed with the {@link #removeNode()} method.
+     *         removed with the {@link Preferences#removeNode()} method.
      */
     static void export(OutputStream os, final Preferences p, boolean subTree)
         throws IOException, BackingStoreException {

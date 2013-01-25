@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright (c) 2009, 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -100,8 +100,8 @@ ${TESTJAVA}${FILESEP}bin${FILESEP}jar \
 rm Deadlock2*.class
 
 # create serialized object and run the test
-${TESTJAVA}${FILESEP}bin${FILESEP}java CreateSerialized
-${TESTJAVA}${FILESEP}bin${FILESEP}java -Djava.ext.dirs=${TESTCLASSES}${FILESEP}testlib Deadlock2
+${TESTJAVA}${FILESEP}bin${FILESEP}java ${TESTVMOPTS} CreateSerialized
+${TESTJAVA}${FILESEP}bin${FILESEP}java ${TESTVMOPTS} -Djava.ext.dirs=${TESTCLASSES}${FILESEP}testlib Deadlock2
 STATUS=$?
 
 # clean up

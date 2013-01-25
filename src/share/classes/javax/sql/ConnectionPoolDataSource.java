@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -48,7 +48,7 @@ public interface ConnectionPoolDataSource  extends CommonDataSource {
    *         connection to the database that this
    *         <code>ConnectionPoolDataSource</code> object represents
    * @exception SQLException if a database access error occurs
-   * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+   * @exception java.sql.SQLFeatureNotSupportedException if the JDBC driver does not support
    * this method
    * @since 1.4
    */
@@ -64,7 +64,7 @@ public interface ConnectionPoolDataSource  extends CommonDataSource {
    *         connection to the database that this
    *         <code>ConnectionPoolDataSource</code> object represents
    * @exception SQLException if a database access error occurs
-   * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
+   * @exception java.sql.SQLFeatureNotSupportedException if the JDBC driver does not support
    * this method
    * @since 1.4
    */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -68,7 +68,7 @@ static int fdCount;
 
 /*
  * This limit applies if getlimit() returns unlimited.
- * Unfortunately, this means if someone wants a higher limt
+ * Unfortunately, this means if someone wants a higher limit
  * then they have to set an explicit limit, higher than this,
  * which is probably counter-intuitive.
  */

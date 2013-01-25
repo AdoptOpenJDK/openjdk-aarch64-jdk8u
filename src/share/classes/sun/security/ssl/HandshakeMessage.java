@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -132,7 +132,7 @@ public abstract class HandshakeMessage {
      */
     final void write(HandshakeOutStream s) throws IOException {
         int len = messageLength();
-        if (len > (1 << 24)) {
+        if (len >= Record.OVERFLOW_OF_INT24) {
             throw new SSLException("Handshake message too big"
                 + ", type = " + messageType() + ", len = " + len);
         }
@@ -170,6 +170,7 @@ public abstract class HandshakeMessage {
  * session parameters after a connection has been (re)established.
  */
 static final class HelloRequest extends HandshakeMessage {
+    @Override
     int messageType() { return ht_hello_request; }
 
     HelloRequest() { }
@@ -179,13 +180,16 @@ static final class HelloRequest extends HandshakeMessage {
         // nothing in this message
     }
 
+    @Override
     int messageLength() { return 0; }
 
+    @Override
     void send(HandshakeOutStream out) throws IOException
     {
         // nothing in this messaage
     }
 
+    @Override
     void print(PrintStream out) throws IOException
     {
         out.println("*** HelloRequest (empty)");
@@ -256,13 +260,9 @@ static final class ClientHello extends HandshakeMessage {
     }
 
     // add server_name extension
-    void addServerNameIndicationExtension(String hostname) {
-        // We would have checked that the hostname ia a FQDN.
-        ArrayList<String> hostnames = new ArrayList<>(1);
-        hostnames.add(hostname);
-
+    void addSNIExtension(List<SNIServerName> serverNames) {
         try {
-            extensions.add(new ServerNameExtension(hostnames));
+            extensions.add(new ServerNameExtension(serverNames));
         } catch (IOException ioe) {
             // ignore the exception and return
         }
@@ -333,6 +333,7 @@ static final class ClientHello extends HandshakeMessage {
 static final
 class ServerHello extends HandshakeMessage
 {
+    @Override
     int messageType() { return ht_server_hello; }
 
     ProtocolVersion     protocolVersion;
@@ -359,6 +360,7 @@ class ServerHello extends HandshakeMessage
         }
     }
 
+    @Override
     int messageLength()
     {
         // almost fixed size, except session ID and extensions:
@@ -370,6 +372,7 @@ class ServerHello extends HandshakeMessage
         return 38 + sessionId.length() + extensions.length();
     }
 
+    @Override
     void send(HandshakeOutStream s) throws IOException
     {
         s.putInt8(protocolVersion.major);
@@ -382,6 +385,7 @@ class ServerHello extends HandshakeMessage
         extensions.send(s);
     }
 
+    @Override
     void print(PrintStream s) throws IOException
     {
         s.println("*** ServerHello, " + protocolVersion);
@@ -389,8 +393,6 @@ class ServerHello extends HandshakeMessage
         if (debug != null && Debug.isOn("verbose")) {
             s.print("RandomCookie:  ");
             svr_random.print(s);
-
-            int i;
 
             s.print("Session ID:  ");
             s.println(sessionId);
@@ -420,6 +422,7 @@ class ServerHello extends HandshakeMessage
 static final
 class CertificateMsg extends HandshakeMessage
 {
+    @Override
     int messageType() { return ht_certificate; }
 
     private X509Certificate[] chain;
@@ -454,6 +457,7 @@ class CertificateMsg extends HandshakeMessage
         chain = v.toArray(new X509Certificate[v.size()]);
     }
 
+    @Override
     int messageLength() {
         if (encodedChain == null) {
             messageLength = 3;
@@ -472,6 +476,7 @@ class CertificateMsg extends HandshakeMessage
         return messageLength;
     }
 
+    @Override
     void send(HandshakeOutStream s) throws IOException {
         s.putInt24(messageLength() - 3);
         for (byte[] b : encodedChain) {
@@ -479,6 +484,7 @@ class CertificateMsg extends HandshakeMessage
         }
     }
 
+    @Override
     void print(PrintStream s) throws IOException {
         s.println("*** Certificate chain");
 
@@ -532,6 +538,7 @@ class CertificateMsg extends HandshakeMessage
  */
 static abstract class ServerKeyExchange extends HandshakeMessage
 {
+    @Override
     int messageType() { return ht_server_key_exchange; }
 }
 
@@ -639,17 +646,20 @@ class RSA_ServerKeyExchange extends ServerKeyExchange
         return signature.verify(signatureBytes);
     }
 
+    @Override
     int messageLength() {
         return 6 + rsa_modulus.length + rsa_exponent.length
                + signatureBytes.length;
     }
 
+    @Override
     void send(HandshakeOutStream s) throws IOException {
         s.putBytes16(rsa_modulus);
         s.putBytes16(rsa_exponent);
         s.putBytes16(signatureBytes);
     }
 
+    @Override
     void print(PrintStream s) throws IOException {
         s.println("*** RSA ServerKeyExchange");
 
@@ -878,6 +888,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
         dh_Ys = toByteArray(obj.getPublicKey());
     }
 
+    @Override
     int messageLength() {
         int temp = 6;   // overhead for p, g, y(s) values.
 
@@ -899,6 +910,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
         return temp;
     }
 
+    @Override
     void send(HandshakeOutStream s) throws IOException {
         s.putBytes16(dh_p);
         s.putBytes16(dh_g);
@@ -918,6 +930,7 @@ class DH_ServerKeyExchange extends ServerKeyExchange
         }
     }
 
+    @Override
     void print(PrintStream s) throws IOException {
         s.println("*** Diffie-Hellman ServerKeyExchange");
 
@@ -1122,6 +1135,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         sig.update(pointBytes);
     }
 
+    @Override
     int messageLength() {
         int sigLen = 0;
         if (signatureBytes != null) {
@@ -1134,6 +1148,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         return 4 + pointBytes.length + sigLen;
     }
 
+    @Override
     void send(HandshakeOutStream s) throws IOException {
         s.putInt8(CURVE_NAMED_CURVE);
         s.putInt16(curveId);
@@ -1149,6 +1164,7 @@ class ECDH_ServerKeyExchange extends ServerKeyExchange {
         }
     }
 
+    @Override
     void print(PrintStream s) throws IOException {
         s.println("*** ECDH ServerKeyExchange");
 
@@ -1483,6 +1499,7 @@ class CertificateRequest extends HandshakeMessage
 static final
 class ServerHelloDone extends HandshakeMessage
 {
+    @Override
     int messageType() { return ht_server_hello_done; }
 
     ServerHelloDone() { }
@@ -1492,16 +1509,19 @@ class ServerHelloDone extends HandshakeMessage
         // nothing to do
     }
 
+    @Override
     int messageLength()
     {
         return 0;
     }
 
+    @Override
     void send(HandshakeOutStream s) throws IOException
     {
         // nothing to send
     }
 
+    @Override
     void print(PrintStream s) throws IOException
     {
         s.println("*** ServerHelloDone");
@@ -1716,6 +1736,7 @@ static final class CertificateVerify extends HandshakeMessage {
 
     private static void makeAccessible(final AccessibleObject o) {
         AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            @Override
             public Object run() {
                 o.setAccessible(true);
                 return null;

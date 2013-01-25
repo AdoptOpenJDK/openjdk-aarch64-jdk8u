@@ -752,7 +752,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * -128 and 127 (inclusive) as required by JLS.
      *
      * The cache is initialized on first usage.  The size of the cache
-     * may be controlled by the -XX:AutoBoxCacheMax=<size> option.
+     * may be controlled by the {@code -XX:AutoBoxCacheMax=<size>} option.
      * During VM initialization, java.lang.Integer.IntegerCache.high property
      * may be set and saved in the private system properties in the
      * sun.misc.VM class.
@@ -918,7 +918,20 @@ public final class Integer extends Number implements Comparable<Integer> {
      *          primitive {@code int} value represented by this
      *          {@code Integer} object.
      */
+    @Override
     public int hashCode() {
+        return Integer.hashCode(value);
+    }
+
+    /**
+     * Returns a hash code for a {@code int} value; compatible with
+     * {@code Integer.hashCode()}.
+     *
+     * @since 1.8
+     *
+     * @return a hash code value for a {@code int} value.
+     */
+    public static int hashCode(int value) {
         return value;
     }
 
@@ -1283,6 +1296,14 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static final int SIZE = 32;
+
+    /**
+     * The number of bytes used to represent a {@code int} value in two's
+     * complement binary form.
+     *
+     * @since 1.8
+     */
+    public static final int BYTES = SIZE / Byte.SIZE;
 
     /**
      * Returns an {@code int} value with at most a single one-bit, in the

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -242,6 +242,14 @@ AWT_ASSERT_APPKIT_THREAD;
     } else {
         [performer performSelectorOnMainThread:@selector(perform) withObject:nil waitUntilDone:wait modes:((inAWT) ? sAWTPerformModes : sPerformModes)]; // AWT_THREADING Safe (cover method)
         [performer release];
+    }
+}
+
++ (void)performOnMainThreadWaiting:(BOOL)wait block:(void (^)())block {
+    if ([NSThread isMainThread] && wait == YES) {
+        block(); 
+    } else { 
+        [JNFRunLoop performOnMainThreadWaiting:wait withBlock:block]; 
     }
 }
 

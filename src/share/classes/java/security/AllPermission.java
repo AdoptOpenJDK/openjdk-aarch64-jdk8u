@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -62,9 +62,7 @@ public final class AllPermission extends Permission {
     /**
      * Creates a new AllPermission object.
      */
-
-    public AllPermission()
-    {
+    public AllPermission() {
         super("<all permissions>");
     }
 
@@ -77,8 +75,7 @@ public final class AllPermission extends Permission {
      * @param name ignored
      * @param actions ignored.
      */
-    public AllPermission(String name, String actions)
-    {
+    public AllPermission(String name, String actions) {
         this();
     }
 
@@ -120,8 +117,7 @@ public final class AllPermission extends Permission {
      *
      * @return the actions.
      */
-    public String getActions()
-    {
+    public String getActions() {
         return "<all actions>";
     }
 
@@ -133,7 +129,6 @@ public final class AllPermission extends Permission {
      * @return a new PermissionCollection object suitable for
      * storing AllPermissions.
      */
-
     public PermissionCollection newPermissionCollection() {
         return new AllPermissionCollection();
     }
@@ -157,8 +152,8 @@ public final class AllPermission extends Permission {
  */
 
 final class AllPermissionCollection
-extends PermissionCollection
-implements java.io.Serializable
+    extends PermissionCollection
+    implements java.io.Serializable
 {
 
     // use serialVersionUID from JDK 1.2.2 for interoperability
@@ -188,8 +183,7 @@ implements java.io.Serializable
      *                                has been marked readonly
      */
 
-    public void add(Permission permission)
-    {
+    public void add(Permission permission) {
         if (! (permission instanceof AllPermission))
             throw new IllegalArgumentException("invalid permission: "+
                                                permission);
@@ -203,13 +197,12 @@ implements java.io.Serializable
      * Check and see if this set of permissions implies the permissions
      * expressed in "permission".
      *
-     * @param p the Permission object to compare
+     * @param permission the Permission object to compare
      *
      * @return always returns true.
      */
 
-    public boolean implies(Permission permission)
-    {
+    public boolean implies(Permission permission) {
         return all_allowed; // No sync; staleness OK
     }
 
@@ -219,8 +212,7 @@ implements java.io.Serializable
      *
      * @return an enumeration of all the AllPermission objects.
      */
-    public Enumeration<Permission> elements()
-    {
+    public Enumeration<Permission> elements() {
         return new Enumeration<Permission>() {
             private boolean hasMore = all_allowed;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1994, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Objects;
 import sun.misc.Unsafe;
 import sun.reflect.ConstantPool;
 import sun.reflect.Reflection;
@@ -505,6 +506,7 @@ public final
      * returns {@code false} otherwise.
      * @return {@code true} if and only if this class is a synthetic class as
      *         defined by the Java Language Specification.
+     * @jls 13.1 The Form of a Binary
      * @since 1.5
      */
     public boolean isSynthetic() {
@@ -2970,7 +2972,7 @@ public final
     /**
      * Returns a map from simple name to enum constant.  This package-private
      * method is used internally by Enum to implement
-     *     public static <T extends Enum<T>> T valueOf(Class<T>, String)
+     * {@code public static <T extends Enum<T>> T valueOf(Class<T>, String)}
      * efficiently.  Note that the map is returned by this method is
      * created lazily on first use.  Typically it won't ever get created.
      */
@@ -3044,34 +3046,62 @@ public final
      * @throws NullPointerException {@inheritDoc}
      * @since 1.5
      */
-    @SuppressWarnings("unchecked")
     public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-        if (annotationClass == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(annotationClass);
 
         initAnnotationsIfNecessary();
-        return (A) annotations.get(annotationClass);
+        return AnnotationSupport.getOneAnnotation(annotations, annotationClass);
     }
 
     /**
      * @throws NullPointerException {@inheritDoc}
      * @since 1.5
      */
-    public boolean isAnnotationPresent(
-        Class<? extends Annotation> annotationClass) {
-        if (annotationClass == null)
-            throw new NullPointerException();
+    public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+        Objects.requireNonNull(annotationClass);
 
         return getAnnotation(annotationClass) != null;
     }
 
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    public <A extends Annotation> A[] getAnnotations(Class<A> annotationClass) {
+        Objects.requireNonNull(annotationClass);
+
+        initAnnotationsIfNecessary();
+        return AnnotationSupport.getMultipleAnnotations(annotations, annotationClass);
+    }
 
     /**
      * @since 1.5
      */
     public Annotation[] getAnnotations() {
         initAnnotationsIfNecessary();
-        return AnnotationParser.toArray(annotations);
+        return AnnotationSupport.unpackToArray(annotations);
+    }
+
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    public <A extends Annotation> A getDeclaredAnnotation(Class<A> annotationClass) {
+        Objects.requireNonNull(annotationClass);
+
+        initAnnotationsIfNecessary();
+        return AnnotationSupport.getOneAnnotation(declaredAnnotations, annotationClass);
+    }
+
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     * @since 1.8
+     */
+    public <A extends Annotation> A[] getDeclaredAnnotations(Class<A> annotationClass) {
+        Objects.requireNonNull(annotationClass);
+
+        initAnnotationsIfNecessary();
+        return AnnotationSupport.getMultipleAnnotations(declaredAnnotations, annotationClass);
     }
 
     /**
@@ -3079,7 +3109,17 @@ public final
      */
     public Annotation[] getDeclaredAnnotations()  {
         initAnnotationsIfNecessary();
-        return AnnotationParser.toArray(declaredAnnotations);
+        return AnnotationSupport.unpackToArray(declaredAnnotations);
+    }
+
+    /** Returns one "directly" present annotation or null */
+    <A extends Annotation> A getDirectDeclaredAnnotation(Class<A> annotationClass) {
+        Objects.requireNonNull(annotationClass);
+
+        initAnnotationsIfNecessary();
+        @SuppressWarnings("unchecked") // TODO check safe
+        A ret = (A)declaredAnnotations.get(annotationClass);
+        return ret;
     }
 
     // Annotations cache

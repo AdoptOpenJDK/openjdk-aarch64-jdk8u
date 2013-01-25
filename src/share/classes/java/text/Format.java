@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2005, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -370,7 +370,7 @@ public abstract class Format implements Serializable, Cloneable {
      * Delegates should NOT assume that the <code>Format</code> will notify
      * the delegate of fields in any particular order.
      *
-     * @see FieldPosition.Delegate
+     * @see FieldPosition#getFieldDelegate
      * @see CharacterIteratorFieldDelegate
      */
     interface FieldDelegate {

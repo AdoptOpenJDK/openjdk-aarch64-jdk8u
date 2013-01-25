@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -85,7 +85,7 @@ import java.io.IOException;
  *         .build();
  *
  *     // read ACL, insert ACE, re-write ACL
- *     List&lt;AclEntry&gt acl = view.getAcl();
+ *     List&lt;AclEntry&gt; acl = view.getAcl();
  *     acl.add(0, entry);   // insert before any DENY entries
  *     view.setAcl(acl);
  * </pre>

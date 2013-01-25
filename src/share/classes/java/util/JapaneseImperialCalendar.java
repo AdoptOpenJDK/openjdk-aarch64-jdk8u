@@ -946,8 +946,9 @@ class JapaneseImperialCalendar extends Calendar {
         set(field, getRolledValue(internalGet(field), amount, min, max));
     }
 
+    @Override
     public String getDisplayName(int field, int style, Locale locale) {
-        if (!checkDisplayNameParams(field, style, SHORT, LONG, locale,
+        if (!checkDisplayNameParams(field, style, SHORT, NARROW_FORMAT, locale,
                                     ERA_MASK|YEAR_MASK|MONTH_MASK|DAY_OF_WEEK_MASK|AM_PM_MASK)) {
             return null;
         }
@@ -956,11 +957,12 @@ class JapaneseImperialCalendar extends Calendar {
 
         // "GanNen" is supported only in the LONG style.
         if (field == YEAR
-            && (getBaseStyle(style) == SHORT || fieldValue != 1 || get(ERA) == 0)) {
+            && (getBaseStyle(style) != LONG || fieldValue != 1 || get(ERA) == 0)) {
             return null;
         }
 
-        String name = CalendarDataUtility.retrieveFieldValueName("japanese", field, fieldValue, style, locale);
+        String name = CalendarDataUtility.retrieveFieldValueName(getCalendarType(), field,
+                                                                 fieldValue, style, locale);
         // If the ERA value is null, then
         // try to get its name or abbreviation from the Era instance.
         if (name == null && field == ERA && fieldValue < eras.length) {
@@ -970,27 +972,37 @@ class JapaneseImperialCalendar extends Calendar {
         return name;
     }
 
+    @Override
     public Map<String,Integer> getDisplayNames(int field, int style, Locale locale) {
-        if (!checkDisplayNameParams(field, style, ALL_STYLES, LONG, locale,
+        if (!checkDisplayNameParams(field, style, ALL_STYLES, NARROW_FORMAT, locale,
                                     ERA_MASK|YEAR_MASK|MONTH_MASK|DAY_OF_WEEK_MASK|AM_PM_MASK)) {
             return null;
         }
-        Map<String, Integer> names = CalendarDataUtility.retrieveFieldValueNames("japanese", field, style, locale);
+        Map<String, Integer> names;
+        names = CalendarDataUtility.retrieveFieldValueNames(getCalendarType(), field, style, locale);
         // If strings[] has fewer than eras[], get more names from eras[].
-        if (field == ERA) {
-            int size = names.size();
-            if (style == ALL_STYLES) {
-                size /= 2; // SHORT and LONG
-            }
-            if (size < eras.length) {
-                int baseStyle = getBaseStyle(style);
-                for (int i = size; i < eras.length; i++) {
-                    Era era = eras[i];
-                    if (baseStyle == ALL_STYLES || baseStyle == SHORT) {
-                        names.put(era.getAbbreviation(), i);
+        if (names != null) {
+            if (field == ERA) {
+                int size = names.size();
+                if (style == ALL_STYLES) {
+                    Set<Integer> values = new HashSet<>();
+                    // count unique era values
+                    for (String key : names.keySet()) {
+                        values.add(names.get(key));
                     }
-                    if (baseStyle == ALL_STYLES || baseStyle == LONG) {
-                        names.put(era.getName(), i);
+                    size = values.size();
+                }
+                if (size < eras.length) {
+                    int baseStyle = getBaseStyle(style);
+                    for (int i = size; i < eras.length; i++) {
+                        Era era = eras[i];
+                        if (baseStyle == ALL_STYLES || baseStyle == SHORT
+                                || baseStyle == NARROW_FORMAT) {
+                            names.put(era.getAbbreviation(), i);
+                        }
+                        if (baseStyle == ALL_STYLES || baseStyle == LONG) {
+                            names.put(era.getName(), i);
+                        }
                     }
                 }
             }
@@ -1932,7 +1944,7 @@ class JapaneseImperialCalendar extends Calendar {
      * Computes the fixed date under either the Gregorian or the
      * Julian calendar, using the given year and the specified calendar fields.
      *
-     * @param cal the CalendarSystem to be used for the date calculation
+     * @param era era index
      * @param year the normalized year number, with 0 indicating the
      * year 1 BCE, -1 indicating 2 BCE, etc.
      * @param fieldMask the calendar fields to be used for the date calculation
@@ -2141,7 +2153,7 @@ class JapaneseImperialCalendar extends Calendar {
      * Returns the length of the specified month in the specified
      * Gregorian year. The year number must be normalized.
      *
-     * @see #isLeapYear(int)
+     * @see GregorianCalendar#isLeapYear(int)
      */
     private int monthLength(int month, int gregorianYear) {
         return CalendarUtils.isGregorianLeapYear(gregorianYear) ?
@@ -2152,7 +2164,7 @@ class JapaneseImperialCalendar extends Calendar {
      * Returns the length of the specified month in the year provided
      * by internalGet(YEAR).
      *
-     * @see #isLeapYear(int)
+     * @see GregorianCalendar#isLeapYear(int)
      */
     private int monthLength(int month) {
         assert jdate.isNormalized();

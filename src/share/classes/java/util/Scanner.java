@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -568,9 +568,8 @@ public final class Scanner implements Iterator<String>, Closeable {
      * Constructs a <code>Scanner</code> that returns values scanned
      * from the specified source delimited by the specified pattern.
      *
-     * @param  source A character source implementing the Readable interface
+     * @param source A character source implementing the Readable interface
      * @param pattern A delimiting pattern
-     * @return A scanner with the specified source and pattern
      */
     private Scanner(Readable source, Pattern pattern) {
         assert source != null : "source should not be null";

@@ -1,7 +1,7 @@
 #! /bin/sh
 
 #
-# Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2005, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -71,7 +71,7 @@ mv jar1.jar ..
 #
 ${TESTJAVA}${FS}bin${FS}javac -d ${DEST} ${TESTSRC}${FS}src${FS}test${FS}*.java
 cd ${DEST}
-${TESTJAVA}${FS}bin${FS}java RunAllTests
+${TESTJAVA}${FS}bin${FS}java ${TESTVMOPTS} RunAllTests
 result=$?
 if [ "$result" -ne "0" ]; then
     exit 1

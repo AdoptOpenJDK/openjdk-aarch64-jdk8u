@@ -25,7 +25,7 @@
 
 package java.lang.invoke;
 
-import static com.sun.xml.internal.ws.org.objectweb.asm.Opcodes.*;
+import static jdk.internal.org.objectweb.asm.Opcodes.*;
 import static java.lang.invoke.LambdaForm.basicTypes;
 import static java.lang.invoke.MethodHandleNatives.Constants.REF_invokeStatic;
 import static java.lang.invoke.MethodHandleStatics.*;
@@ -40,9 +40,9 @@ import java.util.HashMap;
 import sun.invoke.util.ValueConversions;
 import sun.invoke.util.Wrapper;
 
-import com.sun.xml.internal.ws.org.objectweb.asm.ClassWriter;
-import com.sun.xml.internal.ws.org.objectweb.asm.MethodVisitor;
-import com.sun.xml.internal.ws.org.objectweb.asm.Type;
+import jdk.internal.org.objectweb.asm.ClassWriter;
+import jdk.internal.org.objectweb.asm.MethodVisitor;
+import jdk.internal.org.objectweb.asm.Type;
 
 /**
  * The flavor of method handle which emulates an invoke instruction
@@ -79,7 +79,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
             default : throw new InternalError("unexpected xtype: " + xtype);
             }
         } catch (Throwable t) {
-            throw new InternalError(t);
+            throw newInternalError(t);
         }
     }
 
@@ -97,7 +97,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
             case 'D': return cloneExtendD(type, form, (double) x);
             }
         } catch (Throwable t) {
-            throw new InternalError(t);
+            throw newInternalError(t);
         }
         throw new InternalError("unexpected type: " + xtype);
     }
@@ -115,7 +115,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
         try {
              return clone(srcType, form);
          } catch (Throwable t) {
-             throw new InternalError(t);
+             throw newInternalError(t);
          }
     }
 
@@ -124,7 +124,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
         try {
              return clone(newType, form.permuteArguments(1, reorder, basicTypes(newType.parameterList())));
          } catch (Throwable t) {
-             throw new InternalError(t);
+             throw newInternalError(t);
          }
     }
 
@@ -166,7 +166,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
             case 'J': return argJ(i);
             }
         } catch (Throwable ex) {
-            throw new InternalError(ex);
+            throw newInternalError(ex);
         }
         throw new InternalError("unexpected type: " + speciesData().types+"."+i);
     }
@@ -192,7 +192,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
         try {
             return (MethodHandle) argL(0);
         } catch (Throwable ex) {
-            throw new InternalError(ex);
+            throw newInternalError(ex);
         }
     }
 
@@ -464,7 +464,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
                     }
                 }
             } catch (Throwable e) {
-                throw new InternalError(e);
+                throw newInternalError(e);
             }
 
             for (SpeciesData d : CACHE.values()) {
@@ -748,7 +748,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
             try {
                 return LOOKUP.findGetter(cbmhClass, fieldName, fieldType);
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new InternalError(e);
+                throw newInternalError(e);
             }
         }
 
@@ -776,7 +776,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
                 Field F_SPECIES_DATA = cbmh.getDeclaredField("SPECIES_DATA");
                 return (SpeciesData) F_SPECIES_DATA.get(null);
             } catch (ReflectiveOperationException ex) {
-                throw new InternalError(ex);
+                throw newInternalError(ex);
             }
         }
 
@@ -802,7 +802,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
             try {
                 return linkConstructor(LOOKUP.findConstructor(cbmh, MethodType.fromMethodDescriptorString(makeSignature(types, true), null)));
             } catch (NoSuchMethodException | IllegalAccessException | IllegalArgumentException | TypeNotPresentException e) {
-                throw new InternalError(e);
+                throw newInternalError(e);
             }
         }
 
@@ -833,7 +833,7 @@ import com.sun.xml.internal.ws.org.objectweb.asm.Type;
                 linkerMN = MemberName.getFactory().resolveOrFail(REF_invokeStatic, linkerMN, null, NoSuchMethodException.class);
                 assert(linkerMN.isStatic());
             } catch (ReflectiveOperationException ex) {
-                throw new InternalError(ex);
+                throw newInternalError(ex);
             }
             // extend arguments array
             Object[] newArgs = Arrays.copyOf(initName.arguments, initName.arguments.length + 1);

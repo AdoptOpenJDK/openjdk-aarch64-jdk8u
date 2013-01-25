@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2008, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -53,7 +53,7 @@ case "$OS" in
 esac
 
 ${TESTJAVA}${FS}bin${FS}javac -d . ${TESTSRC}${FS}PrintSSL.java || exit 10
-${TESTJAVA}${FS}bin${FS}java -Dtest.src=$TESTSRC PrintSSL | ( read PORT; ${TESTJAVA}${FS}bin${FS}keytool -printcert -sslserver localhost:$PORT )
+${TESTJAVA}${FS}bin${FS}java ${TESTVMOPTS} -Dtest.src=$TESTSRC PrintSSL | ( read PORT; ${TESTJAVA}${FS}bin${FS}keytool -printcert -sslserver localhost:$PORT )
 status=$?
 
 rm PrintSSL*.class

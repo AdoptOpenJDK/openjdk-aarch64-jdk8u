@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -40,4 +40,21 @@ AUTO_FILES_JAVA_DIRS = sun/util/xml
 # Rules
 #
 include $(BUILDDIR)/common/Classes.gmk
+
+#
+# Rules for XML properties provider configuration file
+#
+SERVICEDIR = $(CLASSBINDIR)/META-INF/services
+FILES_copy = $(SERVICEDIR)/sun.util.spi.XmlPropertiesProvider
+
+copy-files: $(FILES_copy)
+
+$(SERVICEDIR)/%: $(SHARE_SRC)/classes/sun/util/xml/META-INF/services/%
+	$(install-file)
+
+build: copy-files
+
+clean::
+	$(RM) $(FILES_copy)
+
 

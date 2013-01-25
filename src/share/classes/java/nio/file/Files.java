@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -510,7 +510,7 @@ public final class Files {
      * <pre>
      *     DirectoryStream.Filter&lt;Path&gt; filter = new DirectoryStream.Filter&lt;Path&gt;() {
      *         public boolean accept(Path file) throws IOException {
-     *             return (Files.size(file) > 8192L);
+     *             return (Files.size(file) &gt; 8192L);
      *         }
      *     };
      *     Path dir = ...
@@ -1592,7 +1592,7 @@ public final class Files {
      *     Path path = ...
      *     AclFileAttributeView view = Files.getFileAttributeView(path, AclFileAttributeView.class);
      *     if (view != null) {
-     *         List&lt;AclEntry&gt acl = view.getAcl();
+     *         List&lt;AclEntry&gt; acl = view.getAcl();
      *         :
      *     }
      * </pre>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -38,6 +38,7 @@
 #include "net_util_md.h"
 #include "nio_util.h"
 #include "nio.h"
+#include "sun_nio_ch_PollArrayWrapper.h"
 
 #ifdef _ALLBSD_SOURCE
 
@@ -626,6 +627,26 @@ Java_sun_nio_ch_Net_shutdown(JNIEnv *env, jclass cl, jobject fdo, jint jhow)
     if ((shutdown(fdval(env, fdo), how) < 0) && (errno != ENOTCONN))
         handleSocketError(env, errno);
 }
+
+JNIEXPORT jint JNICALL
+Java_sun_nio_ch_Net_poll(JNIEnv* env, jclass this, jobject fdo, jint events, jlong timeout)
+{
+    struct pollfd pfd;
+    int rv;
+    pfd.fd = fdval(env, fdo);
+    pfd.events = events;
+    rv = poll(&pfd, 1, timeout);
+
+    if (rv >= 0) {
+        return pfd.revents;
+    } else if (errno == EINTR) {
+        return IOS_INTERRUPTED;
+    } else if (rv < 0) {
+        handleSocketError(env, errno);
+        return IOS_THROWN;
+    }
+}
+
 
 /* Declared in nio_util.h */
 

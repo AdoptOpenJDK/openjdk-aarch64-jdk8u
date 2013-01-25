@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2007, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -119,9 +119,9 @@ fi
 # run
 if [ "$3" = "true" ]
 then
-  RUNCMD="${TESTJAVA}${FS}bin${FS}java -Djava.ext.dirs=${EXTDIRS} $2 "
+  RUNCMD="${TESTJAVA}${FS}bin${FS}java ${TESTVMOPTS} -Djava.ext.dirs=${EXTDIRS} $2 "
 else
-  RUNCMD="${TESTJAVA}${FS}bin${FS}java -classpath ${CLASSPATHARG} $2 "
+  RUNCMD="${TESTJAVA}${FS}bin${FS}java ${TESTVMOPTS} -classpath ${CLASSPATHARG} $2 "
 fi
 
 echo ${RUNCMD}

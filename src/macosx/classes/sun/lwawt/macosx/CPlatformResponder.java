@@ -160,6 +160,9 @@ final class CPlatformResponder {
 
             if(isDeadChar){
                 testChar = (char) out[2];
+                if(testChar == 0){
+                    return;
+                }
             }
 
             jkeyCode = out[0];
@@ -215,7 +218,7 @@ final class CPlatformResponder {
         }
     }
 
-    void handleWindowFocusEvent(boolean gained) {
-        peer.notifyActivation(gained);
+    void handleWindowFocusEvent(boolean gained, LWWindowPeer opposite) {
+        peer.notifyActivation(gained, opposite);
     }
 }

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2004, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -77,7 +77,7 @@ cd ${TESTCLASSES}
 ${TESTJAVA}${FS}bin${FS}jar -cvf Ext_AllPolicy.jar Ext_AllPolicy.class
 
 rm Ext_AllPolicy.class
-${TESTJAVA}${FS}bin${FS}java \
+${TESTJAVA}${FS}bin${FS}java ${TESTVMOPTS} \
         -Djava.security.manager -Djava.ext.dirs="${TESTCLASSES}" Ext_AllPolicy
 
 exit $?

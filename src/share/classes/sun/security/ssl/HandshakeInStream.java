@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2009, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,6 @@ package sun.security.ssl;
 
 import java.io.InputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
 
 import javax.net.ssl.SSLException;
 
@@ -74,6 +73,7 @@ public class HandshakeInStream extends InputStream {
      * Note that this returns the bytes remaining in the buffer, not
      * the bytes remaining in the current handshake message.
      */
+    @Override
     public int available() {
         return r.available();
     }
@@ -81,6 +81,7 @@ public class HandshakeInStream extends InputStream {
     /*
      * Get a byte of handshake data.
      */
+    @Override
     public int read() throws IOException {
         int n = r.read();
         if (n == -1) {
@@ -92,6 +93,7 @@ public class HandshakeInStream extends InputStream {
     /*
      * Get a bunch of bytes of handshake data.
      */
+    @Override
     public int read(byte b [], int off, int len) throws IOException {
         // we read from a ByteArrayInputStream, it always returns the
         // data in a single read if enough is available
@@ -105,6 +107,7 @@ public class HandshakeInStream extends InputStream {
     /*
      * Skip some handshake data.
      */
+    @Override
     public long skip(long n) throws IOException {
         return r.skip(n);
     }
@@ -117,14 +120,17 @@ public class HandshakeInStream extends InputStream {
      * read, data that has already been consumed is lost even if marked).
      */
 
+    @Override
     public void mark(int readlimit) {
         r.mark(readlimit);
     }
 
-    public void reset() {
+    @Override
+    public void reset() throws IOException {
         r.reset();
     }
 
+    @Override
     public boolean markSupported() {
         return true;
     }
@@ -190,6 +196,7 @@ public class HandshakeInStream extends InputStream {
 
     byte[] getBytes8() throws IOException {
         int len = getInt8();
+        verifyLength(len);
         byte b[] = new byte[len];
 
         read(b, 0, len);
@@ -198,6 +205,7 @@ public class HandshakeInStream extends InputStream {
 
     public byte[] getBytes16() throws IOException {
         int len = getInt16();
+        verifyLength(len);
         byte b[] = new byte[len];
 
         read(b, 0, len);
@@ -206,10 +214,19 @@ public class HandshakeInStream extends InputStream {
 
     byte[] getBytes24() throws IOException {
         int len = getInt24();
+        verifyLength(len);
         byte b[] = new byte[len];
 
         read(b, 0, len);
         return b;
+    }
+
+    // Is a length greater than available bytes in the record?
+    private void verifyLength(int len) throws SSLException {
+        if (len > available()) {
+            throw new SSLException(
+                        "Not enough data to fill declared vector size");
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -310,7 +310,7 @@ public final class FileTime
         private final long days;
 
         /**
-         * The excess (in nanoseconds); can be negative if days <= 0.
+         * The excess (in nanoseconds); can be negative if days &lt;= 0.
          */
         private final long excessNanos;
 

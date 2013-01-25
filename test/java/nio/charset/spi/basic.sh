@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2010, 2012, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -116,7 +116,7 @@ for where in ext app; do
 		     av="$av -Djava.security.manager
 		         -Djava.security.policy==$TESTSRC/charsetProvider.sp";;
     esac
-    if (set -x; $JAVA $av Test $css) 2>&1; then
+    if (set -x; $JAVA ${TESTVMOPTS} $av Test $css) 2>&1; then
       continue;
     else
       failures=`expr $failures + 1`
