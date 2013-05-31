@@ -374,6 +374,7 @@ TOOLS = \
 	com/sun/tools/javadoc   \
 	com/sun/tools/javah     \
 	com/sun/tools/javap     \
+	com/sun/tools/doclint	\
 	com/sun/tools/corba     \
 	com/sun/tools/internal/xjc       \
 	com/sun/tools/internal/ws       \
