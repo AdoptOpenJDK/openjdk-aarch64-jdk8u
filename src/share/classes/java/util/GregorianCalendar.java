@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,7 +40,12 @@ package java.util;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import sun.util.locale.provider.CalendarDataUtility;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.chrono.IsoChronology;
+import java.time.temporal.ChronoField;
+import java.time.temporal.Queries;
 import sun.util.calendar.BaseCalendar;
 import sun.util.calendar.CalendarDate;
 import sun.util.calendar.CalendarSystem;
@@ -582,7 +587,8 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Constructs a default <code>GregorianCalendar</code> using the current time
-     * in the default time zone with the default locale.
+     * in the default time zone with the default
+     * {@link Locale.Category#FORMAT FORMAT} locale.
      */
     public GregorianCalendar() {
         this(TimeZone.getDefaultRef(), Locale.getDefault(Locale.Category.FORMAT));
@@ -591,7 +597,8 @@ public class GregorianCalendar extends Calendar {
 
     /**
      * Constructs a <code>GregorianCalendar</code> based on the current time
-     * in the given time zone with the default locale.
+     * in the given time zone with the default
+     * {@link Locale.Category#FORMAT FORMAT} locale.
      *
      * @param zone the given time zone.
      */
@@ -720,6 +727,18 @@ public class GregorianCalendar extends Calendar {
         // should be changed to set() when this constructor is made
         // public.
         this.internalSet(MILLISECOND, millis);
+    }
+
+    /**
+     * Constructs an empty GregorianCalendar.
+     *
+     * @param zone    the given time zone
+     * @param aLocale the given locale
+     * @param flag    the flag requesting an empty instance
+     */
+    GregorianCalendar(TimeZone zone, Locale locale, boolean flag) {
+        super(zone, locale);
+        gdate = (BaseCalendar.Date) gcal.newCalendarDate(getZone());
     }
 
 /////////////////
@@ -3188,5 +3207,62 @@ public class GregorianCalendar extends Calendar {
             cachedFixedDate = Long.MIN_VALUE;
         }
         setGregorianChange(gregorianCutover);
+    }
+
+    /**
+     * Converts this object to a {@code ZonedDateTime} that represents
+     * the same point on the time-line as this {@code GregorianCalendar}.
+     * <p>
+     * Since this object supports a Julian-Gregorian cutover date and
+     * {@code ZonedDateTime} does not, it is possible that the resulting year,
+     * month and day will have different values.  The result will represent the
+     * correct date in the ISO calendar system, which will also be the same value
+     * for Modified Julian Days.
+     *
+     * @return a zoned date-time representing the same point on the time-line
+     *  as this gregorian calendar
+     * @since 1.8
+     */
+    public ZonedDateTime toZonedDateTime() {
+        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(getTimeInMillis()),
+                                       getTimeZone().toZoneId());
+    }
+
+    /**
+     * Obtains an instance of {@code GregorianCalendar} with the default locale
+     * from a {@code ZonedDateTime} object.
+     * <p>
+     * Since {@code ZonedDateTime} does not support a Julian-Gregorian cutover
+     * date and uses ISO calendar system, the return GregorianCalendar is a pure
+     * Gregorian calendar and uses ISO 8601 standard for week definitions,
+     * which has {@code MONDAY} as the {@link Calendar#getFirstDayOfWeek()
+     * FirstDayOfWeek} and {@code 4} as the value of the
+     * {@link Calendar#getMinimalDaysInFirstWeek() MinimalDaysInFirstWeek}.
+     * <p>
+     * {@code ZoneDateTime} can store points on the time-line further in the
+     * future and further in the past than {@code GregorianCalendar}. In this
+     * scenario, this method will throw an {@code IllegalArgumentException}
+     * exception.
+     *
+     * @param zdt  the zoned date-time object to convert
+     * @return  the gregorian calendar representing the same point on the
+     *  time-line as the zoned date-time provided
+     * @exception NullPointerException if {@code zdt} is null
+     * @exception IllegalArgumentException if the zoned date-time is too
+     * large to represent as a {@code GregorianCalendar}
+     * @since 1.8
+     */
+    public static GregorianCalendar from(ZonedDateTime zdt) {
+        GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone(zdt.getZone()));
+        cal.setGregorianChange(new Date(Long.MIN_VALUE));
+        cal.setFirstDayOfWeek(MONDAY);
+        cal.setMinimalDaysInFirstWeek(4);
+        try {
+            cal.setTimeInMillis(Math.addExact(Math.multiplyExact(zdt.toEpochSecond(), 1000),
+                                              zdt.get(ChronoField.MILLI_OF_SECOND)));
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+        return cal;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1994, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -289,7 +289,7 @@ public final class Double extends Number implements Comparable<Double> {
             return Double.toString(d);
         else {
             // Initialized to maximum size of output.
-            StringBuffer answer = new StringBuffer(24);
+            StringBuilder answer = new StringBuilder(24);
 
             if (Math.copySign(1.0, d) == -1.0)    // value is negative,
                 answer.append("-");                  // so append sign info
@@ -300,8 +300,7 @@ public final class Double extends Number implements Comparable<Double> {
 
             if(d == 0.0) {
                 answer.append("0.0p0");
-            }
-            else {
+            } else {
                 boolean subnormal = (d < DoubleConsts.MIN_NORMAL);
 
                 // Isolate significand bits and OR in a high-order bit
@@ -324,13 +323,14 @@ public final class Double extends Number implements Comparable<Double> {
                               "0":
                               signif.replaceFirst("0{1,12}$", ""));
 
+                answer.append('p');
                 // If the value is subnormal, use the E_min exponent
                 // value for double; otherwise, extract and report d's
                 // exponent (the representation of a subnormal uses
                 // E_min -1).
-                answer.append("p" + (subnormal ?
-                               DoubleConsts.MIN_EXPONENT:
-                               Math.getExponent(d) ));
+                answer.append(subnormal ?
+                              DoubleConsts.MIN_EXPONENT:
+                              Math.getExponent(d));
             }
             return answer.toString();
         }
@@ -1019,6 +1019,48 @@ public final class Double extends Number implements Comparable<Double> {
         return (thisBits == anotherBits ?  0 : // Values are equal
                 (thisBits < anotherBits ? -1 : // (-0.0, 0.0) or (!NaN, NaN)
                  1));                          // (0.0, -0.0) or (NaN, !NaN)
+    }
+
+    /**
+     * Adds two {@code double} values together as per the + operator.
+     *
+     * @param a the first operand
+     * @param b the second operand
+     * @return the sum of {@code a} and {@code b}
+     * @jls 4.2.4 Floating-Point Operations
+     * @see java.util.function.BinaryOperator
+     * @since 1.8
+     */
+    public static double sum(double a, double b) {
+        return a + b;
+    }
+
+    /**
+     * Returns the greater of two {@code double} values
+     * as if by calling {@link Math#max(double, double) Math.max}.
+     *
+     * @param a the first operand
+     * @param b the second operand
+     * @return the greater of {@code a} and {@code b}
+     * @see java.util.function.BinaryOperator
+     * @since 1.8
+     */
+    public static double max(double a, double b) {
+        return Math.max(a, b);
+    }
+
+    /**
+     * Returns the smaller of two {@code double} values
+     * as if by calling {@link Math#min(double, double) Math.min}.
+     *
+     * @param a the first operand
+     * @param b the second operand
+     * @return the smaller of {@code a} and {@code b}.
+     * @see java.util.function.BinaryOperator
+     * @since 1.8
+     */
+    public static double min(double a, double b) {
+        return Math.min(a, b);
     }
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */

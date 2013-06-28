@@ -57,7 +57,7 @@ package java.lang;
  * <p>
  * In general, if sb refers to an instance of a {@code StringBuffer},
  * then {@code sb.append(x)} has the same effect as
- * {@code sb.insert(sb.length(),&nbsp;x)}.
+ * {@code sb.insert(sb.length(), x)}.
  * <p>
  * Whenever an operation occurs involving a source sequence (such as
  * appending or inserting from a source sequence), this class synchronizes
@@ -77,10 +77,14 @@ package java.lang;
  * the capacity, it is not necessary to allocate a new internal
  * buffer array. If the internal buffer overflows, it is
  * automatically made larger.
- *
+ * <p>
+ * Unless otherwise noted, passing a {@code null} argument to a constructor
+ * or method in this class will cause a {@link NullPointerException} to be
+ * thrown.
+ * <p>
  * As of  release JDK 5, this class has been supplemented with an equivalent
  * class designed for use by a single thread, {@link StringBuilder}.  The
- * <tt>StringBuilder</tt> class should generally be used in preference to
+ * {@code StringBuilder} class should generally be used in preference to
  * this one, as it supports all of the same operations but it is faster, as
  * it performs no synchronization.
  *
@@ -123,7 +127,6 @@ package java.lang;
      * {@code 16} plus the length of the string argument.
      *
      * @param   str   the initial contents of the buffer.
-     * @exception NullPointerException if {@code str} is {@code null}
      */
     public StringBuffer(String str) {
         super(str.length() + 16);
@@ -141,7 +144,6 @@ package java.lang;
      * {@code 16} is returned.
      *
      * @param      seq   the sequence to copy.
-     * @exception NullPointerException if {@code seq} is {@code null}
      * @since 1.5
      */
     public StringBuffer(CharSequence seq) {
@@ -228,7 +230,6 @@ package java.lang;
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     @Override
@@ -262,17 +263,17 @@ package java.lang;
     }
 
     /**
-     * Appends the specified <tt>StringBuffer</tt> to this sequence.
+     * Appends the specified {@code StringBuffer} to this sequence.
      * <p>
-     * The characters of the <tt>StringBuffer</tt> argument are appended,
-     * in order, to the contents of this <tt>StringBuffer</tt>, increasing the
-     * length of this <tt>StringBuffer</tt> by the length of the argument.
-     * If <tt>sb</tt> is <tt>null</tt>, then the four characters
-     * <tt>"null"</tt> are appended to this <tt>StringBuffer</tt>.
+     * The characters of the {@code StringBuffer} argument are appended,
+     * in order, to the contents of this {@code StringBuffer}, increasing the
+     * length of this {@code StringBuffer} by the length of the argument.
+     * If {@code sb} is {@code null}, then the four characters
+     * {@code "null"} are appended to this {@code StringBuffer}.
      * <p>
      * Let <i>n</i> be the length of the old character sequence, the one
-     * contained in the <tt>StringBuffer</tt> just prior to execution of the
-     * <tt>append</tt> method. Then the character at index <i>k</i> in
+     * contained in the {@code StringBuffer} just prior to execution of the
+     * {@code append} method. Then the character at index <i>k</i> in
      * the new character sequence is equal to the character at index <i>k</i>
      * in the old character sequence, if <i>k</i> is less than <i>n</i>;
      * otherwise, it is equal to the character at index <i>k-n</i> in the
@@ -281,7 +282,7 @@ package java.lang;
      * This method synchronizes on {@code this}, the destination
      * object, but does not synchronize on the source ({@code sb}).
      *
-     * @param   sb   the <tt>StringBuffer</tt> to append.
+     * @param   sb   the {@code StringBuffer} to append.
      * @return  a reference to this object.
      * @since 1.4
      */
@@ -584,7 +585,6 @@ package java.lang;
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
      * @since      1.4
      */
     @Override
@@ -594,7 +594,6 @@ package java.lang;
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
      * @since      1.4
      */
     @Override
@@ -603,7 +602,6 @@ package java.lang;
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
      * @since      1.4
      */
     @Override
@@ -613,7 +611,6 @@ package java.lang;
     }
 
     /**
-     * @throws NullPointerException {@inheritDoc}
      * @since      1.4
      */
     @Override

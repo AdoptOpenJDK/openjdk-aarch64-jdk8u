@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,6 +24,11 @@
  */
 
 package java.util;
+
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
+import java.util.function.ToDoubleFunction;
 
 /**
  * A comparison function, which imposes a <i>total ordering</i> on some
@@ -98,7 +103,7 @@ package java.util;
  * @see java.io.Serializable
  * @since 1.2
  */
-
+@FunctionalInterface
 public interface Comparator<T> {
     /**
      * Compares its two arguments for order.  Returns a negative integer,
@@ -165,4 +170,93 @@ public interface Comparator<T> {
      * @see Object#hashCode()
      */
     boolean equals(Object obj);
+
+    /**
+     * Returns a comparator that imposes the reverse ordering of this
+     * comparator.
+     *
+     * @return A comparator that imposes the reverse ordering of this
+     *         comparator.
+     * @since 1.8
+     */
+    default Comparator<T> reverseOrder() {
+        return Collections.reverseOrder(this);
+    }
+
+    /**
+     * Constructs a lexicographic order comparator with another comparator.
+     * For example, a {@code Comparator<Person> byLastName} can be composed
+     * with another {@code Comparator<Person> byFirstName}, then {@code
+     * byLastName.thenComparing(byFirstName)} creates a {@code
+     * Comparator<Person>} which sorts by last name, and for equal last names
+     * sorts by first name.
+     *
+     * @param other the other comparator used when equals on this.
+     * @throws NullPointerException if the argument is null.
+     * @since 1.8
+     */
+    default Comparator<T> thenComparing(Comparator<? super T> other) {
+        return Comparators.compose(this, other);
+    }
+
+    /**
+     * Constructs a lexicographic order comparator with a function that
+     * extracts a {@code Comparable} key.  This default implementation calls
+     * {@code thenComparing(this, Comparators.comparing(keyExtractor))}.
+     *
+     * @param <U> the {@link Comparable} type for comparison
+     * @param keyExtractor the function used to extract the {@link Comparable} sort key
+     * @throws NullPointerException if the argument is null.
+     * @see Comparators#comparing(Function)
+     * @see #thenComparing(Comparator)
+     * @since 1.8
+     */
+    default <U extends Comparable<? super U>> Comparator<T> thenComparing(Function<? super T, ? extends U> keyExtractor) {
+        return thenComparing(Comparators.comparing(keyExtractor));
+    }
+
+    /**
+     * Constructs a lexicographic order comparator with a function that
+     * extracts a {@code int} value.  This default implementation calls {@code
+     * thenComparing(this, Comparators.comparing(keyExtractor))}.
+     *
+     * @param keyExtractor the function used to extract the integer value
+     * @throws NullPointerException if the argument is null.
+     * @see Comparators#comparing(ToIntFunction)
+     * @see #thenComparing(Comparator)
+     * @since 1.8
+     */
+    default Comparator<T> thenComparing(ToIntFunction<? super T> keyExtractor) {
+        return thenComparing(Comparators.comparing(keyExtractor));
+    }
+
+    /**
+     * Constructs a lexicographic order comparator with a function that
+     * extracts a {@code long} value.  This default implementation calls
+     * {@code thenComparing(this, Comparators.comparing(keyExtractor))}.
+     *
+     * @param keyExtractor the function used to extract the long value
+     * @throws NullPointerException if the argument is null.
+     * @see Comparators#comparing(ToLongFunction)
+     * @see #thenComparing(Comparator)
+     * @since 1.8
+     */
+    default Comparator<T> thenComparing(ToLongFunction<? super T> keyExtractor) {
+        return thenComparing(Comparators.comparing(keyExtractor));
+    }
+
+    /**
+     * Constructs a lexicographic order comparator with a function that
+     * extracts a {@code double} value.  This default implementation calls
+     * {@code thenComparing(this, Comparators.comparing(keyExtractor))}.
+     *
+     * @param keyExtractor the function used to extract the double value
+     * @throws NullPointerException if the argument is null.
+     * @see Comparators#comparing(ToDoubleFunction)
+     * @see #thenComparing(Comparator)
+     * @since 1.8
+     */
+    default Comparator<T> thenComparing(ToDoubleFunction<? super T> keyExtractor) {
+        return thenComparing(Comparators.comparing(keyExtractor));
+    }
 }

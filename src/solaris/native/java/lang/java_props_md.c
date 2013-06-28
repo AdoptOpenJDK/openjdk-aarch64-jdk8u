@@ -514,6 +514,11 @@ GetJavaProperties(JNIEnv *env)
         }
     }
 
+    /* ABI property (optional) */
+#ifdef JDK_ARCH_ABI_PROP_NAME
+    sprops.sun_arch_abi = JDK_ARCH_ABI_PROP_NAME;
+#endif
+
     /* Determine the language, country, variant, and encoding from the host,
      * and store these in the user.language, user.country, user.variant and
      * file.encoding system properties. */
@@ -538,7 +543,12 @@ GetJavaProperties(JNIEnv *env)
     sprops.display_script = sprops.script;
     sprops.display_country = sprops.country;
     sprops.display_variant = sprops.variant;
+
+#ifdef MACOSX
+    sprops.sun_jnu_encoding = "UTF-8";
+#else
     sprops.sun_jnu_encoding = sprops.encoding;
+#endif
 
 #ifdef _ALLBSD_SOURCE
 #if BYTE_ORDER == _LITTLE_ENDIAN

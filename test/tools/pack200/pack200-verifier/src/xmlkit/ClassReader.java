@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,11 +53,14 @@ import com.sun.tools.classfile.LineNumberTable_attribute;
 import com.sun.tools.classfile.LocalVariableTable_attribute;
 import com.sun.tools.classfile.LocalVariableTypeTable_attribute;
 import com.sun.tools.classfile.Method;
+import com.sun.tools.classfile.MethodParameters_attribute;
 import com.sun.tools.classfile.Opcode;
 import com.sun.tools.classfile.RuntimeInvisibleAnnotations_attribute;
 import com.sun.tools.classfile.RuntimeInvisibleParameterAnnotations_attribute;
+import com.sun.tools.classfile.RuntimeInvisibleTypeAnnotations_attribute;
 import com.sun.tools.classfile.RuntimeVisibleAnnotations_attribute;
 import com.sun.tools.classfile.RuntimeVisibleParameterAnnotations_attribute;
+import com.sun.tools.classfile.RuntimeVisibleTypeAnnotations_attribute;
 import com.sun.tools.classfile.Signature_attribute;
 import com.sun.tools.classfile.SourceDebugExtension_attribute;
 import com.sun.tools.classfile.SourceFile_attribute;
@@ -1073,6 +1076,19 @@ class AttributeVisitor implements Attribute.Visitor<Element, Element> {
         return null; // already added to parent
     }
 
+    @Override
+    public Element visitMethodParameters(MethodParameters_attribute mp, Element p) {
+        String name = x.getCpString(mp.attribute_name_index);
+        for (MethodParameters_attribute.Entry e : mp.method_parameter_table) {
+            Element l = new Element(name);
+            l.setAttr("name", x.getCpString(e.name_index));
+            l.setAttr("flag", "" + e.flags);
+            l.trimToSize();
+            p.add(l);
+        }
+        return null; // already added to parent
+    }
+
     private void parseAnnotations(Annotation[] ra, Element p) {
          for (Annotation anno : ra) {
             Element ea = new Element("Member");
@@ -1199,6 +1215,21 @@ class AttributeVisitor implements Attribute.Visitor<Element, Element> {
         e.trimToSize();
         p.add(e);
         return null;
+    }
+
+    /*
+     * TODO
+     * add these two for now to keep the compiler happy, we will implement
+     * these along with the JSR-308 changes.
+     */
+    @Override
+    public Element visitRuntimeVisibleTypeAnnotations(RuntimeVisibleTypeAnnotations_attribute rvta, Element p) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Element visitRuntimeInvisibleTypeAnnotations(RuntimeInvisibleTypeAnnotations_attribute rita, Element p) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
 

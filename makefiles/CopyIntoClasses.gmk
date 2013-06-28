@@ -59,15 +59,6 @@ COPY_FILES += \
 COPY_FILES += \
   $(JDK_TOPDIR)/src/share/classes/sun/jvmstat/perfdata/resources/aliasmap
 
-# Servicetag resources
-SERVICETAG_RESOURCES_DIR = $(JDK_TOPDIR)/src/share/classes/com/sun/servicetag/resources
-COPY_FILES += \
-  $(SERVICETAG_RESOURCES_DIR)/product_registration.xsd \
-  $(SERVICETAG_RESOURCES_DIR)/register.html \
-  $(SERVICETAG_RESOURCES_DIR)/register_ja.html \
-  $(SERVICETAG_RESOURCES_DIR)/register_zh_CN.html \
-  $(wildcard  $(SERVICETAG_RESOURCES_DIR)/javase_*.properties)
-
 # JConsole resources
 JCONSOLE_RESOURCES_DIR = $(JDK_TOPDIR)/src/share/classes/sun/tools/jconsole/resources
 COPY_FILES += \
@@ -169,7 +160,7 @@ COPY_FILES += \
 # are uncommented and the configuration file is stored in the output META-INF directory.
 
 # Make sure the output directory is created.
-$(shell $(MKDIR) -p $(JDK_OUTPUTDIR)/classes/META-INF/services)
+$(eval $(call MakeDir,$(JDK_OUTPUTDIR)/classes/META-INF/services))
 # Find all META-INF/services/* files
 ALL_META-INF_DIRS_share:=$(shell $(FIND) $(JDK_TOPDIR)/src/share/classes -type d -a -name META-INF)
 ALL_META-INF_DIRS_targetapi:=$(shell $(FIND) $(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/classes -type d -a -name META-INF)
@@ -232,9 +223,7 @@ COPY_EXTRA += $(OUT_SERVICES_FILES_PRINT)
 ###
 
 $(JDK_OUTPUTDIR)/classes/sun/nio/cs/ext/sjis0213.dat : $(JDK_OUTPUTDIR)/gensrc/sun/nio/cs/ext/sjis0213.dat
-	$(MKDIR) -p $(@D)
-	$(RM) $@
-	$(CP) $< $(@)
+	$(call install-file)
 
 COPY_EXTRA += $(JDK_OUTPUTDIR)/classes/sun/nio/cs/ext/sjis0213.dat
 

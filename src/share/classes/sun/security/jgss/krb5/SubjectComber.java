@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KeyTab;
 
 /**
@@ -84,19 +85,40 @@ class SubjectComber {
         } else {
             List<T> answer = (oneOnly ? null : new ArrayList<T>());
 
-            if (credClass == KeyTab.class) {    // Principal un-related
-                // We are looking for credentials unrelated to serverPrincipal
-                Iterator<T> iterator =
-                    subject.getPrivateCredentials(credClass).iterator();
+            if (credClass == KeyTab.class) {
+                Iterator<KeyTab> iterator =
+                    subject.getPrivateCredentials(KeyTab.class).iterator();
                 while (iterator.hasNext()) {
-                    T t = iterator.next();
+                    KeyTab t = iterator.next();
+                    if (serverPrincipal != null && t.isBound()) {
+                        KerberosPrincipal name = t.getPrincipal();
+                        if (name != null) {
+                            if (!serverPrincipal.equals(name.getName())) {
+                                continue;
+                            }
+                        } else {
+                            // legacy bound keytab. although we don't know who
+                            // the bound principal is, it must be in allPrincs
+                            boolean found = false;
+                            for (KerberosPrincipal princ:
+                                    subject.getPrincipals(KerberosPrincipal.class)) {
+                                if (princ.getName().equals(serverPrincipal)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) continue;
+                        }
+                    }
+                    // Check passed, we can add now
                     if (DEBUG) {
-                        System.out.println("Found " + credClass.getSimpleName());
+                        System.out.println("Found " + credClass.getSimpleName()
+                                + " " + t);
                     }
                     if (oneOnly) {
                         return t;
                     } else {
-                        answer.add(t);
+                        answer.add(credClass.cast(t));
                     }
                 }
             } else if (credClass == KerberosKey.class) {
@@ -114,11 +136,6 @@ class SubjectComber {
                          if (oneOnly) {
                              return t;
                          } else {
-                             if (serverPrincipal == null) {
-                                 // Record name so that keys returned will all
-                                 // belong to the same principal
-                                 serverPrincipal = name;
-                             }
                              answer.add(credClass.cast(t));
                          }
                     }

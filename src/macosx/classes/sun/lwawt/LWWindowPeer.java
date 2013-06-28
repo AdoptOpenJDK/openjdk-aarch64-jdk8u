@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -48,12 +48,13 @@ public class LWWindowPeer
         FRAME,
         DIALOG,
         EMBEDDED_FRAME,
-        VIEW_EMBEDDED_FRAME
+        VIEW_EMBEDDED_FRAME,
+        LW_FRAME
     }
 
     private static final PlatformLogger focusLog = PlatformLogger.getLogger("sun.lwawt.focus.LWWindowPeer");
 
-    private PlatformWindow platformWindow;
+    private final PlatformWindow platformWindow;
 
     // Window bounds reported by the native system (as opposed to
     // regular bounds inherited from LWComponentPeer which are
@@ -554,12 +555,14 @@ public class LWWindowPeer
 
     /**
      * Called by the {@code PlatformWindow} when this window is moved/resized by
-     * user. There's no notifyReshape() in LWComponentPeer as the only
-     * components which could be resized by user are top-level windows.
+     * user or window insets are changed. There's no notifyReshape() in
+     * LWComponentPeer as the only components which could be resized by user are
+     * top-level windows.
      */
     public final void notifyReshape(int x, int y, int w, int h) {
         final boolean moved;
         final boolean resized;
+        final boolean invalid = updateInsets(platformWindow.getInsets());
         synchronized (getStateLock()) {
             moved = (x != sysX) || (y != sysY);
             resized = (w != sysW) || (h != sysH);
@@ -570,7 +573,7 @@ public class LWWindowPeer
         }
 
         // Check if anything changed
-        if (!moved && !resized) {
+        if (!moved && !resized && !invalid) {
             return;
         }
         // First, update peer's bounds
@@ -584,10 +587,10 @@ public class LWWindowPeer
         }
 
         // Third, COMPONENT_MOVED/COMPONENT_RESIZED/PAINT events
-        if (moved) {
+        if (moved || invalid) {
             handleMove(x, y, true);
         }
-        if (resized) {
+        if (resized || invalid) {
             handleResize(w, h, true);
             repaintPeer();
         }
@@ -999,27 +1002,21 @@ public class LWWindowPeer
         }
     }
 
-    /*
-     * Request the window insets from the delegate and compares it
-     * with the current one. This method is mostly called by the
-     * delegate, e.g. when the window state is changed and insets
-     * should be recalculated.
-     *
+    /**
+     * Request the window insets from the delegate and compares it with the
+     * current one. This method is mostly called by the delegate, e.g. when the
+     * window state is changed and insets should be recalculated.
+     * <p/>
      * This method may be called on the toolkit thread.
      */
-    public boolean updateInsets(Insets newInsets) {
-        boolean changed = false;
+    public final boolean updateInsets(final Insets newInsets) {
         synchronized (getStateLock()) {
-            changed = (insets.equals(newInsets));
+            if (insets.equals(newInsets)) {
+                return false;
+            }
             insets = newInsets;
         }
-
-        if (changed) {
-            replaceSurfaceData();
-            repaintPeer();
-        }
-
-        return changed;
+        return true;
     }
 
     public static LWWindowPeer getWindowUnderCursor() {
@@ -1094,7 +1091,7 @@ public class LWWindowPeer
         return platformWindow.requestWindowFocus();
     }
 
-    private boolean focusAllowedFor() {
+    protected boolean focusAllowedFor() {
         Window window = getTarget();
         // TODO: check if modal blocked
         return window.isVisible() && window.isEnabled() && isFocusableWindow();
@@ -1117,10 +1114,15 @@ public class LWWindowPeer
         return !(window instanceof Dialog || window instanceof Frame);
     }
 
+    @Override
+    public void emulateActivation(boolean activate) {
+        changeFocusedWindow(activate, null);
+    }
+
     /*
      * Changes focused window on java level.
      */
-    private void changeFocusedWindow(boolean becomesFocused, Window opposite) {
+    protected void changeFocusedWindow(boolean becomesFocused, Window opposite) {
         if (focusLog.isLoggable(PlatformLogger.FINE)) {
             focusLog.fine((becomesFocused?"gaining":"loosing") + " focus window: " + this);
         }
@@ -1208,11 +1210,17 @@ public class LWWindowPeer
         grabbingWindow = this;
     }
 
-    void ungrab() {
+    final void ungrab(boolean doPost) {
         if (isGrabbing()) {
             grabbingWindow = null;
-            postEvent(new UngrabEvent(getTarget()));
+            if (doPost) {
+                postEvent(new UngrabEvent(getTarget()));
+            }
         }
+    }
+
+    void ungrab() {
+        ungrab(true);
     }
 
     private boolean isGrabbing() {

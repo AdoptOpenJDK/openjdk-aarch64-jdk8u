@@ -33,10 +33,13 @@ import java.text.spi.DateFormatSymbolsProvider;
 import java.text.spi.DecimalFormatSymbolsProvider;
 import java.text.spi.NumberFormatProvider;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.spi.CalendarDataProvider;
 import java.util.spi.CalendarNameProvider;
 import java.util.spi.CurrencyNameProvider;
@@ -44,7 +47,7 @@ import java.util.spi.LocaleNameProvider;
 import java.util.spi.LocaleServiceProvider;
 import java.util.spi.TimeZoneNameProvider;
 import sun.util.cldr.CLDRLocaleProviderAdapter;
-import sun.util.resources.LocaleData;
+import sun.util.spi.CalendarProvider;
 
 /**
  * The LocaleProviderAdapter abstract class.
@@ -88,10 +91,7 @@ public abstract class LocaleProviderAdapter {
      * LocaleProviderAdapter preference list. The default list is intended
      * to behave the same manner in JDK7.
      */
-    private static Type[] adapterPreference = {
-        Type.JRE,
-        Type.SPI,
-    };
+    private static final List<Type> adapterPreference;
 
     /**
      * JRE Locale Data Adapter instance
@@ -119,13 +119,20 @@ public abstract class LocaleProviderAdapter {
      */
     private static LocaleProviderAdapter fallbackLocaleProviderAdapter = null;
 
+    /**
+     * Adapter lookup cache.
+     */
+    private static ConcurrentMap<Class<? extends LocaleServiceProvider>, ConcurrentMap<Locale, LocaleProviderAdapter>>
+        adapterCache = new ConcurrentHashMap<>();
+
     static {
         String order = AccessController.doPrivileged(
                            new sun.security.action.GetPropertyAction("java.locale.providers"));
-        // Override adapterPreference with the properties one
+        List<Type> typeList = new ArrayList<>();
+
+        // Check user specified adapter preference
         if (order != null && order.length() != 0) {
             String[] types = order.split(",");
-            List<Type> typeList = new ArrayList<>();
             for (String type : types) {
                 try {
                     Type aType = Type.valueOf(type.trim().toUpperCase(Locale.ROOT));
@@ -146,18 +153,22 @@ public abstract class LocaleProviderAdapter {
                     LocaleServiceProviderPool.config(LocaleProviderAdapter.class, e.toString());
                 }
             }
-
-            if (!typeList.isEmpty()) {
-                if (!typeList.contains(Type.JRE)) {
-                    // Append FALLBACK as the last resort.
-                    fallbackLocaleProviderAdapter = new FallbackLocaleProviderAdapter();
-                    typeList.add(Type.FALLBACK);
-                }
-                adapterPreference = typeList.toArray(new Type[0]);
-            }
         }
-    }
 
+        if (!typeList.isEmpty()) {
+            if (!typeList.contains(Type.JRE)) {
+                // Append FALLBACK as the last resort.
+                fallbackLocaleProviderAdapter = new FallbackLocaleProviderAdapter();
+                typeList.add(Type.FALLBACK);
+            }
+        } else {
+            // Default preference list
+            typeList.add(Type.JRE);
+            typeList.add(Type.SPI);
+        }
+
+        adapterPreference = Collections.unmodifiableList(typeList);
+    }
 
     /**
      * Returns the singleton instance for each adapter type
@@ -195,7 +206,7 @@ public abstract class LocaleProviderAdapter {
     /**
      * Returns the preference order of LocaleProviderAdapter.Type
      */
-    public static Type[] getAdapterPreference() {
+    public static List<Type> getAdapterPreference() {
         return adapterPreference;
     }
 
@@ -210,9 +221,23 @@ public abstract class LocaleProviderAdapter {
      */
     public static LocaleProviderAdapter getAdapter(Class<? extends LocaleServiceProvider> providerClass,
                                                Locale locale) {
+        LocaleProviderAdapter adapter;
+
+        // cache lookup
+        ConcurrentMap<Locale, LocaleProviderAdapter> adapterMap = adapterCache.get(providerClass);
+        if (adapterMap != null) {
+            if ((adapter = adapterMap.get(locale)) != null) {
+                return adapter;
+            }
+        } else {
+            adapterMap = new ConcurrentHashMap<>();
+            adapterCache.putIfAbsent(providerClass, adapterMap);
+        }
+
         // Fast look-up for the given locale
-        LocaleProviderAdapter adapter = findAdapter(providerClass, locale);
+        adapter = findAdapter(providerClass, locale);
         if (adapter != null) {
+            adapterMap.putIfAbsent(locale, adapter);
             return adapter;
         }
 
@@ -226,11 +251,13 @@ public abstract class LocaleProviderAdapter {
             }
             adapter = findAdapter(providerClass, loc);
             if (adapter != null) {
+                adapterMap.putIfAbsent(locale, adapter);
                 return adapter;
             }
         }
 
         // returns the adapter for FALLBACK as the last resort
+        adapterMap.putIfAbsent(locale, fallbackLocaleProviderAdapter);
         return fallbackLocaleProviderAdapter;
     }
 
@@ -269,7 +296,10 @@ public abstract class LocaleProviderAdapter {
         }
         if (type == Type.JRE) {
             String oldname = locale.toString().replace('_', '-');
-            return langtags.contains(oldname);
+            return langtags.contains(oldname) ||
+                   "ja-JP-JP".equals(oldname) ||
+                   "th-TH-TH".equals(oldname) ||
+                   "no-NO-NY".equals(oldname);
         }
         return false;
     }
@@ -396,9 +426,15 @@ public abstract class LocaleProviderAdapter {
      */
     public abstract CalendarNameProvider getCalendarNameProvider();
 
-    public abstract LocaleResources getLocaleResources(Locale locale);
+    /**
+     * Returns a CalendarProvider for this LocaleProviderAdapter, or null if no
+     * CalendarProvider is available.
+     *
+     * @return a CalendarProvider
+     */
+    public abstract CalendarProvider getCalendarProvider();
 
-    public abstract LocaleData getLocaleData();
+    public abstract LocaleResources getLocaleResources(Locale locale);
 
     public abstract Locale[] getAvailableLocales();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1000,7 +1000,6 @@ class BandStructure {
 
         /** Write a constant pool reference. */
         public void putRef(Entry e) {
-            assert(index != null);
             addValue(encodeRefOrNull(e, index));
         }
         public void putRef(Entry e, Index index) {
@@ -1052,6 +1051,8 @@ class BandStructure {
 
 
     int encodeRef(Entry e, Index ix) {
+        if (ix == null)
+            throw new RuntimeException("null index for " + e.stringValue());
         int coding = ix.indexOf(e);
         if (verbose > 2)
             Utils.log.fine("putRef "+coding+" => "+e);
@@ -1502,6 +1503,10 @@ class BandStructure {
     CPRefBand method_Exceptions_RC = method_attr_bands.newCPRefBand("method_Exceptions_RC", CONSTANT_Class);
     CPRefBand method_Signature_RS = method_attr_bands.newCPRefBand("method_Signature_RS", CONSTANT_Signature);
     MultiBand method_metadata_bands = method_attr_bands.newMultiBand("(method_metadata_bands)", UNSIGNED5);
+    // band for predefine method parameters
+    IntBand  method_MethodParameters_NB = method_attr_bands.newIntBand("method_MethodParameters_NB", BYTE1);
+    CPRefBand method_MethodParameters_name_RUN = method_attr_bands.newCPRefBand("method_MethodParameters_name_RUN", UNSIGNED5, CONSTANT_Utf8, NULL_IS_OK);
+    IntBand   method_MethodParameters_flag_FH = method_attr_bands.newIntBand("method_MethodParameters_flag_FH");
 
     MultiBand class_attr_bands = class_bands.newMultiBand("(class_attr_bands)", UNSIGNED5);
     IntBand class_flags_hi = class_attr_bands.newIntBand("class_flags_hi");
@@ -1768,6 +1773,13 @@ class BandStructure {
                                method_Exceptions_RC
                            },
                            "Exceptions", "NH[RCH]");
+        predefineAttribute(METHOD_ATTR_MethodParameters, ATTR_CONTEXT_METHOD,
+                           new Band[]{
+                                method_MethodParameters_NB,
+                                method_MethodParameters_name_RUN,
+                                method_MethodParameters_flag_FH
+                           },
+                           "MethodParameters", "NB[RUNHFH]");
         assert(attrCodeEmpty == Package.attrCodeEmpty);
         predefineAttribute(X_ATTR_Signature, ATTR_CONTEXT_METHOD,
                            new Band[] { method_Signature_RS },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -216,6 +216,23 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
+    }
+
+    private LWLightweightFramePeer createDelegatedLwPeer(LightweightFrame target,
+                                                         PlatformComponent platformComponent,
+                                                         PlatformWindow platformWindow)
+    {
+        LWLightweightFramePeer peer = new LWLightweightFramePeer(target, platformComponent, platformWindow);
+        targetCreatedPeer(target, peer);
+        peer.initialize();
+        return peer;
+    }
+
+    @Override
+    public FramePeer createLightweightFrame(LightweightFrame target) {
+        PlatformComponent platformComponent = createLwPlatformComponent();
+        PlatformWindow platformWindow = createPlatformWindow(LWWindowPeer.PeerType.LW_FRAME);
+        return createDelegatedLwPeer(target, platformComponent, platformWindow);
     }
 
     @Override
@@ -502,6 +519,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     protected abstract PlatformComponent createPlatformComponent();
 
+    protected abstract PlatformComponent createLwPlatformComponent();
+
     protected abstract FileDialogPeer createFileDialogPeer(FileDialog target);
 
     // ---- UTILITY METHODS ---- //
@@ -539,7 +558,7 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
     @Override
     public void ungrab(Window w) {
         if (w.getPeer() != null) {
-            ((LWWindowPeer)w.getPeer()).ungrab();
+            ((LWWindowPeer)w.getPeer()).ungrab(false);
         }
     }
 }

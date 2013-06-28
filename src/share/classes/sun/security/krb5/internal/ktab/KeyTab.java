@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import sun.security.jgss.krb5.ServiceCreds;
 
 /**
  * This class represents key table. The key table functions deal with storing
@@ -268,6 +269,15 @@ public class KeyTab implements KeyTabConstants {
     }
 
     /**
+     * Returns a principal name in this keytab. Used by
+     * {@link ServiceCreds#getKKeys()}.
+     */
+    public PrincipalName getOneName() {
+        int size = entries.size();
+        return size > 0 ? entries.elementAt(size-1).service : null;
+    }
+
+    /**
      * Reads all keys for a service from the keytab file that have
      * etypes that have been configured for use. If there are multiple
      * keys with same etype, the one with the highest kvno is returned.
@@ -382,9 +392,15 @@ public class KeyTab implements KeyTabConstants {
      */
     public void addEntry(PrincipalName service, char[] psswd,
             int kvno, boolean append) throws KrbException {
+        addEntry(service, service.getSalt(), psswd, kvno, append);
+    }
+
+    // Called by KDC test
+    public void addEntry(PrincipalName service, String salt, char[] psswd,
+            int kvno, boolean append) throws KrbException {
 
         EncryptionKey[] encKeys = EncryptionKey.acquireSecretKeys(
-            psswd, service.getSalt());
+            psswd, salt);
 
         // There should be only one maximum KVNO value for all etypes, so that
         // all added keys can have the same KVNO.

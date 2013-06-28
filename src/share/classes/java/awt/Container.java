@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -161,7 +161,7 @@ public class Container extends Component {
     private boolean focusTraversalPolicyProvider;
 
     // keeps track of the threads that are printing this component
-    private transient Set printingThreads;
+    private transient Set<Thread> printingThreads;
     // True if there is at least one thread that's printing this component
     private transient boolean printing = false;
 
@@ -275,7 +275,7 @@ public class Container extends Component {
      */
     public Container() {
     }
-
+    @SuppressWarnings({"unchecked","rawtypes"})
     void initializeFocusTraversalKeys() {
         focusTraversalKeys = new Set[4];
     }
@@ -2006,7 +2006,7 @@ public class Container extends Component {
             try {
                 synchronized (getObjectLock()) {
                     if (printingThreads == null) {
-                        printingThreads = new HashSet();
+                        printingThreads = new HashSet<>();
                     }
                     printingThreads.add(t);
                     printing = true;
@@ -2148,7 +2148,7 @@ public class Container extends Component {
      * @since 1.4
      */
     public synchronized ContainerListener[] getContainerListeners() {
-        return (ContainerListener[]) (getListeners(ContainerListener.class));
+        return getListeners(ContainerListener.class);
     }
 
     /**
@@ -2599,9 +2599,9 @@ public class Container extends Component {
         if (GraphicsEnvironment.isHeadless()) {
             throw new HeadlessException();
         }
-        PointerInfo pi = (PointerInfo)java.security.AccessController.doPrivileged(
-            new java.security.PrivilegedAction() {
-                public Object run() {
+        PointerInfo pi = java.security.AccessController.doPrivileged(
+            new java.security.PrivilegedAction<PointerInfo>() {
+                public PointerInfo run() {
                     return MouseInfo.getPointerInfo();
                 }
             }
@@ -2682,7 +2682,7 @@ public class Container extends Component {
                                                                  y - comp.y,
                                                                  ignoreEnabled);
                 } else {
-                    comp = comp.locate(x - comp.x, y - comp.y);
+                    comp = comp.getComponentAt(x - comp.x, y - comp.y);
                 }
                 if (comp != null && comp.visible &&
                     (ignoreEnabled || comp.enabled))
@@ -2700,7 +2700,7 @@ public class Container extends Component {
                                                                  y - comp.y,
                                                                  ignoreEnabled);
                 } else {
-                    comp = comp.locate(x - comp.x, y - comp.y);
+                    comp = comp.getComponentAt(x - comp.x, y - comp.y);
                 }
                 if (comp != null && comp.visible &&
                     (ignoreEnabled || comp.enabled))
@@ -3824,6 +3824,12 @@ public class Container extends Component {
             return Container.this.getAccessibleAt(p);
         }
 
+        /**
+         * Number of PropertyChangeListener objects registered. It's used
+         * to add/remove ContainerListener to track target Container's state.
+         */
+        private volatile transient int propertyListenersCount = 0;
+
         protected ContainerListener accessibleContainerHandler = null;
 
         /**
@@ -3859,9 +3865,25 @@ public class Container extends Component {
         public void addPropertyChangeListener(PropertyChangeListener listener) {
             if (accessibleContainerHandler == null) {
                 accessibleContainerHandler = new AccessibleContainerHandler();
+            }
+            if (propertyListenersCount++ == 0) {
                 Container.this.addContainerListener(accessibleContainerHandler);
             }
             super.addPropertyChangeListener(listener);
+        }
+
+        /**
+         * Remove a PropertyChangeListener from the listener list.
+         * This removes a PropertyChangeListener that was registered
+         * for all properties.
+         *
+         * @param listener the PropertyChangeListener to be removed
+         */
+        public void removePropertyChangeListener(PropertyChangeListener listener) {
+            if (--propertyListenersCount == 0) {
+                Container.this.removeContainerListener(accessibleContainerHandler);
+            }
+            super.removePropertyChangeListener(listener);
         }
 
     } // inner class AccessibleAWTContainer
@@ -4637,7 +4659,7 @@ class LightweightDispatcher implements java.io.Serializable, AWTEventListener {
     private void startListeningForOtherDrags() {
         //System.out.println("Adding AWTEventListener");
         java.security.AccessController.doPrivileged(
-            new java.security.PrivilegedAction() {
+            new java.security.PrivilegedAction<Object>() {
                 public Object run() {
                     nativeContainer.getToolkit().addAWTEventListener(
                         LightweightDispatcher.this,
@@ -4652,7 +4674,7 @@ class LightweightDispatcher implements java.io.Serializable, AWTEventListener {
     private void stopListeningForOtherDrags() {
         //System.out.println("Removing AWTEventListener");
         java.security.AccessController.doPrivileged(
-            new java.security.PrivilegedAction() {
+            new java.security.PrivilegedAction<Object>() {
                 public Object run() {
                     nativeContainer.getToolkit().removeAWTEventListener(LightweightDispatcher.this);
                     return null;

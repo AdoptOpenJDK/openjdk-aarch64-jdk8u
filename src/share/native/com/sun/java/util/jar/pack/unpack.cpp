@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -281,11 +281,13 @@ int entry::typeSize() {
 }
 
 inline cpindex* cpool::getFieldIndex(entry* classRef) {
+  if (classRef == NULL) { abort("missing class reference"); return NULL; }
   assert(classRef->tagMatches(CONSTANT_Class));
   assert((uint)classRef->inord < (uint)tag_count[CONSTANT_Class]);
   return &member_indexes[classRef->inord*2+0];
 }
 inline cpindex* cpool::getMethodIndex(entry* classRef) {
+  if (classRef == NULL) { abort("missing class reference"); return NULL; }
   assert(classRef->tagMatches(CONSTANT_Class));
   assert((uint)classRef->inord < (uint)tag_count[CONSTANT_Class]);
   return &member_indexes[classRef->inord*2+1];
@@ -648,13 +650,14 @@ void unpacker::read_file_header() {
   majver = hdr.getInt();
   hdrVals += 2;
 
-  int majmin[3][2] = {
+  int majmin[4][2] = {
       {JAVA5_PACKAGE_MAJOR_VERSION, JAVA5_PACKAGE_MINOR_VERSION},
       {JAVA6_PACKAGE_MAJOR_VERSION, JAVA6_PACKAGE_MINOR_VERSION},
-      {JAVA7_PACKAGE_MAJOR_VERSION, JAVA7_PACKAGE_MINOR_VERSION}
+      {JAVA7_PACKAGE_MAJOR_VERSION, JAVA7_PACKAGE_MINOR_VERSION},
+      {JAVA8_PACKAGE_MAJOR_VERSION, JAVA8_PACKAGE_MINOR_VERSION}
   };
   int majminfound = false;
-  for (int i = 0 ; i < 3 ; i++) {
+  for (int i = 0 ; i < 4 ; i++) {
       if (majver == majmin[i][0] && minver == majmin[i][1]) {
           majminfound = true;
           break;
@@ -663,11 +666,12 @@ void unpacker::read_file_header() {
   if (majminfound == null) {
     char message[200];
     sprintf(message, "@" ERROR_FORMAT ": magic/ver = "
-            "%08X/%d.%d should be %08X/%d.%d OR %08X/%d.%d OR %08X/%d.%d\n",
+            "%08X/%d.%d should be %08X/%d.%d OR %08X/%d.%d OR %08X/%d.%d OR %08X/%d.%d\n",
             magic, majver, minver,
             JAVA_PACKAGE_MAGIC, JAVA5_PACKAGE_MAJOR_VERSION, JAVA5_PACKAGE_MINOR_VERSION,
             JAVA_PACKAGE_MAGIC, JAVA6_PACKAGE_MAJOR_VERSION, JAVA6_PACKAGE_MINOR_VERSION,
-            JAVA_PACKAGE_MAGIC, JAVA7_PACKAGE_MAJOR_VERSION, JAVA7_PACKAGE_MINOR_VERSION);
+            JAVA_PACKAGE_MAGIC, JAVA7_PACKAGE_MAJOR_VERSION, JAVA7_PACKAGE_MINOR_VERSION,
+            JAVA_PACKAGE_MAGIC, JAVA8_PACKAGE_MAJOR_VERSION, JAVA8_PACKAGE_MINOR_VERSION);
     abort(message);
   }
   CHECK;
@@ -1289,6 +1293,7 @@ void unpacker::read_double_refs(band& cp_band, byte ref1Tag, byte ref2Tag,
     entry& e = cpMap[i];
     e.refs = U_NEW(entry*, e.nrefs = 2);
     e.refs[0] = cp_band1.getRef();
+    CHECK;
     e.refs[1] = cp_band2.getRef();
     CHECK;
   }
@@ -1369,6 +1374,7 @@ void unpacker::read_method_type(entry* cpMap, int len) {
       entry& e = cpMap[i];
       e.refs = U_NEW(entry*, e.nrefs = 1);
       e.refs[0] = cp_MethodType.getRef();
+      CHECK;
   }
 }
 
@@ -2104,6 +2110,7 @@ void unpacker::read_attr_defs() {
     int    attrc   = ADH_BYTE_CONTEXT(header);
     int    idx     = ADH_BYTE_INDEX(header);
     entry* name    = attr_definition_name.getRef();
+    CHECK;
     entry* layout  = attr_definition_layout.getRef();
     CHECK;
     attr_defs[attrc].defineLayout(idx, name, layout->value.b.strval());
@@ -2208,7 +2215,9 @@ void unpacker::read_ics() {
     if (ics[i].name == NO_ENTRY_YET) {
       // Long form.
       ics[i].outer = ic_outer_class.getRefN();
+      CHECK;
       ics[i].name  = ic_name.getRefN();
+      CHECK;
     } else {
       // Fill in outer and name based on inner.
       bytes& n = ics[i].inner->value.b;
@@ -2481,6 +2490,13 @@ void unpacker::read_attrs(int attrc, int obj_count) {
     ad.readBandData(METHOD_ATTR_RuntimeInvisibleParameterAnnotations);
     ad.readBandData(METHOD_ATTR_AnnotationDefault);
     CHECK;
+
+    count = ad.predefCount(METHOD_ATTR_MethodParameters);
+    method_MethodParameters_NB.readData(count);
+    count = method_MethodParameters_NB.getIntTotal();
+    method_MethodParameters_name_RUN.readData(count);
+    method_MethodParameters_flag_FH.readData(count);
+    CHECK;
     break;
 
   case ATTR_CONTEXT_CODE:
@@ -2724,6 +2740,7 @@ void unpacker::putlayout(band** body) {
           e = b.getRefUsing(cp.getKQIndex());
         else
           e = b.getRefN();
+        CHECK;
         switch (b.le_len) {
         case 0: break;
         case 1: putu1ref(e); break;
@@ -2933,6 +2950,9 @@ band* unpacker::ref_band_for_op(int bc) {
   case bc_putfield:
     return &bc_fieldref;
 
+  case _invokespecial_int:
+  case _invokestatic_int:
+    return &bc_imethodref;
   case bc_invokevirtual:
   case bc_invokespecial:
   case bc_invokestatic:
@@ -3109,7 +3129,7 @@ void unpacker::read_bcs() {
 
 void unpacker::read_bands() {
   byte* rp0 = rp;
-
+  CHECK;
   read_file_header();
   CHECK;
 
@@ -3871,10 +3891,12 @@ void unpacker::dump_options() {
 // packed file and len is the length of the buffer.
 // If null, the callback is used to fill an internal buffer.
 void unpacker::start(void* packptr, size_t len) {
+  CHECK;
   NOT_PRODUCT(debug_u = this);
   if (packptr != null && len != 0) {
     inbytes.set((byte*) packptr, len);
   }
+  CHECK;
   read_bands();
 }
 
@@ -4006,6 +4028,7 @@ void unpacker::write_bc_ops() {
     NOT_PRODUCT(bc_superfield.setIndex(null));
     NOT_PRODUCT(bc_supermethod.setIndex(null));
   }
+  CHECK;
 
   for (int curIP = 0; ; curIP++) {
     int curPC = (int)(wpoffset() - codeBase);
@@ -4119,7 +4142,8 @@ void unpacker::write_bc_ops() {
         int coding = bc_initref.getInt();
         // Find the nth overloading of <init> in classRef.
         entry*   ref = null;
-        cpindex* ix = (classRef == null)? null: cp.getMethodIndex(classRef);
+        cpindex* ix = cp.getMethodIndex(classRef);
+        CHECK;
         for (int j = 0, which_init = 0; ; j++) {
           ref = (ix == null)? null: ix->get(j);
           if (ref == null)  break;  // oops, bad input
@@ -4168,6 +4192,12 @@ void unpacker::write_bc_ops() {
         }
         origBC = bc;
         switch (bc) {
+        case _invokestatic_int:
+          origBC = bc_invokestatic;
+          break;
+        case _invokespecial_int:
+          origBC = bc_invokespecial;
+          break;
         case bc_ildc:
         case bc_cldc:
         case bc_fldc:
@@ -4396,6 +4426,7 @@ int unpacker::write_attrs(int attrc, julong indexBits) {
       case ADH_BYTE(ATTR_CONTEXT_CLASS, CLASS_ATTR_EnclosingMethod):
         aname = cp.sym[cpool::s_EnclosingMethod];
         putref(class_EnclosingMethod_RC.getRefN());
+        CHECK_0;
         putref(class_EnclosingMethod_RDN.getRefN());
         break;
 
@@ -4414,6 +4445,16 @@ int unpacker::write_attrs(int attrc, julong indexBits) {
         putu2(count = method_Exceptions_N.getInt());
         for (j = 0; j < count; j++) {
           putref(method_Exceptions_RC.getRefN());
+          CHECK_0;
+        }
+        break;
+
+      case ADH_BYTE(ATTR_CONTEXT_METHOD, METHOD_ATTR_MethodParameters):
+        aname = cp.sym[cpool::s_MethodParameters];
+        putu1(count = method_MethodParameters_NB.getByte());
+        for (j = 0; j < count; j++) {
+          putref(method_MethodParameters_name_RUN.getRefN());
+          putu2(method_MethodParameters_flag_FH.getInt());
         }
         break;
 
@@ -4437,16 +4478,18 @@ int unpacker::write_attrs(int attrc, julong indexBits) {
             // (253)     [(1)(2)(2)]
             // (254)     [(1)(2)(2)(2)]
             putu2(code_StackMapTable_offset.getInt());
+            CHECK_0;
             for (int k = (tag - 251); k > 0; k--) {
               put_stackmap_type();
+              CHECK_0;
             }
           } else {
             // (255)     [(1)NH[(2)]NH[(2)]]
             putu2(code_StackMapTable_offset.getInt());
             putu2(j2 = code_StackMapTable_local_N.getInt());
-            while (j2-- > 0)  put_stackmap_type();
+            while (j2-- > 0) {put_stackmap_type(); CHECK_0;}
             putu2(j2 = code_StackMapTable_stack_N.getInt());
-            while (j2-- > 0)  put_stackmap_type();
+            while (j2-- > 0)  {put_stackmap_type(); CHECK_0;}
           }
         }
         break;
@@ -4470,7 +4513,9 @@ int unpacker::write_attrs(int attrc, julong indexBits) {
           bii    += code_LocalVariableTable_span_O.getInt();
           putu2(to_bci(bii) - bci);
           putref(code_LocalVariableTable_name_RU.getRefN());
+          CHECK_0;
           putref(code_LocalVariableTable_type_RS.getRefN());
+          CHECK_0;
           putu2(code_LocalVariableTable_slot.getInt());
         }
         break;
@@ -4485,7 +4530,9 @@ int unpacker::write_attrs(int attrc, julong indexBits) {
           bii    += code_LocalVariableTypeTable_span_O.getInt();
           putu2(to_bci(bii) - bci);
           putref(code_LocalVariableTypeTable_name_RU.getRefN());
+          CHECK_0;
           putref(code_LocalVariableTypeTable_type_RS.getRefN());
+          CHECK_0;
           putu2(code_LocalVariableTypeTable_slot.getInt());
         }
         break;
@@ -4513,7 +4560,7 @@ int unpacker::write_attrs(int attrc, julong indexBits) {
         break;
       }
     }
-
+    CHECK_0;
     if (aname == null) {
       // Unparse a compressor-defined attribute.
       layout_definition* lo = ad.getLayout(idx);
@@ -4669,7 +4716,9 @@ int  unpacker::write_ics(int naOffset, int na) {
       flags &= ~ACC_IC_LONG_FORM;  // clear high bit if set to get clean zero
       extra_ic.flags = flags;
       extra_ic.outer = class_InnerClasses_outer_RCN.getRefN();
+      CHECK_0;
       extra_ic.name  = class_InnerClasses_name_RUN.getRefN();
+      CHECK_0;
       // Detect if this is an exact copy of the global tuple.
       if (global_ic != null) {
         if (global_ic->flags != extra_ic.flags ||
@@ -4740,8 +4789,8 @@ int unpacker::write_bsms(int naOffset, int na) {
     PTRLIST_QSORT(cp.requested_bsms, outputEntry_cmp);
     // append the BootstrapMethods attribute (after the InnerClasses attr):
     putref(cp.sym[cpool::s_BootstrapMethods]);
+    // make a note of the offset, for lazy patching
     int sizeOffset = (int)wpoffset();
-    byte* sizewp = wp;
     putu4(-99);  // attr size will be patched
     putu2(cur_class_local_bsm_count);
     int written_bsms = 0;
@@ -4758,6 +4807,7 @@ int unpacker::write_bsms(int naOffset, int na) {
       written_bsms += 1;
     }
     assert(written_bsms == cur_class_local_bsm_count);  // else insane
+    byte* sizewp = wp_at(sizeOffset);
     putu4_at(sizewp, (int)(wp - (sizewp+4)));  // size of code attr
     putu2_at(wp_at(naOffset), ++na);  // increment class attr count
   }
@@ -4778,6 +4828,7 @@ void unpacker::write_classfile_tail() {
   julong indexMask = ad.flagIndexMask();
 
   cur_class = class_this.getRef();
+  CHECK;
   cur_super = class_super.getRef();
   CHECK;
 
@@ -4791,6 +4842,7 @@ void unpacker::write_classfile_tail() {
   putu2(num = class_interface_count.getInt());
   for (i = 0; i < num; i++) {
     putref(class_interface.getRef());
+    CHECK;
   }
 
   write_members(class_field_count.getInt(),  ATTR_CONTEXT_FIELD);

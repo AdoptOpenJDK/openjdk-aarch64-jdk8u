@@ -50,7 +50,6 @@ import java.text.MessageFormat;
 import java.util.spi.LocaleNameProvider;
 
 import sun.security.action.GetPropertyAction;
-import sun.util.locale.provider.LocaleServiceProviderPool;
 import sun.util.locale.BaseLocale;
 import sun.util.locale.InternalLocaleBuilder;
 import sun.util.locale.LanguageTag;
@@ -61,7 +60,9 @@ import sun.util.locale.LocaleSyntaxException;
 import sun.util.locale.LocaleUtils;
 import sun.util.locale.ParseStatus;
 import sun.util.locale.provider.LocaleProviderAdapter;
-import sun.util.resources.OpenListResourceBundle;
+import sun.util.locale.provider.LocaleResources;
+import sun.util.locale.provider.LocaleServiceProviderPool;
+import sun.util.locale.provider.ResourceBundleBasedAdapter;
 
 /**
  * A <code>Locale</code> object represents a specific geographical, political,
@@ -350,7 +351,8 @@ import sun.util.resources.OpenListResourceBundle;
  * you can use <code>getDisplayLanguage</code> to get the name of
  * the language suitable for displaying to the user. Interestingly,
  * the <code>getDisplayXXX</code> methods are themselves locale-sensitive
- * and have two versions: one that uses the default locale and one
+ * and have two versions: one that uses the default
+ * {@link Locale.Category#DISPLAY DISPLAY} locale and one
  * that uses the locale specified as an argument.
  *
  * <p>The Java Platform provides a number of classes that perform locale-sensitive
@@ -368,7 +370,8 @@ import sun.util.resources.OpenListResourceBundle;
  * </pre>
  * </blockquote>
  * Each of these methods has two variants; one with an explicit locale
- * and one without; the latter uses the default locale:
+ * and one without; the latter uses the default
+ * {@link Locale.Category#FORMAT FORMAT} locale:
  * <blockquote>
  * <pre>
  *     NumberFormat.getInstance(myLocale)
@@ -1644,11 +1647,15 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Returns a name for the locale's language that is appropriate for display to the
      * user.
-     * If possible, the name returned will be localized for the default locale.
-     * For example, if the locale is fr_FR and the default locale
+     * If possible, the name returned will be localized for the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale.
+     * For example, if the locale is fr_FR and the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale
      * is en_US, getDisplayLanguage() will return "French"; if the locale is en_US and
-     * the default locale is fr_FR, getDisplayLanguage() will return "anglais".
-     * If the name returned cannot be localized for the default locale,
+     * the default {@link Locale.Category#DISPLAY DISPLAY} locale is fr_FR,
+     * getDisplayLanguage() will return "anglais".
+     * If the name returned cannot be localized for the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale,
      * (say, we don't have a Japanese name for Croatian),
      * this function falls back on the English name, and uses the ISO code as a last-resort
      * value.  If the locale doesn't specify a language, this function returns the empty string.
@@ -1678,10 +1685,12 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Returns a name for the the locale's script that is appropriate for display to
-     * the user. If possible, the name will be localized for the default locale.  Returns
+     * the user. If possible, the name will be localized for the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale.  Returns
      * the empty string if this locale doesn't specify a script code.
      *
-     * @return the display name of the script code for the current default locale
+     * @return the display name of the script code for the current default
+     *     {@link Locale.Category#DISPLAY DISPLAY} locale
      * @since 1.7
      */
     public String getDisplayScript() {
@@ -1694,7 +1703,8 @@ public final class Locale implements Cloneable, Serializable {
      * localized for the given locale. Returns the empty string if
      * this locale doesn't specify a script code.
      *
-     * @return the display name of the script code for the current default locale
+     * @return the display name of the script code for the current default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale
      * @throws NullPointerException if <code>inLocale</code> is <code>null</code>
      * @since 1.7
      */
@@ -1705,11 +1715,15 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Returns a name for the locale's country that is appropriate for display to the
      * user.
-     * If possible, the name returned will be localized for the default locale.
-     * For example, if the locale is fr_FR and the default locale
+     * If possible, the name returned will be localized for the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale.
+     * For example, if the locale is fr_FR and the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale
      * is en_US, getDisplayCountry() will return "France"; if the locale is en_US and
-     * the default locale is fr_FR, getDisplayCountry() will return "Etats-Unis".
-     * If the name returned cannot be localized for the default locale,
+     * the default {@link Locale.Category#DISPLAY DISPLAY} locale is fr_FR,
+     * getDisplayCountry() will return "Etats-Unis".
+     * If the name returned cannot be localized for the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale,
      * (say, we don't have a Japanese name for Croatia),
      * this function falls back on the English name, and uses the ISO code as a last-resort
      * value.  If the locale doesn't specify a country, this function returns the empty string.
@@ -1761,7 +1775,8 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Returns a name for the locale's variant code that is appropriate for display to the
-     * user.  If possible, the name will be localized for the default locale.  If the locale
+     * user.  If possible, the name will be localized for the default
+     * {@link Locale.Category#DISPLAY DISPLAY} locale.  If the locale
      * doesn't specify a variant code, this function returns the empty string.
      */
     public final String getDisplayVariant() {
@@ -1779,20 +1794,15 @@ public final class Locale implements Cloneable, Serializable {
         if (baseLocale.getVariant().length() == 0)
             return "";
 
-        OpenListResourceBundle bundle = LocaleProviderAdapter.forJRE().getLocaleData().getLocaleNames(inLocale);
+        LocaleResources lr = LocaleProviderAdapter.forJRE().getLocaleResources(inLocale);
 
-        String names[] = getDisplayVariantArray(bundle, inLocale);
+        String names[] = getDisplayVariantArray(inLocale);
 
         // Get the localized patterns for formatting a list, and use
         // them to format the list.
-        String listPattern = null;
-        String listCompositionPattern = null;
-        try {
-            listPattern = bundle.getString("ListPattern");
-            listCompositionPattern = bundle.getString("ListCompositionPattern");
-        } catch (MissingResourceException e) {
-        }
-        return formatList(names, listPattern, listCompositionPattern);
+        return formatList(names,
+                          lr.getLocaleName("ListPattern"),
+                          lr.getLocaleName("ListCompositionPattern"));
     }
 
     /**
@@ -1837,23 +1847,17 @@ public final class Locale implements Cloneable, Serializable {
      * @throws NullPointerException if <code>inLocale</code> is <code>null</code>
      */
     public String getDisplayName(Locale inLocale) {
-        OpenListResourceBundle bundle = LocaleProviderAdapter.forJRE().getLocaleData().getLocaleNames(inLocale);
+        LocaleResources lr =  LocaleProviderAdapter.forJRE().getLocaleResources(inLocale);
 
         String languageName = getDisplayLanguage(inLocale);
         String scriptName = getDisplayScript(inLocale);
         String countryName = getDisplayCountry(inLocale);
-        String[] variantNames = getDisplayVariantArray(bundle, inLocale);
+        String[] variantNames = getDisplayVariantArray(inLocale);
 
         // Get the localized patterns for formatting a display name.
-        String displayNamePattern = null;
-        String listPattern = null;
-        String listCompositionPattern = null;
-        try {
-            displayNamePattern = bundle.getString("DisplayNamePattern");
-            listPattern = bundle.getString("ListPattern");
-            listCompositionPattern = bundle.getString("ListCompositionPattern");
-        } catch (MissingResourceException e) {
-        }
+        String displayNamePattern = lr.getLocaleName("DisplayNamePattern");
+        String listPattern = lr.getLocaleName("ListPattern");
+        String listCompositionPattern = lr.getLocaleName("ListCompositionPattern");
 
         // The display name consists of a main name, followed by qualifiers.
         // Typically, the format is "MainName (Qualifier, Qualifier)" but this
@@ -2005,7 +2009,7 @@ public final class Locale implements Cloneable, Serializable {
      * @param bundle the ResourceBundle to use to get the display names
      * @return an array of display names, possible of zero length.
      */
-    private String[] getDisplayVariantArray(OpenListResourceBundle bundle, Locale inLocale) {
+    private String[] getDisplayVariantArray(Locale inLocale) {
         // Split the variant name into tokens separated by '_'.
         StringTokenizer tokenizer = new StringTokenizer(baseLocale.getVariant(), "_");
         String[] names = new String[tokenizer.countTokens()];

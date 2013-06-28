@@ -50,12 +50,12 @@ import javax.management.MBeanInfo;
 import javax.management.NotCompliantMBeanException;
 
 import com.sun.jmx.remote.util.EnvHelp;
-import java.beans.BeanInfo;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import javax.management.AttributeNotFoundException;
 import javax.management.openmbean.CompositeData;
+import sun.reflect.misc.MethodUtil;
+import sun.reflect.misc.ReflectUtil;
 
 /**
  * This class contains the methods for performing all the tests needed to verify
@@ -528,8 +528,10 @@ public class Introspector {
                     // to locate method
                     readMethod = SimpleIntrospector.getReadMethod(clazz, element);
                 }
-                if (readMethod != null)
-                    return readMethod.invoke(complex);
+                if (readMethod != null) {
+                    ReflectUtil.checkPackageAccess(readMethod.getDeclaringClass());
+                    return MethodUtil.invoke(readMethod, complex, new Class[0]);
+                }
 
                 throw new AttributeNotFoundException(
                     "Could not find the getter method for the property " +

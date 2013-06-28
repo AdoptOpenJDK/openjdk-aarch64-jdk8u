@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -83,7 +83,7 @@ public class PackerImpl  extends TLGlobals implements Pack200.Packer {
      * @param out an OutputStream
      * @exception IOException if an error is encountered.
      */
-    public void pack(JarFile in, OutputStream out) throws IOException {
+    public synchronized void pack(JarFile in, OutputStream out) throws IOException {
         assert(Utils.currentInstance.get() == null);
         TimeZone tz = (props.getBoolean(Utils.PACK_DEFAULT_TIMEZONE))
                       ? null
@@ -118,7 +118,7 @@ public class PackerImpl  extends TLGlobals implements Pack200.Packer {
      * @param out an OutputStream
      * @exception IOException if an error is encountered.
      */
-    public void pack(JarInputStream in, OutputStream out) throws IOException {
+    public synchronized void pack(JarInputStream in, OutputStream out) throws IOException {
         assert(Utils.currentInstance.get() == null);
         TimeZone tz = (props.getBoolean(Utils.PACK_DEFAULT_TIMEZONE)) ? null :
             TimeZone.getDefault();
@@ -179,6 +179,15 @@ public class PackerImpl  extends TLGlobals implements Pack200.Packer {
                 throw new RuntimeException("Bad option: " + Pack200.Packer.UNKNOWN_ATTRIBUTE + " = " + uaMode);
             }
             unknownAttrCommand = uaMode.intern();
+        }
+        final String classFormatCommand;
+        {
+            String fmtMode = props.getProperty(Utils.CLASS_FORMAT_ERROR, Pack200.Packer.PASS);
+            if (!(Pack200.Packer.PASS.equals(fmtMode) ||
+                  Pack200.Packer.ERROR.equals(fmtMode))) {
+                throw new RuntimeException("Bad option: " + Utils.CLASS_FORMAT_ERROR + " = " + fmtMode);
+            }
+            classFormatCommand = fmtMode.intern();
         }
 
         final Map<Attribute.Layout, Attribute> attrDefs;
@@ -505,8 +514,7 @@ public class PackerImpl  extends TLGlobals implements Pack200.Packer {
                     }
                 } else if (ioe instanceof ClassReader.ClassFormatException) {
                     ClassReader.ClassFormatException ce = (ClassReader.ClassFormatException) ioe;
-                    // %% TODO: Do we invent a new property for this or reuse %%
-                    if (unknownAttrCommand.equals(Pack200.Packer.PASS)) {
+                    if (classFormatCommand.equals(Pack200.Packer.PASS)) {
                         Utils.log.info(ce.toString());
                         Utils.log.warning(message + " unknown class format: " +
                                 fname);

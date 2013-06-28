@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -207,6 +207,10 @@ class ConstantPool {
             return tag;
         }
 
+        public final boolean tagEquals(int tag) {
+            return getTag() == tag;
+        }
+
         public Entry getRef(int i) {
             return null;
         }
@@ -243,8 +247,32 @@ class ConstantPool {
             return tag == CONSTANT_Double || tag == CONSTANT_Long;
         }
 
-        public final boolean tagMatches(int tag) {
-            return (this.tag == tag);
+        public final boolean tagMatches(int matchTag) {
+            if (tag == matchTag)
+                return true;
+            byte[] allowedTags;
+            switch (matchTag) {
+                case CONSTANT_All:
+                    return true;
+                case CONSTANT_Signature:
+                    return tag == CONSTANT_Utf8;  // format check also?
+                case CONSTANT_LoadableValue:
+                    allowedTags = LOADABLE_VALUE_TAGS;
+                    break;
+                case CONSTANT_AnyMember:
+                    allowedTags = ANY_MEMBER_TAGS;
+                    break;
+                case CONSTANT_FieldSpecific:
+                    allowedTags = FIELD_SPECIFIC_TAGS;
+                    break;
+                default:
+                    return false;
+            }
+            for (byte b : allowedTags) {
+                if (b == tag)
+                    return true;
+            }
+            return false;
         }
 
         public String toString() {
@@ -1381,6 +1409,8 @@ class ConstantPool {
 
         /** Index of all CP entries of a given tag and class. */
         public Index getMemberIndex(byte tag, ClassEntry classRef) {
+            if (classRef == null)
+                throw new RuntimeException("missing class reference for " + tagName(tag));
             if (indexByTagAndClass == null)
                 indexByTagAndClass = new Index[CONSTANT_Limit][];
             Index allClasses =  getIndexByTag(CONSTANT_Class);

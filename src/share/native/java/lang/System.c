@@ -212,6 +212,10 @@ Java_java_lang_System_initProperties(JNIEnv *env, jclass cla, jobject props)
     PUTPROP(props, "os.version", sprops->os_version);
     PUTPROP(props, "os.arch", sprops->os_arch);
 
+#ifdef JDK_ARCH_ABI_PROP_NAME
+    PUTPROP(props, "sun.arch.abi", sprops->sun_arch_abi);
+#endif
+
     /* file system properties */
     PUTPROP(props, "file.separator", sprops->file_separator);
     PUTPROP(props, "path.separator", sprops->path_separator);
@@ -389,11 +393,19 @@ Java_java_lang_System_initProperties(JNIEnv *env, jclass cla, jobject props)
         sprops->display_variant, sprops->format_variant, putID, getPropID);
     GETPROP(props, "file.encoding", jVMVal);
     if (jVMVal == NULL) {
+#ifdef MACOSX
+        /*
+         * Since sun_jnu_encoding is now hard-coded to UTF-8 on Mac, we don't
+         * want to use it to overwrite file.encoding
+         */
+        PUTPROP(props, "file.encoding", sprops->encoding);
+#else
         if (fmtdefault) {
             PUTPROP(props, "file.encoding", sprops->encoding);
         } else {
             PUTPROP(props, "file.encoding", sprops->sun_jnu_encoding);
         }
+#endif
     } else {
         (*env)->DeleteLocalRef(env, jVMVal);
     }

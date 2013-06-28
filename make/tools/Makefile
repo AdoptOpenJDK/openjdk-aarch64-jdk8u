@@ -48,11 +48,11 @@ SUBDIRS =                   \
   hasher_classes            \
   jarreorder                \
   jarsplit                  \
-  javazic                   \
   jdwpgen                   \
   makeclasslist             \
   strip_properties          \
   spp                       \
+  tzdb                      \
   CharsetMapping
 
 ifndef DISABLE_NIMBUS

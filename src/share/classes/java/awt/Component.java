@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -7287,6 +7287,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
     }
     final Set<AWTKeyStroke> getFocusTraversalKeys_NoIDCheck(int id) {
         // Okay to return Set directly because it is an unmodifiable view
+        @SuppressWarnings("unchecked")
         Set<AWTKeyStroke> keystrokes = (focusTraversalKeys != null)
             ? focusTraversalKeys[id]
             : null;
@@ -8993,7 +8994,10 @@ public abstract class Component implements ImageObserver, MenuContainer,
      *  to the individual objects which extend Component.
      */
 
-    AccessibleContext accessibleContext = null;
+    /**
+     * The {@code AccessibleContext} associated with this {@code Component}.
+     */
+    protected AccessibleContext accessibleContext = null;
 
     /**
      * Gets the <code>AccessibleContext</code> associated
@@ -9032,6 +9036,13 @@ public abstract class Component implements ImageObserver, MenuContainer,
          */
         protected AccessibleAWTComponent() {
         }
+
+        /**
+         * Number of PropertyChangeListener objects registered. It's used
+         * to add/remove ComponentListener and FocusListener to track
+         * target Component's state.
+         */
+        private volatile transient int propertyListenersCount = 0;
 
         protected ComponentListener accessibleAWTComponentHandler = null;
         protected FocusListener accessibleAWTFocusHandler = null;
@@ -9097,10 +9108,12 @@ public abstract class Component implements ImageObserver, MenuContainer,
         public void addPropertyChangeListener(PropertyChangeListener listener) {
             if (accessibleAWTComponentHandler == null) {
                 accessibleAWTComponentHandler = new AccessibleAWTComponentHandler();
-                Component.this.addComponentListener(accessibleAWTComponentHandler);
             }
             if (accessibleAWTFocusHandler == null) {
                 accessibleAWTFocusHandler = new AccessibleAWTFocusHandler();
+            }
+            if (propertyListenersCount++ == 0) {
+                Component.this.addComponentListener(accessibleAWTComponentHandler);
                 Component.this.addFocusListener(accessibleAWTFocusHandler);
             }
             super.addPropertyChangeListener(listener);
@@ -9114,13 +9127,9 @@ public abstract class Component implements ImageObserver, MenuContainer,
          * @param listener  The PropertyChangeListener to be removed
          */
         public void removePropertyChangeListener(PropertyChangeListener listener) {
-            if (accessibleAWTComponentHandler != null) {
+            if (--propertyListenersCount == 0) {
                 Component.this.removeComponentListener(accessibleAWTComponentHandler);
-                accessibleAWTComponentHandler = null;
-            }
-            if (accessibleAWTFocusHandler != null) {
                 Component.this.removeFocusListener(accessibleAWTFocusHandler);
-                accessibleAWTFocusHandler = null;
             }
             super.removePropertyChangeListener(listener);
         }

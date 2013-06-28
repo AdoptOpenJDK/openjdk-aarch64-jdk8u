@@ -32,6 +32,9 @@ include NativeCompilation.gmk
 # Setup the java compilers for the JDK build.
 include Setup.gmk
 
+# Prepare the find cache. Only used on windows.
+$(eval $(call FillCacheFind,$(JDK_TOPDIR)/src/share/bin))
+
 # Build tools
 include Tools.gmk
 
@@ -267,6 +270,11 @@ $(eval $(call SetupLauncher,javap,\
     -DNEVER_ACT_AS_SERVER_CLASS_MACHINE \
     -DJAVA_ARGS='{ "-J-ms8m"$(COMMA) "com.sun.tools.javap.Main"$(COMMA) }'))
 
+$(eval $(call SetupLauncher,jdeps,\
+    -DEXPAND_CLASSPATH_WILDCARDS \
+    -DNEVER_ACT_AS_SERVER_CLASS_MACHINE \
+    -DJAVA_ARGS='{ "-J-ms8m"$(COMMA) "com.sun.tools.jdeps.Main"$(COMMA) }'))
+
 BUILD_LAUNCHER_jconsole_CFLAGS_windows:=-DJAVAW
 BUILD_LAUNCHER_jconsole_LDFLAGS_windows:=user32.lib
 
@@ -302,6 +310,9 @@ $(eval $(call SetupLauncher,jps,\
 
 $(eval $(call SetupLauncher,jrunscript,\
     -DJAVA_ARGS='{ "-J-ms8m"$(COMMA) "com.sun.tools.script.shell.Main"$(COMMA) }'))
+
+$(eval $(call SetupLauncher,jjs,\
+    -DJAVA_ARGS='{  "-J-ms8m"$(COMMA) "jdk.nashorn.tools.Shell"$(COMMA) }'))
 
 $(eval $(call SetupLauncher,jsadebugd,\
     -DJAVA_ARGS='{ "-J-ms8m"$(COMMA) "sun.jvm.hotspot.jdi.SADebugServer"$(COMMA) }' \
@@ -478,8 +489,7 @@ endif
 # -link -incremental:no
 # like all other launchers.
 $(JDK_OUTPUTDIR)/bin$(OUTPUT_SUBDIR)/unpack200$(EXE_SUFFIX): $(BUILD_UNPACKEXE)
-	$(MKDIR) -p $(@D)
-	$(CP) '$<' '$@'
+	$(call install-file)
 
 BUILD_LAUNCHERS += $(JDK_OUTPUTDIR)/bin$(OUTPUT_SUBDIR)/unpack200$(EXE_SUFFIX)
 
@@ -577,9 +587,36 @@ ifeq ($(OPENJDK_TARGET_OS),windows)
         $(call SET_SHARED_LIBRARY_MAPFILE,$(JDK_TOPDIR)/makefiles/java/main/java/mapfile-$(OPENJDK_TARGET_CPU))))
 else
     $(JAVA_RMI_CGI): $(JDK_TOPDIR)/src/solaris/bin/java-rmi.cgi.sh
-	$(MKDIR) -p $(@D)
-	$(CP) $< $@
+	$(call install-file)
 	$(CHMOD) a+x $@
+endif
+
+##########################################################################################
+# jabswitch
+
+ifndef OPENJDK
+ifeq ($(OPENJDK_TARGET_OS),windows)
+
+    $(eval $(call SetupNativeCompilation,BUILD_JABSWITCH,\
+		SRC:=$(JDK_TOPDIR)/src/closed/windows/native/sun/bridge,\
+		INCLUDE_FILES:=jabswitch.cpp,\
+		LANG:=C++,\
+		CFLAGS:=$(filter-out -Zc:wchar_t-,$(CFLAGS_JDKEXE)) -Zc:wchar_t \
+			-analyze- -Od -Gd -D_WINDOWS \
+			-D_UNICODE -DUNICODE -RTC1 -EHsc,\
+		LDFLAGS:=$(LDFLAGS_JDKEXE) \
+			 Advapi32.lib Version.lib User32.lib,\
+		OBJECT_DIR:=$(JDK_OUTPUTDIR)/objs/jabswitch,\
+		OUTPUT_DIR:=$(JDK_OUTPUTDIR)/bin,\
+		PROGRAM:=jabswitch,\
+		DEBUG_SYMBOLS:=true,\
+		VERSIONINFO_RESOURCE:=$(JDK_TOPDIR)/src/closed/windows/native/sun/bridge/AccessBridgeStatusWindow.rc,\
+		RC_FLAGS:=$(RC_FLAGS),\
+		MANIFEST:=$(JDK_TOPDIR)/src/closed/windows/native/sun/bridge/jabswitch.manifest))
+
+    BUILD_LAUNCHERS += $(BUILD_JABSWITCH)
+
+endif
 endif
 
 ##########################################################################################

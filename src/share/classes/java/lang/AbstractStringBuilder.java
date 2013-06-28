@@ -35,6 +35,10 @@ import java.util.Arrays;
  * particular sequence of characters, but the length and content of the
  * sequence can be changed through certain method calls.
  *
+ * <p>Unless otherwise noted, passing a {@code null} argument to a constructor
+ * or method in this class will cause a {@link NullPointerException} to be
+ * thrown.
+ *
  * @author      Michael McCloskey
  * @author      Martin Buchholz
  * @author      Ulf Zibis
@@ -334,8 +338,6 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @param      srcEnd     stop copying at this offset.
      * @param      dst        the array to copy the data into.
      * @param      dstBegin   offset into {@code dst}.
-     * @throws     NullPointerException if {@code dst} is
-     *             {@code null}.
      * @throws     IndexOutOfBoundsException  if any of the following is true:
      *             <ul>
      *             <li>{@code srcBegin} is negative
@@ -860,9 +862,9 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return     the specified subsequence.
      *
      * @throws  IndexOutOfBoundsException
-     *          if <tt>start</tt> or <tt>end</tt> are negative,
-     *          if <tt>end</tt> is greater than <tt>length()</tt>,
-     *          or if <tt>start</tt> is greater than <tt>end</tt>
+     *          if {@code start} or {@code end} are negative,
+     *          if {@code end} is greater than {@code length()},
+     *          or if {@code start} is greater than {@code end}
      * @spec JSR-51
      */
     @Override
@@ -1282,8 +1284,6 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *          object, then the index of the first character of the first
      *          such substring is returned; if it does not occur as a
      *          substring, {@code -1} is returned.
-     * @throws  java.lang.NullPointerException if {@code str} is
-     *          {@code null}.
      */
     public int indexOf(String str) {
         return indexOf(str, 0);
@@ -1292,7 +1292,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     /**
      * Returns the index within this string of the first occurrence of the
      * specified substring, starting at the specified index.  The integer
-     * returned is the smallest value <tt>k</tt> for which:
+     * returned is the smallest value {@code k} for which:
      * <blockquote><pre>
      *     k >= Math.min(fromIndex, str.length()) &&
      *                   this.toString().startsWith(str, k)
@@ -1303,8 +1303,6 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @param   fromIndex   the index from which to start the search.
      * @return  the index within this string of the first occurrence of the
      *          specified substring, starting at the specified index.
-     * @throws  java.lang.NullPointerException if {@code str} is
-     *            {@code null}.
      */
     public int indexOf(String str, int fromIndex) {
         return String.indexOf(value, 0, count, str, fromIndex);
@@ -1325,8 +1323,6 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *          within this object, then the index of the first character of
      *          the last such substring is returned. If it does not occur as
      *          a substring, {@code -1} is returned.
-     * @throws  java.lang.NullPointerException  if {@code str} is
-     *          {@code null}.
      */
     public int lastIndexOf(String str) {
         return lastIndexOf(str, count);
@@ -1346,8 +1342,6 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @param   fromIndex   the index to start the search from.
      * @return  the index within this sequence of the last occurrence of the
      *          specified substring.
-     * @throws  java.lang.NullPointerException if {@code str} is
-     *          {@code null}.
      */
     public int lastIndexOf(String str, int fromIndex) {
         return String.lastIndexOf(value, 0, count, str, fromIndex);
@@ -1418,7 +1412,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     public abstract String toString();
 
     /**
-     * Needed by <tt>String</tt> for the contentEquals method.
+     * Needed by {@code String} for the contentEquals method.
      */
     final char[] getValue() {
         return value;

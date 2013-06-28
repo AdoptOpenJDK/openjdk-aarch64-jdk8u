@@ -285,10 +285,12 @@ public class KDC {
             if (Character.isDigit(pass[pass.length-1])) {
                 kvno = pass[pass.length-1] - '0';
             }
-            ktab.addEntry(new PrincipalName(name,
-                    name.indexOf('/') < 0 ?
-                        PrincipalName.KRB_NT_UNKNOWN :
-                        PrincipalName.KRB_NT_SRV_HST),
+            PrincipalName pn = new PrincipalName(name,
+                        name.indexOf('/') < 0 ?
+                            PrincipalName.KRB_NT_UNKNOWN :
+                            PrincipalName.KRB_NT_SRV_HST);
+            ktab.addEntry(pn,
+                        getSalt(pn),
                         pass,
                         kvno,
                         true);
@@ -534,7 +536,7 @@ public class KDC {
         if (pass == null) {
             throw new KrbException(server?
                 Krb5.KDC_ERR_S_PRINCIPAL_UNKNOWN:
-                Krb5.KDC_ERR_C_PRINCIPAL_UNKNOWN);
+                Krb5.KDC_ERR_C_PRINCIPAL_UNKNOWN, pn.toString());
         }
         return pass;
     }
@@ -544,7 +546,7 @@ public class KDC {
      * @param p principal
      * @return the salt
      */
-    private String getSalt(PrincipalName p) {
+    protected String getSalt(PrincipalName p) {
         String pn = p.toString();
         if (p.getRealmString() == null) {
             pn = pn + "@" + getRealm();
@@ -921,29 +923,29 @@ public class KDC {
                         pas2 = new DerValue[] {
                             new DerValue(new ETypeInfo2(1, null, null).asn1Encode()),
                             new DerValue(new ETypeInfo2(1, "", null).asn1Encode()),
-                            new DerValue(new ETypeInfo2(1, OneKDC.REALM, new byte[]{1}).asn1Encode()),
+                            new DerValue(new ETypeInfo2(1, realm, new byte[]{1}).asn1Encode()),
                         };
                         pas = new DerValue[] {
                             new DerValue(new ETypeInfo(1, null).asn1Encode()),
                             new DerValue(new ETypeInfo(1, "").asn1Encode()),
-                            new DerValue(new ETypeInfo(1, OneKDC.REALM).asn1Encode()),
+                            new DerValue(new ETypeInfo(1, realm).asn1Encode()),
                         };
                         break;
                     case 2:     // we still reject non-null s2kparams and prefer E2 over E
                         pas2 = new DerValue[] {
-                            new DerValue(new ETypeInfo2(1, OneKDC.REALM, new byte[]{1}).asn1Encode()),
+                            new DerValue(new ETypeInfo2(1, realm, new byte[]{1}).asn1Encode()),
                             new DerValue(new ETypeInfo2(1, null, null).asn1Encode()),
                             new DerValue(new ETypeInfo2(1, "", null).asn1Encode()),
                         };
                         pas = new DerValue[] {
-                            new DerValue(new ETypeInfo(1, OneKDC.REALM).asn1Encode()),
+                            new DerValue(new ETypeInfo(1, realm).asn1Encode()),
                             new DerValue(new ETypeInfo(1, null).asn1Encode()),
                             new DerValue(new ETypeInfo(1, "").asn1Encode()),
                         };
                         break;
                     case 3:     // but only E is wrong
                         pas = new DerValue[] {
-                            new DerValue(new ETypeInfo(1, OneKDC.REALM).asn1Encode()),
+                            new DerValue(new ETypeInfo(1, realm).asn1Encode()),
                             new DerValue(new ETypeInfo(1, null).asn1Encode()),
                             new DerValue(new ETypeInfo(1, "").asn1Encode()),
                         };
