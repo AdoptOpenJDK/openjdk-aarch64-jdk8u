@@ -104,17 +104,7 @@ FILES_ties   = $(subst javax/management/remote/rmi/,javax/management/remote/rmi/
 # when available, we need to run with latest rmic version available. rmic 
 # launch tool not built at this stage but we can invoke via rmi class.
 
-# aarch64 build needs to use the bootstrap javac for now
-# until the newly built jvm is robust enough to be relied on
-ifeq ($(PLATFORM)-$(LIBARCH), linux-amd64)
-  ifeq ($(BUILD_AARCH64), true)
-    RMIC_JAVA = $(BOOT_JAVA_CMD)
-  else
-    RMIC_JAVA = $(OUTPUTDIR)/bin/java
-  endif
-else
-  RMIC_JAVA = $(OUTPUTDIR)/bin/java
-endif
+RMIC_JAVA = $(OUTPUTDIR)/bin/java
 # need to treat 64bit solaris differently
 ifeq ($(PLATFORM)-$(LIBARCH), solaris-amd64)
 RMIC_JAVA = $(OUTPUTDIR)/bin/amd64/java

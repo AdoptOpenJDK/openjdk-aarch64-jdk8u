@@ -467,7 +467,11 @@ SA_DIZ_NAME = $(LIB_PREFIX)saproc.diz
 ifeq ($(ARCH), ia64)
   INCLUDE_SA = false
 else
+ifeq ($(ARCH), aarch64)
+  INCLUDE_SA = false
+else
   INCLUDE_SA = true
+endif
 endif
 
 ifdef CROSS_COMPILE_ARCH
