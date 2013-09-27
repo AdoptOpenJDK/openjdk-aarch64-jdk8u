@@ -143,6 +143,8 @@ void JavaCT_DrawGlyphVector
     CGContextRef cgRef = qsdo->cgRef;
     CGAffineTransform ctmText = CGContextGetTextMatrix(cgRef);
 
+    BOOL saved = false;
+
     /* Save and restore of graphics context is done before the iteration.  
        This seems to work using our test case (see bug ID 7158350) so we are restoring it at
        the end of the for loop.  If we find out that save/restore outside the loop
@@ -175,9 +177,18 @@ void JavaCT_DrawGlyphVector
                 CFRelease(fallback);
 
                 if (cgFallback) {
+                    if (!saved) {
+                        CGContextSaveGState(cgRef);
+                        saved = true;
+                    }
                     CGContextSetFont(cgRef, cgFallback);
                     CFRelease(cgFallback);
                 }
+            }
+        } else {
+            if (saved) {
+                CGContextRestoreGState(cgRef);
+                saved = false;
             }
         }
 
@@ -501,10 +512,22 @@ static inline void doDrawGlyphsPipe_getGlyphVectorLengthAndAlloc
         int *uniChars = (int *)malloc(sizeof(int) * length);
         CGSize *advances = (CGSize *)malloc(sizeof(CGSize) * length);
 
-        if (glyphs == NULL || advances == NULL)
+        if (glyphs == NULL || uniChars == NULL || advances == NULL)
         {
             (*env)->DeleteLocalRef(env, glyphsArray);
             [NSException raise:NSMallocException format:@"%s-%s:%d", THIS_FILE, __FUNCTION__, __LINE__];
+            if (glyphs)
+            {
+                free(glyphs);
+            }
+            if (uniChars)
+            {
+                free(uniChars);
+            }
+            if (advances)
+            {
+                free(advances);
+            }
             return;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -203,6 +203,12 @@ class Inet6Address extends InetAddress {
      */
     private transient NetworkInterface scope_ifname;  // null
 
+    /**
+     * set if the object is constructed with a scoped
+     * interface instead of a numeric scope id.
+     */
+    private boolean scope_ifname_set; // false;
+
     private static final long serialVersionUID = 6880410070516793377L;
 
     // Perform native initialization
@@ -210,18 +216,18 @@ class Inet6Address extends InetAddress {
 
     Inet6Address() {
         super();
-        hostName = null;
+        holder().hostName = null;
         ipaddress = new byte[INADDRSZ];
-        family = IPv6;
+        holder().family = IPv6;
     }
 
     /* checking of value for scope_id should be done by caller
      * scope_id must be >= 0, or -1 to indicate not being set
      */
     Inet6Address(String hostName, byte addr[], int scope_id) {
-        this.hostName = hostName;
+        holder().hostName = hostName;
         if (addr.length == INADDRSZ) { // normal IPv6 address
-            family = IPv6;
+            holder().family = IPv6;
             ipaddress = addr.clone();
         }
         if (scope_id >= 0) {
@@ -332,18 +338,19 @@ class Inet6Address extends InetAddress {
         }
     }
 
-    private void initif(String hostName, byte addr[],NetworkInterface nif)
+    private void initif(String hostName, byte addr[], NetworkInterface nif)
         throws UnknownHostException
     {
-        this.hostName = hostName;
+        holder().hostName = hostName;
         if (addr.length == INADDRSZ) { // normal IPv6 address
-            family = IPv6;
+            holder().family = IPv6;
             ipaddress = addr.clone();
         }
         if (nif != null) {
             scope_ifname = nif;
             scope_id = deriveNumericScope(nif);
             scope_id_set = true;
+            scope_ifname_set = true;  // for consistency
         }
     }
 
@@ -420,12 +427,18 @@ class Inet6Address extends InetAddress {
      */
     private void readObject(ObjectInputStream s)
         throws IOException, ClassNotFoundException {
+
+        if (getClass().getClassLoader() != null) {
+            throw new SecurityException ("invalid address type");
+        }
+
         s.defaultReadObject();
 
         if (ifname != null && !ifname.equals("")) {
             try {
                 scope_ifname = NetworkInterface.getByName(ifname);
                 if (scope_ifname != null) {
+                    scope_ifname_set = true;
                     try {
                         scope_id = deriveNumericScope(scope_ifname);
                     } catch (UnknownHostException e) {
@@ -433,6 +446,12 @@ class Inet6Address extends InetAddress {
                         // the machine being used for deserialization has
                         // the same interface name but without IPv6 configured.
                     }
+                } else {
+                    /* the interface does not exist on this system, so we clear
+                     * the scope information completely */
+                    scope_id_set = false;
+                    scope_ifname_set = false;
+                    scope_id = 0;
                 }
             } catch (SocketException e) {}
 
@@ -447,7 +466,7 @@ class Inet6Address extends InetAddress {
                                              ipaddress.length);
         }
 
-        if (family != IPv6) {
+        if (holder().getFamily() != IPv6) {
             throw new InvalidObjectException("invalid address family type");
         }
     }
@@ -779,8 +798,10 @@ class Inet6Address extends InetAddress {
     private synchronized void writeObject(java.io.ObjectOutputStream s)
         throws IOException
     {
-        if (scope_ifname != null)
+        if (scope_ifname != null) {
             ifname = scope_ifname.getName();
+            scope_ifname_set = true;
+        }
         s.defaultWriteObject();
     }
 }

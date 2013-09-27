@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -132,6 +132,10 @@ public class WWindowPeer extends WPanelPeer implements WindowPeer,
         }
     }
 
+    public void updateAlwaysOnTopState() {
+        setAlwaysOnTop(((Window)target).isAlwaysOnTop());
+    }
+
     public void updateFocusableWindowState() {
         setFocusableWindow(((Window)target).isFocusableWindow());
     }
@@ -209,6 +213,12 @@ public class WWindowPeer extends WPanelPeer implements WindowPeer,
     void create(WComponentPeer parent) {
         preCreate(parent);
         createAwtWindow(parent);
+    }
+
+    @Override
+    final WComponentPeer getNativeParent() {
+        final Container owner = ((Window) target).getOwner();
+        return (WComponentPeer) WToolkit.targetToPeer(owner);
     }
 
     // should be overriden in WDialogPeer

@@ -66,7 +66,6 @@ jfieldID ni_nameID;         /* NetworkInterface.name */
 jfieldID ni_displayNameID;  /* NetworkInterface.displayName */
 jfieldID ni_childsID;       /* NetworkInterface.childs */
 jclass ni_iacls;            /* InetAddress */
-jfieldID ni_iaAddr;         /* InetAddress.address */
 
 jclass ni_ia4cls;           /* Inet4Address */
 jmethodID ni_ia4Ctor;       /* Inet4Address() */
@@ -124,32 +123,44 @@ MIB_IFROW *getIF(jint index) {
      */
     size = sizeof(MIB_IFTABLE);
     tableP = (MIB_IFTABLE *)malloc(size);
+    if(tableP == NULL)
+        return NULL;
+
     count = GetIfTable(tableP, &size, TRUE);
     if (count == ERROR_INSUFFICIENT_BUFFER || count == ERROR_BUFFER_OVERFLOW) {
-        tableP = (MIB_IFTABLE *)realloc(tableP, size);
+        MIB_IFTABLE* newTableP =  (MIB_IFTABLE *)realloc(tableP, size);
+        if (newTableP == NULL) {
+            free(tableP);
+            return NULL;
+        }
+        tableP = newTableP;
+
         count = GetIfTable(tableP, &size, TRUE);
     }
 
     if (count != NO_ERROR) {
-        if (tableP != NULL)
-            free(tableP);
+        free(tableP);
         return NULL;
     }
 
-    if (tableP != NULL) {
-      ifrowP = tableP->table;
-      for (i=0; i<tableP->dwNumEntries; i++) {
-        /*
-         * Warning the real index is obtained by GetFriendlyIfIndex()
-         */
+    {
+    ifrowP = tableP->table;
+    for (i=0; i<tableP->dwNumEntries; i++) {
+    /*
+     * Warning: the real index is obtained by GetFriendlyIfIndex()
+    */
         ifindex = GetFriendlyIfIndex(ifrowP->dwIndex);
         if (ifindex == index) {
           /*
            * Create a copy of the entry so that we can free the table.
            */
-          ret = (MIB_IFROW *) malloc(sizeof(MIB_IFROW));
-          memcpy(ret, ifrowP, sizeof(MIB_IFROW));
-          break;
+            ret = (MIB_IFROW *) malloc(sizeof(MIB_IFROW));
+            if (ret == NULL) {
+                free(tableP);
+                return NULL;
+            }
+            memcpy(ret, ifrowP, sizeof(MIB_IFROW));
+            break;
         }
 
         /* onto the next interface */
@@ -185,15 +196,25 @@ int enumInterfaces(JNIEnv *env, netif **netifPP)
      */
     size = sizeof(MIB_IFTABLE);
     tableP = (MIB_IFTABLE *)malloc(size);
+    if (tableP == NULL) {
+        JNU_ThrowOutOfMemoryError(env, "Native heap allocation failure");
+        return -1;
+    }
+
     ret = GetIfTable(tableP, &size, TRUE);
     if (ret == ERROR_INSUFFICIENT_BUFFER || ret == ERROR_BUFFER_OVERFLOW) {
-        tableP = (MIB_IFTABLE *)realloc(tableP, size);
+        MIB_IFTABLE * newTableP = (MIB_IFTABLE *)realloc(tableP, size);
+        if (newTableP == NULL) {
+            free(tableP);
+            JNU_ThrowOutOfMemoryError(env, "Native heap allocation failure");
+            return -1;
+        }
+        tableP = newTableP;
         ret = GetIfTable(tableP, &size, TRUE);
     }
 
     if (ret != NO_ERROR) {
-        if (tableP != NULL)
-            free(tableP);
+        free(tableP);
 
         JNU_ThrowByName(env, "java/lang/Error",
                 "IP Helper Library GetIfTable function failed");
@@ -371,10 +392,21 @@ int enumAddresses_win(JNIEnv *env, netif *netifP, netaddr **netaddrPP)
      */
     size = sizeof(MIB_IPADDRTABLE);
     tableP = (MIB_IPADDRTABLE *)malloc(size);
+    if (tableP == NULL) {
+        JNU_ThrowOutOfMemoryError(env, "Native heap allocation failure");
+        return -1;
+    }
 
     ret = GetIpAddrTable(tableP, &size, FALSE);
     if (ret == ERROR_INSUFFICIENT_BUFFER || ret == ERROR_BUFFER_OVERFLOW) {
-        tableP = (MIB_IPADDRTABLE *)realloc(tableP, size);
+        MIB_IPADDRTABLE * newTableP = (MIB_IPADDRTABLE *)realloc(tableP, size);
+        if (newTableP == NULL) {
+            free(tableP);
+            JNU_ThrowOutOfMemoryError(env, "Native heap allocation failure");
+            return -1;
+        }
+        tableP = newTableP;
+
         ret = GetIpAddrTable(tableP, &size, FALSE);
     }
     if (ret != NO_ERROR) {
@@ -480,7 +512,6 @@ Java_java_net_NetworkInterface_init(JNIEnv *env, jclass cls)
 
     ni_iacls = (*env)->FindClass(env, "java/net/InetAddress");
     ni_iacls = (*env)->NewGlobalRef(env, ni_iacls);
-    ni_iaAddr = (*env)->GetFieldID(env, ni_iacls, "address", "I");
 
     ni_ia4cls = (*env)->FindClass(env, "java/net/Inet4Address");
     ni_ia4cls = (*env)->NewGlobalRef(env, ni_ia4cls);
@@ -568,7 +599,7 @@ jobject createNetworkInterface
             }
             /* default ctor will set family to AF_INET */
 
-            (*env)->SetIntField(env, iaObj, ni_iaAddr, ntohl(addrs->addr.him4.sin_addr.s_addr));
+            setInetAddress_addr(env, iaObj, ntohl(addrs->addr.him4.sin_addr.s_addr));
             if (addrs->mask != -1) {
               ibObj = (*env)->NewObject(env, ni_ibcls, ni_ibctrID);
               if (ibObj == NULL) {
@@ -581,8 +612,7 @@ jobject createNetworkInterface
                 free_netaddr(netaddrP);
                 return NULL;
               }
-              (*env)->SetIntField(env, ia2Obj, ni_iaAddr,
-                                  ntohl(addrs->brdcast.him4.sin_addr.s_addr));
+              setInetAddress_addr(env, ia2Obj, ntohl(addrs->brdcast.him4.sin_addr.s_addr));
               (*env)->SetObjectField(env, ibObj, ni_ibbroadcastID, ia2Obj);
               (*env)->SetShortField(env, ibObj, ni_ibmaskID, addrs->mask);
               (*env)->SetObjectArrayElement(env, bindsArr, bind_index++, ibObj);
@@ -736,7 +766,7 @@ JNIEXPORT jobject JNICALL Java_java_net_NetworkInterface_getByInetAddress0
     (JNIEnv *env, jclass cls, jobject iaObj)
 {
     netif *ifList, *curr;
-    jint addr = (*env)->GetIntField(env, iaObj, ni_iaAddr);
+    jint addr = getInetAddress_addr(env, iaObj);
     jobject netifObj = NULL;
 
     // Retained for now to support IPv4 only stack, java.net.preferIPv4Stack

@@ -87,18 +87,22 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     private final T target;
 
-    // Container peer. It may not be the peer of the target's direct
-    // parent, for example, in the case of hw/lw mixing. However,
-    // let's skip this scenario for the time being. We also assume
-    // the container peer is not null, which might also be false if
-    // addNotify() is called for a component outside of the hierarchy.
-    // The exception is LWWindowPeers: their parents are always null
-    private LWContainerPeer containerPeer;
+    /**
+     * Container peer. It may not be the peer of the target's direct parent, for
+     * example, in the case of hw/lw mixing. However, let's skip this scenario
+     * for the time being. We also assume the container peer is not null, which
+     * might also be false if addNotify() is called for a component outside of
+     * the hierarchy. The exception is LWWindowPeers: their containers are
+     * always null
+     */
+    private final LWContainerPeer containerPeer;
 
-    // Handy reference to the top-level window peer. Window peer is
-    // borrowed from the containerPeer in constructor, and should also
-    // be updated when the component is reparented to another container
-    private LWWindowPeer windowPeer;
+    /**
+     * Handy reference to the top-level window peer. Window peer is borrowed
+     * from the containerPeer in constructor, and should also be updated when
+     * the component is reparented to another container
+     */
+    private final LWWindowPeer windowPeer;
 
     private final AtomicBoolean disposed = new AtomicBoolean(false);
 
@@ -183,13 +187,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         this.target = target;
         this.platformComponent = platformComponent;
 
-        initializeContainerPeer();
         // Container peer is always null for LWWindowPeers, so
         // windowPeer is always null for them as well. On the other
         // hand, LWWindowPeer shouldn't use windowPeer at all
-        if (containerPeer != null) {
-            windowPeer = containerPeer.getWindowPeerOrSelf();
-        }
+        final Container container = SunToolkit.getNativeContainer(target);
+        containerPeer = (LWContainerPeer) LWToolkit.targetToPeer(container);
+        windowPeer = containerPeer != null ? containerPeer.getWindowPeerOrSelf()
+                                           : null;
         // don't bother about z-order here as updateZOrder()
         // will be called from addNotify() later anyway
         if (containerPeer != null) {
@@ -336,7 +340,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         return peerTreeLock;
     }
 
-    final T getTarget() {
+    public final T getTarget() {
         return target;
     }
 
@@ -354,15 +358,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     // Just a helper method
     protected final LWContainerPeer getContainerPeer() {
         return containerPeer;
-    }
-
-    // Just a helper method
-    // Overridden in LWWindowPeer to skip containerPeer initialization
-    protected void initializeContainerPeer() {
-        Container parent = LWToolkit.getNativeContainer(target);
-        if (parent != null) {
-            containerPeer = (LWContainerPeer) LWToolkit.targetToPeer(parent);
-        }
     }
 
     public PlatformWindow getPlatformWindow() {
@@ -463,35 +458,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     private void applyConstrain(final Graphics g) {
         final SunGraphics2D sg2d = (SunGraphics2D) g;
-        final Rectangle constr = localToWindow(getSize());
-        // translate and set rectangle constrain.
-        sg2d.constrain(constr.x, constr.y, constr.width, constr.height);
-        // set region constrain.
-        //sg2d.constrain(getVisibleRegion());
-        SG2DConstraint(sg2d, getVisibleRegion());
-    }
-
-    //TODO Move this method to SG2D?
-    void SG2DConstraint(final SunGraphics2D sg2d, Region r) {
-        sg2d.constrainX = sg2d.transX;
-        sg2d.constrainY = sg2d.transY;
-
-        Region c = sg2d.constrainClip;
-        if ((sg2d.constrainX | sg2d.constrainY) != 0) {
-            r = r.getTranslatedRegion(sg2d.constrainX, sg2d.constrainY);
-        }
-        if (c == null) {
-            c = r;
-        } else {
-            c = c.getIntersection(r);
-            if (c == sg2d.constrainClip) {
-                // Common case to ignore
-                return;
-            }
-        }
-        sg2d.constrainClip = c;
-        //validateCompClip() forced call.
-        sg2d.setDevClip(r.getLoX(), r.getLoY(), r.getWidth(), r.getHeight());
+        final Rectangle size = localToWindow(getSize());
+        sg2d.constrain(size.x, size.y, size.width, size.height, getVisibleRegion());
     }
 
     public Region getVisibleRegion() {

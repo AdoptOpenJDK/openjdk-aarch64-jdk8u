@@ -360,7 +360,9 @@ public abstract class WComponentPeer extends WObjectPeer
     }
 
     void handleJavaFocusEvent(FocusEvent fe) {
-        if (focusLog.isLoggable(PlatformLogger.FINER)) focusLog.finer(fe.toString());
+        if (focusLog.isLoggable(PlatformLogger.FINER)) {
+            focusLog.finer(fe.toString());
+        }
         setFocus(fe.getID() == FocusEvent.FOCUS_GAINED);
     }
 
@@ -693,7 +695,9 @@ public abstract class WComponentPeer extends WObjectPeer
               }
               boolean res = wpeer.requestWindowFocus(cause);
 
-              if (focusLog.isLoggable(PlatformLogger.FINER)) focusLog.finer("Requested window focus: " + res);
+              if (focusLog.isLoggable(PlatformLogger.FINER)) {
+                  focusLog.finer("Requested window focus: " + res);
+              }
               // If parent window can be made focused and has been made focused(synchronously)
               // then we can proceed with children, otherwise we retreat.
               if (!(res && parentWindow.isFocused())) {
@@ -713,7 +717,9 @@ public abstract class WComponentPeer extends WObjectPeer
     }
 
     private boolean rejectFocusRequestHelper(String logMsg) {
-        if (focusLog.isLoggable(PlatformLogger.FINER)) focusLog.finer(logMsg);
+        if (focusLog.isLoggable(PlatformLogger.FINER)) {
+            focusLog.finer(logMsg);
+        }
         WKeyboardFocusManagerPeer.removeLastFocusRequest((Component)target);
         return false;
     }
@@ -753,9 +759,7 @@ public abstract class WComponentPeer extends WObjectPeer
     WComponentPeer(Component target) {
         this.target = target;
         this.paintArea = new RepaintArea();
-        Container parent = WToolkit.getNativeContainer(target);
-        WComponentPeer parentPeer = (WComponentPeer) WToolkit.targetToPeer(parent);
-        create(parentPeer);
+        create(getNativeParent());
         // fix for 5088782: check if window object is created successfully
         checkCreation();
 
@@ -764,6 +768,17 @@ public abstract class WComponentPeer extends WObjectPeer
         start();  // Initialize enable/disable state, turn on callbacks
     }
     abstract void create(WComponentPeer parent);
+
+    /**
+     * Gets the native parent of this peer. We use the term "parent" explicitly,
+     * because we override the method in top-level window peer implementations.
+     *
+     * @return the parent container/owner of this peer.
+     */
+    WComponentPeer getNativeParent() {
+        Container parent = SunToolkit.getNativeContainer((Component) target);
+        return (WComponentPeer) WToolkit.targetToPeer(parent);
+    }
 
     protected void checkCreation()
     {
@@ -1080,10 +1095,9 @@ public abstract class WComponentPeer extends WObjectPeer
     @SuppressWarnings("deprecation")
     public void applyShape(Region shape) {
         if (shapeLog.isLoggable(PlatformLogger.FINER)) {
-            shapeLog.finer(
-                    "*** INFO: Setting shape: PEER: " + this
-                    + "; TARGET: " + target
-                    + "; SHAPE: " + shape);
+            shapeLog.finer("*** INFO: Setting shape: PEER: " + this
+                            + "; TARGET: " + target
+                            + "; SHAPE: " + shape);
         }
 
         if (shape != null) {

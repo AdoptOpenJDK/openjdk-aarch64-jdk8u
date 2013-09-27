@@ -32,6 +32,7 @@ import java.awt.peer.WindowPeer;
 import java.beans.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Objects;
 
 import javax.swing.*;
 
@@ -860,8 +861,8 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         }
     }
 
-    private void flushBuffers() {
-        if (isVisible() && !nativeBounds.isEmpty()) {
+    void flushBuffers() {
+        if (isVisible() && !nativeBounds.isEmpty() && !isFullScreenMode) {
             try {
                 LWCToolkit.invokeAndWait(new Runnable() {
                     @Override
@@ -873,6 +874,21 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Helper method to get a pointer to the native view from the PlatformWindow.
+     */
+    static long getNativeViewPtr(PlatformWindow platformWindow) {
+        long nativePeer = 0L;
+        if (platformWindow instanceof CPlatformWindow) {
+            nativePeer = ((CPlatformWindow) platformWindow).getContentView().getAWTView();
+        } else if (platformWindow instanceof CViewPlatformEmbeddedFrame){
+            nativePeer = ((CViewPlatformEmbeddedFrame) platformWindow).getNSViewPtr();
+        } else {
+            throw new IllegalArgumentException("Unsupported platformWindow implementation");
+        }
+        return nativePeer;
     }
 
     /*************************************************************
@@ -901,9 +917,12 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
 
         final Rectangle oldB = nativeBounds;
         nativeBounds = new Rectangle(x, y, width, height);
+        final GraphicsConfiguration oldGC = peer.getGraphicsConfiguration();
         peer.notifyReshape(x, y, width, height);
+        final GraphicsConfiguration newGC = peer.getGraphicsConfiguration();
+        // System-dependent appearance optimization.
         if ((byUser && !oldB.getSize().equals(nativeBounds.getSize()))
-            || isFullScreenAnimationOn) {
+            || isFullScreenAnimationOn || !Objects.equals(newGC, oldGC)) {
             flushBuffers();
         }
     }

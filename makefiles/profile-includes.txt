@@ -36,7 +36,6 @@ PROFILE_1_JRE_LIB_FILES := \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)npt$(SHARED_LIBRARY_SUFFIX) \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)npt.diz \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)sunec$(SHARED_LIBRARY_SUFFIX) \
-    $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)unpack$(SHARED_LIBRARY_SUFFIX) \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)verify$(SHARED_LIBRARY_SUFFIX) \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)verify.diz \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)zip$(SHARED_LIBRARY_SUFFIX) \
@@ -66,6 +65,7 @@ PROFILE_1_JRE_LIB_FILES := \
     ext/sunec.jar \
     ext/sunjce_provider.jar \
     ext/sunpkcs11.jar \
+    hijrah-config-umalqura.properties \
     jce.jar \
     jsse.jar \
     logging.properties \
@@ -80,7 +80,7 @@ PROFILE_1_JRE_LIB_FILES := \
     security/java.security \
     security/local_policy.jar \
     security/trusted.libraries \
-    tzdb.jar
+    tzdb.dat
 
 PROFILE_1_JRE_OTHER_FILES := \
     COPYRIGHT \
@@ -100,9 +100,7 @@ PROFILE_1_JRE_JAR_FILES := \
     resources.jar \
     rt.jar \
     security/US_export_policy.jar \
-    security/local_policy.jar \
-    tzdb.jar
-
+    security/local_policy.jar
 
 PROFILE_2_JRE_BIN_FILES := \
     rmid$(EXE_SUFFIX) \
@@ -173,6 +171,7 @@ FULL_JRE_LIB_FILES := \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)mlib_image$(SHARED_LIBRARY_SUFFIX) \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)splashscreen$(SHARED_LIBRARY_SUFFIX) \
     $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)t2k$(SHARED_LIBRARY_SUFFIX) \
+    $(OPENJDK_TARGET_CPU_LEGACY_LIB)/$(LIBRARY_PREFIX)unpack$(SHARED_LIBRARY_SUFFIX) \
     alt-rt.jar \
     charsets.jar \
     cmm/CIEXYZ.pf \

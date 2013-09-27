@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -2234,7 +2234,7 @@ public class Window extends Container implements Accessible {
                 WindowPeer peer = (WindowPeer)this.peer;
                 synchronized(getTreeLock()) {
                     if (peer != null) {
-                        peer.setAlwaysOnTop(alwaysOnTop);
+                        peer.updateAlwaysOnTopState();
                     }
                 }
             }
@@ -3914,7 +3914,7 @@ public class Window extends Container implements Accessible {
 
     // ************************** MIXING CODE *******************************
 
-    // A window has a parent, but it does NOT have a container
+    // A window has an owner, but it does NOT have a container
     @Override
     final Container getContainer() {
         return null;

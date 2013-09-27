@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,6 +24,10 @@
  */
 
 package java.util;
+
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * The root interface in the <i>collection hierarchy</i>.  A collection
@@ -103,6 +107,12 @@ package java.util;
  * <p>This interface is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
+ *
+ * @implSpec
+ * The default method implementations (inherited or otherwise) do not apply any
+ * synchronization protocol.  If a {@code Collection} implementation has a
+ * specific synchronization protocol, then it must override default
+ * implementations to apply that protocol.
  *
  * @param <E> the type of elements in this collection
  *
@@ -367,6 +377,40 @@ public interface Collection<E> extends Iterable<E> {
     boolean removeAll(Collection<?> c);
 
     /**
+     * Removes all of the elements of this collection that satisfy the given
+     * predicate.  Errors or runtime exceptions thrown by the predicate are
+     * relayed to the caller.
+     *
+     * @implSpec
+     * The default implementation traverses all elements of the collection using
+     * its {@link #iterator}.  Each matching element is removed using
+     * {@link Iterator#remove()}.  If the collection's iterator does not
+     * support removal then an {@code UnsupportedOperationException} will be
+     * thrown on the first matching element.
+     *
+     * @param filter a predicate which returns {@code true} for elements to be
+     *        removed
+     * @return {@code true} if any elements were removed
+     * @throws NullPointerException if the specified filter is null
+     * @throws UnsupportedOperationException if the {@code remove}
+     *         method is not supported by this collection's
+     *         {@link #iterator}
+     * @since 1.8
+     */
+    default boolean removeIf(Predicate<? super E> filter) {
+        Objects.requireNonNull(filter);
+        boolean removed = false;
+        final Iterator<E> each = iterator();
+        while (each.hasNext()) {
+            if (filter.test(each.next())) {
+                each.remove();
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    /**
      * Retains only the elements in this collection that are contained in the
      * specified collection (optional operation).  In other words, removes from
      * this collection all of its elements that are not contained in the
@@ -453,4 +497,87 @@ public interface Collection<E> extends Iterable<E> {
      * @see Object#equals(Object)
      */
     int hashCode();
+
+    /**
+     * Creates a {@link Spliterator} over the elements in this collection.
+     *
+     * <p>The returned {@code Spliterator} must report the characteristic
+     * {@link Spliterator#SIZED}; implementations should document any additional
+     * characteristic values reported by the returned Spliterator.
+     *
+     * <p>The default implementation should be overridden by subclasses that
+     * can return a more efficient spliterator.  In order to
+     * preserve expected laziness behavior for the {@link #stream()} and
+     * {@link #parallelStream()}} methods, spliterators should either have the
+     * characteristic of {@code IMMUTABLE} or {@code CONCURRENT}, or be
+     * <em><a href="Spliterator.html#binding">late-binding</a></em>.
+     * If none of these is practical, the overriding class should describe the
+     * spliterator's documented policy of binding and structural interference,
+     * and should override the {@link #stream()} and {@link #parallelStream()}
+     * methods to create streams using a {@code Supplier} of the spliterator,
+     * as in:
+     * <pre>{@code
+     *     Stream<E> s = StreamSupport.stream(() -> spliterator(), spliteratorCharacteristics)
+     * }</pre>
+     * <p>These requirements ensure that streams produced by the
+     * {@link #stream()} and {@link #parallelStream()} methods will reflect the
+     * contents of the collection as of initiation of the terminal stream
+     * operation.
+     *
+     * @implSpec
+     * The default implementation creates a
+     * <em><a href="Spliterator.html#binding">late-binding</a></em> spliterator
+     * from the collections's {@code Iterator}.  The spliterator inherits the
+     * <em>fail-fast</em> properties of the collection's iterator.
+     *
+     * @implNote
+     * The returned {@code Spliterator} additionally reports
+     * {@link Spliterator#SUBSIZED}.
+     *
+     * @return a {@code Spliterator} over the elements in this collection
+     * @since 1.8
+     */
+    default Spliterator<E> spliterator() {
+        return Spliterators.spliterator(this, 0);
+    }
+
+    /**
+     * Returns a sequential {@code Stream} with this collection as its source.
+     *
+     * <p>This method should be overridden when the {@link #spliterator()}
+     * method cannot return a spliterator that is {@code IMMUTABLE},
+     * {@code CONCURRENT}, or <em>late-binding</em>. (See {@link #spliterator()}
+     * for details.)
+     *
+     * @implSpec
+     * The default implementation creates a sequential {@code Stream} from the
+     * collection's {@code Spliterator}.
+     *
+     * @return a sequential {@code Stream} over the elements in this collection
+     * @since 1.8
+     */
+    default Stream<E> stream() {
+        return StreamSupport.stream(spliterator());
+    }
+
+    /**
+     * Returns a possibly parallel {@code Stream} with this collection as its
+     * source.  It is allowable for this method to return a sequential stream.
+     *
+     * <p>This method should be overridden when the {@link #spliterator()}
+     * method cannot return a spliterator that is {@code IMMUTABLE},
+     * {@code CONCURRENT}, or <em>late-binding</em>. (See {@link #spliterator()}
+     * for details.)
+     *
+     * @implSpec
+     * The default implementation creates a parallel {@code Stream} from the
+     * collection's {@code Spliterator}.
+     *
+     * @return a possibly parallel {@code Stream} over the elements in this
+     * collection
+     * @since 1.8
+     */
+    default Stream<E> parallelStream() {
+        return StreamSupport.parallelStream(spliterator());
+    }
 }
