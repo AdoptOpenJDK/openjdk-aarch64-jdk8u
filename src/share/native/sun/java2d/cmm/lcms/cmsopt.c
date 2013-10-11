@@ -548,6 +548,10 @@ cmsBool FixWhiteMisalignment(cmsPipeline* Lut, cmsColorSpaceSignature EntryColor
         for (i=0; i < nOuts; i++) {
 
             cmsToneCurve* InversePostLin = cmsReverseToneCurve(Curves[i]);
+            if (InversePostLin == NULL) {
+                WhiteOut[i] = 0;
+                continue;
+            }
             WhiteOut[i] = cmsEvalToneCurve16(InversePostLin, WhitePointOut[i]);
             cmsFreeToneCurve(InversePostLin);
         }
@@ -1201,6 +1205,15 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, int nCurves, int nElements, cmsT
     for (i=0; i < nCurves; i++) {
 
         c16->Curves[i] = _cmsCalloc(ContextID, nElements, sizeof(cmsUInt16Number));
+        if (c16->Curves[i] == NULL) {
+            for (j=0; j < i; j++) {
+                _cmsFree(ContextID, c16->Curves[j]);
+            }
+            _cmsFree(ContextID, c16->Curves);
+            _cmsFree(ContextID, c16);
+
+            return NULL;
+        }
 
         if (nElements == 256) {
 

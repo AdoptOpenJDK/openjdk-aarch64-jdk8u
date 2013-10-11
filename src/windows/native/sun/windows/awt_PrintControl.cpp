@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -81,6 +81,7 @@ jmethodID AwtPrintControl::setToPageID;
 jmethodID AwtPrintControl::setNativeAttID;
 jmethodID AwtPrintControl::setRangeCopiesID;
 jmethodID AwtPrintControl::setResID;
+jmethodID AwtPrintControl::setJobAttributesID;
 
 
 BOOL AwtPrintControl::IsSupportedLevel(HANDLE hPrinter, DWORD dwLevel) {
@@ -252,7 +253,7 @@ void AwtPrintControl::initIDs(JNIEnv *env, jclass cls)
     AwtPrintControl::getCopiesID =
       env->GetMethodID(cls, "getCopiesAttrib", "()I");
     AwtPrintControl::getCollateID =
-      env->GetMethodID(cls, "getCollateAttrib","()Z");
+      env->GetMethodID(cls, "getCollateAttrib","()I");
     AwtPrintControl::getOrientID =
       env->GetMethodID(cls, "getOrientAttrib", "()I");
     AwtPrintControl::getFromPageID =
@@ -297,6 +298,10 @@ void AwtPrintControl::initIDs(JNIEnv *env, jclass cls)
     AwtPrintControl::setPrinterID =
       env->GetMethodID(cls, "setPrinterNameAttrib", "(Ljava/lang/String;)V");
 
+    AwtPrintControl::setJobAttributesID =
+        env->GetMethodID(cls, "setJobAttributes",
+        "(Ljavax/print/attribute/PrintRequestAttributeSet;IISSSSSSS)V");
+
     DASSERT(AwtPrintControl::driverDoesMultipleCopiesID != NULL);
     DASSERT(AwtPrintControl::getPrintDCID != NULL);
     DASSERT(AwtPrintControl::setPrintDCID != NULL);
@@ -327,6 +332,7 @@ void AwtPrintControl::initIDs(JNIEnv *env, jclass cls)
     DASSERT(AwtPrintControl::getSidesID != NULL);
     DASSERT(AwtPrintControl::getSelectID != NULL);
     DASSERT(AwtPrintControl::getPrintToFileEnabledID != NULL);
+    DASSERT(AwtPrintControl::setJobAttributesID != NULL);
 
 
     CATCH_BAD_ALLOC;
@@ -422,17 +428,17 @@ BOOL AwtPrintControl::CreateDevModeAndDevNames(PRINTDLG *ppd,
         devnames->wOutputOffset =
             static_cast<WORD>(sizeof(DEVNAMES)/sizeof(TCHAR) + lenDriverName + lenPrinterName);
         if (info2->pDriverName != NULL) {
-            _tcscpy(lpcDevnames + devnames->wDriverOffset, info2->pDriverName);
+            _tcscpy_s(lpcDevnames + devnames->wDriverOffset, devnameSize - devnames->wDriverOffset, info2->pDriverName);
         } else {
             *(lpcDevnames + devnames->wDriverOffset) = _T('\0');
         }
         if (pPrinterName != NULL) {
-            _tcscpy(lpcDevnames + devnames->wDeviceOffset, pPrinterName);
+            _tcscpy_s(lpcDevnames + devnames->wDeviceOffset, devnameSize - devnames->wDeviceOffset, pPrinterName);
         } else {
             *(lpcDevnames + devnames->wDeviceOffset) = _T('\0');
         }
         if (info2->pPortName != NULL) {
-            _tcscpy(lpcDevnames + devnames->wOutputOffset, info2->pPortName);
+            _tcscpy_s(lpcDevnames + devnames->wOutputOffset, devnameSize - devnames->wOutputOffset, info2->pPortName);
         } else {
             *(lpcDevnames + devnames->wOutputOffset) = _T('\0');
         }
@@ -484,8 +490,8 @@ WORD AwtPrintControl::getNearestMatchingPaper(LPTSTR printer, LPTSTR port,
                                               NULL, NULL);
 
     if (numPaperSizes > 0) {
-        papers = (WORD*)safe_Malloc(sizeof(WORD) * numPaperSizes);
-        paperSizes = (POINT *)safe_Malloc(sizeof(*paperSizes) *
+        papers = (WORD*)SAFE_SIZE_ARRAY_ALLOC(safe_Malloc, sizeof(WORD), numPaperSizes);
+        paperSizes = (POINT *)SAFE_SIZE_ARRAY_ALLOC(safe_Malloc, sizeof(*paperSizes),
                                           numPaperSizes);
 
         DWORD result1 = DeviceCapabilities(printer, port,
@@ -690,12 +696,6 @@ BOOL AwtPrintControl::InitPrintDialog(JNIEnv *env,
     pd.Flags = PD_ENABLEPRINTHOOK | PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE;
     pd.lpfnPrintHook = (LPPRINTHOOKPROC)PrintDlgHook;
 
-    if (env->CallBooleanMethod(printCtrl, AwtPrintControl::getCollateID)) {
-        pd.Flags |= PD_COLLATE;
-    }
-
-    pd.nCopies = (WORD)env->CallIntMethod(printCtrl,
-                                          AwtPrintControl::getCopiesID);
     pd.nFromPage = (WORD)env->CallIntMethod(printCtrl,
                                             AwtPrintControl::getFromPageID);
     pd.nToPage = (WORD)env->CallIntMethod(printCtrl,
@@ -729,37 +729,52 @@ BOOL AwtPrintControl::InitPrintDialog(JNIEnv *env,
       DEVMODE *devmode = (DEVMODE *)::GlobalLock(pd.hDevMode);
       DASSERT(!IsBadWritePtr(devmode, sizeof(DEVMODE)));
 
-      devmode->dmFields |= DM_COPIES | DM_COLLATE | DM_ORIENTATION |
-          DM_PAPERSIZE | DM_PRINTQUALITY | DM_COLOR | DM_DUPLEX;
-
-      devmode->dmCopies = pd.nCopies;
+      WORD copies = (WORD)env->CallIntMethod(printCtrl,
+                                             AwtPrintControl::getCopiesID);
+      if (copies > 0) {
+          devmode->dmFields |= DM_COPIES;
+          devmode->dmCopies = copies;
+      }
 
       jint orient = env->CallIntMethod(printCtrl,
                                        AwtPrintControl::getOrientID);
-      if (orient == 0) {
+      if (orient == 0) {  // PageFormat.LANDSCAPE == 0
+        devmode->dmFields |= DM_ORIENTATION;
         devmode->dmOrientation = DMORIENT_LANDSCAPE;
-      } else if (orient == 1) {
+      } else if (orient == 1) { // PageFormat.PORTRAIT == 1
+        devmode->dmFields |= DM_ORIENTATION;
         devmode->dmOrientation = DMORIENT_PORTRAIT;
       }
 
-      devmode->dmCollate = (pd.Flags & PD_COLLATE) ? DMCOLLATE_TRUE
-        : DMCOLLATE_FALSE;
+      // -1 means unset, so we'll accept the printer default.
+      int collate = env->CallIntMethod(printCtrl,
+                                       AwtPrintControl::getCollateID);
+      if (collate == 1) {
+        devmode->dmFields |= DM_COLLATE;
+        devmode->dmCollate = DMCOLLATE_TRUE;
+      } else if (collate == 0) {
+        devmode->dmFields |= DM_COLLATE;
+        devmode->dmCollate = DMCOLLATE_FALSE;
+      }
 
       int quality = env->CallIntMethod(printCtrl,
                                        AwtPrintControl::getQualityID);
       if (quality) {
+        devmode->dmFields |= DM_PRINTQUALITY;
         devmode->dmPrintQuality = quality;
       }
 
       int color = env->CallIntMethod(printCtrl,
                                      AwtPrintControl::getColorID);
       if (color) {
+        devmode->dmFields |= DM_COLOR;
         devmode->dmColor = color;
       }
 
       int sides = env->CallIntMethod(printCtrl,
                                      AwtPrintControl::getSidesID);
       if (sides) {
+        devmode->dmFields |= DM_DUPLEX;
         devmode->dmDuplex = (int)sides;
       }
 
@@ -771,6 +786,7 @@ BOOL AwtPrintControl::InitPrintDialog(JNIEnv *env,
 
       double newWid = 0.0, newHt = 0.0;
       if (wid_ht != NULL && wid_ht[0] != 0 && wid_ht[1] != 0) {
+        devmode->dmFields |= DM_PAPERSIZE;
         devmode->dmPaperSize = AwtPrintControl::getNearestMatchingPaper(
                                              printName,
                                              portName,

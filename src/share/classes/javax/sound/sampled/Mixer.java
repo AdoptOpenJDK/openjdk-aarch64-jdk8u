@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2004, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -133,6 +133,8 @@ public interface Mixer extends Line {
      * <code>DataLine</code>.
      *
      * @param info describes the desired line
+     * @return a line that is available for use and that matches the description
+     * in the specified {@code Line.Info} object
      * @throws LineUnavailableException if a matching line
      * is not available due to resource restrictions
      * @throws IllegalArgumentException if this mixer does
@@ -253,22 +255,22 @@ public interface Mixer extends Line {
         /**
          * Mixer name.
          */
-        private /*final*/ String name;
+        private final String name;
 
         /**
          * Mixer vendor.
          */
-        private /*final*/ String vendor;
+        private final String vendor;
 
         /**
          * Mixer description.
          */
-        private /*final*/ String description;
+        private final String description;
 
         /**
          * Mixer version.
          */
-        private /*final*/ String version;
+        private final String version;
 
         /**
          * Constructs a mixer's info object, passing it the given

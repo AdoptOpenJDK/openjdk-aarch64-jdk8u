@@ -21,12 +21,9 @@
  * questions.
  */
 import java.io.File;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import static java.nio.file.StandardOpenOption.*;
 /*
  * @test
  * @bug 6746111 8005252 8008262
@@ -40,6 +37,7 @@ public class AttributeTests {
     public static void main(String... args) throws Exception {
         test6746111();
         testMethodParameters();
+        Utils.cleanup();
     }
 
     /*
@@ -58,8 +56,7 @@ public class AttributeTests {
         scratch.add("}");
         File cwd = new File(".");
         File javaFile = new File(cwd, javaFileName);
-        Files.write(javaFile.toPath(), scratch, Charset.defaultCharset(),
-                CREATE, TRUNCATE_EXISTING);
+        Utils.createFile(javaFile, scratch);
 
         Utils.compiler(javaFile.getName(), "-parameters");
 

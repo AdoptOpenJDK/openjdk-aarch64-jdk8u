@@ -67,7 +67,7 @@ import java.time.format.TextStyle;
 import org.testng.annotations.Test;
 
 /**
- * Test DateTimeFormatSymbols.
+ * Test DecimalStyle.
  */
 @Test
 public class TCKTextStyle {
@@ -89,6 +89,16 @@ public class TCKTextStyle {
         assertTrue(!TextStyle.FULL.isStandalone());
         assertTrue(!TextStyle.SHORT.isStandalone());
         assertTrue(!TextStyle.NARROW.isStandalone());
+    }
+
+    //-----------------------------------------------------------------------
+    // valueOf()
+    //-----------------------------------------------------------------------
+    @Test
+    public void test_valueOf() {
+        for (TextStyle style : TextStyle.values()) {
+            assertEquals(TextStyle.valueOf(style.name()), style);
+        }
     }
 
 }

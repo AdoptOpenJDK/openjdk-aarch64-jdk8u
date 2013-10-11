@@ -26,10 +26,10 @@
  * @bug     6207984 6272521 6192552 6269713 6197726 6260652 5073546 4137464
  *          4155650 4216399 4294891 6282555 6318622 6355327 6383475 6420753
  *          6431845 4802633 6570566 6570575 6570631 6570924 6691185 6691215
+ *          4802647 7123424
  * @summary Run many tests on many Collection and Map implementations
  * @author  Martin Buchholz
  * @run main MOAT
- * @run main/othervm -XX:+AggressiveOpts MOAT
  */
 
 /* Mother Of All (Collection) Tests
@@ -58,6 +58,8 @@ import static java.util.Collections.*;
 public class MOAT {
     public static void realMain(String[] args) {
 
+        testCollection(new NewAbstractCollection<Integer>());
+        testCollection(new NewAbstractSet<Integer>());
         testCollection(new LinkedHashSet<Integer>());
         testCollection(new HashSet<Integer>());
         testCollection(new Vector<Integer>());
@@ -68,6 +70,14 @@ public class MOAT {
         testCollection(new LinkedList<Integer>());
         testCollection(new LinkedList<Integer>().subList(0,0));
         testCollection(new TreeSet<Integer>());
+        testCollection(Collections.checkedList(new ArrayList<Integer>(), Integer.class));
+        testCollection(Collections.synchronizedList(new ArrayList<Integer>()));
+        testCollection(Collections.checkedSet(new HashSet<Integer>(), Integer.class));
+        testCollection(Collections.checkedSortedSet(new TreeSet<Integer>(), Integer.class));
+        testCollection(Collections.checkedNavigableSet(new TreeSet<Integer>(), Integer.class));
+        testCollection(Collections.synchronizedSet(new HashSet<Integer>()));
+        testCollection(Collections.synchronizedSortedSet(new TreeSet<Integer>()));
+        testCollection(Collections.synchronizedNavigableSet(new TreeSet<Integer>()));
 
         testCollection(new CopyOnWriteArrayList<Integer>());
         testCollection(new CopyOnWriteArrayList<Integer>().subList(0,0));
@@ -95,6 +105,12 @@ public class MOAT {
         testMap(new Hashtable<Integer,Integer>());
         testMap(new ConcurrentHashMap<Integer,Integer>(10, 0.5f));
         testMap(new ConcurrentSkipListMap<Integer,Integer>());
+        testMap(Collections.checkedMap(new HashMap<Integer,Integer>(), Integer.class, Integer.class));
+        testMap(Collections.checkedSortedMap(new TreeMap<Integer,Integer>(), Integer.class, Integer.class));
+        testMap(Collections.checkedNavigableMap(new TreeMap<Integer,Integer>(), Integer.class, Integer.class));
+        testMap(Collections.synchronizedMap(new HashMap<Integer,Integer>()));
+        testMap(Collections.synchronizedSortedMap(new TreeMap<Integer,Integer>()));
+        testMap(Collections.synchronizedNavigableMap(new TreeMap<Integer,Integer>()));
 
         // Empty collections
         final List<Integer> emptyArray = Arrays.asList(new Integer[]{});
@@ -114,19 +130,29 @@ public class MOAT {
         testCollection(emptySet);
         testEmptySet(emptySet);
         testEmptySet(EMPTY_SET);
+        testEmptySet(Collections.emptySet());
+        testEmptySet(Collections.emptySortedSet());
+        testEmptySet(Collections.emptyNavigableSet());
         testImmutableSet(emptySet);
 
         List<Integer> emptyList = emptyList();
         testCollection(emptyList);
         testEmptyList(emptyList);
         testEmptyList(EMPTY_LIST);
+        testEmptyList(Collections.emptyList());
         testImmutableList(emptyList);
 
         Map<Integer,Integer> emptyMap = emptyMap();
         testMap(emptyMap);
         testEmptyMap(emptyMap);
         testEmptyMap(EMPTY_MAP);
+        testEmptyMap(Collections.emptyMap());
+        testEmptyMap(Collections.emptySortedMap());
+        testEmptyMap(Collections.emptyNavigableMap());
         testImmutableMap(emptyMap);
+        testImmutableMap(Collections.emptyMap());
+        testImmutableMap(Collections.emptySortedMap());
+        testImmutableMap(Collections.emptyNavigableMap());
 
         // Singleton collections
         Set<Integer> singletonSet = singleton(1);
@@ -374,8 +400,6 @@ public class MOAT {
     // If add(null) succeeds, contains(null) & remove(null) should succeed
     //----------------------------------------------------------------
     private static void testNullElement(Collection<Integer> c) {
-        // !!!! 5018849: (coll) TreeSet.contains(null) does not agree with Javadoc
-        if (c instanceof TreeSet) return;
 
         try {
             check(c.add(null));
@@ -753,9 +777,25 @@ public class MOAT {
         // The "all" operations should throw NPE when passed null
         //----------------------------------------------------------------
         {
+            clear(c);
+            try {
+                c.removeAll(null);
+                fail("Expected NullPointerException");
+            }
+            catch (NullPointerException e) { pass(); }
+            catch (Throwable t) { unexpected(t); }
+
             oneElement(c);
             try {
                 c.removeAll(null);
+                fail("Expected NullPointerException");
+            }
+            catch (NullPointerException e) { pass(); }
+            catch (Throwable t) { unexpected(t); }
+
+            clear(c);
+            try {
+                c.retainAll(null);
                 fail("Expected NullPointerException");
             }
             catch (NullPointerException e) { pass(); }
@@ -1205,4 +1245,35 @@ public class MOAT {
     static <T> T serialClone(T obj) {
         try { return (T) readObject(serializedForm(obj)); }
         catch (Exception e) { throw new Error(e); }}
+    private static class NewAbstractCollection<E> extends AbstractCollection<E> {
+        ArrayList<E> list = new ArrayList<>();
+        public boolean remove(Object obj) {
+            return list.remove(obj);
+        }
+        public boolean add(E e) {
+            return list.add(e);
+        }
+        public Iterator<E> iterator() {
+            return list.iterator();
+        }
+        public int size() {
+            return list.size();
+        }
+    }
+    private static class NewAbstractSet<E> extends AbstractSet<E> {
+        HashSet<E> set = new HashSet<>();
+        public boolean remove(Object obj) {
+            return set.remove(obj);
+        }
+        public boolean add(E e) {
+            return set.add(e);
+        }
+        public Iterator<E> iterator() {
+            return set.iterator();
+        }
+        public int size() {
+            return set.size();
+        }
+    }
+
 }

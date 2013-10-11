@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,8 @@
 
 package com.sun.media.sound;
 
+import java.util.Arrays;
+
 import javax.sound.sampled.*;
 
 /**
@@ -37,20 +39,20 @@ import javax.sound.sampled.*;
  * @author Florian Bomers
  */
 
-public class DataPusher implements Runnable {
+public final class DataPusher implements Runnable {
 
     private static final int AUTO_CLOSE_TIME = 5000;
     private static final boolean DEBUG = false;
 
-    private SourceDataLine source = null;
-    private AudioFormat format = null;
+    private final SourceDataLine source;
+    private final AudioFormat format;
 
     // stream as source data
-    private AudioInputStream ais = null;
+    private final AudioInputStream ais;
 
     // byte array as source data
-    private byte[] audioData = null;
-    private int audioDataByteLength = 0;
+    private final byte[] audioData;
+    private final int audioDataByteLength;
     private int pos;
     private int newPos = -1;
     private boolean looping;
@@ -67,16 +69,22 @@ public class DataPusher implements Runnable {
     private final int BUFFER_SIZE = 16384;
 
     public DataPusher(SourceDataLine sourceLine, AudioFormat format, byte[] audioData, int byteLength) {
-        this.audioData = audioData;
-        this.audioDataByteLength = byteLength;
-        this.format = format;
-        this.source = sourceLine;
+        this(sourceLine, format, null, audioData, byteLength);
     }
 
     public DataPusher(SourceDataLine sourceLine, AudioInputStream ais) {
+        this(sourceLine, ais.getFormat(), ais, null, 0);
+    }
+
+    private DataPusher(final SourceDataLine source, final AudioFormat format,
+                       final AudioInputStream ais, final byte[] audioData,
+                       final int audioDataByteLength) {
+        this.source = source;
+        this.format = format;
         this.ais = ais;
-        this.format = ais.getFormat();
-        this.source = sourceLine;
+        this.audioDataByteLength = audioDataByteLength;
+        this.audioData = audioData == null ? null : Arrays.copyOf(audioData,
+                                                                  audioData.length);
     }
 
     public synchronized void start() {

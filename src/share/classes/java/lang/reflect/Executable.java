@@ -326,8 +326,12 @@ public abstract class Executable extends AccessibleObject
             tmp = getParameters0();
 
             // If we get back nothing, then synthesize parameters
-            if (tmp == null)
+            if (tmp == null) {
+                hasRealParameterData = false;
                 tmp = synthesizeAllParams();
+            } else {
+                hasRealParameterData = true;
+            }
 
             parameters = tmp;
         }
@@ -335,6 +339,16 @@ public abstract class Executable extends AccessibleObject
         return tmp;
     }
 
+    boolean hasRealParameterData() {
+        // If this somehow gets called before parameters gets
+        // initialized, force it into existence.
+        if (parameters == null) {
+            privateGetParameters();
+        }
+        return hasRealParameterData;
+    }
+
+    private transient volatile boolean hasRealParameterData;
     private transient volatile Parameter[] parameters;
 
     private native Parameter[] getParameters0();
@@ -384,6 +398,8 @@ public abstract class Executable extends AccessibleObject
     /**
      * Returns a string describing this {@code Executable}, including
      * any type parameters.
+     * @return a string describing this {@code Executable}, including
+     * any type parameters
      */
     public abstract String toGenericString();
 
@@ -412,20 +428,32 @@ public abstract class Executable extends AccessibleObject
     }
 
     /**
-     * Returns an array of arrays that represent the annotations on
-     * the formal parameters, in declaration order, of the executable
-     * represented by this object. (Returns an array of length zero if
-     * the underlying executable is parameterless.  If the executable has
-     * one or more parameters, a nested array of length zero is
-     * returned for each parameter with no annotations.) The
-     * annotation objects contained in the returned arrays are
-     * serializable.  The caller of this method is free to modify the
-     * returned arrays; it will have no effect on the arrays returned
-     * to other callers.
+     * Returns an array of arrays of {@code Annotation}s that
+     * represent the annotations on the formal parameters, in
+     * declaration order, of the {@code Executable} represented by
+     * this object.  Synthetic and mandated parameters (see
+     * explanation below), such as the outer "this" parameter to an
+     * inner class constructor will be represented in the returned
+     * array.  If the executable has no parameters (meaning no formal,
+     * no synthetic, and no mandated parameters), a zero-length array
+     * will be returned.  If the {@code Executable} has one or more
+     * parameters, a nested array of length zero is returned for each
+     * parameter with no annotations. The annotation objects contained
+     * in the returned arrays are serializable.  The caller of this
+     * method is free to modify the returned arrays; it will have no
+     * effect on the arrays returned to other callers.
      *
-     * @return an array of arrays that represent the annotations on the formal
-     *    parameters, in declaration order, of the executable represented by this
-     *    object
+     * A compiler may add extra parameters that are implicitly
+     * declared in source ("mandated"), as well as parameters that
+     * are neither implicitly nor explicitly declared in source
+     * ("synthetic") to the parameter list for a method.  See {@link
+     * java.lang.reflect.Parameter} for more information.
+     *
+     * @see java.lang.reflect.Parameter
+     * @see java.lang.reflect.Parameter#getAnnotations
+     * @return an array of arrays that represent the annotations on
+     *    the formal and implicit parameters, in declaration order, of
+     *    the executable represented by this object
      */
     public abstract Annotation[][] getParameterAnnotations();
 
@@ -486,8 +514,8 @@ public abstract class Executable extends AccessibleObject
     }
 
     /**
-     * Returns an AnnotatedType object that represents the potentially
-     * annotated return type of the method/constructor represented by this
+     * Returns an AnnotatedType object that represents the use of a type to
+     * specify the return type of the method/constructor represented by this
      * Executable.
      *
      * If this Executable represents a constructor, the AnnotatedType object
@@ -496,6 +524,8 @@ public abstract class Executable extends AccessibleObject
      * If this Executable represents a method, the AnnotatedType object
      * represents the use of a type to specify the return type of the method.
      *
+     * @return an object representing the return type of this method
+     * or constructor
      * @since 1.8
      */
     public abstract AnnotatedType getAnnotatedReturnType();
@@ -510,12 +540,12 @@ public abstract class Executable extends AccessibleObject
      */
     AnnotatedType getAnnotatedReturnType0(Type returnType) {
         return TypeAnnotationParser.buildAnnotatedType(getTypeAnnotationBytes(),
-                                                       sun.misc.SharedSecrets.getJavaLangAccess().
-                                                           getConstantPool(getDeclaringClass()),
-                                                       this,
-                                                       getDeclaringClass(),
-                                                       returnType,
-                                                       TypeAnnotation.TypeAnnotationTarget.METHOD_RETURN_TYPE);
+                sun.misc.SharedSecrets.getJavaLangAccess().
+                        getConstantPool(getDeclaringClass()),
+                this,
+                getDeclaringClass(),
+                returnType,
+                TypeAnnotation.TypeAnnotationTarget.METHOD_RETURN);
     }
 
     /**
@@ -531,16 +561,19 @@ public abstract class Executable extends AccessibleObject
      *
      * Returns null if this Executable represents a static method.
      *
+     * @return an object representing the receiver type of the
+     * method or constructor represented by this Executable
+     *
      * @since 1.8
      */
     public AnnotatedType getAnnotatedReceiverType() {
         return TypeAnnotationParser.buildAnnotatedType(getTypeAnnotationBytes(),
-                                                       sun.misc.SharedSecrets.getJavaLangAccess().
-                                                           getConstantPool(getDeclaringClass()),
-                                                       this,
-                                                       getDeclaringClass(),
-                                                       getDeclaringClass(),
-                                                       TypeAnnotation.TypeAnnotationTarget.METHOD_RECEIVER_TYPE);
+                sun.misc.SharedSecrets.getJavaLangAccess().
+                        getConstantPool(getDeclaringClass()),
+                this,
+                getDeclaringClass(),
+                getDeclaringClass(),
+                TypeAnnotation.TypeAnnotationTarget.METHOD_RECEIVER);
     }
 
     /**
@@ -553,10 +586,19 @@ public abstract class Executable extends AccessibleObject
      * Returns an array of length 0 if the method/constructor declares no
      * parameters.
      *
+     * @return an array of objects representing the types of the
+     * formal parameters of this method or constructor
+     *
      * @since 1.8
      */
     public AnnotatedType[] getAnnotatedParameterTypes() {
-        throw new UnsupportedOperationException("Not yet");
+        return TypeAnnotationParser.buildAnnotatedTypes(getTypeAnnotationBytes(),
+                sun.misc.SharedSecrets.getJavaLangAccess().
+                        getConstantPool(getDeclaringClass()),
+                this,
+                getDeclaringClass(),
+                getParameterTypes(),
+                TypeAnnotation.TypeAnnotationTarget.METHOD_FORMAL_PARAMETER);
     }
 
     /**
@@ -569,16 +611,19 @@ public abstract class Executable extends AccessibleObject
      * Returns an array of length 0 if the method/constructor declares no
      * exceptions.
      *
+     * @return an array of objects representing the declared
+     * exceptions of this method or constructor
+     *
      * @since 1.8
      */
     public AnnotatedType[] getAnnotatedExceptionTypes() {
         return TypeAnnotationParser.buildAnnotatedTypes(getTypeAnnotationBytes(),
-                                                        sun.misc.SharedSecrets.getJavaLangAccess().
-                                                            getConstantPool(getDeclaringClass()),
-                                                        this,
-                                                        getDeclaringClass(),
-                                                        getGenericExceptionTypes(),
-                                                        TypeAnnotation.TypeAnnotationTarget.THROWS);
+                sun.misc.SharedSecrets.getJavaLangAccess().
+                        getConstantPool(getDeclaringClass()),
+                this,
+                getDeclaringClass(),
+                getGenericExceptionTypes(),
+                TypeAnnotation.TypeAnnotationTarget.THROWS);
     }
 
 }

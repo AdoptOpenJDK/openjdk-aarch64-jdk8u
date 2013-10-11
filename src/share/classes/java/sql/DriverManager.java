@@ -36,7 +36,7 @@ import sun.reflect.Reflection;
 
 /**
  * <P>The basic service for managing a set of JDBC drivers.<br>
- * <B>NOTE:</B> The {@link <code>DataSource</code>} interface, new in the
+ * <B>NOTE:</B> The {@link javax.sql.DataSource} interface, new in the
  * JDBC 2.0 API, provides another way to connect to a data source.
  * The use of a <code>DataSource</code> object is the preferred means of
  * connecting to a data source.
@@ -326,6 +326,7 @@ public class DriverManager {
      * @param driver the new JDBC Driver that is to be registered with the
      *               {@code DriverManager}
      * @exception SQLException if a database access error occurs
+     * @exception NullPointerException if {@code driver} is null
      */
     public static synchronized void registerDriver(java.sql.Driver driver)
         throws SQLException {
@@ -345,6 +346,7 @@ public class DriverManager {
      * @param da     the {@code DriverAction} implementation to be used when
      *               {@code DriverManager#deregisterDriver} is called
      * @exception SQLException if a database access error occurs
+     * @exception NullPointerException if {@code driver} is null
      */
     public static synchronized void registerDriver(java.sql.Driver driver,
             DriverAction da)

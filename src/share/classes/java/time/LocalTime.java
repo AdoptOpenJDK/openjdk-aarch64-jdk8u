@@ -74,7 +74,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -109,7 +109,7 @@ import java.util.Objects;
  * in most of the world. This API assumes that all calendar systems use the same
  * representation, this class, for time-of-day.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -470,8 +470,9 @@ public final class LocalTime
      * Checks if the specified field is supported.
      * <p>
      * This checks if this time can be queried for the specified field.
-     * If false, then calling the {@link #range(TemporalField) range} and
-     * {@link #get(TemporalField) get} methods will throw an exception.
+     * If false, then calling the {@link #range(TemporalField) range},
+     * {@link #get(TemporalField) get} and {@link #with(TemporalField, long)}
+     * methods will throw an exception.
      * <p>
      * If the field is a {@link ChronoField} then the query is implemented here.
      * The supported fields are:
@@ -510,6 +511,43 @@ public final class LocalTime
         return field != null && field.isSupportedBy(this);
     }
 
+    /**
+     * Checks if the specified unit is supported.
+     * <p>
+     * This checks if the specified unit can be added to, or subtracted from, this date-time.
+     * If false, then calling the {@link #plus(long, TemporalUnit)} and
+     * {@link #minus(long, TemporalUnit) minus} methods will throw an exception.
+     * <p>
+     * If the unit is a {@link ChronoUnit} then the query is implemented here.
+     * The supported units are:
+     * <ul>
+     * <li>{@code NANOS}
+     * <li>{@code MICROS}
+     * <li>{@code MILLIS}
+     * <li>{@code SECONDS}
+     * <li>{@code MINUTES}
+     * <li>{@code HOURS}
+     * <li>{@code HALF_DAYS}
+     * </ul>
+     * All other {@code ChronoUnit} instances will return false.
+     * <p>
+     * If the unit is not a {@code ChronoUnit}, then the result of this method
+     * is obtained by invoking {@code TemporalUnit.isSupportedBy(Temporal)}
+     * passing {@code this} as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    @Override  // override for Javadoc
+    public boolean isSupported(TemporalUnit unit) {
+        if (unit instanceof ChronoUnit) {
+            return unit.isTimeBased();
+        }
+        return unit != null && unit.isSupportedBy(this);
+    }
+
+    //-----------------------------------------------------------------------
     /**
      * Gets the range of valid values for the specified field.
      * <p>
@@ -628,7 +666,7 @@ public final class LocalTime
             case CLOCK_HOUR_OF_DAY: return (hour == 0 ? 24 : hour);
             case AMPM_OF_DAY: return hour / 12;
         }
-        throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+        throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
     }
 
     //-----------------------------------------------------------------------
@@ -803,7 +841,7 @@ public final class LocalTime
                 case CLOCK_HOUR_OF_DAY: return withHour((int) (newValue == 24 ? 0 : newValue));
                 case AMPM_OF_DAY: return plusHours((newValue - (hour / 12)) * 12);
             }
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.adjustInto(this, newValue);
     }
@@ -974,9 +1012,6 @@ public final class LocalTime
      *  Returns a {@code LocalTime} with the specified number of half-days added.
      *  This is equivalent to {@link #plusHours(long)} with the amount
      *  multiplied by 12.
-     * <li>{@code DAYS} -
-     *  Returns a {@code LocalTime} with the specified number of days added.
-     *  This returns {@code this} time.
      * </ul>
      * <p>
      * All other {@code ChronoUnit} instances will throw an {@code UnsupportedTemporalTypeException}.
@@ -998,8 +1033,7 @@ public final class LocalTime
     @Override
     public LocalTime plus(long amountToAdd, TemporalUnit unit) {
         if (unit instanceof ChronoUnit) {
-            ChronoUnit f = (ChronoUnit) unit;
-            switch (f) {
+            switch ((ChronoUnit) unit) {
                 case NANOS: return plusNanos(amountToAdd);
                 case MICROS: return plusNanos((amountToAdd % MICROS_PER_DAY) * 1000);
                 case MILLIS: return plusNanos((amountToAdd % MILLIS_PER_DAY) * 1000_000);
@@ -1007,9 +1041,8 @@ public final class LocalTime
                 case MINUTES: return plusMinutes(amountToAdd);
                 case HOURS: return plusHours(amountToAdd);
                 case HALF_DAYS: return plusHours((amountToAdd % 2) * 12);
-                case DAYS: return this;
             }
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
         return unit.addTo(this, amountToAdd);
     }
@@ -1291,19 +1324,19 @@ public final class LocalTime
     }
 
     /**
-     * Calculates the period between this time and another time in
-     * terms of the specified unit.
+     * Calculates the amount of time until another time in terms of the specified unit.
      * <p>
-     * This calculates the period between two times in terms of a single unit.
+     * This calculates the amount of time between two {@code LocalTime}
+     * objects in terms of a single {@code TemporalUnit}.
      * The start and end points are {@code this} and the specified time.
      * The result will be negative if the end is before the start.
      * The {@code Temporal} passed to this method must be a {@code LocalTime}.
-     * For example, the period in hours between two times can be calculated
-     * using {@code startTime.periodUntil(endTime, HOURS)}.
+     * For example, the amount in hours between two times can be calculated
+     * using {@code startTime.until(endTime, HOURS)}.
      * <p>
      * The calculation returns a whole number, representing the number of
      * complete units between the two times.
-     * For example, the period in hours between 11:30 and 13:29 will only
+     * For example, the amount in hours between 11:30 and 13:29 will only
      * be one hour as it is one minute short of two hours.
      * <p>
      * There are two equivalent ways of using this method.
@@ -1311,7 +1344,7 @@ public final class LocalTime
      * The second is to use {@link TemporalUnit#between(Temporal, Temporal)}:
      * <pre>
      *   // these two lines are equivalent
-     *   amount = start.periodUntil(end, MINUTES);
+     *   amount = start.until(end, MINUTES);
      *   amount = MINUTES.between(start, end);
      * </pre>
      * The choice should be made based on which makes the code more readable.
@@ -1329,17 +1362,17 @@ public final class LocalTime
      * This instance is immutable and unaffected by this method call.
      *
      * @param endTime  the end time, which must be a {@code LocalTime}, not null
-     * @param unit  the unit to measure the period in, not null
-     * @return the amount of the period between this time and the end time
-     * @throws DateTimeException if the period cannot be calculated
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this time and the end time
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
     @Override
-    public long periodUntil(Temporal endTime, TemporalUnit unit) {
+    public long until(Temporal endTime, TemporalUnit unit) {
         if (endTime instanceof LocalTime == false) {
             Objects.requireNonNull(endTime, "endTime");
-            throw new DateTimeException("Unable to calculate period between objects of two different types");
+            throw new DateTimeException("Unable to calculate amount as objects are of two different types");
         }
         LocalTime end = (LocalTime) endTime;
         if (unit instanceof ChronoUnit) {
@@ -1353,7 +1386,7 @@ public final class LocalTime
                 case HOURS: return nanosUntil / NANOS_PER_HOUR;
                 case HALF_DAYS: return nanosUntil / (12 * NANOS_PER_HOUR);
             }
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
         return unit.between(this, endTime);
     }
@@ -1562,8 +1595,11 @@ public final class LocalTime
     /**
      * Writes the object using a
      * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
+     * A twos-complement value indicates the remaining values are not in the stream
+     * and should be set to zero.
      * <pre>
-     *  out.writeByte(4);  // identifies this as a LocalTime
+     *  out.writeByte(4);  // identifies a LocalTime
      *  if (nano == 0) {
      *    if (second == 0) {
      *      if (minute == 0) {
@@ -1596,7 +1632,7 @@ public final class LocalTime
      * @return never
      * @throws InvalidObjectException always
      */
-    private Object readResolve() throws ObjectStreamException {
+    private Object readResolve() throws InvalidObjectException {
         throw new InvalidObjectException("Deserialization via serialization delegate");
     }
 

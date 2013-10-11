@@ -25,25 +25,56 @@
 
 package java.nio.file;
 
-import java.nio.file.attribute.*;
-import java.nio.file.spi.FileSystemProvider;
-import java.nio.file.spi.FileTypeDetector;
-import java.nio.channels.SeekableByteChannel;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.io.Writer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.FileAttributeView;
+import java.nio.file.attribute.FileOwnerAttributeView;
+import java.nio.file.attribute.FileStoreAttributeView;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.UserPrincipal;
+import java.nio.file.spi.FileSystemProvider;
+import java.nio.file.spi.FileTypeDetector;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.BiPredicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * This class consists exclusively of static methods that operate on files,
@@ -63,6 +94,21 @@ public final class Files {
      */
     private static FileSystemProvider provider(Path path) {
         return path.getFileSystem().provider();
+    }
+
+    /**
+     * Convert a Closeable to a Runnable by converting checked IOException
+     * to UncheckedIOException
+     */
+    private static Runnable asUncheckedRunnable(Closeable c) {
+        return () -> {
+            try {
+                c.close();
+            }
+            catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
     }
 
     // -- File contents --
@@ -185,7 +231,7 @@ public final class Files {
      * <p> In the addition to {@code READ} and {@code WRITE}, the following
      * options may be present:
      *
-     * <table border=1 cellpadding=5 summary="">
+     * <table border=1 cellpadding=5 summary="Options">
      * <tr> <th>Option</th> <th>Description</th> </tr>
      * <tr>
      *   <td> {@link StandardOpenOption#APPEND APPEND} </td>
@@ -1485,9 +1531,18 @@ public final class Files {
     // lazy loading of default and installed file type detectors
     private static class FileTypeDetectors{
         static final FileTypeDetector defaultFileTypeDetector =
-            sun.nio.fs.DefaultFileTypeDetector.create();
+            createDefaultFileTypeDetector();
         static final List<FileTypeDetector> installeDetectors =
             loadInstalledDetectors();
+
+        // creates the default file type detector
+        private static FileTypeDetector createDefaultFileTypeDetector() {
+            return AccessController
+                .doPrivileged(new PrivilegedAction<FileTypeDetector>() {
+                    @Override public FileTypeDetector run() {
+                        return sun.nio.fs.DefaultFileTypeDetector.create();
+                }});
+        }
 
         // loads all installed file type detectors
         private static List<FileTypeDetector> loadInstalledDetectors() {
@@ -1598,7 +1653,8 @@ public final class Files {
      *     }
      * </pre>
      *
-     *
+     * @param   <V>
+     *          The {@code FileAttributeView} type
      * @param   path
      *          the path to the file
      * @param   type
@@ -1647,6 +1703,8 @@ public final class Files {
      *    PosixFileAttributes attrs = Files.readAttributes(path, PosixFileAttributes.class, NOFOLLOW_LINKS);
      * </pre>
      *
+     * @param   <A>
+     *          The {@code BasicFileAttributes} type
      * @param   path
      *          the path to the file
      * @param   type
@@ -1845,7 +1903,7 @@ public final class Files {
      * attributes} parameter:
      *
      * <blockquote>
-     * <table border="0">
+     * <table border="0" summary="Possible values">
      * <tr>
      *   <td> {@code "*"} </td>
      *   <td> Read all {@link BasicFileAttributes basic-file-attributes}. </td>
@@ -1953,9 +2011,11 @@ public final class Files {
      * System Interface (POSIX) family of standards.
      *
      * @param   path
-     *          A file reference that locates the file
+     *          The path to the file
      * @param   perms
      *          The new set of permissions
+     *
+     * @return  The path
      *
      * @throws  UnsupportedOperationException
      *          if the associated file system does not support the {@code
@@ -1991,7 +2051,7 @@ public final class Files {
      * access to a file attribute that is the owner of the file.
      *
      * @param   path
-     *          A file reference that locates the file
+     *          The path to the file
      * @param   options
      *          options indicating how symbolic links are handled
      *
@@ -2034,9 +2094,11 @@ public final class Files {
      * </pre>
      *
      * @param   path
-     *          A file reference that locates the file
+     *          The path to the file
      * @param   owner
      *          The new file owner
+     *
+     * @return  The path
      *
      * @throws  UnsupportedOperationException
      *          if the associated file system does not support the {@code
@@ -2071,6 +2133,8 @@ public final class Files {
      * read with the {@link #readAttributes(Path,Class,LinkOption[])
      * readAttributes} method and the file type tested with the {@link
      * BasicFileAttributes#isSymbolicLink} method.
+     *
+     * @param   path  The path to the file
      *
      * @return  {@code true} if the file is a symbolic link; {@code false} if
      *          the file does not exist, is not a symbolic link, or it cannot
@@ -2221,7 +2285,7 @@ public final class Files {
      * @param   time
      *          the new last modified time
      *
-     * @return  the file
+     * @return  the path
      *
      * @throws  IOException
      *          if an I/O error occurs
@@ -2587,9 +2651,6 @@ public final class Files {
                                     FileVisitor<? super Path> visitor)
         throws IOException
     {
-        if (maxDepth < 0)
-            throw new IllegalArgumentException("'maxDepth' is negative");
-
         /**
          * Create a FileTreeWalker to walk the file tree, invoking the visitor
          * for each event.
@@ -2941,41 +3002,63 @@ public final class Files {
     }
 
     /**
-     * Read all the bytes from an input stream. The {@code initialSize}
-     * parameter indicates the initial size of the byte[] to allocate.
+     * The maximum size of array to allocate.
+     * Some VMs reserve some header words in an array.
+     * Attempts to allocate larger arrays may result in
+     * OutOfMemoryError: Requested array size exceeds VM limit
+     */
+    private static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE - 8;
+
+    /**
+     * Reads all the bytes from an input stream. Uses {@code initialSize} as a hint
+     * about how many bytes the stream will have.
+     *
+     * @param   source
+     *          the input stream to read from
+     * @param   initialSize
+     *          the initial size of the byte array to allocate
+     *
+     * @return  a byte array containing the bytes read from the file
+     *
+     * @throws  IOException
+     *          if an I/O error occurs reading from the stream
+     * @throws  OutOfMemoryError
+     *          if an array of the required size cannot be allocated
      */
     private static byte[] read(InputStream source, int initialSize)
-        throws IOException
+            throws IOException
     {
         int capacity = initialSize;
         byte[] buf = new byte[capacity];
         int nread = 0;
-        int rem = buf.length;
         int n;
-        // read to EOF which may read more or less than initialSize (eg: file
-        // is truncated while we are reading)
-        while ((n = source.read(buf, nread, rem)) > 0) {
-            nread += n;
-            rem -= n;
-            assert rem >= 0;
-            if (rem == 0) {
-                // need larger buffer
-                int newCapacity = capacity << 1;
-                if (newCapacity < 0) {
-                    if (capacity == Integer.MAX_VALUE)
-                        throw new OutOfMemoryError("Required array size too large");
-                    newCapacity = Integer.MAX_VALUE;
-                }
-                rem = newCapacity - capacity;
-                buf = Arrays.copyOf(buf, newCapacity);
-                capacity = newCapacity;
+        for (;;) {
+            // read to EOF which may read more or less than initialSize (eg: file
+            // is truncated while we are reading)
+            while ((n = source.read(buf, nread, capacity - nread)) > 0)
+                nread += n;
+
+            // if last call to source.read() returned -1, we are done
+            // otherwise, try to read one more byte; if that failed we're done too
+            if (n < 0 || (n = source.read()) < 0)
+                break;
+
+            // one more byte was read; need to allocate a larger buffer
+            if (capacity <= MAX_BUFFER_SIZE - capacity) {
+                capacity = Math.max(capacity << 1, BUFFER_SIZE);
+            } else {
+                if (capacity == MAX_BUFFER_SIZE)
+                    throw new OutOfMemoryError("Required array size too large");
+                capacity = MAX_BUFFER_SIZE;
             }
+            buf = Arrays.copyOf(buf, capacity);
+            buf[nread++] = (byte)n;
         }
         return (capacity == nread) ? buf : Arrays.copyOf(buf, nread);
     }
 
     /**
-     * Read all the bytes from a file. The method ensures that the file is
+     * Reads all the bytes from a file. The method ensures that the file is
      * closed when all bytes have been read or an I/O error, or other runtime
      * exception, is thrown.
      *
@@ -2999,12 +3082,13 @@ public final class Files {
      *          method is invoked to check read access to the file.
      */
     public static byte[] readAllBytes(Path path) throws IOException {
-        long size = size(path);
-        if (size > (long)Integer.MAX_VALUE)
-            throw new OutOfMemoryError("Required array size too large");
+        try (FileChannel fc = FileChannel.open(path);
+             InputStream is = Channels.newInputStream(fc)) {
+            long size = fc.size();
+            if (size > (long)MAX_BUFFER_SIZE)
+                throw new OutOfMemoryError("Required array size too large");
 
-        try (InputStream in = newInputStream(path)) {
-             return read(in, (int)size);
+            return read(is, (int)size);
         }
     }
 
@@ -3176,5 +3260,363 @@ public final class Files {
             }
         }
         return path;
+    }
+
+    // -- Stream APIs --
+
+    /**
+     * Return a lazily populated {@code Stream}, the elements of
+     * which are the entries in the directory.  The listing is not recursive.
+     *
+     * <p> The elements of the stream are {@link Path} objects that are
+     * obtained as if by {@link Path#resolve(Path) resolving} the name of the
+     * directory entry against {@code dir}. Some file systems maintain special
+     * links to the directory itself and the directory's parent directory.
+     * Entries representing these links are not included.
+     *
+     * <p> The stream is <i>weakly consistent</i>. It is thread safe but does
+     * not freeze the directory while iterating, so it may (or may not)
+     * reflect updates to the directory that occur after returning from this
+     * method.
+     *
+     * <p> The returned stream encapsulates a {@link DirectoryStream}.
+     * If timely disposal of file system resources is required, the
+     * {@code try}-with-resources construct should be used to ensure that the
+     * stream's {@link Stream#close close} method is invoked after the stream
+     * operations are completed.
+     *
+     * <p> Operating on a closed stream behaves as if the end of stream
+     * has been reached. Due to read-ahead, one or more elements may be
+     * returned after the stream has been closed.
+     *
+     * <p> If an {@link IOException} is thrown when accessing the directory
+     * after this method has returned, it is wrapped in an {@link
+     * UncheckedIOException} which will be thrown from the method that caused
+     * the access to take place.
+     *
+     * @param   dir  The path to the directory
+     *
+     * @return  The {@code Stream} describing the content of the
+     *          directory
+     *
+     * @throws  NotDirectoryException
+     *          if the file could not otherwise be opened because it is not
+     *          a directory <i>(optional specific exception)</i>
+     * @throws  IOException
+     *          if an I/O error occurs when opening the directory
+     * @throws  SecurityException
+     *          In the case of the default provider, and a security manager is
+     *          installed, the {@link SecurityManager#checkRead(String) checkRead}
+     *          method is invoked to check read access to the directory.
+     *
+     * @see     #newDirectoryStream(Path)
+     * @since   1.8
+     */
+    public static Stream<Path> list(Path dir) throws IOException {
+        DirectoryStream<Path> ds = Files.newDirectoryStream(dir);
+        try {
+            final Iterator<Path> delegate = ds.iterator();
+
+            // Re-wrap DirectoryIteratorException to UncheckedIOException
+            Iterator<Path> it = new Iterator<Path>() {
+                @Override
+                public boolean hasNext() {
+                    try {
+                        return delegate.hasNext();
+                    } catch (DirectoryIteratorException e) {
+                        throw new UncheckedIOException(e.getCause());
+                    }
+                }
+                @Override
+                public Path next() {
+                    try {
+                        return delegate.next();
+                    } catch (DirectoryIteratorException e) {
+                        throw new UncheckedIOException(e.getCause());
+                    }
+                }
+            };
+
+            return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, Spliterator.DISTINCT), false)
+                                .onClose(asUncheckedRunnable(ds));
+        } catch (Error|RuntimeException e) {
+            try {
+                ds.close();
+            } catch (IOException ex) {
+                try {
+                    e.addSuppressed(ex);
+                } catch (Throwable ignore) {}
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Return a {@code Stream} that is lazily populated with {@code
+     * Path} by walking the file tree rooted at a given starting file.  The
+     * file tree is traversed <em>depth-first</em>, the elements in the stream
+     * are {@link Path} objects that are obtained as if by {@link
+     * Path#resolve(Path) resolving} the relative path against {@code start}.
+     *
+     * <p> The {@code stream} walks the file tree as elements are consumed.
+     * The {@code Stream} returned is guaranteed to have at least one
+     * element, the starting file itself. For each file visited, the stream
+     * attempts to read its {@link BasicFileAttributes}. If the file is a
+     * directory and can be opened successfully, entries in the directory, and
+     * their <em>descendants</em> will follow the directory in the stream as
+     * they are encountered. When all entries have been visited, then the
+     * directory is closed. The file tree walk then continues at the next
+     * <em>sibling</em> of the directory.
+     *
+     * <p> The stream is <i>weakly consistent</i>. It does not freeze the
+     * file tree while iterating, so it may (or may not) reflect updates to
+     * the file tree that occur after returned from this method.
+     *
+     * <p> By default, symbolic links are not automatically followed by this
+     * method. If the {@code options} parameter contains the {@link
+     * FileVisitOption#FOLLOW_LINKS FOLLOW_LINKS} option then symbolic links are
+     * followed. When following links, and the attributes of the target cannot
+     * be read, then this method attempts to get the {@code BasicFileAttributes}
+     * of the link.
+     *
+     * <p> If the {@code options} parameter contains the {@link
+     * FileVisitOption#FOLLOW_LINKS FOLLOW_LINKS} option then the stream keeps
+     * track of directories visited so that cycles can be detected. A cycle
+     * arises when there is an entry in a directory that is an ancestor of the
+     * directory. Cycle detection is done by recording the {@link
+     * java.nio.file.attribute.BasicFileAttributes#fileKey file-key} of directories,
+     * or if file keys are not available, by invoking the {@link #isSameFile
+     * isSameFile} method to test if a directory is the same file as an
+     * ancestor. When a cycle is detected it is treated as an I/O error with
+     * an instance of {@link FileSystemLoopException}.
+     *
+     * <p> The {@code maxDepth} parameter is the maximum number of levels of
+     * directories to visit. A value of {@code 0} means that only the starting
+     * file is visited, unless denied by the security manager. A value of
+     * {@link Integer#MAX_VALUE MAX_VALUE} may be used to indicate that all
+     * levels should be visited.
+     *
+     * <p> When a security manager is installed and it denies access to a file
+     * (or directory), then it is ignored and not included in the stream.
+     *
+     * <p> The returned stream encapsulates one or more {@link DirectoryStream}s.
+     * If timely disposal of file system resources is required, the
+     * {@code try}-with-resources construct should be used to ensure that the
+     * stream's {@link Stream#close close} method is invoked after the stream
+     * operations are completed.  Operating on a closed stream will result in an
+     * {@link java.lang.IllegalStateException}.
+     *
+     * <p> If an {@link IOException} is thrown when accessing the directory
+     * after this method has returned, it is wrapped in an {@link
+     * UncheckedIOException} which will be thrown from the method that caused
+     * the access to take place.
+     *
+     * @param   start
+     *          the starting file
+     * @param   maxDepth
+     *          the maximum number of directory levels to visit
+     * @param   options
+     *          options to configure the traversal
+     *
+     * @return  the {@link Stream} of {@link Path}
+     *
+     * @throws  IllegalArgumentException
+     *          if the {@code maxDepth} parameter is negative
+     * @throws  SecurityException
+     *          If the security manager denies access to the starting file.
+     *          In the case of the default provider, the {@link
+     *          SecurityManager#checkRead(String) checkRead} method is invoked
+     *          to check read access to the directory.
+     * @throws  IOException
+     *          if an I/O error is thrown when accessing the starting file.
+     * @since   1.8
+     */
+    public static Stream<Path> walk(Path start, int maxDepth,
+                                    FileVisitOption... options)
+            throws IOException {
+        FileTreeIterator iterator = new FileTreeIterator(start, maxDepth, options);
+        try {
+            return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.DISTINCT), false)
+                                .onClose(iterator::close)
+                                .map(entry -> entry.file());
+        } catch (Error|RuntimeException e) {
+            iterator.close();
+            throw e;
+        }
+    }
+
+    /**
+     * Return a {@code Stream} that is lazily populated with {@code
+     * Path} by walking the file tree rooted at a given starting file.  The
+     * file tree is traversed <em>depth-first</em>, the elements in the stream
+     * are {@link Path} objects that are obtained as if by {@link
+     * Path#resolve(Path) resolving} the relative path against {@code start}.
+     *
+     * <p> This method works as if invoking it were equivalent to evaluating the
+     * expression:
+     * <blockquote><pre>
+     * walk(start, Integer.MAX_VALUE, options)
+     * </pre></blockquote>
+     * In other words, it visits all levels of the file tree.
+     *
+     * <p> The returned stream encapsulates one or more {@link DirectoryStream}s.
+     * If timely disposal of file system resources is required, the
+     * {@code try}-with-resources construct should be used to ensure that the
+     * stream's {@link Stream#close close} method is invoked after the stream
+     * operations are completed.  Operating on a closed stream will result in an
+     * {@link java.lang.IllegalStateException}.
+     *
+     * @param   start
+     *          the starting file
+     * @param   options
+     *          options to configure the traversal
+     *
+     * @return  the {@link Stream} of {@link Path}
+     *
+     * @throws  SecurityException
+     *          If the security manager denies access to the starting file.
+     *          In the case of the default provider, the {@link
+     *          SecurityManager#checkRead(String) checkRead} method is invoked
+     *          to check read access to the directory.
+     * @throws  IOException
+     *          if an I/O error is thrown when accessing the starting file.
+     *
+     * @see     #walk(Path, int, FileVisitOption...)
+     * @since   1.8
+     */
+    public static Stream<Path> walk(Path start,
+                                    FileVisitOption... options)
+            throws IOException {
+        return walk(start, Integer.MAX_VALUE, options);
+    }
+
+    /**
+     * Return a {@code Stream} that is lazily populated with {@code
+     * Path} by searching for files in a file tree rooted at a given starting
+     * file.
+     *
+     * <p> This method walks the file tree in exactly the manner specified by
+     * the {@link #walk walk} method. For each file encountered, the given
+     * {@link BiPredicate} is invoked with its {@link Path} and {@link
+     * BasicFileAttributes}. The {@code Path} object is obtained as if by
+     * {@link Path#resolve(Path) resolving} the relative path against {@code
+     * start} and is only included in the returned {@link Stream} if
+     * the {@code BiPredicate} returns true. Compare to calling {@link
+     * java.util.stream.Stream#filter filter} on the {@code Stream}
+     * returned by {@code walk} method, this method may be more efficient by
+     * avoiding redundant retrieval of the {@code BasicFileAttributes}.
+     *
+     * <p> The returned stream encapsulates one or more {@link DirectoryStream}s.
+     * If timely disposal of file system resources is required, the
+     * {@code try}-with-resources construct should be used to ensure that the
+     * stream's {@link Stream#close close} method is invoked after the stream
+     * operations are completed.  Operating on a closed stream will result in an
+     * {@link java.lang.IllegalStateException}.
+     *
+     * <p> If an {@link IOException} is thrown when accessing the directory
+     * after returned from this method, it is wrapped in an {@link
+     * UncheckedIOException} which will be thrown from the method that caused
+     * the access to take place.
+     *
+     * @param   start
+     *          the starting file
+     * @param   maxDepth
+     *          the maximum number of directory levels to search
+     * @param   matcher
+     *          the function used to decide whether a file should be included
+     *          in the returned stream
+     * @param   options
+     *          options to configure the traversal
+     *
+     * @return  the {@link Stream} of {@link Path}
+     *
+     * @throws  IllegalArgumentException
+     *          if the {@code maxDepth} parameter is negative
+     * @throws  SecurityException
+     *          If the security manager denies access to the starting file.
+     *          In the case of the default provider, the {@link
+     *          SecurityManager#checkRead(String) checkRead} method is invoked
+     *          to check read access to the directory.
+     * @throws  IOException
+     *          if an I/O error is thrown when accessing the starting file.
+     *
+     * @see     #walk(Path, int, FileVisitOption...)
+     * @since   1.8
+     */
+    public static Stream<Path> find(Path start,
+                                    int maxDepth,
+                                    BiPredicate<Path, BasicFileAttributes> matcher,
+                                    FileVisitOption... options)
+            throws IOException {
+        FileTreeIterator iterator = new FileTreeIterator(start, maxDepth, options);
+        try {
+            return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.DISTINCT), false)
+                                .onClose(iterator::close)
+                                .filter(entry -> matcher.test(entry.file(), entry.attributes()))
+                                .map(entry -> entry.file());
+        } catch (Error|RuntimeException e) {
+            iterator.close();
+            throw e;
+        }
+    }
+
+    /**
+     * Read all lines from a file as a {@code Stream}.  Unlike {@link
+     * #readAllLines(Path, Charset) readAllLines}, this method does not read
+     * all lines into a {@code List}, but instead populates lazily as the stream
+     * is consumed.
+     *
+     * <p> Bytes from the file are decoded into characters using the specified
+     * charset and the same line terminators as specified by {@code
+     * readAllLines} are supported.
+     *
+     * <p> After this method returns, then any subsequent I/O exception that
+     * occurs while reading from the file or when a malformed or unmappable byte
+     * sequence is read, is wrapped in an {@link UncheckedIOException} that will
+     * be thrown from the
+     * {@link java.util.stream.Stream} method that caused the read to take
+     * place. In case an {@code IOException} is thrown when closing the file,
+     * it is also wrapped as an {@code UncheckedIOException}.
+     *
+     * <p> The returned stream encapsulates a {@link Reader}.  If timely
+     * disposal of file system resources is required, the try-with-resources
+     * construct should be used to ensure that the stream's
+     * {@link Stream#close close} method is invoked after the stream operations
+     * are completed.
+     *
+     *
+     * @param   path
+     *          the path to the file
+     * @param   cs
+     *          the charset to use for decoding
+     *
+     * @return  the lines from the file as a {@code Stream}
+     *
+     * @throws  IOException
+     *          if an I/O error occurs opening the file
+     * @throws  SecurityException
+     *          In the case of the default provider, and a security manager is
+     *          installed, the {@link SecurityManager#checkRead(String) checkRead}
+     *          method is invoked to check read access to the file.
+     *
+     * @see     #readAllLines(Path, Charset)
+     * @see     #newBufferedReader(Path, Charset)
+     * @see     java.io.BufferedReader#lines()
+     * @since   1.8
+     */
+    public static Stream<String> lines(Path path, Charset cs) throws IOException {
+        BufferedReader br = Files.newBufferedReader(path, cs);
+        try {
+            return br.lines().onClose(asUncheckedRunnable(br));
+        } catch (Error|RuntimeException e) {
+            try {
+                br.close();
+            } catch (IOException ex) {
+                try {
+                    e.addSuppressed(ex);
+                } catch (Throwable ignore) {}
+            }
+            throw e;
+        }
     }
 }

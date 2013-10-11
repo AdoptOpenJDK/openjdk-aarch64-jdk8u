@@ -145,6 +145,14 @@ abstract class Handshaker {
     /* True if it's OK to start a new SSL session */
     boolean             enableNewSession;
 
+    // Whether local cipher suites preference should be honored during
+    // handshaking?
+    //
+    // Note that in this provider, this option only applies to server side.
+    // Local cipher suites preference is always honored in client side in
+    // this provider.
+    boolean preferLocalCipherSuites = false;
+
     // Temporary storage for the individual keys. Set by
     // calculateConnectionKeys() and cleared once the ciphers are
     // activated.
@@ -185,6 +193,16 @@ abstract class Handshaker {
     // By default, allow such legacy hello messages.
     static final boolean allowLegacyHelloMessages = Debug.getBooleanProperty(
                     "sun.security.ssl.allowLegacyHelloMessages", true);
+
+    // To prevent the TLS renegotiation issues, by setting system property
+    // "jdk.tls.rejectClientInitiatedRenegotiation" to true, applications in
+    // server side can disable all client initiated SSL renegotiations
+    // regardless of the support of TLS protocols.
+    //
+    // By default, allow client initiated renegotiations.
+    static final boolean rejectClientInitiatedRenego =
+            Debug.getBooleanProperty(
+                "jdk.tls.rejectClientInitiatedRenegotiation", false);
 
     // need to dispose the object when it is invalidated
     boolean invalidated;
@@ -453,6 +471,13 @@ abstract class Handshaker {
     }
 
     /**
+     * Sets the cipher suites preference.
+     */
+    void setUseCipherSuitesOrder(boolean on) {
+        this.preferLocalCipherSuites = on;
+    }
+
+    /**
      * Prior to handshaking, activate the handshake and initialize the version,
      * input stream and output stream.
      */
@@ -523,7 +548,9 @@ abstract class Handshaker {
     }
 
     /**
-     * Check if the given ciphersuite is enabled and available.
+     * Check if the given ciphersuite is enabled and available within the
+     * current active cipher suites.
+     *
      * Does not check if the required server certificates are available.
      */
     boolean isNegotiable(CipherSuite s) {
@@ -531,7 +558,17 @@ abstract class Handshaker {
             activeCipherSuites = getActiveCipherSuites();
         }
 
-        return activeCipherSuites.contains(s) && s.isNegotiable();
+        return isNegotiable(activeCipherSuites, s);
+    }
+
+    /**
+     * Check if the given ciphersuite is enabled and available within the
+     * proposed cipher suite list.
+     *
+     * Does not check if the required server certificates are available.
+     */
+    final static boolean isNegotiable(CipherSuiteList proposed, CipherSuite s) {
+        return proposed.contains(s) && s.isNegotiable();
     }
 
     /**

@@ -38,6 +38,7 @@ import java.util.*;
 import sun.awt.*;
 import sun.lwawt.macosx.*;
 import sun.print.*;
+import sun.security.util.SecurityConstants;
 
 public abstract class LWToolkit extends SunToolkit implements Runnable {
 
@@ -53,7 +54,12 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
     private Clipboard clipboard;
     private MouseInfoPeer mouseInfoPeer;
 
-    public LWToolkit() {
+    /**
+     * Dynamic Layout Resize client code setting.
+     */
+    private volatile boolean dynamicLayoutSetting = true;
+
+    protected LWToolkit() {
     }
 
     /*
@@ -497,7 +503,7 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
     public Clipboard getSystemClipboard() {
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
-            security.checkSystemClipboardAccess();
+            security.checkPermission(SecurityConstants.AWT.ACCESS_CLIPBOARD_PERMISSION);
         }
 
         synchronized (this) {
@@ -507,6 +513,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
         }
         return clipboard;
     }
+
+    protected abstract SecurityWarningWindow createSecurityWarning(Window ownerWindow, LWWindowPeer ownerPeer);
 
     // ---- DELEGATES ---- //
 
@@ -549,16 +557,51 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
     }
 
     @Override
-    public void grab(Window w) {
-        if (w.getPeer() != null) {
-            ((LWWindowPeer)w.getPeer()).grab();
+    public void grab(final Window w) {
+        final Object peer = AWTAccessor.getComponentAccessor().getPeer(w);
+        if (peer != null) {
+            ((LWWindowPeer) peer).grab();
         }
     }
 
     @Override
-    public void ungrab(Window w) {
-        if (w.getPeer() != null) {
-            ((LWWindowPeer)w.getPeer()).ungrab(false);
+    public void ungrab(final Window w) {
+        final Object peer = AWTAccessor.getComponentAccessor().getPeer(w);
+        if (peer != null) {
+            ((LWWindowPeer) peer).ungrab(false);
         }
+    }
+
+    @Override
+    protected final Object lazilyLoadDesktopProperty(final String name) {
+        if (name.equals("awt.dynamicLayoutSupported")) {
+            return isDynamicLayoutSupported();
+        }
+        return super.lazilyLoadDesktopProperty(name);
+    }
+
+    @Override
+    public final void setDynamicLayout(final boolean dynamic) {
+        dynamicLayoutSetting = dynamic;
+    }
+
+    @Override
+    protected final boolean isDynamicLayoutSet() {
+        return dynamicLayoutSetting;
+    }
+
+    @Override
+    public final boolean isDynamicLayoutActive() {
+        // "Live resizing" is active by default and user's data is ignored.
+        return isDynamicLayoutSupported();
+    }
+
+    /**
+     * Returns true if dynamic layout of Containers on resize is supported by
+     * the underlying operating system and/or window manager.
+     */
+    protected final boolean isDynamicLayoutSupported() {
+        // "Live resizing" is supported by default.
+        return true;
     }
 }

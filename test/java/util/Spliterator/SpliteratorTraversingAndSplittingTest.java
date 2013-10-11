@@ -25,6 +25,7 @@
  * @test
  * @summary Spliterator traversing and splitting tests
  * @run testng SpliteratorTraversingAndSplittingTest
+ * @bug 8020016
  */
 
 import org.testng.annotations.DataProvider;
@@ -128,6 +129,10 @@ public class SpliteratorTraversingAndSplittingTest {
 
         void addMap(Function<Map<T, T>, ? extends Map<T, T>> m) {
             String description = "new " + m.apply(Collections.<T, T>emptyMap()).getClass().getName();
+            addMap(m, description);
+        }
+
+        void addMap(Function<Map<T, T>, ? extends Map<T, T>> m, String description) {
             add(description + ".keySet().spliterator()", () -> m.apply(mExp).keySet().spliterator());
             add(description + ".values().spliterator()", () -> m.apply(mExp).values().spliterator());
             add(description + ".entrySet().spliterator()", mExp.entrySet(), () -> m.apply(mExp).entrySet().spliterator());
@@ -166,7 +171,7 @@ public class SpliteratorTraversingAndSplittingTest {
                    () -> Spliterators.spliteratorUnknownSize(exp.iterator(), 0));
 
             db.add("Spliterators.spliterator(Spliterators.iteratorFromSpliterator(Spliterator ), ...)",
-                   () -> Spliterators.spliterator(Spliterators.iteratorFromSpliterator(exp.spliterator()), exp.size(), 0));
+                   () -> Spliterators.spliterator(Spliterators.iterator(exp.spliterator()), exp.size(), 0));
 
             db.add("Spliterators.spliterator(T[], ...)",
                    () -> Spliterators.spliterator(exp.toArray(new Integer[0]), 0));
@@ -317,6 +322,21 @@ public class SpliteratorTraversingAndSplittingTest {
             db.addCollection(
                     c -> new AbstractSortedSetImpl(c));
 
+            class IterableWrapper implements Iterable<Integer> {
+                final Iterable<Integer> it;
+
+                IterableWrapper(Iterable<Integer> it) {
+                    this.it = it;
+                }
+
+                @Override
+                public Iterator<Integer> iterator() {
+                    return it.iterator();
+                }
+            }
+            db.add("new Iterable.spliterator()",
+                   () -> new IterableWrapper(exp).spliterator());
+
             //
 
             db.add("Arrays.asList().spliterator()",
@@ -367,9 +387,21 @@ public class SpliteratorTraversingAndSplittingTest {
 
             db.addCollection(CopyOnWriteArraySet::new);
 
-            if (size == 1) {
+            if (size == 0) {
+                db.addCollection(c -> Collections.<Integer>emptySet());
+                db.addList(c -> Collections.<Integer>emptyList());
+            }
+            else if (size == 1) {
                 db.addCollection(c -> Collections.singleton(exp.get(0)));
                 db.addCollection(c -> Collections.singletonList(exp.get(0)));
+            }
+
+            {
+                Integer[] ai = new Integer[size];
+                Arrays.fill(ai, 1);
+                db.add(String.format("Collections.nCopies(%d, 1)", exp.size()),
+                       Arrays.asList(ai),
+                       () -> Collections.nCopies(exp.size(), 1).spliterator());
             }
 
             // Collections.synchronized/unmodifiable/checked wrappers
@@ -399,11 +431,35 @@ public class SpliteratorTraversingAndSplittingTest {
 
             db.addMap(HashMap::new);
 
+            db.addMap(m -> {
+                // Create a Map ensuring that for large sizes
+                // buckets will contain 2 or more entries
+                HashMap<Integer, Integer> cm = new HashMap<>(1, m.size() + 1);
+                // Don't use putAll which inflates the table by
+                // m.size() * loadFactor, thus creating a very sparse
+                // map for 1000 entries defeating the purpose of this test,
+                // in addition it will cause the split until null test to fail
+                // because the number of valid splits is larger than the
+                // threshold
+                for (Map.Entry<Integer, Integer> e : m.entrySet())
+                    cm.put(e.getKey(), e.getValue());
+                return cm;
+            }, "new java.util.HashMap(1, size + 1)");
+
             db.addMap(LinkedHashMap::new);
 
             db.addMap(IdentityHashMap::new);
 
             db.addMap(WeakHashMap::new);
+
+            db.addMap(m -> {
+                // Create a Map ensuring that for large sizes
+                // buckets will be consist of 2 or more entries
+                WeakHashMap<Integer, Integer> cm = new WeakHashMap<>(1, m.size() + 1);
+                for (Map.Entry<Integer, Integer> e : m.entrySet())
+                    cm.put(e.getKey(), e.getValue());
+                return cm;
+            }, "new java.util.WeakHashMap(1, size + 1)");
 
             // @@@  Descending maps etc
             db.addMap(TreeMap::new);
@@ -411,6 +467,13 @@ public class SpliteratorTraversingAndSplittingTest {
             db.addMap(ConcurrentHashMap::new);
 
             db.addMap(ConcurrentSkipListMap::new);
+
+            if (size == 0) {
+                db.addMap(m -> Collections.<Integer, Integer>emptyMap());
+            }
+            else if (size == 1) {
+                db.addMap(m -> Collections.singletonMap(exp.get(0), exp.get(0)));
+            }
         }
 
         return spliteratorDataProvider = data.toArray(new Object[0][]);
@@ -521,10 +584,10 @@ public class SpliteratorTraversingAndSplittingTest {
                    () -> Arrays.spliterator(exp));
 
             db.add("Spliterators.spliterator(PrimitiveIterator.OfInt, ...)",
-                   () -> Spliterators.spliterator(Spliterators.iteratorFromSpliterator(Arrays.spliterator(exp)), exp.length, 0));
+                   () -> Spliterators.spliterator(Spliterators.iterator(Arrays.spliterator(exp)), exp.length, 0));
 
             db.add("Spliterators.spliteratorUnknownSize(PrimitiveIterator.OfInt, ...)",
-                   () -> Spliterators.spliteratorUnknownSize(Spliterators.iteratorFromSpliterator(Arrays.spliterator(exp)), 0));
+                   () -> Spliterators.spliteratorUnknownSize(Spliterators.iterator(Arrays.spliterator(exp)), 0));
 
             class IntSpliteratorFromArray extends Spliterators.AbstractIntSpliterator {
                 int[] a;
@@ -674,10 +737,10 @@ public class SpliteratorTraversingAndSplittingTest {
                    () -> Arrays.spliterator(exp));
 
             db.add("Spliterators.spliterator(PrimitiveIterator.OfLong, ...)",
-                   () -> Spliterators.spliterator(Spliterators.iteratorFromSpliterator(Arrays.spliterator(exp)), exp.length, 0));
+                   () -> Spliterators.spliterator(Spliterators.iterator(Arrays.spliterator(exp)), exp.length, 0));
 
             db.add("Spliterators.spliteratorUnknownSize(PrimitiveIterator.OfLong, ...)",
-                   () -> Spliterators.spliteratorUnknownSize(Spliterators.iteratorFromSpliterator(Arrays.spliterator(exp)), 0));
+                   () -> Spliterators.spliteratorUnknownSize(Spliterators.iterator(Arrays.spliterator(exp)), 0));
 
             class LongSpliteratorFromArray extends Spliterators.AbstractLongSpliterator {
                 long[] a;
@@ -834,10 +897,10 @@ public class SpliteratorTraversingAndSplittingTest {
                    () -> Arrays.spliterator(exp));
 
             db.add("Spliterators.spliterator(PrimitiveIterator.OfDouble, ...)",
-                   () -> Spliterators.spliterator(Spliterators.iteratorFromSpliterator(Arrays.spliterator(exp)), exp.length, 0));
+                   () -> Spliterators.spliterator(Spliterators.iterator(Arrays.spliterator(exp)), exp.length, 0));
 
             db.add("Spliterators.spliteratorUnknownSize(PrimitiveIterator.OfDouble, ...)",
-                   () -> Spliterators.spliteratorUnknownSize(Spliterators.iteratorFromSpliterator(Arrays.spliterator(exp)), 0));
+                   () -> Spliterators.spliteratorUnknownSize(Spliterators.iterator(Arrays.spliterator(exp)), 0));
 
             class DoubleSpliteratorFromArray extends Spliterators.AbstractDoubleSpliterator {
                 double[] a;
@@ -1096,7 +1159,7 @@ public class SpliteratorTraversingAndSplittingTest {
             List<T> dest = new ArrayList<>();
             spliterator = supplier.get();
 
-            assertSpliterator(spliterator);
+            assertRootSpliterator(spliterator);
 
             // verify splitting with forEach
             visit(depth, 0, dest, spliterator, boxingAdapter, spliterator.characteristics(), false);
@@ -1171,7 +1234,7 @@ public class SpliteratorTraversingAndSplittingTest {
             UnaryOperator<Consumer<T>> boxingAdapter) {
         Spliterator<T> s = supplier.get();
         boolean isOrdered = s.hasCharacteristics(Spliterator.ORDERED);
-        assertSpliterator(s);
+        assertRootSpliterator(s);
 
         List<T> splits = new ArrayList<>();
         Consumer<T> c = boxingAdapter.apply(splits::add);
@@ -1261,6 +1324,13 @@ public class SpliteratorTraversingAndSplittingTest {
             stack.push(e.fromSplit(parentAndRightSplit));
             stack.push(e.fromSplit(leftSplit));
         }
+    }
+
+    private static void assertRootSpliterator(Spliterator<?> s) {
+        assertFalse(s.hasCharacteristics(Spliterator.SIZED | Spliterator.CONCURRENT),
+                    "Root spliterator should not be SIZED and CONCURRENT");
+
+        assertSpliterator(s);
     }
 
     private static void assertSpliterator(Spliterator<?> s, int rootCharacteristics) {

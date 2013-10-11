@@ -32,7 +32,7 @@ import java.time.chrono.IsoChronology;
 import java.time.chrono.JapaneseChronology;
 import java.time.chrono.MinguoChronology;
 import java.time.chrono.ThaiBuddhistChronology;
-import java.time.format.DateTimeFormatSymbols;
+import java.time.format.DecimalStyle;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
@@ -110,7 +110,7 @@ public class TestNonIsoFormatter {
             // Chronology, Locale, Chronology Name
             { ISO8601,  Locale.ENGLISH, "ISO" },    // No data in CLDR; Use Id.
             { BUDDHIST, Locale.ENGLISH, "Buddhist Calendar" },
-            { HIJRAH,   Locale.ENGLISH, "Hijrah-umalqura" }, // No data in CLDR; Use Id.
+            { HIJRAH,   Locale.ENGLISH, "Islamic Umm al-Qura Calendar" }, // JDK-8015986
             { JAPANESE, Locale.ENGLISH, "Japanese Calendar" },
             { MINGUO,   Locale.ENGLISH, "Minguo Calendar" },
 
@@ -121,27 +121,31 @@ public class TestNonIsoFormatter {
             { ISO8601,  thTH, "ISO" },    // No data in CLDR; Use Id.
             { JAPANESE, thTH, "\u0e1b\u0e0f\u0e34\u0e17\u0e34\u0e19\u0e0d\u0e35\u0e48\u0e1b\u0e38\u0e48\u0e19" },
             { BUDDHIST, thTH, "\u0e1b\u0e0f\u0e34\u0e17\u0e34\u0e19\u0e1e\u0e38\u0e17\u0e18" },
+
+            { HIJRAH,   ARABIC, "\u0644\u062a\u0642\u0648\u064a\u0645 "
+                                + "\u0627\u0644\u0647\u062c\u0631\u064a\u060c "
+                                + "\u0623\u0645 \u0627\u0644\u0642\u0631\u0649" }, // JDK-8015986
         };
     }
 
     @Test(dataProvider="format_data")
     public void test_formatLocalizedDate(Chronology chrono, Locale formatLocale, Locale numberingLocale,
-                                         ChronoLocalDate<?> date, String expected) {
+                                         ChronoLocalDate date, String expected) {
         DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
             .withChronology(chrono).withLocale(formatLocale)
-            .withSymbols(DateTimeFormatSymbols.of(numberingLocale));
+            .withDecimalStyle(DecimalStyle.of(numberingLocale));
         String text = dtf.format(date);
         assertEquals(text, expected);
     }
 
     @Test(dataProvider="format_data")
     public void test_parseLocalizedText(Chronology chrono, Locale formatLocale, Locale numberingLocale,
-                                        ChronoLocalDate<?> expected, String text) {
+                                        ChronoLocalDate expected, String text) {
         DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
             .withChronology(chrono).withLocale(formatLocale)
-            .withSymbols(DateTimeFormatSymbols.of(numberingLocale));
+            .withDecimalStyle(DecimalStyle.of(numberingLocale));
         TemporalAccessor temporal = dtf.parse(text);
-        ChronoLocalDate<?> date = chrono.date(temporal);
+        ChronoLocalDate date = chrono.date(temporal);
         assertEquals(date, expected);
     }
 

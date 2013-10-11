@@ -56,6 +56,8 @@
  */
 package java.time.chrono;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
 import static java.time.temporal.ChronoField.PROLEPTIC_MONTH;
 import static java.time.temporal.ChronoField.YEAR;
 
@@ -65,12 +67,15 @@ import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
 import java.time.temporal.ValueRange;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * The Minguo calendar system.
@@ -95,7 +100,7 @@ import java.util.Locale;
  *  are never out of step.
  * </ul><p>
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -253,16 +258,19 @@ public final class MinguoChronology extends Chronology implements Serializable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public ChronoLocalDateTime<MinguoDate> localDateTime(TemporalAccessor temporal) {
         return (ChronoLocalDateTime<MinguoDate>)super.localDateTime(temporal);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public ChronoZonedDateTime<MinguoDate> zonedDateTime(TemporalAccessor temporal) {
         return (ChronoZonedDateTime<MinguoDate>)super.zonedDateTime(temporal);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public ChronoZonedDateTime<MinguoDate> zonedDateTime(Instant instant, ZoneId zone) {
         return (ChronoZonedDateTime<MinguoDate>)super.zonedDateTime(instant, zone);
     }
@@ -292,7 +300,7 @@ public final class MinguoChronology extends Chronology implements Serializable {
     }
 
     @Override
-    public Era eraOf(int eraValue) {
+    public MinguoEra eraOf(int eraValue) {
         return MinguoEra.of(eraValue);
     }
 
@@ -321,4 +329,35 @@ public final class MinguoChronology extends Chronology implements Serializable {
         return field.range();
     }
 
+    //-----------------------------------------------------------------------
+    @Override  // override for return type
+    public MinguoDate resolveDate(Map<TemporalField, Long> fieldValues, ResolverStyle resolverStyle) {
+        return (MinguoDate) super.resolveDate(fieldValues, resolverStyle);
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Writes the Chronology using a
+     * <a href="../../../serialized-form.html#java.time.chrono.Ser">dedicated serialized form</a>.
+     * @serialData
+     * <pre>
+     *  out.writeByte(1);     // identifies a Chronology
+     *  out.writeUTF(getId());
+     * </pre>
+     *
+     * @return the instance of {@code Ser}, not null
+     */
+    @Override
+    Object writeReplace() {
+        return super.writeReplace();
+    }
+
+    /**
+     * Defend against malicious streams.
+     * @return never
+     * @throws InvalidObjectException always
+     */
+    private Object readResolve() throws InvalidObjectException {
+        throw new InvalidObjectException("Deserialization via serialization delegate");
+    }
 }

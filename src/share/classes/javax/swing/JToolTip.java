@@ -31,6 +31,7 @@ import javax.accessibility.*;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 
 /**
@@ -84,7 +85,7 @@ public class JToolTip extends JComponent implements Accessible {
     }
 
     /**
-     * Returns the L&F object that renders this component.
+     * Returns the L&amp;F object that renders this component.
      *
      * @return the <code>ToolTipUI</code> object that renders this component
      */
@@ -103,7 +104,7 @@ public class JToolTip extends JComponent implements Accessible {
 
 
     /**
-     * Returns the name of the L&F class that renders this component.
+     * Returns the name of the L&amp;F class that renders this component.
      *
      * @return the string "ToolTipUI"
      * @see JComponent#getUIClassID
@@ -128,6 +129,11 @@ public class JToolTip extends JComponent implements Accessible {
         String oldValue = this.tipText;
         this.tipText = tipText;
         firePropertyChange("tiptext", oldValue, tipText);
+
+        if (!Objects.equals(oldValue, tipText)) {
+            revalidate();
+            repaint();
+        }
     }
 
     /**

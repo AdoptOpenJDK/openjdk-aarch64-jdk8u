@@ -34,13 +34,14 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.lang.ref.WeakReference;
 import java.nio.charset.CoderMalfunctionError;                  // javadoc
+import java.util.Arrays;
 
 
 /**
  * An engine that can transform a sequence of $itypesPhrase$ into a sequence of
  * $otypesPhrase$.
  *
- * <a name="steps">
+ * <a name="steps"></a>
  *
  * <p> The input $itype$ sequence is provided in a $itype$ buffer or a series
  * of such buffers.  The output $otype$ sequence is written to a $otype$ buffer
@@ -75,22 +76,22 @@ import java.nio.charset.CoderMalfunctionError;                  // javadoc
  * examine this object and fill the input buffer, flush the output buffer, or
  * attempt to recover from $a$ $coding$ error, as appropriate, and try again.
  *
- * <a name="ce">
+ * <a name="ce"></a>
  *
  * <p> There are two general types of $coding$ errors.  If the input $itype$
  * sequence is $notLegal$ then the input is considered <i>malformed</i>.  If
  * the input $itype$ sequence is legal but cannot be mapped to a valid
  * $outSequence$ then an <i>unmappable character</i> has been encountered.
  *
- * <a name="cae">
+ * <a name="cae"></a>
  *
  * <p> How $a$ $coding$ error is handled depends upon the action requested for
  * that type of error, which is described by an instance of the {@link
- * CodingErrorAction} class.  The possible error actions are to {@link
- * CodingErrorAction#IGNORE </code>ignore<code>} the erroneous input, {@link
- * CodingErrorAction#REPORT </code>report<code>} the error to the invoker via
- * the returned {@link CoderResult} object, or {@link CodingErrorAction#REPLACE
- * </code>replace<code>} the erroneous input with the current value of the
+ * CodingErrorAction} class.  The possible error actions are to {@linkplain
+ * CodingErrorAction#IGNORE ignore} the erroneous input, {@linkplain
+ * CodingErrorAction#REPORT report} the error to the invoker via
+ * the returned {@link CoderResult} object, or {@linkplain CodingErrorAction#REPLACE
+ * replace} the erroneous input with the current value of the
  * replacement $replTypeName$.  The replacement
  *
 #if[encoder]
@@ -105,7 +106,7 @@ import java.nio.charset.CoderMalfunctionError;                  // javadoc
  * replaceWith} method.
  *
  * <p> The default action for malformed-input and unmappable-character errors
- * is to {@link CodingErrorAction#REPORT </code>report<code>} them.  The
+ * is to {@linkplain CodingErrorAction#REPORT report} them.  The
  * malformed-input error action may be changed via the {@link
  * #onMalformedInput(CodingErrorAction) onMalformedInput} method; the
  * unmappable-character action may be changed via the {@link
@@ -160,7 +161,10 @@ public abstract class Charset$Coder$ {
 
     /**
      * Initializes a new $coder$.  The new $coder$ will have the given
-     * $otypes-per-itype$ and replacement values. </p>
+     * $otypes-per-itype$ and replacement values.
+     *
+     * @param  cs
+     *         The charset that created this $coder$
      *
      * @param  average$ItypesPerOtype$
      *         A positive float value indicating the expected number of
@@ -173,7 +177,7 @@ public abstract class Charset$Coder$ {
      * @param  replacement
      *         The initial replacement; must not be <tt>null</tt>, must have
      *         non-zero length, must not be longer than max$ItypesPerOtype$,
-     *         and must be {@link #isLegalReplacement </code>legal<code>}
+     *         and must be {@linkplain #isLegalReplacement legal}
      *
      * @throws  IllegalArgumentException
      *          If the preconditions on the parameters do not hold
@@ -206,7 +210,10 @@ public abstract class Charset$Coder$ {
     /**
      * Initializes a new $coder$.  The new $coder$ will have the given
      * $otypes-per-itype$ values and its replacement will be the
-     * $replTypeName$ $defaultReplName$. </p>
+     * $replTypeName$ $defaultReplName$.
+     *
+     * @param  cs
+     *         The charset that created this $coder$
      *
      * @param  average$ItypesPerOtype$
      *         A positive float value indicating the expected number of
@@ -229,7 +236,7 @@ public abstract class Charset$Coder$ {
     }
 
     /**
-     * Returns the charset that created this $coder$.  </p>
+     * Returns the charset that created this $coder$.
      *
      * @return  This $coder$'s charset
      */
@@ -238,13 +245,18 @@ public abstract class Charset$Coder$ {
     }
 
     /**
-     * Returns this $coder$'s replacement value. </p>
+     * Returns this $coder$'s replacement value.
      *
      * @return  This $coder$'s current replacement,
      *          which is never <tt>null</tt> and is never empty
      */
     public final $replType$ replacement() {
+#if[decoder]
         return replacement;
+#end[decoder]
+#if[encoder]
+        return Arrays.copyOf(replacement, replacement.$replLength$);
+#end[encoder]
     }
 
     /**
@@ -254,7 +266,7 @@ public abstract class Charset$Coder$ {
      * method, passing the new replacement, after checking that the new
      * replacement is acceptable.  </p>
      *
-     * @param  newReplacement
+     * @param  newReplacement  The replacement value
      *
 #if[decoder]
      *         The new replacement; must not be <tt>null</tt>
@@ -264,7 +276,7 @@ public abstract class Charset$Coder$ {
      *         The new replacement; must not be <tt>null</tt>, must have
      *         non-zero length, must not be longer than the value returned by
      *         the {@link #max$ItypesPerOtype$() max$ItypesPerOtype$} method, and
-     *         must be {@link #isLegalReplacement </code>legal<code>}
+     *         must be {@link #isLegalReplacement legal}
 #end[encoder]
      *
      * @return  This $coder$
@@ -280,12 +292,15 @@ public abstract class Charset$Coder$ {
             throw new IllegalArgumentException("Empty replacement");
         if (len > max$ItypesPerOtype$)
             throw new IllegalArgumentException("Replacement too long");
+#if[decoder]
+        this.replacement = newReplacement;
+#end[decoder]
 #if[encoder]
         if (!isLegalReplacement(newReplacement))
             throw new IllegalArgumentException("Illegal replacement");
+        this.replacement = Arrays.copyOf(newReplacement, newReplacement.$replLength$);
 #end[encoder]
-        this.replacement = newReplacement;
-        implReplaceWith(newReplacement);
+        implReplaceWith(this.replacement);
         return this;
     }
 
@@ -296,7 +311,7 @@ public abstract class Charset$Coder$ {
      * should be overridden by $coder$s that require notification of changes to
      * the replacement.  </p>
      *
-     * @param  newReplacement
+     * @param  newReplacement    The replacement value
      */
     protected void implReplaceWith($replType$ newReplacement) {
     }
@@ -342,7 +357,7 @@ public abstract class Charset$Coder$ {
 #end[encoder]
 
     /**
-     * Returns this $coder$'s current action for malformed-input errors.  </p>
+     * Returns this $coder$'s current action for malformed-input errors.
      *
      * @return The current malformed-input action, which is never <tt>null</tt>
      */
@@ -351,7 +366,7 @@ public abstract class Charset$Coder$ {
     }
 
     /**
-     * Changes this $coder$'s action for malformed-input errors.  </p>
+     * Changes this $coder$'s action for malformed-input errors.
      *
      * <p> This method invokes the {@link #implOnMalformedInput
      * implOnMalformedInput} method, passing the new action.  </p>
@@ -377,12 +392,13 @@ public abstract class Charset$Coder$ {
      * <p> The default implementation of this method does nothing.  This method
      * should be overridden by $coder$s that require notification of changes to
      * the malformed-input action.  </p>
+     *
+     * @param  newAction  The new action
      */
     protected void implOnMalformedInput(CodingErrorAction newAction) { }
 
     /**
      * Returns this $coder$'s current action for unmappable-character errors.
-     * </p>
      *
      * @return The current unmappable-character action, which is never
      *         <tt>null</tt>
@@ -420,13 +436,15 @@ public abstract class Charset$Coder$ {
      * <p> The default implementation of this method does nothing.  This method
      * should be overridden by $coder$s that require notification of changes to
      * the unmappable-character action.  </p>
+     *
+     * @param  newAction  The new action
      */
     protected void implOnUnmappableCharacter(CodingErrorAction newAction) { }
 
     /**
      * Returns the average number of $otype$s that will be produced for each
      * $itype$ of input.  This heuristic value may be used to estimate the size
-     * of the output buffer required for a given input sequence. </p>
+     * of the output buffer required for a given input sequence.
      *
      * @return  The average number of $otype$s produced
      *          per $itype$ of input
@@ -438,7 +456,7 @@ public abstract class Charset$Coder$ {
     /**
      * Returns the maximum number of $otype$s that will be produced for each
      * $itype$ of input.  This value may be used to compute the worst-case size
-     * of the output buffer required for a given input sequence. </p>
+     * of the output buffer required for a given input sequence.
      *
      * @return  The maximum number of $otype$s that will be produced per
      *          $itype$ of input
@@ -477,24 +495,24 @@ public abstract class Charset$Coder$ {
      *   typically done by draining any $code$d $otype$s from the output
      *   buffer.  </p></li>
      *
-     *   <li><p> A {@link CoderResult#malformedForLength
-     *   </code>malformed-input<code>} result indicates that a malformed-input
+     *   <li><p> A {@linkplain CoderResult#malformedForLength
+     *   malformed-input} result indicates that a malformed-input
      *   error has been detected.  The malformed $itype$s begin at the input
      *   buffer's (possibly incremented) position; the number of malformed
      *   $itype$s may be determined by invoking the result object's {@link
      *   CoderResult#length() length} method.  This case applies only if the
-     *   {@link #onMalformedInput </code>malformed action<code>} of this $coder$
+     *   {@linkplain #onMalformedInput malformed action} of this $coder$
      *   is {@link CodingErrorAction#REPORT}; otherwise the malformed input
      *   will be ignored or replaced, as requested.  </p></li>
      *
-     *   <li><p> An {@link CoderResult#unmappableForLength
-     *   </code>unmappable-character<code>} result indicates that an
+     *   <li><p> An {@linkplain CoderResult#unmappableForLength
+     *   unmappable-character} result indicates that an
      *   unmappable-character error has been detected.  The $itype$s that
      *   $code$ the unmappable character begin at the input buffer's (possibly
      *   incremented) position; the number of such $itype$s may be determined
      *   by invoking the result object's {@link CoderResult#length() length}
-     *   method.  This case applies only if the {@link #onUnmappableCharacter
-     *   </code>unmappable action<code>} of this $coder$ is {@link
+     *   method.  This case applies only if the {@linkplain #onUnmappableCharacter
+     *   unmappable action} of this $coder$ is {@link
      *   CodingErrorAction#REPORT}; otherwise the unmappable character will be
      *   ignored or replaced, as requested.  </p></li>
      *
@@ -917,6 +935,9 @@ public abstract class Charset$Coder$ {
      * <p> The default implementation of this method is not very efficient; it
      * should generally be overridden to improve performance.  </p>
      *
+     * @param   c
+     *          The given character
+     *
      * @return  <tt>true</tt> if, and only if, this encoder can encode
      *          the given character
      *
@@ -944,6 +965,9 @@ public abstract class Charset$Coder$ {
      *
      * <p> The default implementation of this method is not very efficient; it
      * should generally be overridden to improve performance.  </p>
+     *
+     * @param   cs
+     *          The given character sequence
      *
      * @return  <tt>true</tt> if, and only if, this encoder can encode
      *          the given character without throwing any exceptions and without

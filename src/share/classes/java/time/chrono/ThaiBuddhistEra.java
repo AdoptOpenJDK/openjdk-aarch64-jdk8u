@@ -61,9 +61,6 @@
  */
 package java.time.chrono;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.time.DateTimeException;
 
 /**
@@ -102,7 +99,7 @@ import java.time.DateTimeException;
  * <b>Do not use {@code ordinal()} to obtain the numeric representation of {@code ThaiBuddhistEra}.
  * Use {@code getValue()} instead.</b>
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This is an immutable and thread-safe enum.
  *
  * @since 1.8
@@ -153,20 +150,6 @@ public enum ThaiBuddhistEra implements Era {
     @Override
     public int getValue() {
         return ordinal();
-    }
-
-    //-----------------------------------------------------------------------
-    private Object writeReplace() {
-        return new Ser(Ser.THAIBUDDHIST_ERA_TYPE, this);
-    }
-
-    void writeExternal(DataOutput out) throws IOException {
-        out.writeByte(this.getValue());
-    }
-
-    static ThaiBuddhistEra readExternal(DataInput in) throws IOException {
-        byte eraValue = in.readByte();
-        return ThaiBuddhistEra.of(eraValue);
     }
 
 }

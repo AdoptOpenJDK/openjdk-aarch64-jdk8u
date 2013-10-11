@@ -74,7 +74,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -118,7 +118,7 @@ import java.util.regex.Pattern;
  * most applications.
  * See {@link Instant} for a discussion as to the meaning of the second and time-scales.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -459,9 +459,9 @@ public final class Duration
      */
     public static Duration between(Temporal startInclusive, Temporal endExclusive) {
         try {
-            return ofNanos(startInclusive.periodUntil(endExclusive, NANOS));
+            return ofNanos(startInclusive.until(endExclusive, NANOS));
         } catch (DateTimeException | ArithmeticException ex) {
-            long secs = startInclusive.periodUntil(endExclusive, SECONDS);
+            long secs = startInclusive.until(endExclusive, SECONDS);
             long nanos;
             try {
                 nanos = endExclusive.getLong(NANO_OF_SECOND) - startInclusive.getLong(NANO_OF_SECOND);
@@ -523,7 +523,7 @@ public final class Duration
         } else if (unit == NANOS) {
             return nanos;
         } else {
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
     }
 
@@ -1299,8 +1299,9 @@ public final class Duration
     /**
      * Writes the object using a
      * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
      * <pre>
-     *  out.writeByte(1);  // identifies this as a Duration
+     *  out.writeByte(1);  // identifies a Duration
      *  out.writeLong(seconds);
      *  out.writeInt(nanos);
      * </pre>
@@ -1316,7 +1317,7 @@ public final class Duration
      * @return never
      * @throws InvalidObjectException always
      */
-    private Object readResolve() throws ObjectStreamException {
+    private Object readResolve() throws InvalidObjectException {
         throw new InvalidObjectException("Deserialization via serialization delegate");
     }
 

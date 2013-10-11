@@ -123,6 +123,10 @@ public class UnixPrintServiceLookup extends PrintServiceLookup
         return osname.equals("SunOS");
     }
 
+    static boolean isLinux() {
+        return (osname.equals("Linux"));
+    }
+
     static boolean isBSD() {
         return (osname.equals("Linux") ||
                 osname.contains("OS X"));
@@ -241,7 +245,7 @@ public class UnixPrintServiceLookup extends PrintServiceLookup
                 continue;
             }
             if ((defaultPrintService != null)
-                && printers[p].equals(defaultPrintService.getName())) {
+                && printers[p].equals(getPrinterDestName(defaultPrintService))) {
                 printerList.add(defaultPrintService);
                 defaultIndex = printerList.size() - 1;
             } else {
@@ -266,11 +270,12 @@ public class UnixPrintServiceLookup extends PrintServiceLookup
                 } else {
                     int j;
                     for (j=0; j<printServices.length; j++) {
-                        if ((printServices[j] != null) &&
-                            (printers[p].equals(printServices[j].getName()))) {
-                            printerList.add(printServices[j]);
-                            printServices[j] = null;
-                            break;
+                        if (printServices[j] != null) {
+                            if (printers[p].equals(getPrinterDestName(printServices[j]))) {
+                                printerList.add(printServices[j]);
+                                printServices[j] = null;
+                                break;
+                            }
                         }
                     }
 
@@ -356,16 +361,52 @@ public class UnixPrintServiceLookup extends PrintServiceLookup
         return true;
       }
 
+    /*
+     * Gets the printer name compatible with the list of printers returned by
+     * the system when we query default or all the available printers.
+     */
+    private String getPrinterDestName(PrintService ps) {
+        if (isMac()) {
+            return ((IPPPrintService)ps).getDest();
+        }
+        return ps.getName();
+    }
+
     /* On a network with many (hundreds) of network printers, it
      * can save several seconds if you know all you want is a particular
      * printer, to ask for that printer rather than retrieving all printers.
      */
     private PrintService getServiceByName(PrinterName nameAttr) {
         String name = nameAttr.getValue();
-        PrintService printer = null;
         if (name == null || name.equals("") || !checkPrinterName(name)) {
             return null;
         }
+        /* check if all printers are already available */
+        if (printServices != null) {
+            for (PrintService printService : printServices) {
+                PrinterName printerName =
+                    (PrinterName)printService.getAttribute(PrinterName.class);
+                if (printerName.getValue().equals(name)) {
+                    return printService;
+                }
+            }
+        }
+        /* take CUPS into account first */
+        if (CUPSPrinter.isCupsRunning()) {
+            try {
+                return new IPPPrintService(name,
+                                           new URL("http://"+
+                                                   CUPSPrinter.getServer()+":"+
+                                                   CUPSPrinter.getPort()+"/"+
+                                                   name));
+            } catch (Exception e) {
+                IPPPrintService.debug_println(debugPrefix+
+                                              " getServiceByName Exception "+
+                                              e);
+            }
+        }
+        /* fallback if nothing not having a printer at this point */
+        PrintService printer = null;
         if (isMac() || isSysV()) {
             printer = getNamedPrinterNameSysV(name);
         } else {
@@ -540,7 +581,7 @@ public class UnixPrintServiceLookup extends PrintServiceLookup
         defaultPrintService = null;
         if (printServices != null) {
             for (int j=0; j<printServices.length; j++) {
-                if (defaultPrinter.equals(printServices[j].getName())) {
+                if (defaultPrinter.equals(getPrinterDestName(printServices[j]))) {
                     defaultPrintService = printServices[j];
                     break;
                 }

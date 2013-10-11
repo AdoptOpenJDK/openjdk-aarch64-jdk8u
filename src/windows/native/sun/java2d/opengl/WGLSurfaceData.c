@@ -30,6 +30,7 @@
 #include "jni.h"
 #include "jlong.h"
 #include "jni_util.h"
+#include "sizecalc.h"
 #include "OGLRenderQueue.h"
 #include "WGLGraphicsConfig.h"
 #include "WGLSurfaceData.h"
@@ -66,12 +67,13 @@ Java_sun_java2d_opengl_WGLSurfaceData_initOps(JNIEnv *env, jobject wglsd,
 
     J2dTraceLn(J2D_TRACE_INFO, "WGLSurfaceData_initOps");
 
-    if (oglsdo == NULL) {
-        JNU_ThrowOutOfMemoryError(env, "Initialization of SurfaceData failed.");
-        return;
-    }
     if (wglsdo == NULL) {
         JNU_ThrowOutOfMemoryError(env, "creating native wgl ops");
+        return;
+    }
+    if (oglsdo == NULL) {
+        free(wglsdo);
+        JNU_ThrowOutOfMemoryError(env, "Initialization of SurfaceData failed.");
         return;
     }
 
@@ -603,7 +605,7 @@ JNIEXPORT jboolean JNICALL
     height = h;
     srcx = srcy = dstx = dsty = 0;
 
-    pDst = malloc(height * scanStride);
+    pDst = SAFE_SIZE_ARRAY_ALLOC(malloc, height, scanStride);
     if (pDst == NULL) {
         return JNI_FALSE;
     }

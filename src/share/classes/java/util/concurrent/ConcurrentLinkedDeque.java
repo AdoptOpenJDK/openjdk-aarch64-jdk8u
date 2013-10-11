@@ -42,6 +42,9 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
 
 /**
  * An unbounded concurrent {@linkplain Deque deque} based on linked nodes.
@@ -52,12 +55,8 @@ import java.util.Queue;
  * Like most other concurrent collection implementations, this class
  * does not permit the use of {@code null} elements.
  *
- * <p>Iterators are <i>weakly consistent</i>, returning elements
- * reflecting the state of the deque at some point at or since the
- * creation of the iterator.  They do <em>not</em> throw {@link
- * java.util.ConcurrentModificationException
- * ConcurrentModificationException}, and may proceed concurrently with
- * other operations.
+ * <p>Iterators and spliterators are
+ * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
  *
  * <p>Beware that, unlike in most collections, the {@code size} method
  * is <em>NOT</em> a constant-time operation. Because of the
@@ -816,7 +815,7 @@ public class ConcurrentLinkedDeque<E>
      * Creates an array list and fills it with elements of this list.
      * Used by toArray.
      *
-     * @return the arrayList
+     * @return the array list
      */
     private ArrayList<E> toArrayList() {
         ArrayList<E> list = new ArrayList<E>();
@@ -1024,11 +1023,27 @@ public class ConcurrentLinkedDeque<E>
     }
 
     public E poll()           { return pollFirst(); }
-    public E remove()         { return removeFirst(); }
     public E peek()           { return peekFirst(); }
-    public E element()        { return getFirst(); }
-    public void push(E e)     { addFirst(e); }
+
+    /**
+     * @throws NoSuchElementException {@inheritDoc}
+     */
+    public E remove()         { return removeFirst(); }
+
+    /**
+     * @throws NoSuchElementException {@inheritDoc}
+     */
     public E pop()            { return removeFirst(); }
+
+    /**
+     * @throws NoSuchElementException {@inheritDoc}
+     */
+    public E element()        { return getFirst(); }
+
+    /**
+     * @throws NullPointerException {@inheritDoc}
+     */
+    public void push(E e)     { addFirst(e); }
 
     /**
      * Removes the first element {@code e} such that
@@ -1271,12 +1286,8 @@ public class ConcurrentLinkedDeque<E>
      * Returns an iterator over the elements in this deque in proper sequence.
      * The elements will be returned in order from first (head) to last (tail).
      *
-     * <p>The returned iterator is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}, and guarantees to traverse
-     * elements as they existed upon construction of the iterator, and
-     * may (but is not guaranteed to) reflect any modifications
-     * subsequent to construction.
+     * <p>The returned iterator is
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * @return an iterator over the elements in this deque in proper sequence
      */
@@ -1289,12 +1300,8 @@ public class ConcurrentLinkedDeque<E>
      * sequential order.  The elements will be returned in order from
      * last (tail) to first (head).
      *
-     * <p>The returned iterator is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}, and guarantees to traverse
-     * elements as they existed upon construction of the iterator, and
-     * may (but is not guaranteed to) reflect any modifications
-     * subsequent to construction.
+     * <p>The returned iterator is
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * @return an iterator over the elements in this deque in reverse order
      */
@@ -1385,9 +1392,120 @@ public class ConcurrentLinkedDeque<E>
         Node<E> nextNode(Node<E> p) { return pred(p); }
     }
 
+    /** A customized variant of Spliterators.IteratorSpliterator */
+    static final class CLDSpliterator<E> implements Spliterator<E> {
+        static final int MAX_BATCH = 1 << 25;  // max batch array size;
+        final ConcurrentLinkedDeque<E> queue;
+        Node<E> current;    // current node; null until initialized
+        int batch;          // batch size for splits
+        boolean exhausted;  // true when no more nodes
+        CLDSpliterator(ConcurrentLinkedDeque<E> queue) {
+            this.queue = queue;
+        }
+
+        public Spliterator<E> trySplit() {
+            Node<E> p;
+            final ConcurrentLinkedDeque<E> q = this.queue;
+            int b = batch;
+            int n = (b <= 0) ? 1 : (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                if (p.item == null && p == (p = p.next))
+                    current = p = q.first();
+                if (p != null && p.next != null) {
+                    Object[] a = new Object[n];
+                    int i = 0;
+                    do {
+                        if ((a[i] = p.item) != null)
+                            ++i;
+                        if (p == (p = p.next))
+                            p = q.first();
+                    } while (p != null && i < n);
+                    if ((current = p) == null)
+                        exhausted = true;
+                    if (i > 0) {
+                        batch = i;
+                        return Spliterators.spliterator
+                            (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                             Spliterator.CONCURRENT);
+                    }
+                }
+            }
+            return null;
+        }
+
+        public void forEachRemaining(Consumer<? super E> action) {
+            Node<E> p;
+            if (action == null) throw new NullPointerException();
+            final ConcurrentLinkedDeque<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                exhausted = true;
+                do {
+                    E e = p.item;
+                    if (p == (p = p.next))
+                        p = q.first();
+                    if (e != null)
+                        action.accept(e);
+                } while (p != null);
+            }
+        }
+
+        public boolean tryAdvance(Consumer<? super E> action) {
+            Node<E> p;
+            if (action == null) throw new NullPointerException();
+            final ConcurrentLinkedDeque<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.first()) != null)) {
+                E e;
+                do {
+                    e = p.item;
+                    if (p == (p = p.next))
+                        p = q.first();
+                } while (e == null && p != null);
+                if ((current = p) == null)
+                    exhausted = true;
+                if (e != null) {
+                    action.accept(e);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public long estimateSize() { return Long.MAX_VALUE; }
+
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL |
+                Spliterator.CONCURRENT;
+        }
+    }
+
+    /**
+     * Returns a {@link Spliterator} over the elements in this deque.
+     *
+     * <p>The returned spliterator is
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#CONCURRENT},
+     * {@link Spliterator#ORDERED}, and {@link Spliterator#NONNULL}.
+     *
+     * @implNote
+     * The {@code Spliterator} implements {@code trySplit} to permit limited
+     * parallelism.
+     *
+     * @return a {@code Spliterator} over the elements in this deque
+     * @since 1.8
+     */
+    public Spliterator<E> spliterator() {
+        return new CLDSpliterator<E>(this);
+    }
+
     /**
      * Saves this deque to a stream (that is, serializes it).
      *
+     * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
      */
@@ -1410,6 +1528,10 @@ public class ConcurrentLinkedDeque<E>
 
     /**
      * Reconstitutes this deque from a stream (that is, deserializes it).
+     * @param s the stream
+     * @throws ClassNotFoundException if the class of a serialized object
+     *         could not be found
+     * @throws java.io.IOException if an I/O error occurs
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

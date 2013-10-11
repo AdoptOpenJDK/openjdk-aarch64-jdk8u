@@ -70,9 +70,9 @@ import java.util.function.UnaryOperator;
  * unsynchronized access to the list:<pre>
  *   List list = Collections.synchronizedList(new ArrayList(...));</pre>
  *
- * <p><a name="fail-fast"/>
+ * <p><a name="fail-fast">
  * The iterators returned by this class's {@link #iterator() iterator} and
- * {@link #listIterator(int) listIterator} methods are <em>fail-fast</em>:
+ * {@link #listIterator(int) listIterator} methods are <em>fail-fast</em>:</a>
  * if the list is structurally modified at any time after the iterator is
  * created, in any way except through the iterator's own
  * {@link ListIterator#remove() remove} or
@@ -671,6 +671,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @see Collection#contains(Object)
      */
     public boolean removeAll(Collection<?> c) {
+        Objects.requireNonNull(c);
         return batchRemove(c, false);
     }
 
@@ -691,6 +692,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @see Collection#contains(Object)
      */
     public boolean retainAll(Collection<?> c) {
+        Objects.requireNonNull(c);
         return batchRemove(c, true);
     }
 
@@ -874,7 +876,8 @@ public class ArrayList<E> extends AbstractList<E>
                 consumer.accept((E) elementData[i++]);
             }
             // update once at end of iteration to reduce heap write traffic
-            lastRet = cursor = i;
+            cursor = i;
+            lastRet = i - 1;
             checkForComodification();
         }
 
@@ -1235,6 +1238,20 @@ public class ArrayList<E> extends AbstractList<E>
         }
     }
 
+    /**
+     * Creates a <em><a href="Spliterator.html#binding">late-binding</a></em>
+     * and <em>fail-fast</em> {@link Spliterator} over the elements in this
+     * list.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#SIZED},
+     * {@link Spliterator#SUBSIZED}, and {@link Spliterator#ORDERED}.
+     * Overriding implementations should document the reporting of additional
+     * characteristic values.
+     *
+     * @return a {@code Spliterator} over the elements in this list
+     * @since 1.8
+     */
+    @Override
     public Spliterator<E> spliterator() {
         return new ArrayListSpliterator<>(this, 0, -1, 0);
     }

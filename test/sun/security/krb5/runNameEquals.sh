@@ -22,7 +22,7 @@
 #
 
 # @test
-# @bug 6317711 6944847
+# @bug 6317711 6944847 8024046
 # @summary Ensure the GSSName has the correct impl which respects
 # the contract for equals and hashCode across different configurations.
 
@@ -52,14 +52,19 @@ NATIVE=false
 # set platform-dependent variables
 OS=`uname -s`
 case "$OS" in
-  SunOS | Linux )
+  SunOS | Linux | Darwin )
     PATHSEP=":"
     FILESEP="/"
     NATIVE=true
-    ;;
-  Darwin )
-    PATHSEP=":"
-    FILESEP="/"
+    # Not all *nix has native GSS libs installed
+    krb5-config --libs gssapi 2> /dev/null
+    if [ $? != 0 ]; then
+        # Fedora has a different path
+        /usr/kerberos/bin/krb5-config --libs gssapi 2> /dev/null
+        if [ $? != 0 ]; then
+            NATIVE=false
+        fi
+    fi
     ;;
   CYGWIN* )
     PATHSEP=";"

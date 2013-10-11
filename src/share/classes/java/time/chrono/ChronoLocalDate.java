@@ -234,7 +234,7 @@ import java.util.Objects;
  * Use {@link TemporalAccessor} if read-only access is required, or use {@link Temporal}
  * if read-write access is required.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This interface must be implemented with care to ensure other classes operate correctly.
  * All implementations that can be instantiated must be final, immutable and thread-safe.
  * Subclasses should be Serializable wherever possible.
@@ -242,11 +242,10 @@ import java.util.Objects;
  * Additional calendar systems may be added to the system.
  * See {@link Chronology} for more details.
  *
- * @param <D> the concrete type for the date
  * @since 1.8
  */
-public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
-        extends Temporal, TemporalAdjuster, Comparable<ChronoLocalDate<?>> {
+public interface ChronoLocalDate
+        extends Temporal, TemporalAdjuster, Comparable<ChronoLocalDate> {
 
     /**
      * Gets a comparator that compares {@code ChronoLocalDate} in
@@ -257,12 +256,13 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * This allows dates in different calendar systems to be compared based
      * on the position of the date on the local time-line.
      * The underlying comparison is equivalent to comparing the epoch-day.
+     * @return a comparator that compares in time-line order ignoring the chronology
      *
      * @see #isAfter
      * @see #isBefore
      * @see #isEqual
      */
-    static Comparator<ChronoLocalDate<?>> timeLineOrder() {
+    static Comparator<ChronoLocalDate> timeLineOrder() {
         return Chronology.DATE_ORDER;
     }
 
@@ -288,9 +288,9 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws DateTimeException if unable to convert to a {@code ChronoLocalDate}
      * @see Chronology#date(TemporalAccessor)
      */
-    static ChronoLocalDate<?> from(TemporalAccessor temporal) {
+    static ChronoLocalDate from(TemporalAccessor temporal) {
         if (temporal instanceof ChronoLocalDate) {
-            return (ChronoLocalDate<?>) temporal;
+            return (ChronoLocalDate) temporal;
         }
         Chronology chrono = temporal.query(TemporalQuery.chronology());
         if (chrono == null) {
@@ -366,12 +366,57 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
         return (isLeapYear() ? 366 : 365);
     }
 
+    /**
+     * Checks if the specified field is supported.
+     * <p>
+     * This checks if the specified field can be queried on this date.
+     * If false, then calling the {@link #range(TemporalField) range},
+     * {@link #get(TemporalField) get} and {@link #with(TemporalField, long)}
+     * methods will throw an exception.
+     * <p>
+     * The set of supported fields is defined by the chronology and normally includes
+     * all {@code ChronoField} date fields.
+     * <p>
+     * If the field is not a {@code ChronoField}, then the result of this method
+     * is obtained by invoking {@code TemporalField.isSupportedBy(TemporalAccessor)}
+     * passing {@code this} as the argument.
+     * Whether the field is supported is determined by the field.
+     *
+     * @param field  the field to check, null returns false
+     * @return true if the field can be queried, false if not
+     */
     @Override
     default boolean isSupported(TemporalField field) {
         if (field instanceof ChronoField) {
             return field.isDateBased();
         }
         return field != null && field.isSupportedBy(this);
+    }
+
+    /**
+     * Checks if the specified unit is supported.
+     * <p>
+     * This checks if the specified unit can be added to or subtracted from this date.
+     * If false, then calling the {@link #plus(long, TemporalUnit)} and
+     * {@link #minus(long, TemporalUnit) minus} methods will throw an exception.
+     * <p>
+     * The set of supported units is defined by the chronology and normally includes
+     * all {@code ChronoUnit} date units except {@code FOREVER}.
+     * <p>
+     * If the unit is not a {@code ChronoUnit}, then the result of this method
+     * is obtained by invoking {@code TemporalUnit.isSupportedBy(Temporal)}
+     * passing {@code this} as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    @Override
+    default boolean isSupported(TemporalUnit unit) {
+        if (unit instanceof ChronoUnit) {
+            return unit.isDateBased();
+        }
+        return unit != null && unit.isSupportedBy(this);
     }
 
     //-----------------------------------------------------------------------
@@ -382,8 +427,8 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws ArithmeticException {@inheritDoc}
      */
     @Override
-    default D with(TemporalAdjuster adjuster) {
-        return (D) getChronology().ensureChronoLocalDate(Temporal.super.with(adjuster));
+    default ChronoLocalDate with(TemporalAdjuster adjuster) {
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.with(adjuster));
     }
 
     /**
@@ -393,11 +438,11 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws ArithmeticException {@inheritDoc}
      */
     @Override
-    default D with(TemporalField field, long newValue) {
+    default ChronoLocalDate with(TemporalField field, long newValue) {
         if (field instanceof ChronoField) {
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
-        return (D) getChronology().ensureChronoLocalDate(field.adjustInto(this, newValue));
+        return ChronoDateImpl.ensureValid(getChronology(), field.adjustInto(this, newValue));
     }
 
     /**
@@ -406,8 +451,8 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws ArithmeticException {@inheritDoc}
      */
     @Override
-    default D plus(TemporalAmount amount) {
-        return (D) getChronology().ensureChronoLocalDate(Temporal.super.plus(amount));
+    default ChronoLocalDate plus(TemporalAmount amount) {
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.plus(amount));
     }
 
     /**
@@ -416,11 +461,11 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws ArithmeticException {@inheritDoc}
      */
     @Override
-    default D plus(long amountToAdd, TemporalUnit unit) {
+    default ChronoLocalDate plus(long amountToAdd, TemporalUnit unit) {
         if (unit instanceof ChronoUnit) {
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
-        return (D) getChronology().ensureChronoLocalDate(unit.addTo(this, amountToAdd));
+        return ChronoDateImpl.ensureValid(getChronology(), unit.addTo(this, amountToAdd));
     }
 
     /**
@@ -429,8 +474,8 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws ArithmeticException {@inheritDoc}
      */
     @Override
-    default D minus(TemporalAmount amount) {
-        return (D) getChronology().ensureChronoLocalDate(Temporal.super.minus(amount));
+    default ChronoLocalDate minus(TemporalAmount amount) {
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.minus(amount));
     }
 
     /**
@@ -440,8 +485,8 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws ArithmeticException {@inheritDoc}
      */
     @Override
-    default D minus(long amountToSubtract, TemporalUnit unit) {
-        return (D) getChronology().ensureChronoLocalDate(Temporal.super.minus(amountToSubtract, unit));
+    default ChronoLocalDate minus(long amountToSubtract, TemporalUnit unit) {
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.minus(amountToSubtract, unit));
     }
 
     //-----------------------------------------------------------------------
@@ -510,25 +555,25 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
     }
 
     /**
-     * Calculates the period between this date and another date in
-     * terms of the specified unit.
+     * Calculates the amount of time until another date in terms of the specified unit.
      * <p>
-     * This calculates the period between two dates in terms of a single unit.
+     * This calculates the amount of time between two {@code ChronoLocalDate}
+     * objects in terms of a single {@code TemporalUnit}.
      * The start and end points are {@code this} and the specified date.
      * The result will be negative if the end is before the start.
      * The {@code Temporal} passed to this method must be a
      * {@code ChronoLocalDate} in the same chronology.
      * The calculation returns a whole number, representing the number of
      * complete units between the two dates.
-     * For example, the period in days between two dates can be calculated
-     * using {@code startDate.periodUntil(endDate, DAYS)}.
+     * For example, the amount in days between two dates can be calculated
+     * using {@code startDate.until(endDate, DAYS)}.
      * <p>
      * There are two equivalent ways of using this method.
      * The first is to invoke this method.
      * The second is to use {@link TemporalUnit#between(Temporal, Temporal)}:
      * <pre>
      *   // these two lines are equivalent
-     *   amount = start.periodUntil(end, MONTHS);
+     *   amount = start.until(end, MONTHS);
      *   amount = MONTHS.between(start, end);
      * </pre>
      * The choice should be made based on which makes the code more readable.
@@ -548,13 +593,13 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      *
      * @param endDate  the end date, which must be a {@code ChronoLocalDate}
      *  in the same chronology, not null
-     * @param unit  the unit to measure the period in, not null
-     * @return the amount of the period between this date and the end date
-     * @throws DateTimeException if the period cannot be calculated
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this date and the end date
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws ArithmeticException if numeric overflow occurs
      */
     @Override  // override for Javadoc
-    long periodUntil(Temporal endDate, TemporalUnit unit);
+    long until(Temporal endDate, TemporalUnit unit);
 
     /**
      * Calculates the period between this date and another date as a {@code Period}.
@@ -574,7 +619,7 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @throws DateTimeException if the period cannot be calculated
      * @throws ArithmeticException if numeric overflow occurs
      */
-    Period periodUntil(ChronoLocalDate<?> endDate);
+    Period until(ChronoLocalDate endDate);
 
     /**
      * Formats this date using the specified formatter.
@@ -605,8 +650,9 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @param localTime  the local time to use, not null
      * @return the local date-time formed from this date and the specified time, not null
      */
-    default ChronoLocalDateTime<D> atTime(LocalTime localTime) {
-        return (ChronoLocalDateTime<D>)ChronoLocalDateTimeImpl.of(this, localTime);
+    @SuppressWarnings("unchecked")
+    default ChronoLocalDateTime<?> atTime(LocalTime localTime) {
+        return ChronoLocalDateTimeImpl.of(this, localTime);
     }
 
     //-----------------------------------------------------------------------
@@ -655,7 +701,7 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @return the comparator value, negative if less, positive if greater
      */
     @Override
-    default int compareTo(ChronoLocalDate<?> other) {
+    default int compareTo(ChronoLocalDate other) {
         int cmp = Long.compare(toEpochDay(), other.toEpochDay());
         if (cmp == 0) {
             cmp = getChronology().compareTo(other.getChronology());
@@ -677,7 +723,7 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @param other  the other date to compare to, not null
      * @return true if this is after the specified date
      */
-    default boolean isAfter(ChronoLocalDate<?> other) {
+    default boolean isAfter(ChronoLocalDate other) {
         return this.toEpochDay() > other.toEpochDay();
     }
 
@@ -695,7 +741,7 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @param other  the other date to compare to, not null
      * @return true if this is before the specified date
      */
-    default boolean isBefore(ChronoLocalDate<?> other) {
+    default boolean isBefore(ChronoLocalDate other) {
         return this.toEpochDay() < other.toEpochDay();
     }
 
@@ -713,7 +759,7 @@ public interface ChronoLocalDate<D extends ChronoLocalDate<D>>
      * @param other  the other date to compare to, not null
      * @return true if the underlying date is equal to the specified date
      */
-    default boolean isEqual(ChronoLocalDate<?> other) {
+    default boolean isEqual(ChronoLocalDate other) {
         return this.toEpochDay() == other.toEpochDay();
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -128,8 +128,7 @@ public final class HttpCookie implements Cloneable {
      *         a {@code String} specifying the value of the cookie
      *
      * @throws  IllegalArgumentException
-     *          if the cookie name contains illegal characters or it is one of
-     *          the tokens reserved for use by the cookie protocol
+     *          if the cookie name contains illegal characters
      * @throws  NullPointerException
      *          if {@code name} is {@code null}
      *
@@ -142,7 +141,7 @@ public final class HttpCookie implements Cloneable {
 
     private HttpCookie(String name, String value, String header) {
         name = name.trim();
-        if (name.length() == 0 || !isToken(name)) {
+        if (name.length() == 0 || !isToken(name) || name.charAt(0) == '$') {
             throw new IllegalArgumentException("Illegal cookie name");
         }
 
@@ -170,9 +169,8 @@ public final class HttpCookie implements Cloneable {
      * @return  a List of cookie parsed from header line string
      *
      * @throws  IllegalArgumentException
-     *          if header string violates the cookie specification's syntax, or
-     *          the cookie name contains illegal characters, or the cookie name
-     *          is one of the tokens reserved for use by the cookie protocol
+     *          if header string violates the cookie specification's syntax or
+     *          the cookie name contains illegal characters.
      * @throws  NullPointerException
      *          if the header string is {@code null}
      */
@@ -472,7 +470,7 @@ public final class HttpCookie implements Cloneable {
      * protocol.
      *
      * @return  {@code false} if the cookie can be sent over any standard
-     *          protocol; otherwise, <code>true</code>
+     *          protocol; otherwise, {@code true}
      *
      * @see  #setSecure
      */

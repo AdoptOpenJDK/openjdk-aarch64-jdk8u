@@ -64,13 +64,17 @@ package java.time;
 import static java.time.temporal.ChronoField.ERA;
 import static java.time.temporal.ChronoField.YEAR;
 import static java.time.temporal.ChronoField.YEAR_OF_ERA;
+import static java.time.temporal.ChronoUnit.CENTURIES;
+import static java.time.temporal.ChronoUnit.DECADES;
+import static java.time.temporal.ChronoUnit.ERAS;
+import static java.time.temporal.ChronoUnit.MILLENNIA;
 import static java.time.temporal.ChronoUnit.YEARS;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.chrono.Chronology;
 import java.time.chrono.IsoChronology;
@@ -115,7 +119,7 @@ import java.util.Objects;
  * However, any application that makes use of historical dates, and requires them
  * to be accurate will find the ISO-8601 approach unsuitable.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -329,8 +333,9 @@ public final class Year
      * Checks if the specified field is supported.
      * <p>
      * This checks if this year can be queried for the specified field.
-     * If false, then calling the {@link #range(TemporalField) range} and
-     * {@link #get(TemporalField) get} methods will throw an exception.
+     * If false, then calling the {@link #range(TemporalField) range},
+     * {@link #get(TemporalField) get} and {@link #with(TemporalField, long)}
+     * methods will throw an exception.
      * <p>
      * If the field is a {@link ChronoField} then the query is implemented here.
      * The supported fields are:
@@ -357,6 +362,41 @@ public final class Year
         return field != null && field.isSupportedBy(this);
     }
 
+    /**
+     * Checks if the specified unit is supported.
+     * <p>
+     * This checks if the specified unit can be added to, or subtracted from, this date-time.
+     * If false, then calling the {@link #plus(long, TemporalUnit)} and
+     * {@link #minus(long, TemporalUnit) minus} methods will throw an exception.
+     * <p>
+     * If the unit is a {@link ChronoUnit} then the query is implemented here.
+     * The supported units are:
+     * <ul>
+     * <li>{@code YEARS}
+     * <li>{@code DECADES}
+     * <li>{@code CENTURIES}
+     * <li>{@code MILLENNIA}
+     * <li>{@code ERAS}
+     * </ul>
+     * All other {@code ChronoUnit} instances will return false.
+     * <p>
+     * If the unit is not a {@code ChronoUnit}, then the result of this method
+     * is obtained by invoking {@code TemporalUnit.isSupportedBy(Temporal)}
+     * passing {@code this} as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    @Override
+    public boolean isSupported(TemporalUnit unit) {
+        if (unit instanceof ChronoUnit) {
+            return unit == YEARS || unit == DECADES || unit == CENTURIES || unit == MILLENNIA || unit == ERAS;
+        }
+        return unit != null && unit.isSupportedBy(this);
+    }
+
+    //-----------------------------------------------------------------------
     /**
      * Gets the range of valid values for the specified field.
      * <p>
@@ -450,7 +490,7 @@ public final class Year
                 case YEAR: return year;
                 case ERA: return (year < 1 ? 0 : 1);
             }
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.getFrom(this);
     }
@@ -575,7 +615,7 @@ public final class Year
                 case YEAR: return Year.of((int) newValue);
                 case ERA: return (getLong(ERA) == newValue ? this : Year.of(1 - year));
             }
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.adjustInto(this, newValue);
     }
@@ -664,7 +704,7 @@ public final class Year
                 case MILLENNIA: return plusYears(Math.multiplyExact(amountToAdd, 1000));
                 case ERAS: return with(ERA, Math.addExact(getLong(ERA), amountToAdd));
             }
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
         return unit.addTo(this, amountToAdd);
     }
@@ -813,15 +853,15 @@ public final class Year
     }
 
     /**
-     * Calculates the period between this year and another year in
-     * terms of the specified unit.
+     * Calculates the amount of time until another year in terms of the specified unit.
      * <p>
-     * This calculates the period between two years in terms of a single unit.
+     * This calculates the amount of time between two {@code Year}
+     * objects in terms of a single {@code TemporalUnit}.
      * The start and end points are {@code this} and the specified year.
      * The result will be negative if the end is before the start.
      * The {@code Temporal} passed to this method must be a {@code Year}.
      * For example, the period in decades between two year can be calculated
-     * using {@code startYear.periodUntil(endYear, DECADES)}.
+     * using {@code startYear.until(endYear, DECADES)}.
      * <p>
      * The calculation returns a whole number, representing the number of
      * complete units between the two years.
@@ -833,7 +873,7 @@ public final class Year
      * The second is to use {@link TemporalUnit#between(Temporal, Temporal)}:
      * <pre>
      *   // these two lines are equivalent
-     *   amount = start.periodUntil(end, YEARS);
+     *   amount = start.until(end, YEARS);
      *   amount = YEARS.between(start, end);
      * </pre>
      * The choice should be made based on which makes the code more readable.
@@ -851,17 +891,17 @@ public final class Year
      * This instance is immutable and unaffected by this method call.
      *
      * @param endYear  the end year, which must be a {@code Year}, not null
-     * @param unit  the unit to measure the period in, not null
-     * @return the amount of the period between this year and the end year
-     * @throws DateTimeException if the period cannot be calculated
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this year and the end year
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
     @Override
-    public long periodUntil(Temporal endYear, TemporalUnit unit) {
+    public long until(Temporal endYear, TemporalUnit unit) {
         if (endYear instanceof Year == false) {
             Objects.requireNonNull(endYear, "endYear");
-            throw new DateTimeException("Unable to calculate period between objects of two different types");
+            throw new DateTimeException("Unable to calculate amount as objects are of two different types");
         }
         Year end = (Year) endYear;
         if (unit instanceof ChronoUnit) {
@@ -873,7 +913,7 @@ public final class Year
                 case MILLENNIA: return yearsUntil / 1000;
                 case ERAS: return end.getLong(ERA) - getLong(ERA);
             }
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
         return unit.between(this, endYear);
     }
@@ -1040,9 +1080,10 @@ public final class Year
     //-----------------------------------------------------------------------
     /**
      * Writes the object using a
-     * <a href="../../../serialized-form.html#java.time.temporal.Ser">dedicated serialized form</a>.
+     * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
      * <pre>
-     *  out.writeByte(11);  // identifies this as a Year
+     *  out.writeByte(11);  // identifies a Year
      *  out.writeInt(year);
      * </pre>
      *
@@ -1057,7 +1098,7 @@ public final class Year
      * @return never
      * @throws InvalidObjectException always
      */
-    private Object readResolve() throws ObjectStreamException {
+    private Object readResolve() throws InvalidObjectException {
         throw new InvalidObjectException("Deserialization via serialization delegate");
     }
 

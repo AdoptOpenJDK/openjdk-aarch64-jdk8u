@@ -63,7 +63,11 @@ package java.time.temporal;
 
 import java.time.DateTimeException;
 import java.time.Duration;
+import java.time.LocalTime;
 import java.time.Period;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.chrono.ChronoZonedDateTime;
 
 /**
  * A unit of date-time, such as Days or Hours.
@@ -83,7 +87,7 @@ import java.time.Period;
  * If it is, then the date-time must handle it.
  * Otherwise, the method call is re-dispatched to the matching method in this interface.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This interface must be implemented with care to ensure other classes operate correctly.
  * All implementations that can be instantiated must be final, immutable and thread-safe.
  * It is recommended to use an enum where possible.
@@ -91,15 +95,6 @@ import java.time.Period;
  * @since 1.8
  */
 public interface TemporalUnit {
-
-    /**
-     * Gets a descriptive name for the unit.
-     * <p>
-     * This should be in the plural and upper-first camel case, such as 'Days' or 'Minutes'.
-     *
-     * @return the name, not null
-     */
-    String getName();
 
     /**
      * Gets the duration of this unit, which may be an estimate.
@@ -132,6 +127,33 @@ public interface TemporalUnit {
 
     //-----------------------------------------------------------------------
     /**
+     * Checks if this unit represents a component of a date.
+     * <p>
+     * A date is time-based if it can be used to imply meaning from a date.
+     * It must have a {@linkplain #getDuration() duration} that is an integral
+     * multiple of the length of a standard day.
+     * Note that it is valid for both {@code isDateBased()} and {@code isTimeBased()}
+     * to return false, such as when representing a unit like 36 hours.
+     *
+     * @return true if this unit is a component of a date
+     */
+    boolean isDateBased();
+
+    /**
+     * Checks if this unit represents a component of a time.
+     * <p>
+     * A unit is time-based if it can be used to imply meaning from a time.
+     * It must have a {@linkplain #getDuration() duration} that divides into
+     * the length of a standard day without remainder.
+     * Note that it is valid for both {@code isDateBased()} and {@code isTimeBased()}
+     * to return false, such as when representing a unit like 36 hours.
+     *
+     * @return true if this unit is a component of a time
+     */
+    boolean isTimeBased();
+
+    //-----------------------------------------------------------------------
+    /**
      * Checks if this unit is supported by the specified temporal object.
      * <p>
      * This checks that the implementing date-time can add/subtract this unit.
@@ -144,6 +166,15 @@ public interface TemporalUnit {
      * @return true if the unit is supported
      */
     default boolean isSupportedBy(Temporal temporal) {
+        if (temporal instanceof LocalTime) {
+            return isTimeBased();
+        }
+        if (temporal instanceof ChronoLocalDate) {
+            return isDateBased();
+        }
+        if (temporal instanceof ChronoLocalDateTime || temporal instanceof ChronoZonedDateTime) {
+            return true;
+        }
         try {
             temporal.plus(1, this);
             return true;
@@ -197,28 +228,26 @@ public interface TemporalUnit {
 
     //-----------------------------------------------------------------------
     /**
-     * Calculates the period in terms of this unit between two temporal objects
-     * of the same type.
+     * Calculates the amount of time between two temporal objects.
      * <p>
-     * This calculates the period between two temporals in terms of this unit.
-     * The start and end points are supplied as temporal objects and must be
-     * of the same type.
+     * This calculates the amount in terms of this unit. The start and end
+     * points are supplied as temporal objects and must be of the same type.
      * The result will be negative if the end is before the start.
-     * For example, the period in hours between two temporal objects can be
+     * For example, the amount in hours between two temporal objects can be
      * calculated using {@code HOURS.between(startTime, endTime)}.
      * <p>
      * The calculation returns a whole number, representing the number of
      * complete units between the two temporals.
-     * For example, the period in hours between the times 11:30 and 13:29
+     * For example, the amount in hours between the times 11:30 and 13:29
      * will only be one hour as it is one minute short of two hours.
      * <p>
      * There are two equivalent ways of using this method.
      * The first is to invoke this method directly.
-     * The second is to use {@link Temporal#periodUntil(Temporal, TemporalUnit)}:
+     * The second is to use {@link Temporal#until(Temporal, TemporalUnit)}:
      * <pre>
      *   // these two lines are equivalent
      *   between = thisUnit.between(start, end);
-     *   between = start.periodUntil(end, thisUnit);
+     *   between = start.until(end, thisUnit);
      * </pre>
      * The choice should be made based on which makes the code more readable.
      * <p>
@@ -227,7 +256,7 @@ public interface TemporalUnit {
      * <pre>
      *  long daysBetween = DAYS.between(start, end);
      *  // or alternatively
-     *  long daysBetween = start.periodUntil(end, DAYS);
+     *  long daysBetween = start.until(end, DAYS);
      * </pre>
      * <p>
      * Implementations should perform any queries or calculations using the units
@@ -237,9 +266,9 @@ public interface TemporalUnit {
      *
      * @param temporal1  the base temporal object, not null
      * @param temporal2  the other temporal object, not null
-     * @return the period between temporal1 and temporal2 in terms of this unit;
+     * @return the amount of time between temporal1 and temporal2 in terms of this unit;
      *  positive if temporal2 is later than temporal1, negative if earlier
-     * @throws DateTimeException if the period cannot be calculated
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws UnsupportedTemporalTypeException if the unit is not supported by the temporal
      * @throws ArithmeticException if numeric overflow occurs
      */
@@ -247,7 +276,9 @@ public interface TemporalUnit {
 
     //-----------------------------------------------------------------------
     /**
-     * Outputs this unit as a {@code String} using the name.
+     * Gets a descriptive name for the unit.
+     * <p>
+     * This should be in the plural and upper-first camel case, such as 'Days' or 'Minutes'.
      *
      * @return the name of this unit, not null
      */

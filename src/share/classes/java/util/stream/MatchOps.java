@@ -94,12 +94,7 @@ final class MatchOps {
             }
         }
 
-        // @@@ Workaround for JDK-8011591 -- when fixed, replace s with constructor ref
-        Supplier<BooleanTerminalSink<T>> s = new Supplier<BooleanTerminalSink<T>>() {
-            @Override
-            public BooleanTerminalSink<T> get() {return new MatchSink();}
-        };
-        return new MatchOp<>(StreamShape.REFERENCE, matchKind, s);
+        return new MatchOp<>(StreamShape.REFERENCE, matchKind, MatchSink::new);
     }
 
     /**
@@ -128,12 +123,7 @@ final class MatchOps {
             }
         }
 
-        // @@@ Workaround for JDK-8011591 -- when fixed, replace s with constructor ref
-        Supplier<BooleanTerminalSink<Integer>> s = new Supplier<BooleanTerminalSink<Integer>>() {
-            @Override
-            public BooleanTerminalSink<Integer> get() {return new MatchSink();}
-        };
-        return new MatchOp<>(StreamShape.INT_VALUE, matchKind, s);
+        return new MatchOp<>(StreamShape.INT_VALUE, matchKind, MatchSink::new);
     }
 
     /**
@@ -163,12 +153,7 @@ final class MatchOps {
             }
         }
 
-        // @@@ Workaround for JDK-8011591 -- when fixed, replace s with constructor ref
-        Supplier<BooleanTerminalSink<Long>> s = new Supplier<BooleanTerminalSink<Long>>() {
-            @Override
-            public BooleanTerminalSink<Long> get() {return new MatchSink();}
-        };
-        return new MatchOp<>(StreamShape.LONG_VALUE, matchKind, s);
+        return new MatchOp<>(StreamShape.LONG_VALUE, matchKind, MatchSink::new);
     }
 
     /**
@@ -198,12 +183,7 @@ final class MatchOps {
             }
         }
 
-        // @@@ Workaround for JDK-8011591 -- when fixed, replace s with constructor ref
-        Supplier<BooleanTerminalSink<Double>> s = new Supplier<BooleanTerminalSink<Double>>() {
-            @Override
-            public BooleanTerminalSink<Double> get() {return new MatchSink();}
-        };
-        return new MatchOp<>(StreamShape.DOUBLE_VALUE, matchKind, s);
+        return new MatchOp<>(StreamShape.DOUBLE_VALUE, matchKind, MatchSink::new);
     }
 
     /**
@@ -294,6 +274,7 @@ final class MatchOps {
      * @param <P_IN> the type of source elements for the pipeline
      * @param <P_OUT> the type of output elements for the pipeline
      */
+    @SuppressWarnings("serial")
     private static final class MatchTask<P_IN, P_OUT>
             extends AbstractShortCircuitTask<P_IN, P_OUT, Boolean, MatchTask<P_IN, P_OUT>> {
         private final MatchOp<P_OUT> op;

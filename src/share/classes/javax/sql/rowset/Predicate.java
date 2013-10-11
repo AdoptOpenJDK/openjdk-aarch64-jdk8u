@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2004, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,48 +53,46 @@ import java.sql.*;
  * and application motivated implementations of <code>Predicate</code> to emerge.
  * <p>
  * A sample implementation would look something like this:
- * <pre>
- * <code>
+ * <pre>{@code
  *    public class Range implements Predicate {
  *
- *       private Object lo[];
- *       private Object hi[];
- *       private int idx[];
+ *       private int[] lo;
+ *       private int[] hi;
+ *       private int[] idx;
  *
- *       public Range(Object[] lo, Object[] hi, int[] idx) {
+ *       public Range(int[] lo, int[] hi, int[] idx) {
  *          this.lo = lo;
  *          this.hi = hi;
  *          this.idx = idx;
  *       }
  *
  *      public boolean evaluate(RowSet rs) {
- *          CachedRowSet crs = (CachedRowSet)rs;
- *          boolean bool1,bool2;
  *
  *          // Check the present row determine if it lies
  *          // within the filtering criteria.
  *
  *          for (int i = 0; i < idx.length; i++) {
+ *             int value;
+ *             try {
+ *                 value = (Integer) rs.getObject(idx[i]);
+ *             } catch (SQLException ex) {
+ *                 Logger.getLogger(Range.class.getName()).log(Level.SEVERE, null, ex);
+ *                 return false;
+ *             }
  *
- *              if ((rs.getObject(idx[i]) >= lo[i]) &&
- *                  (rs.getObject(idx[i]) >= hi[i]) {
- *                  bool1 = true; // within filter constraints
- *          } else {
- *            bool2 = true; // outside of filter constraints
- *          }
+ *             if (value < lo[i] && value > hi[i]) {
+ *                 // outside of filter constraints
+ *                 return false;
+ *             }
+ *         }
+ *         // Within filter constraints
+ *        return true;
  *      }
- *
- *      if (bool2) {
- *         return false;
- *      } else {
- *         return true;
- *      }
- *  }
- * </code>
- * </pre>
+ *   }
+ * }</pre>
  * <P>
  * The example above implements a simple range predicate. Note, that
- * implementations should but are not required to provider <code>String</code>
+ * implementations should but are not required to provide <code>String</code>
  * and integer index based constructors to provide for JDBC RowSet Implementation
  * applications that use both column identification conventions.
  *
@@ -112,7 +110,7 @@ public interface Predicate {
      * cursor moving  from row to the next. In addition, if this internal method
      * moves the cursor onto a row that has been deleted, the internal method will
      * continue to ove the cursor until a valid row is found.
-     *
+     * @param rs The {@code RowSet} to be evaluated
      * @return <code>true</code> if there are more rows in the filter;
      *     <code>false</code> otherwise
      */

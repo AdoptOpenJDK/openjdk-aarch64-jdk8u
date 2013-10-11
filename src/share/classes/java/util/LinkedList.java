@@ -954,10 +954,10 @@ public class LinkedList<E>
             Objects.requireNonNull(action);
             while (modCount == expectedModCount && nextIndex < size) {
                 action.accept(next.item);
+                lastReturned = next;
                 next = next.next;
                 nextIndex++;
             }
-            lastReturned = next;
             checkForComodification();
         }
 
@@ -1149,6 +1149,23 @@ public class LinkedList<E>
             linkLast((E)s.readObject());
     }
 
+    /**
+     * Creates a <em><a href="Spliterator.html#binding">late-binding</a></em>
+     * and <em>fail-fast</em> {@link Spliterator} over the elements in this
+     * list.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#SIZED} and
+     * {@link Spliterator#ORDERED}.  Overriding implementations should document
+     * the reporting of additional characteristic values.
+     *
+     * @implNote
+     * The {@code Spliterator} additionally reports {@link Spliterator#SUBSIZED}
+     * and implements {@code trySplit} to permit limited parallelism..
+     *
+     * @return a {@code Spliterator} over the elements in this list
+     * @since 1.8
+     */
+    @Override
     public Spliterator<E> spliterator() {
         return new LLSpliterator<E>(this, -1, 0);
     }
@@ -1195,12 +1212,7 @@ public class LinkedList<E>
                     n = s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                Object[] a;
-                try {
-                    a = new Object[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                Object[] a = new Object[n];
                 int j = 0;
                 do { a[j++] = p.item; } while ((p = p.next) != null && j < n);
                 current = p;

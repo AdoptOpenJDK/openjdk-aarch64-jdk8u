@@ -26,6 +26,7 @@
 package java.util;
 
 import java.io.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.BiFunction;
@@ -166,50 +167,6 @@ public class Hashtable<K,V>
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
     private static final long serialVersionUID = 1421746759512286392L;
-
-    private static class Holder {
-            // Unsafe mechanics
-        /**
-         *
-         */
-        static final sun.misc.Unsafe UNSAFE;
-
-        /**
-         * Offset of "final" hashSeed field we must set in
-         * readObject() method.
-         */
-        static final long HASHSEED_OFFSET;
-
-        static {
-            try {
-                UNSAFE = sun.misc.Unsafe.getUnsafe();
-                HASHSEED_OFFSET = UNSAFE.objectFieldOffset(
-                    Hashtable.class.getDeclaredField("hashSeed"));
-            } catch (NoSuchFieldException | SecurityException e) {
-                throw new InternalError("Failed to record hashSeed offset", e);
-            }
-        }
-    }
-
-    /**
-     * A randomizing value associated with this instance that is applied to
-     * hash code of keys to make hash collisions harder to find.
-     */
-    transient final int hashSeed = sun.misc.Hashing.randomHashSeed(this);
-
-    private int hash(Object k) {
-        if (k instanceof String) {
-            return ((String)k).hash32();
-        }
-
-        int h = hashSeed ^ k.hashCode();
-
-        // This function ensures that hashCodes that differ only by
-        // constant multiples at each bit position have a bounded
-        // number of collisions (approximately 8 at default load factor).
-        h ^= (h >>> 20) ^ (h >>> 12);
-        return h ^ (h >>> 7) ^ (h >>> 4);
-    }
 
     /**
      * Constructs a new, empty hashtable with the specified initial
@@ -375,7 +332,7 @@ public class Hashtable<K,V>
      */
     public synchronized boolean containsKey(Object key) {
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         for (Entry<?,?> e = tab[index] ; e != null ; e = e.next) {
             if ((e.hash == hash) && e.key.equals(key)) {
@@ -403,7 +360,7 @@ public class Hashtable<K,V>
     @SuppressWarnings("unchecked")
     public synchronized V get(Object key) {
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         for (Entry<?,?> e = tab[index] ; e != null ; e = e.next) {
             if ((e.hash == hash) && e.key.equals(key)) {
@@ -468,7 +425,7 @@ public class Hashtable<K,V>
             rehash();
 
             tab = table;
-            hash = hash(key);
+            hash = key.hashCode();
             index = (hash & 0x7FFFFFFF) % tab.length;
         }
 
@@ -504,7 +461,7 @@ public class Hashtable<K,V>
 
         // Makes sure the key is not already in the hashtable.
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> entry = (Entry<K,V>)tab[index];
@@ -531,7 +488,7 @@ public class Hashtable<K,V>
      */
     public synchronized V remove(Object key) {
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -740,7 +697,7 @@ public class Hashtable<K,V>
             Map.Entry<?,?> entry = (Map.Entry<?,?>)o;
             Object key = entry.getKey();
             Entry<?,?>[] tab = table;
-            int hash = hash(key);
+            int hash = key.hashCode();
             int index = (hash & 0x7FFFFFFF) % tab.length;
 
             for (Entry<?,?> e = tab[index]; e != null; e = e.next)
@@ -755,7 +712,7 @@ public class Hashtable<K,V>
             Map.Entry<?,?> entry = (Map.Entry<?,?>) o;
             Object key = entry.getKey();
             Entry<?,?>[] tab = table;
-            int hash = hash(key);
+            int hash = key.hashCode();
             int index = (hash & 0x7FFFFFFF) % tab.length;
 
             @SuppressWarnings("unchecked")
@@ -908,23 +865,45 @@ public class Hashtable<K,V>
         return (null == result) ? defaultValue : result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);     // explicit check required in case
                                             // table is empty.
-        Entry<?,?>[] tab = table;
-        for (Entry<?,?> entry : tab) {
+        final int expectedModCount = modCount;
+
+        Entry<?, ?>[] tab = table;
+        for (Entry<?, ?> entry : tab) {
             while (entry != null) {
                 action.accept((K)entry.key, (V)entry.value);
                 entry = entry.next;
+
+                if (expectedModCount != modCount) {
+                    throw new ConcurrentModificationException();
+                }
             }
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public synchronized void replaceAll(
-            BiFunction<? super K, ? super V, ? extends V> function) {
-        Map.super.replaceAll(function);
+    public synchronized void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        Objects.requireNonNull(function);     // explicit check required in case
+                                              // table is empty.
+        final int expectedModCount = modCount;
+
+        Entry<K, V>[] tab = (Entry<K, V>[])table;
+        for (Entry<K, V> entry : tab) {
+            while (entry != null) {
+                entry.value = Objects.requireNonNull(
+                    function.apply(entry.key, entry.value));
+                entry = entry.next;
+
+                if (expectedModCount != modCount) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        }
     }
 
     @Override
@@ -933,7 +912,7 @@ public class Hashtable<K,V>
 
         // Makes sure the key is not already in the hashtable.
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> entry = (Entry<K,V>)tab[index];
@@ -956,7 +935,7 @@ public class Hashtable<K,V>
         Objects.requireNonNull(value);
 
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -978,8 +957,10 @@ public class Hashtable<K,V>
 
     @Override
     public synchronized boolean replace(K key, V oldValue, V newValue) {
+        Objects.requireNonNull(oldValue);
+        Objects.requireNonNull(newValue);
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -998,8 +979,9 @@ public class Hashtable<K,V>
 
     @Override
     public synchronized V replace(K key, V value) {
+        Objects.requireNonNull(value);
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -1018,7 +1000,7 @@ public class Hashtable<K,V>
         Objects.requireNonNull(mappingFunction);
 
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -1038,11 +1020,11 @@ public class Hashtable<K,V>
     }
 
     @Override
-    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public synchronized V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -1067,11 +1049,11 @@ public class Hashtable<K,V>
     }
 
     @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    public synchronized V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -1102,11 +1084,11 @@ public class Hashtable<K,V>
     }
 
     @Override
-    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    public synchronized V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
 
         Entry<?,?> tab[] = table;
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>)tab[index];
@@ -1186,10 +1168,6 @@ public class Hashtable<K,V>
         // Read in the length, threshold, and loadfactor
         s.defaultReadObject();
 
-        // set hashMask
-        Holder.UNSAFE.putIntVolatile(this, Holder.HASHSEED_OFFSET,
-                sun.misc.Hashing.randomHashSeed(this));
-
         // Read the original length of the array and number of elements
         int origlength = s.readInt();
         int elements = s.readInt();
@@ -1237,7 +1215,7 @@ public class Hashtable<K,V>
         }
         // Makes sure the key is not already in the hashtable.
         // This should not happen in deserialized version.
-        int hash = hash(key);
+        int hash = key.hashCode();
         int index = (hash & 0x7FFFFFFF) % tab.length;
         for (Entry<?,?> e = tab[index] ; e != null ; e = e.next) {
             if ((e.hash == hash) && e.key.equals(key)) {
@@ -1302,7 +1280,7 @@ public class Hashtable<K,V>
         }
 
         public int hashCode() {
-            return (Objects.hashCode(key) ^ Objects.hashCode(value));
+            return hash ^ Objects.hashCode(value);
         }
 
         public String toString() {

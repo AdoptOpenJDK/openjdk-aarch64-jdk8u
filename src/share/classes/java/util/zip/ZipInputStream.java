@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,6 +32,7 @@ import java.io.PushbackInputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import static java.util.zip.ZipConstants64.*;
+import static java.util.zip.ZipUtils.*;
 
 /**
  * This class implements an input stream filter for reading files in the
@@ -231,7 +232,7 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
      * @return the actual number of bytes skipped
      * @exception ZipException if a ZIP file error has occurred
      * @exception IOException if an I/O error has occurred
-     * @exception IllegalArgumentException if n < 0
+     * @exception IllegalArgumentException if {@code n < 0}
      */
     public long skip(long n) throws IOException {
         if (n < 0) {
@@ -287,9 +288,9 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
         int len = get16(tmpbuf, LOCNAM);
         int blen = b.length;
         if (len > blen) {
-            do
+            do {
                 blen = blen * 2;
-            while (len > blen);
+            } while (len > blen);
             b = new byte[blen];
         }
         readFully(b, 0, len);
@@ -302,7 +303,7 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
             throw new ZipException("encrypted ZIP entry not supported");
         }
         e.method = get16(tmpbuf, LOCHOW);
-        e.time = get32(tmpbuf, LOCTIM);
+        e.time = dosToJavaTime(get32(tmpbuf, LOCTIM));
         if ((flag & 8) == 8) {
             /* "Data Descriptor" present */
             if (e.method != DEFLATED) {
@@ -316,32 +317,9 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
         }
         len = get16(tmpbuf, LOCEXT);
         if (len > 0) {
-            byte[] bb = new byte[len];
-            readFully(bb, 0, len);
-            e.setExtra(bb);
-            // extra fields are in "HeaderID(2)DataSize(2)Data... format
-            if (e.csize == ZIP64_MAGICVAL || e.size == ZIP64_MAGICVAL) {
-                int off = 0;
-                while (off + 4 < len) {
-                    int sz = get16(bb, off + 2);
-                    if (get16(bb, off) == ZIP64_EXTID) {
-                        off += 4;
-                        // LOC extra zip64 entry MUST include BOTH original and
-                        // compressed file size fields
-                        if (sz < 16 || (off + sz) > len ) {
-                            // Invalid zip64 extra fields, simply skip. Even it's
-                            // rare, it's possible the entry size happens to be
-                            // the magic value and it "accidnetly" has some bytes
-                            // in extra match the id.
-                            return e;
-                        }
-                        e.size = get64(bb, off);
-                        e.csize = get64(bb, off + 8);
-                        break;
-                    }
-                    off += (sz + 4);
-                }
-            }
+            byte[] extra = new byte[len];
+            readFully(extra, 0, len);
+            e.setExtra0(extra, true);
         }
         return e;
     }
@@ -430,27 +408,4 @@ class ZipInputStream extends InflaterInputStream implements ZipConstants {
         }
     }
 
-    /*
-     * Fetches unsigned 16-bit value from byte array at specified offset.
-     * The bytes are assumed to be in Intel (little-endian) byte order.
-     */
-    private static final int get16(byte b[], int off) {
-        return Byte.toUnsignedInt(b[off]) | (Byte.toUnsignedInt(b[off+1]) << 8);
-    }
-
-    /*
-     * Fetches unsigned 32-bit value from byte array at specified offset.
-     * The bytes are assumed to be in Intel (little-endian) byte order.
-     */
-    private static final long get32(byte b[], int off) {
-        return (get16(b, off) | ((long)get16(b, off+2) << 16)) & 0xffffffffL;
-    }
-
-    /*
-     * Fetches signed 64-bit value from byte array at specified offset.
-     * The bytes are assumed to be in Intel (little-endian) byte order.
-     */
-    private static final long get64(byte b[], int off) {
-        return get32(b, off) | (get32(b, off+4) << 32);
-    }
 }

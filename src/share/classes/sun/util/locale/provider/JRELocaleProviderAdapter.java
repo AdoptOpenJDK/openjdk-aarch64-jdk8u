@@ -34,12 +34,10 @@ import java.text.spi.DateFormatProvider;
 import java.text.spi.DateFormatSymbolsProvider;
 import java.text.spi.DecimalFormatSymbolsProvider;
 import java.text.spi.NumberFormatProvider;
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.spi.CalendarDataProvider;
@@ -363,7 +361,7 @@ public class JRELocaleProviderAdapter extends LocaleProviderAdapter implements R
         while (tokens.hasMoreTokens()) {
             String token = tokens.nextToken();
             if (token.equals("|")) {
-                if (isNonUSLangSupported()) {
+                if (isNonENLangSupported()) {
                     continue;
                 }
                 break;
@@ -400,7 +398,7 @@ public class JRELocaleProviderAdapter extends LocaleProviderAdapter implements R
          */
         int barIndex = supportedLocaleString.indexOf('|');
         StringTokenizer localeStringTokenizer;
-        if (isNonUSLangSupported()) {
+        if (isNonENLangSupported()) {
             localeStringTokenizer = new StringTokenizer(supportedLocaleString.substring(0, barIndex)
                     + supportedLocaleString.substring(barIndex + 1));
         } else {
@@ -429,17 +427,17 @@ public class JRELocaleProviderAdapter extends LocaleProviderAdapter implements R
         return locales;
     }
 
-    private static volatile Boolean isNonUSSupported = null;
+    private static volatile Boolean isNonENSupported = null;
 
     /*
-     * Returns true if the non US resources jar file exists in jre
+     * Returns true if the non EN resources jar file exists in jre
      * extension directory. @returns true if the jar file is there. Otherwise,
      * returns false.
      */
-    private static boolean isNonUSLangSupported() {
-        if (isNonUSSupported == null) {
+    private static boolean isNonENLangSupported() {
+        if (isNonENSupported == null) {
             synchronized (JRELocaleProviderAdapter.class) {
-                if (isNonUSSupported == null) {
+                if (isNonENSupported == null) {
                     final String sep = File.separator;
                     String localeDataJar =
                             java.security.AccessController.doPrivileged(
@@ -451,7 +449,7 @@ public class JRELocaleProviderAdapter extends LocaleProviderAdapter implements R
                      * localedata.jar is installed or not.
                      */
                     final File f = new File(localeDataJar);
-                    isNonUSSupported =
+                    isNonENSupported =
                         AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
                             @Override
                             public Boolean run() {
@@ -461,6 +459,6 @@ public class JRELocaleProviderAdapter extends LocaleProviderAdapter implements R
                }
             }
         }
-        return isNonUSSupported;
+        return isNonENSupported;
     }
 }

@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Vector;
 import java.util.HashSet;
 import static java.util.zip.ZipConstants64.*;
+import static java.util.zip.ZipUtils.*;
 
 /**
  * This class implements an output stream filter for writing files in the
@@ -58,8 +59,9 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
                     "jdk.util.zip.inhibitZip64", "false")));
 
     private static class XEntry {
-        public final ZipEntry entry;
-        public final long offset;
+        final ZipEntry entry;
+        final long offset;
+        long dostime;    // last modification time in msdos format
         public XEntry(ZipEntry entry, long offset) {
             this.entry = entry;
             this.offset = offset;
@@ -191,6 +193,8 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
             closeEntry();       // close previous entry
         }
         if (e.time == -1) {
+            // by default, do NOT use extended timestamps in extra
+            // data, for now.
             e.setTime(System.currentTimeMillis());
         }
         if (e.method == -1) {
@@ -382,17 +386,21 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
     private void writeLOC(XEntry xentry) throws IOException {
         ZipEntry e = xentry.entry;
         int flag = e.flag;
-        int elen = (e.extra != null) ? e.extra.length : 0;
         boolean hasZip64 = false;
+        int elen = getExtraLen(e.extra);
+
+        // keep a copy of dostime for writeCEN(), otherwise the tz
+        // sensitive local time entries in loc and cen might be
+        // different if the default tz get changed during writeLOC()
+        // and writeCEN()
+        xentry.dostime = javaToDosTime(e.time);
 
         writeInt(LOCSIG);               // LOC header signature
-
         if ((flag & 8) == 8) {
             writeShort(version(e));     // version needed to extract
             writeShort(flag);           // general purpose bit flag
             writeShort(e.method);       // compression method
-            writeInt(e.time);           // last modification time
-
+            writeInt(xentry.dostime);   // last modification time
             // store size, uncompressed size, and crc-32 in data descriptor
             // immediately following compressed entry data
             writeInt(0);
@@ -407,7 +415,7 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
             }
             writeShort(flag);           // general purpose bit flag
             writeShort(e.method);       // compression method
-            writeInt(e.time);           // last modification time
+            writeInt(xentry.dostime);   // last modification time
             writeInt(e.crc);            // crc-32
             if (hasZip64) {
                 writeInt(ZIP64_MAGICVAL);
@@ -420,6 +428,23 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
         }
         byte[] nameBytes = zc.getBytes(e.name);
         writeShort(nameBytes.length);
+
+        int elenEXTT = 0;               // info-zip extended timestamp
+        int flagEXTT = 0;
+        if (e.mtime != null) {
+            elenEXTT += 4;
+            flagEXTT |= EXTT_FLAG_LMT;
+        }
+        if (e.atime != null) {
+            elenEXTT += 4;
+            flagEXTT |= EXTT_FLAG_LAT;
+        }
+        if (e.ctime != null) {
+            elenEXTT += 4;
+            flagEXTT |= EXTT_FLAT_CT;
+        }
+        if (flagEXTT != 0)
+            elen += (elenEXTT + 5);    // headid(2) + size(2) + flag(1) + data
         writeShort(elen);
         writeBytes(nameBytes, 0, nameBytes.length);
         if (hasZip64) {
@@ -428,9 +453,18 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
             writeLong(e.size);
             writeLong(e.csize);
         }
-        if (e.extra != null) {
-            writeBytes(e.extra, 0, e.extra.length);
+        if (flagEXTT != 0) {
+            writeShort(EXTID_EXTT);
+            writeShort(elenEXTT + 1);      // flag + data
+            writeByte(flagEXTT);
+            if (e.mtime != null)
+                writeInt(fileTimeToUnixTime(e.mtime));
+            if (e.atime != null)
+                writeInt(fileTimeToUnixTime(e.atime));
+            if (e.ctime != null)
+                writeInt(fileTimeToUnixTime(e.ctime));
         }
+        writeExtra(e.extra);
         locoff = written;
     }
 
@@ -457,25 +491,25 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
         ZipEntry e  = xentry.entry;
         int flag = e.flag;
         int version = version(e);
-
         long csize = e.csize;
         long size = e.size;
         long offset = xentry.offset;
-        int e64len = 0;
+        int elenZIP64 = 0;
         boolean hasZip64 = false;
+
         if (e.csize >= ZIP64_MAGICVAL) {
             csize = ZIP64_MAGICVAL;
-            e64len += 8;              // csize(8)
+            elenZIP64 += 8;              // csize(8)
             hasZip64 = true;
         }
         if (e.size >= ZIP64_MAGICVAL) {
             size = ZIP64_MAGICVAL;    // size(8)
-            e64len += 8;
+            elenZIP64 += 8;
             hasZip64 = true;
         }
         if (xentry.offset >= ZIP64_MAGICVAL) {
             offset = ZIP64_MAGICVAL;
-            e64len += 8;              // offset(8)
+            elenZIP64 += 8;              // offset(8)
             hasZip64 = true;
         }
         writeInt(CENSIG);           // CEN header signature
@@ -488,18 +522,36 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
         }
         writeShort(flag);           // general purpose bit flag
         writeShort(e.method);       // compression method
-        writeInt(e.time);           // last modification time
+        // use the copy in xentry, which has been converted
+        // from e.time in writeLOC()
+        writeInt(xentry.dostime);   // last modification time
         writeInt(e.crc);            // crc-32
         writeInt(csize);            // compressed size
         writeInt(size);             // uncompressed size
         byte[] nameBytes = zc.getBytes(e.name);
         writeShort(nameBytes.length);
+
+        int elen = getExtraLen(e.extra);
         if (hasZip64) {
-            // + headid(2) + datasize(2)
-            writeShort(e64len + 4 + (e.extra != null ? e.extra.length : 0));
-        } else {
-            writeShort(e.extra != null ? e.extra.length : 0);
+            elen += (elenZIP64 + 4);// + headid(2) + datasize(2)
         }
+        // cen info-zip extended timestamp only outputs mtime
+        // but set the flag for a/ctime, if present in loc
+        int flagEXTT = 0;
+        if (e.mtime != null) {
+            elen += 4;              // + mtime(4)
+            flagEXTT |= EXTT_FLAG_LMT;
+        }
+        if (e.atime != null) {
+            flagEXTT |= EXTT_FLAG_LAT;
+        }
+        if (e.ctime != null) {
+            flagEXTT |= EXTT_FLAT_CT;
+        }
+        if (flagEXTT != 0) {
+            elen += 5;             // headid + sz + flag
+        }
+        writeShort(elen);
         byte[] commentBytes;
         if (e.comment != null) {
             commentBytes = zc.getBytes(e.comment);
@@ -513,9 +565,11 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
         writeInt(0);                // external file attributes (unused)
         writeInt(offset);           // relative offset of local header
         writeBytes(nameBytes, 0, nameBytes.length);
+
+        // take care of EXTID_ZIP64 and EXTID_EXTT
         if (hasZip64) {
             writeShort(ZIP64_EXTID);// Zip64 extra
-            writeShort(e64len);
+            writeShort(elenZIP64);
             if (size == ZIP64_MAGICVAL)
                 writeLong(e.size);
             if (csize == ZIP64_MAGICVAL)
@@ -523,9 +577,18 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
             if (offset == ZIP64_MAGICVAL)
                 writeLong(xentry.offset);
         }
-        if (e.extra != null) {
-            writeBytes(e.extra, 0, e.extra.length);
+        if (flagEXTT != 0) {
+            writeShort(EXTID_EXTT);
+            if (e.mtime != null) {
+                writeShort(5);      // flag + mtime
+                writeByte(flagEXTT);
+                writeInt(fileTimeToUnixTime(e.mtime));
+            } else {
+                writeShort(1);      // flag only
+                writeByte(flagEXTT);
+            }
         }
+        writeExtra(e.extra);
         if (commentBytes != null) {
             writeBytes(commentBytes, 0, Math.min(commentBytes.length, 0xffff));
         }
@@ -586,6 +649,66 @@ class ZipOutputStream extends DeflaterOutputStream implements ZipConstants {
         } else {
             writeShort(0);
         }
+    }
+
+    /*
+     * Returns the length of extra data without EXTT and ZIP64.
+     */
+    private int getExtraLen(byte[] extra) {
+        if (extra == null)
+            return 0;
+        int skipped = 0;
+        int len = extra.length;
+        int off = 0;
+        while (off + 4 <= len) {
+            int tag = get16(extra, off);
+            int sz = get16(extra, off + 2);
+            if (sz < 0 || (off + 4 + sz) > len) {
+                break;
+            }
+            if (tag == EXTID_EXTT || tag == EXTID_ZIP64) {
+                skipped += (sz + 4);
+            }
+            off += (sz + 4);
+        }
+        return len - skipped;
+    }
+
+    /*
+     * Writes extra data without EXTT and ZIP64.
+     *
+     * Extra timestamp and ZIP64 data is handled/output separately
+     * in writeLOC and writeCEN.
+     */
+    private void writeExtra(byte[] extra) throws IOException {
+        if (extra != null) {
+            int len = extra.length;
+            int off = 0;
+            while (off + 4 <= len) {
+                int tag = get16(extra, off);
+                int sz = get16(extra, off + 2);
+                if (sz < 0 || (off + 4 + sz) > len) {
+                    writeBytes(extra, off, len - off);
+                    return;
+                }
+                if (tag != EXTID_EXTT && tag != EXTID_ZIP64) {
+                    writeBytes(extra, off, sz + 4);
+                }
+                off += (sz + 4);
+            }
+            if (off < len) {
+                writeBytes(extra, off, len - off);
+            }
+        }
+    }
+
+    /*
+     * Writes a 8-bit byte to the output stream.
+     */
+    private void writeByte(int v) throws IOException {
+        OutputStream out = this.out;
+        out.write(v & 0xff);
+        written += 1;
     }
 
     /*

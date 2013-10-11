@@ -60,13 +60,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.zone.ZoneRules;
 import java.time.zone.ZoneRulesException;
 import java.time.zone.ZoneRulesProvider;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /**
  * A geographical region where the same time-zone rules apply.
@@ -83,7 +82,7 @@ import java.util.regex.Pattern;
  * By contrast, the region identifier is well-defined and long-lived.
  * This separation also allows rules to be shared between regions if appropriate.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -153,19 +152,6 @@ final class ZoneRegion extends ZoneId implements Serializable {
         }
     }
 
-    /**
-     * Obtains an instance of {@code ZoneId} wrapping an offset.
-     * <p>
-     * For example, zone IDs like 'UTC', 'GMT', 'UT' and 'UTC+01:30' will be setup here.
-     *
-     * @param zoneId  the time-zone ID, not null
-     * @param offset  the offset, not null
-     * @return the zone ID, not null
-     */
-    static ZoneRegion ofPrefixedOffset(String zoneId, ZoneOffset offset) {
-        return new ZoneRegion(zoneId, offset.getRules());
-    }
-
     //-------------------------------------------------------------------------
     /**
      * Constructor.
@@ -195,8 +181,9 @@ final class ZoneRegion extends ZoneId implements Serializable {
     /**
      * Writes the object using a
      * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
      * <pre>
-     *  out.writeByte(7);  // identifies this as a ZoneId (not ZoneOffset)
+     *  out.writeByte(7);  // identifies a ZoneId (not ZoneOffset)
      *  out.writeUTF(zoneId);
      * </pre>
      *
@@ -211,7 +198,7 @@ final class ZoneRegion extends ZoneId implements Serializable {
      * @return never
      * @throws InvalidObjectException always
      */
-    private Object readResolve() throws ObjectStreamException {
+    private Object readResolve() throws InvalidObjectException {
         throw new InvalidObjectException("Deserialization via serialization delegate");
     }
 

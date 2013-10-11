@@ -362,6 +362,7 @@ public class JFileChooser extends JComponent implements Accessible {
      */
     protected void setup(FileSystemView view) {
         installShowFilesListener();
+        installHierarchyListener();
 
         if(view == null) {
             view = FileSystemView.getFileSystemView();
@@ -372,6 +373,22 @@ public class JFileChooser extends JComponent implements Accessible {
             setFileFilter(getAcceptAllFileFilter());
         }
         enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+    }
+
+    private void installHierarchyListener() {
+        addHierarchyListener(new HierarchyListener() {
+            @Override
+            public void hierarchyChanged(HierarchyEvent e) {
+                if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED)
+                        == HierarchyEvent.PARENT_CHANGED) {
+                    JFileChooser fc = JFileChooser.this;
+                    JRootPane rootPane = SwingUtilities.getRootPane(fc);
+                    if (rootPane != null) {
+                        rootPane.setDefaultButton(fc.getUI().getDefaultButton(fc));
+                    }
+                }
+            }
+        });
     }
 
     private void installShowFilesListener() {
@@ -801,7 +818,6 @@ public class JFileChooser extends JComponent implements Accessible {
                 dialog.getRootPane().setWindowDecorationStyle(JRootPane.FILE_CHOOSER_DIALOG);
             }
         }
-        dialog.getRootPane().setDefaultButton(ui.getDefaultButton(this));
         dialog.pack();
         dialog.setLocationRelativeTo(parent);
 
@@ -1146,9 +1162,26 @@ public class JFileChooser extends JComponent implements Accessible {
      * @see #resetChoosableFileFilters
      */
     public boolean removeChoosableFileFilter(FileFilter f) {
-        if(filters.contains(f)) {
+        int index = filters.indexOf(f);
+        if (index >= 0) {
             if(getFileFilter() == f) {
-                setFileFilter(null);
+                FileFilter aaff = getAcceptAllFileFilter();
+                if (isAcceptAllFileFilterUsed() && (aaff != f)) {
+                    // choose default filter if it is used
+                    setFileFilter(aaff);
+                }
+                else if (index > 0) {
+                    // choose the first filter, because it is not removed
+                    setFileFilter(filters.get(0));
+                }
+                else if (filters.size() > 1) {
+                    // choose the second filter, because the first one is removed
+                    setFileFilter(filters.get(1));
+                }
+                else {
+                    // no more filters
+                    setFileFilter(null);
+                }
             }
             FileFilter[] oldValue = getChoosableFileFilters();
             filters.removeElement(f);

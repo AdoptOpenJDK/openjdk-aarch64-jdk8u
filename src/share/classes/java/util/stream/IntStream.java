@@ -24,7 +24,11 @@
  */
 package java.util.stream;
 
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.IntSummaryStatistics;
 import java.util.Objects;
 import java.util.OptionalDouble;
@@ -32,6 +36,7 @@ import java.util.OptionalInt;
 import java.util.PrimitiveIterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.IntBinaryOperator;
@@ -46,40 +51,87 @@ import java.util.function.ObjIntConsumer;
 import java.util.function.Supplier;
 
 /**
- * A sequence of primitive integer elements supporting sequential and parallel
- * bulk operations. Streams support lazy intermediate operations (transforming
- * a stream to another stream) such as {@code filter} and {@code map}, and terminal
- * operations (consuming the contents of a stream to produce a result or
- * side-effect), such as {@code forEach}, {@code findFirst}, and {@code
- * iterator}.  Once an operation has been performed on a stream, it
- * is considered <em>consumed</em> and no longer usable for other operations.
+ * A sequence of elements supporting sequential and parallel aggregate
+ * operations.  The following example illustrates an aggregate operation using
+ * {@link Stream} and {@link IntStream}:
  *
- * <p>For sequential stream pipelines, all operations are performed in the
- * <a href="package-summary.html#Ordering">encounter order</a> of the pipeline
- * source, if the pipeline source has a defined encounter order.
+ * <pre>{@code
+ *     int sum = widgets.stream()
+ *                      .filter(w -> w.getColor() == RED)
+ *                      .mapToInt(w -> w.getWeight())
+ *                      .sum();
+ * }</pre>
  *
- * <p>For parallel stream pipelines, unless otherwise specified, intermediate
- * stream operations preserve the <a href="package-summary.html#Ordering">
- * encounter order</a> of their source, and terminal operations
- * respect the encounter order of their source, if the source
- * has an encounter order.  Provided that and parameters to stream operations
- * satisfy the <a href="package-summary.html#NonInterference">non-interference
- * requirements</a>, and excepting differences arising from the absence of
- * a defined encounter order, the result of a stream pipeline should be the
- * stable across multiple executions of the same operations on the same source.
- * However, the timing and thread in which side-effects occur (for those
- * operations which are allowed to produce side-effects, such as
- * {@link #forEach(IntConsumer)}), are explicitly nondeterministic for parallel
- * execution of stream pipelines.
+ * In this example, {@code widgets} is a {@code Collection<Widget>}.  We create
+ * a stream of {@code Widget} objects via {@link Collection#stream Collection.stream()},
+ * filter it to produce a stream containing only the red widgets, and then
+ * transform it into a stream of {@code int} values representing the weight of
+ * each red widget. Then this stream is summed to produce a total weight.
  *
- * <p>Unless otherwise noted, passing a {@code null} argument to any stream
- * method may result in a {@link NullPointerException}.
+ * <p>To perform a computation, stream
+ * <a href="package-summary.html#StreamOps">operations</a> are composed into a
+ * <em>stream pipeline</em>.  A stream pipeline consists of a source (which
+ * might be an array, a collection, a generator function, an IO channel,
+ * etc), zero or more <em>intermediate operations</em> (which transform a
+ * stream into another stream, such as {@link IntStream#filter(IntPredicate)}), and a
+ * <em>terminal operation</em> (which produces a result or side-effect, such
+ * as {@link IntStream#sum()} or {@link IntStream#forEach(IntConsumer)}).
+ * Streams are lazy; computation on the source data is only performed when the
+ * terminal operation is initiated, and source elements are consumed only
+ * as needed.
  *
- * @apiNote
- * Streams are not data structures; they do not manage the storage for their
- * elements, nor do they support access to individual elements.  However,
- * you can use the {@link #iterator()} or {@link #spliterator()} operations to
- * perform a controlled traversal.
+ * <p>Collections and streams, while bearing some superficial similarities,
+ * have different goals.  Collections are primarily concerned with the efficient
+ * management of, and access to, their elements.  By contrast, streams do not
+ * provide a means to directly access or manipulate their elements, and are
+ * instead concerned with declaratively describing their source and the
+ * computational operations which will be performed in aggregate on that source.
+ * However, if the provided stream operations do not offer the desired
+ * functionality, the {@link #iterator()} and {@link #spliterator()} operations
+ * can be used to perform a controlled traversal.
+ *
+ * <p>A stream pipeline, like the "widgets" example above, can be viewed as
+ * a <em>query</em> on the stream source.  Unless the source was explicitly
+ * designed for concurrent modification (such as a {@link ConcurrentHashMap}),
+ * unpredictable or erroneous behavior may result from modifying the stream
+ * source while it is being queried.
+ *
+ * <p>Most stream operations accept parameters that describe user-specified
+ * behavior, such as the lambda expression {@code w -> w.getWeight()} passed to
+ * {@code mapToInt} in the example above.  Such parameters are always instances
+ * of a <a href="../function/package-summary.html">functional interface</a> such
+ * as {@link java.util.function.Function}, and are often lambda expressions or
+ * method references.  These parameters can never be null, should not modify the
+ * stream source, and should be
+ * <a href="package-summary.html#NonInterference">effectively stateless</a>
+ * (their result should not depend on any state that might change during
+ * execution of the stream pipeline.)
+ *
+ * <p>A stream should be operated on (invoking an intermediate or terminal stream
+ * operation) only once.  This rules out, for example, "forked" streams, where
+ * the same source feeds two or more pipelines, or multiple traversals of the
+ * same stream.  A stream implementation may throw {@link IllegalStateException}
+ * if it detects that the stream is being reused. However, since some stream
+ * operations may return their receiver rather than a new stream object, it may
+ * not be possible to detect reuse in all cases.
+ *
+ * <p>Streams have a {@link #close()} method and implement {@link AutoCloseable},
+ * but nearly all stream instances do not actually need to be closed after use.
+ * Generally, only streams whose source is an IO channel (such as those returned
+ * by {@link Files#lines(Path, Charset)}) will require closing.  Most streams
+ * are backed by collections, arrays, or generating functions, which require no
+ * special resource management.  (If a stream does require closing, it can be
+ * declared as a resource in a {@code try}-with-resources statement.)
+ *
+ * <p>Stream pipelines may execute either sequentially or in
+ * <a href="package-summary.html#Parallelism">parallel</a>.  This
+ * execution mode is a property of the stream.  Streams are created
+ * with an initial choice of sequential or parallel execution.  (For example,
+ * {@link Collection#stream() Collection.stream()} creates a sequential stream,
+ * and {@link Collection#parallelStream() Collection.parallelStream()} creates
+ * a parallel one.)  This choice of execution mode may be modified by the
+ * {@link #sequential()} or {@link #parallel()} methods, and may be queried with
+ * the {@link #isParallel()} method.
  *
  * @since 1.8
  * @see <a href="package-summary.html">java.util.stream</a>
@@ -160,21 +212,12 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
     /**
      * Returns a stream consisting of the results of replacing each element of
      * this stream with the contents of the stream produced by applying the
-     * provided mapping function to each element.
+     * provided mapping function to each element.  (If the result of the mapping
+     * function is {@code null}, this is treated as if the result was an empty
+     * stream.)
      *
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
-     *
-     * @apiNote
-     * The {@code flatMap()} operation has the effect of applying a one-to-many
-     * tranformation to the elements of the stream, and then flattening the
-     * resulting elements into a new stream. For example, if {@code orders}
-     * is a stream of purchase orders, and each purchase order contains a
-     * collection of line items, then the following produces a stream of line
-     * items:
-     * <pre>{@code
-     *     orderStream.flatMap(order -> order.getLineItems().stream())...
-     * }</pre>
      *
      * @param mapper a <a href="package-summary.html#NonInterference">
      *               non-interfering, stateless</a> function to apply to
@@ -224,18 +267,18 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      * <pre>{@code
      *     list.stream()
      *         .filter(filteringFunction)
-     *         .peek(e -> {System.out.println("Filtered value: " + e); });
+     *         .peek(e -> System.out.println("Filtered value: " + e));
      *         .map(mappingFunction)
-     *         .peek(e -> {System.out.println("Mapped value: " + e); });
+     *         .peek(e -> System.out.println("Mapped value: " + e));
      *         .collect(Collectors.toIntSummaryStastistics());
      * }</pre>
      *
-     * @param consumer a <a href="package-summary.html#NonInterference">
-     *                 non-interfering</a> action to perform on the elements as
-     *                 they are consumed from the stream
+     * @param action a <a href="package-summary.html#NonInterference">
+     *               non-interfering</a> action to perform on the elements as
+     *               they are consumed from the stream
      * @return the new stream
      */
-    IntStream peek(IntConsumer consumer);
+    IntStream peek(IntConsumer action);
 
     /**
      * Returns a stream consisting of the elements of this stream, truncated
@@ -252,8 +295,8 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
 
     /**
      * Returns a stream consisting of the remaining elements of this stream
-     * after indexing {@code startInclusive} elements into the stream. If the
-     * {@code startInclusive} index lies past the end of this stream then an
+     * after discarding the first {@code startInclusive} elements of the stream.
+     * If this stream contains fewer than {@code startInclusive} elements then an
      * empty stream will be returned.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">stateful
@@ -267,10 +310,10 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
 
     /**
      * Returns a stream consisting of the remaining elements of this stream
-     * after indexing {@code startInclusive} elements into the stream and
-     * truncated to contain no more than {@code endExclusive - startInclusive}
-     * elements. If the {@code startInclusive} index lies past the end
-     * of this stream then an empty stream will be returned.
+     * after discarding the first {@code startInclusive} elements and truncating
+     * the result to be no longer than {@code endExclusive - startInclusive}
+     * elements in length. If this stream contains fewer than
+     * {@code startInclusive} elements then an empty stream will be returned.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">short-circuiting
      * stateful intermediate operation</a>.
@@ -419,12 +462,12 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
     /**
      * Performs a <a href="package-summary.html#MutableReduction">mutable
      * reduction</a> operation on the elements of this stream.  A mutable
-     * reduction is one in which the reduced value is a mutable value holder,
+     * reduction is one in which the reduced value is a mutable result container,
      * such as an {@code ArrayList}, and elements are incorporated by updating
-     * the state of the result, rather than by replacing the result.  This
+     * the state of the result rather than by replacing the result.  This
      * produces a result equivalent to:
      * <pre>{@code
-     *     R result = resultFactory.get();
+     *     R result = supplier.get();
      *     for (int element : this stream)
      *         accumulator.accept(result, element);
      *     return result;
@@ -437,10 +480,9 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      * operation</a>.
      *
      * @param <R> type of the result
-     * @param resultFactory a function that creates a new result container.
-     *                      For a parallel execution, this function may be
-     *                      called multiple times and must return a fresh value
-     *                      each time.
+     * @param supplier a function that creates a new result container. For a
+     *                 parallel execution, this function may be called
+     *                 multiple times and must return a fresh value each time.
      * @param accumulator an <a href="package-summary.html#Associativity">associative</a>
      *                    <a href="package-summary.html#NonInterference">non-interfering,
      *                    stateless</a> function for incorporating an additional
@@ -452,17 +494,20 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      * @return the result of the reduction
      * @see Stream#collect(Supplier, BiConsumer, BiConsumer)
      */
-    <R> R collect(Supplier<R> resultFactory,
+    <R> R collect(Supplier<R> supplier,
                   ObjIntConsumer<R> accumulator,
                   BiConsumer<R, R> combiner);
 
     /**
      * Returns the sum of elements in this stream.  This is a special case
-     * of a <a href="package-summary.html#MutableReduction">reduction</a>
+     * of a <a href="package-summary.html#Reduction">reduction</a>
      * and is equivalent to:
      * <pre>{@code
      *     return reduce(0, Integer::sum);
      * }</pre>
+     *
+     * <p>This is a <a href="package-summary.html#StreamOps">terminal
+     * operation</a>.
      *
      * @return the sum of elements in this stream
      */
@@ -471,7 +516,7 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
     /**
      * Returns an {@code OptionalInt} describing the minimum element of this
      * stream, or an empty optional if this stream is empty.  This is a special
-     * case of a <a href="package-summary.html#MutableReduction">reduction</a>
+     * case of a <a href="package-summary.html#Reduction">reduction</a>
      * and is equivalent to:
      * <pre>{@code
      *     return reduce(Integer::min);
@@ -479,7 +524,6 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      *
      * <p>This is a <a href="package-summary.html#StreamOps">terminal operation</a>.
      *
-
      * @return an {@code OptionalInt} containing the minimum element of this
      * stream, or an empty {@code OptionalInt} if the stream is empty
      */
@@ -488,7 +532,7 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
     /**
      * Returns an {@code OptionalInt} describing the maximum element of this
      * stream, or an empty optional if this stream is empty.  This is a special
-     * case of a <a href="package-summary.html#MutableReduction">reduction</a>
+     * case of a <a href="package-summary.html#Reduction">reduction</a>
      * and is equivalent to:
      * <pre>{@code
      *     return reduce(Integer::max);
@@ -504,7 +548,7 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
 
     /**
      * Returns the count of elements in this stream.  This is a special case of
-     * a <a href="package-summary.html#MutableReduction">reduction</a> and is
+     * a <a href="package-summary.html#Reduction">reduction</a> and is
      * equivalent to:
      * <pre>{@code
      *     return mapToLong(e -> 1L).sum();
@@ -517,10 +561,13 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
     long count();
 
     /**
-     * Returns an {@code OptionalDouble} describing the average of elements of
+     * Returns an {@code OptionalDouble} describing the arithmetic mean of elements of
      * this stream, or an empty optional if this stream is empty.  This is a
      * special case of a
-     * <a href="package-summary.html#MutableReduction">reduction</a>.
+     * <a href="package-summary.html#Reduction">reduction</a>.
+     *
+     * <p>This is a <a href="package-summary.html#StreamOps">terminal
+     * operation</a>.
      *
      * @return an {@code OptionalDouble} containing the average element of this
      * stream, or an empty optional if the stream is empty
@@ -530,7 +577,10 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
     /**
      * Returns an {@code IntSummaryStatistics} describing various
      * summary data about the elements of this stream.  This is a special
-     * case of a <a href="package-summary.html#MutableReduction">reduction</a>.
+     * case of a <a href="package-summary.html#Reduction">reduction</a>.
+     *
+     * <p>This is a <a href="package-summary.html#StreamOps">terminal
+     * operation</a>.
      *
      * @return an {@code IntSummaryStatistics} describing various summary data
      * about the elements of this stream
@@ -587,9 +637,8 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
 
     /**
      * Returns an {@link OptionalInt} describing the first element of this
-     * stream (in the encounter order), or an empty {@code OptionalInt} if the
-     * stream is empty.  If the stream has no encounter order, than any element
-     * may be returned.
+     * stream, or an empty {@code OptionalInt} if the stream is empty.  If the
+     * stream has no encounter order, then any element may be returned.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">short-circuiting
      * terminal operation</a>.
@@ -609,8 +658,8 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      * <p>The behavior of this operation is explicitly nondeterministic; it is
      * free to select any element in the stream.  This is to allow for maximal
      * performance in parallel operations; the cost is that multiple invocations
-     * on the same source may not return the same result.  (If the first element
-     * in the encounter order is desired, use {@link #findFirst()} instead.)
+     * on the same source may not return the same result.  (If a stable result
+     * is desired, use {@link #findFirst()} instead.)
      *
      * @return an {@code OptionalInt} describing some element of this stream, or
      * an empty {@code OptionalInt} if the stream is empty
@@ -622,23 +671,32 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      * Returns a {@code LongStream} consisting of the elements of this stream,
      * converted to {@code long}.
      *
+     * <p>This is an <a href="package-summary.html#StreamOps">intermediate
+     * operation</a>.
+     *
      * @return a {@code LongStream} consisting of the elements of this stream,
      * converted to {@code long}
      */
-    LongStream longs();
+    LongStream asLongStream();
 
     /**
      * Returns a {@code DoubleStream} consisting of the elements of this stream,
      * converted to {@code double}.
      *
+     * <p>This is an <a href="package-summary.html#StreamOps">intermediate
+     * operation</a>.
+     *
      * @return a {@code DoubleStream} consisting of the elements of this stream,
      * converted to {@code double}
      */
-    DoubleStream doubles();
+    DoubleStream asDoubleStream();
 
     /**
      * Returns a {@code Stream} consisting of the elements of this stream,
      * each boxed to an {@code Integer}.
+     *
+     * <p>This is an <a href="package-summary.html#StreamOps">intermediate
+     * operation</a>.
      *
      * @return a {@code Stream} consistent of the elements of this stream,
      * each boxed to an {@code Integer}
@@ -664,7 +722,7 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      *
      * @return a stream builder
      */
-    public static StreamBuilder.OfInt builder() {
+    public static Builder builder() {
         return new Streams.IntStreamBuilderImpl();
     }
 
@@ -674,7 +732,7 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      * @return an empty sequential stream
      */
     public static IntStream empty() {
-        return StreamSupport.intStream(Spliterators.emptyIntSpliterator());
+        return StreamSupport.intStream(Spliterators.emptyIntSpliterator(), false);
     }
 
     /**
@@ -684,11 +742,11 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      * @return a singleton sequential stream
      */
     public static IntStream of(int t) {
-        return StreamSupport.intStream(new Streams.IntStreamBuilderImpl(t));
+        return StreamSupport.intStream(new Streams.IntStreamBuilderImpl(t), false);
     }
 
     /**
-     * Returns a sequential stream whose elements are the specified values.
+     * Returns a sequential ordered stream whose elements are the specified values.
      *
      * @param values the elements of the new stream
      * @return the new stream
@@ -698,7 +756,7 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
     }
 
     /**
-     * Returns an infinite sequential {@code IntStream} produced by iterative
+     * Returns an infinite sequential ordered {@code IntStream} produced by iterative
      * application of a function {@code f} to an initial element {@code seed},
      * producing a {@code Stream} consisting of {@code seed}, {@code f(seed)},
      * {@code f(f(seed))}, etc.
@@ -732,12 +790,12 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
         };
         return StreamSupport.intStream(Spliterators.spliteratorUnknownSize(
                 iterator,
-                Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL));
+                Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL), false);
     }
 
     /**
-     * Returns a sequential {@code IntStream} where each element is
-     * generated by an {@code IntSupplier}.  This is suitable for generating
+     * Returns a sequential stream where each element is generated by
+     * the provided {@code IntSupplier}.  This is suitable for generating
      * constant streams, streams of random elements, etc.
      *
      * @param s the {@code IntSupplier} for generated elements
@@ -745,26 +803,20 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      */
     public static IntStream generate(IntSupplier s) {
         Objects.requireNonNull(s);
-        return StreamSupport.intStream(Spliterators.spliteratorUnknownSize(
-                new PrimitiveIterator.OfInt() {
-                    @Override
-                    public boolean hasNext() { return true; }
-
-                    @Override
-                    public int nextInt() { return s.getAsInt(); }
-                },
-                Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL));
+        return StreamSupport.intStream(
+                new StreamSpliterators.InfiniteSupplyingSpliterator.OfInt(Long.MAX_VALUE, s), false);
     }
 
     /**
-     * Returns a sequential {@code IntStream} from {@code startInclusive}
+     * Returns a sequential ordered {@code IntStream} from {@code startInclusive}
      * (inclusive) to {@code endExclusive} (exclusive) by an incremental step of
-     * 1.
+     * {@code 1}.
      *
-     * @implSpec
-     * The implementation behaves as if:
+     * @apiNote
+     * <p>An equivalent sequence of increasing values can be produced
+     * sequentially using a {@code for} loop as follows:
      * <pre>{@code
-     *     intRange(startInclusive, endExclusive, 1);
+     *     for (int i = startInclusive; i < endExclusive ; i++) { ... }
      * }</pre>
      *
      * @param startInclusive the (inclusive) initial value
@@ -773,36 +825,116 @@ public interface IntStream extends BaseStream<Integer, IntStream> {
      *         elements
      */
     public static IntStream range(int startInclusive, int endExclusive) {
-        return range(startInclusive, endExclusive, 1);
+        if (startInclusive >= endExclusive) {
+            return empty();
+        } else {
+            return StreamSupport.intStream(
+                    new Streams.RangeIntSpliterator(startInclusive, endExclusive, false), false);
+        }
     }
 
     /**
-     * Returns a sequential {@code IntStream} from {@code startInclusive}
-     * (inclusive) to {@code endExclusive} (exclusive) by a positive {@code
-     * step}.  If {@code startInclusive} is greater than or equal to {@code
-     * endExclusive}, an empty stream is returned.
+     * Returns a sequential ordered {@code IntStream} from {@code startInclusive}
+     * (inclusive) to {@code endInclusive} (inclusive) by an incremental step of
+     * {@code 1}.
      *
+     * @apiNote
      * <p>An equivalent sequence of increasing values can be produced
      * sequentially using a {@code for} loop as follows:
      * <pre>{@code
-     *     for (int i = startInclusive; i < endExclusive ; i += step) { ... }
+     *     for (int i = startInclusive; i <= endInclusive ; i++) { ... }
      * }</pre>
      *
      * @param startInclusive the (inclusive) initial value
-     * @param endExclusive the exclusive upper bound
-     * @param step the positive difference between consecutive values
+     * @param endInclusive the inclusive upper bound
      * @return a sequential {@code IntStream} for the range of {@code int}
      *         elements
-     * @throws IllegalArgumentException if {@code step} is less than or equal to
-     *                                  0
      */
-    public static IntStream range(int startInclusive, int endExclusive, int step) {
-        if (step <= 0) {
-            throw new IllegalArgumentException(String.format("Illegal step: %d", step));
-        } else if (startInclusive >= endExclusive) {
+    public static IntStream rangeClosed(int startInclusive, int endInclusive) {
+        if (startInclusive > endInclusive) {
             return empty();
         } else {
-            return StreamSupport.intStream(new Streams.RangeIntSpliterator(startInclusive, endExclusive, step));
+            return StreamSupport.intStream(
+                    new Streams.RangeIntSpliterator(startInclusive, endInclusive, true), false);
         }
+    }
+
+    /**
+     * Creates a lazily concatenated stream whose elements are all the
+     * elements of the first stream followed by all the elements of the
+     * second stream. The resulting stream is ordered if both
+     * of the input streams are ordered, and parallel if either of the input
+     * streams is parallel.  When the resulting stream is closed, the close
+     * handlers for both input streams are invoked.
+     *
+     * @param a the first stream
+     * @param b the second stream
+     * @return the concatenation of the two input streams
+     */
+    public static IntStream concat(IntStream a, IntStream b) {
+        Objects.requireNonNull(a);
+        Objects.requireNonNull(b);
+
+        Spliterator.OfInt split = new Streams.ConcatSpliterator.OfInt(
+                a.spliterator(), b.spliterator());
+        IntStream stream = StreamSupport.intStream(split, a.isParallel() || b.isParallel());
+        return stream.onClose(Streams.composedClose(a, b));
+    }
+
+    /**
+     * A mutable builder for an {@code IntStream}.
+     *
+     * <p>A stream builder has a lifecycle, which starts in a building
+     * phase, during which elements can be added, and then transitions to a built
+     * phase, after which elements may not be added.  The built phase
+     * begins when the {@link #build()} method is called, which creates an
+     * ordered stream whose elements are the elements that were added to the
+     * stream builder, in the order they were added.
+     *
+     * @see IntStream#builder()
+     * @since 1.8
+     */
+    public interface Builder extends IntConsumer {
+
+        /**
+         * Adds an element to the stream being built.
+         *
+         * @throws IllegalStateException if the builder has already transitioned
+         * to the built state
+         */
+        @Override
+        void accept(int t);
+
+        /**
+         * Adds an element to the stream being built.
+         *
+         * @implSpec
+         * The default implementation behaves as if:
+         * <pre>{@code
+         *     accept(t)
+         *     return this;
+         * }</pre>
+         *
+         * @param t the element to add
+         * @return {@code this} builder
+         * @throws IllegalStateException if the builder has already transitioned
+         * to the built state
+         */
+        default Builder add(int t) {
+            accept(t);
+            return this;
+        }
+
+        /**
+         * Builds the stream, transitioning this builder to the built state.
+         * An {@code IllegalStateException} is thrown if there are further
+         * attempts to operate on the builder after it has entered the built
+         * state.
+         *
+         * @return the built stream
+         * @throws IllegalStateException if the builder has already transitioned to
+         * the built state
+         */
+        IntStream build();
     }
 }

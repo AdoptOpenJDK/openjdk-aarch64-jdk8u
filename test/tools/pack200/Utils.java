@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +46,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static java.nio.file.StandardCopyOption.*;
+import static java.nio.file.StandardOpenOption.*;
 
 /**
  *
@@ -70,8 +72,10 @@ class Utils {
     static final String JAR_FILE_EXT    = ".jar";
 
     static final File   TEST_SRC_DIR = new File(System.getProperty("test.src"));
+    static final File   TEST_CLS_DIR = new File(System.getProperty("test.classes"));
     static final String VERIFIER_DIR_NAME = "pack200-verifier";
     static final File   VerifierJar = new File(VERIFIER_DIR_NAME + JAR_FILE_EXT);
+    static final File   XCLASSES = new File("xclasses");
 
     private Utils() {} // all static
 
@@ -86,10 +90,13 @@ class Utils {
             return;
         }
         File srcDir = new File(TEST_SRC_DIR, VERIFIER_DIR_NAME);
+        if (!srcDir.exists()) {
+            // if not available try one level above
+            srcDir = new File(TEST_SRC_DIR.getParentFile(), VERIFIER_DIR_NAME);
+        }
         List<File> javaFileList = findFiles(srcDir, createFilter(JAVA_FILE_EXT));
         File tmpFile = File.createTempFile("javac", ".tmp");
-        File classesDir = new File("xclasses");
-        classesDir.mkdirs();
+        XCLASSES.mkdirs();
         FileOutputStream fos = null;
         PrintStream ps = null;
         try {
@@ -104,14 +111,14 @@ class Utils {
         }
 
         compiler("-d",
-                "xclasses",
+                XCLASSES.getName(),
                 "@" + tmpFile.getAbsolutePath());
 
         jar("cvfe",
             VerifierJar.getName(),
             "sun.tools.pack.verify.Main",
             "-C",
-            "xclasses",
+            XCLASSES.getName(),
             ".");
     }
 
@@ -168,6 +175,33 @@ class Utils {
         };
     }
 
+    /*
+     * clean up all the usual suspects
+     */
+    static void cleanup() throws IOException {
+        recursiveDelete(XCLASSES);
+        List<File> toDelete = new ArrayList<>();
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".out")));
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".bak")));
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".jar")));
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".pack")));
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".bnd")));
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".txt")));
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".idx")));
+        toDelete.addAll(Utils.findFiles(new File("."),
+                Utils.createFilter(".gidx")));
+        for (File f : toDelete) {
+            f.delete();
+        }
+    }
+
     static final FileFilter DIR_FILTER = new FileFilter() {
         public boolean accept(File pathname) {
             if (pathname.isDirectory()) {
@@ -192,6 +226,9 @@ class Utils {
             Files.createDirectories(parent);
         }
         Files.copy(src.toPath(), dst.toPath(), COPY_ATTRIBUTES, REPLACE_EXISTING);
+        if (dst.isDirectory() && !dst.canWrite()) {
+            dst.setWritable(true);
+        }
     }
 
     static String baseName(File file, String extension) {
@@ -204,6 +241,10 @@ class Utils {
                 ? name.substring(0, cut)
                 : name;
 
+    }
+   static void createFile(File outFile, List<String> content) throws IOException {
+        Files.write(outFile.getAbsoluteFile().toPath(), content,
+                Charset.defaultCharset(), CREATE_NEW, TRUNCATE_EXISTING);
     }
 
     /*

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -89,13 +89,14 @@ public abstract class Reference<T> {
 
     private T referent;         /* Treated specially by GC */
 
-    ReferenceQueue<? super T> queue;
+    volatile ReferenceQueue<? super T> queue;
 
     /* When active:   NULL
      *     pending:   this
      *    Enqueued:   next reference in queue (or this if last)
      *    Inactive:   this
      */
+    @SuppressWarnings("rawtypes")
     Reference next;
 
     /* When active:   next element in a discovered reference list maintained by GC (or this if last)
@@ -119,7 +120,7 @@ public abstract class Reference<T> {
      * them.  This list is protected by the above lock object. The
      * list uses the discovered field to link its elements.
      */
-    private static Reference pending = null;
+    private static Reference<Object> pending = null;
 
     /* High-priority thread to enqueue pending References
      */
@@ -131,15 +132,30 @@ public abstract class Reference<T> {
 
         public void run() {
             for (;;) {
-                Reference r;
+                Reference<Object> r;
                 synchronized (lock) {
                     if (pending != null) {
                         r = pending;
                         pending = r.discovered;
                         r.discovered = null;
                     } else {
+                        // The waiting on the lock may cause an OOME because it may try to allocate
+                        // exception objects, so also catch OOME here to avoid silent exit of the
+                        // reference handler thread.
+                        //
+                        // Explicitly define the order of the two exceptions we catch here
+                        // when waiting for the lock.
+                        //
+                        // We do not want to try to potentially load the InterruptedException class
+                        // (which would be done if this was its first use, and InterruptedException
+                        // were checked first) in this situation.
+                        //
+                        // This may lead to the VM not ever trying to load the InterruptedException
+                        // class again.
                         try {
-                            lock.wait();
+                            try {
+                                lock.wait();
+                            } catch (OutOfMemoryError x) { }
                         } catch (InterruptedException x) { }
                         continue;
                     }
@@ -151,7 +167,7 @@ public abstract class Reference<T> {
                     continue;
                 }
 
-                ReferenceQueue q = r.queue;
+                ReferenceQueue<Object> q = r.queue;
                 if (q != ReferenceQueue.NULL) q.enqueue(r);
             }
         }
@@ -210,9 +226,7 @@ public abstract class Reference<T> {
      *           been enqueued
      */
     public boolean isEnqueued() {
-        synchronized (this) {
-            return (this.next != null && this.queue == ReferenceQueue.ENQUEUED);
-        }
+        return (this.queue == ReferenceQueue.ENQUEUED);
     }
 
     /**

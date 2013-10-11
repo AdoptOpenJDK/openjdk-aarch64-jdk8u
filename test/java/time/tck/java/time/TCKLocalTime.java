@@ -142,7 +142,7 @@ public class TCKLocalTime extends AbstractDateTimeTest {
 
     private static final TemporalUnit[] INVALID_UNITS;
     static {
-        EnumSet<ChronoUnit> set = EnumSet.range(WEEKS, FOREVER);
+        EnumSet<ChronoUnit> set = EnumSet.range(DAYS, FOREVER);
         INVALID_UNITS = (TemporalUnit[]) set.toArray(new TemporalUnit[set.size()]);
     }
 
@@ -280,17 +280,6 @@ public class TCKLocalTime extends AbstractDateTimeTest {
     @Test
     public void constant_MAX() {
         check(LocalTime.MAX, 23, 59, 59, 999999999);
-    }
-
-    //-----------------------------------------------------------------------
-    // now()
-    //-----------------------------------------------------------------------
-    @Test
-    public void now() {
-        LocalTime expected = LocalTime.now(Clock.systemDefaultZone());
-        LocalTime test = LocalTime.now();
-        long diff = Math.abs(test.toNanoOfDay() - expected.toNanoOfDay());
-        assertTrue(diff < 100000000);  // less than 0.1 secs
     }
 
     //-----------------------------------------------------------------------
@@ -617,6 +606,68 @@ public class TCKLocalTime extends AbstractDateTimeTest {
     @Test(expectedExceptions=NullPointerException.class)
     public void factory_parse_formatter_nullFormatter() {
         LocalTime.parse("ANY", null);
+    }
+
+    //-----------------------------------------------------------------------
+    // isSupported(TemporalField)
+    //-----------------------------------------------------------------------
+    @Test
+    public void test_isSupported_TemporalField() {
+        assertEquals(TEST_12_30_40_987654321.isSupported((TemporalField) null), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.NANO_OF_SECOND), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.NANO_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.MICRO_OF_SECOND), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.MICRO_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.MILLI_OF_SECOND), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.MILLI_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.SECOND_OF_MINUTE), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.SECOND_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.MINUTE_OF_HOUR), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.MINUTE_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.HOUR_OF_AMPM), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.CLOCK_HOUR_OF_AMPM), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.HOUR_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.CLOCK_HOUR_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.AMPM_OF_DAY), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.DAY_OF_WEEK), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.DAY_OF_MONTH), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.DAY_OF_YEAR), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.EPOCH_DAY), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.ALIGNED_WEEK_OF_MONTH), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.ALIGNED_WEEK_OF_YEAR), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.MONTH_OF_YEAR), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.PROLEPTIC_MONTH), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.YEAR), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.YEAR_OF_ERA), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.ERA), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.INSTANT_SECONDS), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoField.OFFSET_SECONDS), false);
+    }
+
+    //-----------------------------------------------------------------------
+    // isSupported(TemporalUnit)
+    //-----------------------------------------------------------------------
+    @Test
+    public void test_isSupported_TemporalUnit() {
+        assertEquals(TEST_12_30_40_987654321.isSupported((TemporalUnit) null), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.NANOS), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.MICROS), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.MILLIS), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.SECONDS), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.MINUTES), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.HOURS), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.HALF_DAYS), true);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.DAYS), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.WEEKS), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.MONTHS), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.YEARS), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.DECADES), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.CENTURIES), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.MILLENNIA), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.ERAS), false);
+        assertEquals(TEST_12_30_40_987654321.isSupported(ChronoUnit.FOREVER), false);
     }
 
     //-----------------------------------------------------------------------
@@ -953,16 +1004,20 @@ public class TCKLocalTime extends AbstractDateTimeTest {
     //-----------------------------------------------------------------------
     TemporalUnit NINETY_MINS = new TemporalUnit() {
         @Override
-        public String getName() {
-            return "NinetyMins";
-        }
-        @Override
         public Duration getDuration() {
             return Duration.ofMinutes(90);
         }
         @Override
         public boolean isDurationEstimated() {
             return false;
+        }
+        @Override
+        public boolean isDateBased() {
+            return false;
+        }
+        @Override
+        public boolean isTimeBased() {
+            return true;
         }
         @Override
         public boolean isSupportedBy(Temporal temporal) {
@@ -976,13 +1031,13 @@ public class TCKLocalTime extends AbstractDateTimeTest {
         public long between(Temporal temporal1, Temporal temporal2) {
             throw new UnsupportedOperationException();
         }
+        @Override
+        public String toString() {
+            return "NinetyMins";
+        }
     };
 
     TemporalUnit NINETY_FIVE_MINS = new TemporalUnit() {
-        @Override
-        public String getName() {
-            return "NinetyFiveMins";
-        }
         @Override
         public Duration getDuration() {
             return Duration.ofMinutes(95);
@@ -992,6 +1047,14 @@ public class TCKLocalTime extends AbstractDateTimeTest {
             return false;
         }
         @Override
+        public boolean isDateBased() {
+            return false;
+        }
+        @Override
+        public boolean isTimeBased() {
+            return false;
+        }
+        @Override
         public boolean isSupportedBy(Temporal temporal) {
             return false;
         }
@@ -1002,6 +1065,10 @@ public class TCKLocalTime extends AbstractDateTimeTest {
         @Override
         public long between(Temporal temporal1, Temporal temporal2) {
             throw new UnsupportedOperationException();
+        }
+        @Override
+        public String toString() {
+            return "NinetyFiveMins";
         }
     };
 
@@ -1120,14 +1187,6 @@ public class TCKLocalTime extends AbstractDateTimeTest {
                 // expected
             }
         }
-    }
-
-    @Test
-    public void test_plus_longTemporalUnit_multiples() {
-        assertEquals(TEST_12_30_40_987654321.plus(0, DAYS), TEST_12_30_40_987654321);
-        assertEquals(TEST_12_30_40_987654321.plus(1, DAYS), TEST_12_30_40_987654321);
-        assertEquals(TEST_12_30_40_987654321.plus(2, DAYS), TEST_12_30_40_987654321);
-        assertEquals(TEST_12_30_40_987654321.plus(-3, DAYS), TEST_12_30_40_987654321);
     }
 
     @Test(expectedExceptions=NullPointerException.class)
@@ -1556,14 +1615,6 @@ public class TCKLocalTime extends AbstractDateTimeTest {
         }
     }
 
-    @Test
-    public void test_minus_longTemporalUnit_long_multiples() {
-        assertEquals(TEST_12_30_40_987654321.minus(0, DAYS), TEST_12_30_40_987654321);
-        assertEquals(TEST_12_30_40_987654321.minus(1, DAYS), TEST_12_30_40_987654321);
-        assertEquals(TEST_12_30_40_987654321.minus(2, DAYS), TEST_12_30_40_987654321);
-        assertEquals(TEST_12_30_40_987654321.minus(-3, DAYS), TEST_12_30_40_987654321);
-    }
-
     @Test(expectedExceptions=NullPointerException.class)
     public void test_minus_longTemporalUnit_null() {
         TEST_12_30_40_987654321.minus(1, (TemporalUnit) null);
@@ -1938,7 +1989,7 @@ public class TCKLocalTime extends AbstractDateTimeTest {
     }
 
     //-----------------------------------------------------------------------
-    // periodUntil(Temporal, TemporalUnit)
+    // until(Temporal, TemporalUnit)
     //-----------------------------------------------------------------------
     @DataProvider(name="periodUntilUnit")
     Object[][] data_periodUntilUnit() {
@@ -1978,29 +2029,29 @@ public class TCKLocalTime extends AbstractDateTimeTest {
 
     @Test(dataProvider="periodUntilUnit")
     public void test_periodUntil_TemporalUnit(LocalTime time1, LocalTime time2, TemporalUnit unit, long expected) {
-        long amount = time1.periodUntil(time2, unit);
+        long amount = time1.until(time2, unit);
         assertEquals(amount, expected);
     }
 
     @Test(dataProvider="periodUntilUnit")
     public void test_periodUntil_TemporalUnit_negated(LocalTime time1, LocalTime time2, TemporalUnit unit, long expected) {
-        long amount = time2.periodUntil(time1, unit);
+        long amount = time2.until(time1, unit);
         assertEquals(amount, -expected);
     }
 
     @Test(expectedExceptions = UnsupportedTemporalTypeException.class)
     public void test_periodUntil_TemporalUnit_unsupportedUnit() {
-        TEST_12_30_40_987654321.periodUntil(TEST_12_30_40_987654321, DAYS);
+        TEST_12_30_40_987654321.until(TEST_12_30_40_987654321, DAYS);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void test_periodUntil_TemporalUnit_nullEnd() {
-        TEST_12_30_40_987654321.periodUntil(null, HOURS);
+        TEST_12_30_40_987654321.until(null, HOURS);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void test_periodUntil_TemporalUnit_nullUnit() {
-        TEST_12_30_40_987654321.periodUntil(TEST_12_30_40_987654321, null);
+        TEST_12_30_40_987654321.until(TEST_12_30_40_987654321, null);
     }
 
     //-----------------------------------------------------------------------

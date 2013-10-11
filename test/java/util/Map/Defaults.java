@@ -23,7 +23,7 @@
 
 /*
  * @test
- * @bug 8010122 8004518
+ * @bug 8010122 8004518 8024331
  * @summary Test Map default methods
  * @author Mike Duigou
  * @run testng Defaults
@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -47,6 +48,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.testng.annotations.Test;
@@ -60,14 +62,14 @@ import static org.testng.Assert.assertSame;
 
 public class Defaults {
 
-    @Test(dataProvider = "Nulls Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=all keys=withNull values=withNull")
     public void testGetOrDefaultNulls(String description, Map<IntegerEnum, String> map) {
-        assertTrue(map.containsKey(null), "null key absent");
-        assertNull(map.get(null), "value not null");
-        assertSame(map.get(null), map.getOrDefault(null, EXTRA_VALUE), "values should match");
+        assertTrue(map.containsKey(null), description + ": null key absent");
+        assertNull(map.get(null), description + ": value not null");
+        assertSame(map.get(null), map.getOrDefault(null, EXTRA_VALUE), description + ": values should match");
     }
 
-    @Test(dataProvider = "Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=all keys=all values=all")
     public void testGetOrDefault(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]), "expected key missing");
         assertSame(map.get(KEYS[1]), map.getOrDefault(KEYS[1], EXTRA_VALUE), "values should match");
@@ -76,7 +78,7 @@ public class Defaults {
         assertNull(map.getOrDefault(EXTRA_KEY, null), "null not returned as default");
     }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public void testPutIfAbsentNulls(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(null), "null key absent");
         assertNull(map.get(null), "value not null");
@@ -96,7 +98,7 @@ public class Defaults {
         assertSame(map.get(null), EXTRA_VALUE, "value not expected");
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public void testPutIfAbsent(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object expected = map.get(KEYS[1]);
@@ -109,7 +111,7 @@ public class Defaults {
         assertSame(map.get(EXTRA_KEY), EXTRA_VALUE);
     }
 
-    @Test(dataProvider = "Nulls Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=all keys=all values=all")
     public void testForEach(String description, Map<IntegerEnum, String> map) {
         IntegerEnum[] EACH_KEY = new IntegerEnum[map.size()];
 
@@ -120,10 +122,43 @@ public class Defaults {
             assertSame(v, map.get(k));
         });
 
-        assertEquals(KEYS, EACH_KEY);
+        assertEquals(KEYS, EACH_KEY, description);
     }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
+    public static void testReplaceAll(String description, Map<IntegerEnum, String> map) {
+        IntegerEnum[] EACH_KEY = new IntegerEnum[map.size()];
+        Set<String> EACH_REPLACE = new HashSet<>(map.size());
+
+        map.replaceAll((k,v) -> {
+            int idx = (null == k) ? 0 : k.ordinal(); // substitute for index.
+            assertNull(EACH_KEY[idx]);
+            EACH_KEY[idx] = (idx == 0) ? KEYS[0] : k; // substitute for comparison.
+            assertSame(v, map.get(k));
+            String replacement = v + " replaced";
+            EACH_REPLACE.add(replacement);
+            return replacement;
+        });
+
+        assertEquals(KEYS, EACH_KEY, description);
+        assertEquals(map.values().size(), EACH_REPLACE.size(), description + EACH_REPLACE);
+        assertTrue(EACH_REPLACE.containsAll(map.values()), description + " : " + EACH_REPLACE + " != " + map.values());
+        assertTrue(map.values().containsAll(EACH_REPLACE), description + " : " + EACH_REPLACE + " != " + map.values());
+    }
+
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=nonNull values=nonNull")
+    public static void testReplaceAllNoNullReplacement(String description, Map<IntegerEnum, String> map) {
+        assertThrows(
+            () -> { map.replaceAll(null); },
+            NullPointerException.class,
+            description);
+        assertThrows(
+            () -> { map.replaceAll((k,v) -> null); },
+            NullPointerException.class,
+            description + " should not allow replacement with null value");
+    }
+
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public static void testRemoveNulls(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(null), "null key absent");
         assertNull(map.get(null), "value not null");
@@ -136,7 +171,7 @@ public class Defaults {
         assertFalse(map.remove(null, null));
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public static void testRemove(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object expected = map.get(KEYS[1]);
@@ -151,7 +186,7 @@ public class Defaults {
         assertFalse(map.remove(EXTRA_KEY, EXTRA_VALUE));
     }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public void testReplaceKVNulls(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(null), "null key absent");
         assertNull(map.get(null), "value not null");
@@ -159,7 +194,16 @@ public class Defaults {
         assertSame(map.get(null), EXTRA_VALUE);
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=nonNull values=nonNull")
+    public void testReplaceKVNoNulls(String description, Map<IntegerEnum, String> map) {
+        assertTrue(map.containsKey(FIRST_KEY), "expected key missing");
+        assertSame(map.get(FIRST_KEY), FIRST_VALUE, "found wrong value");
+        assertThrows( () -> {map.replace(FIRST_KEY, null);}, NullPointerException.class, description + ": should throw NPE");
+        assertSame(map.replace(FIRST_KEY, EXTRA_VALUE), FIRST_VALUE, description + ": replaced wrong value");
+        assertSame(map.get(FIRST_KEY), EXTRA_VALUE, "found wrong value");
+    }
+
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public void testReplaceKV(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object expected = map.get(KEYS[1]);
@@ -177,7 +221,7 @@ public class Defaults {
         assertSame(map.get(EXTRA_KEY), expected);
     }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public void testReplaceKVVNulls(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(null), "null key absent");
         assertNull(map.get(null), "value not null");
@@ -189,7 +233,17 @@ public class Defaults {
         assertSame(map.get(null), EXTRA_VALUE);
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=nonNull values=nonNull")
+    public void testReplaceKVVNoNulls(String description, Map<IntegerEnum, String> map) {
+        assertTrue(map.containsKey(FIRST_KEY), "expected key missing");
+        assertSame(map.get(FIRST_KEY), FIRST_VALUE, "found wrong value");
+        assertThrows( () -> {map.replace(FIRST_KEY, FIRST_VALUE, null);}, NullPointerException.class, description + ": should throw NPE");
+        assertThrows( () -> {if (!map.replace(FIRST_KEY, null, EXTRA_VALUE)) throw new NullPointerException("default returns false rather than throwing");}, NullPointerException.class,  description + ": should throw NPE");
+        assertTrue(map.replace(FIRST_KEY, FIRST_VALUE, EXTRA_VALUE), description + ": replaced wrong value");
+        assertSame(map.get(FIRST_KEY), EXTRA_VALUE, "found wrong value");
+    }
+
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public void testReplaceKVV(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object expected = map.get(KEYS[1]);
@@ -212,7 +266,7 @@ public class Defaults {
         assertSame(map.get(EXTRA_KEY), EXTRA_VALUE);
     }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public void testComputeIfAbsentNulls(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(null), "null key absent");
         assertNull(map.get(null), "value not null");
@@ -220,7 +274,7 @@ public class Defaults {
         assertSame(map.get(null), EXTRA_VALUE, description);
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public void testComputeIfAbsent(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object expected = map.get(KEYS[1]);
@@ -234,19 +288,41 @@ public class Defaults {
         assertSame(map.get(EXTRA_KEY), EXTRA_VALUE);
     }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeIfAbsentNPEHashMap() {
+        Object value = new HashMap().computeIfAbsent(KEYS[1], null);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeIfAbsentNPEHashtable() {
+        Object value = new Hashtable().computeIfAbsent(KEYS[1], null);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeIfAbsentNPETreeMap() {
+        Object value = new TreeMap().computeIfAbsent(KEYS[1], null);
+    }
+
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public void testComputeIfPresentNulls(String description, Map<IntegerEnum, String> map) {
-        assertTrue(map.containsKey(null));
-        assertNull(map.get(null));
+        assertTrue(map.containsKey(null), description + ": null key absent");
+        assertNull(map.get(null), description + ": value not null");
         assertSame(map.computeIfPresent(null, (k, v) -> {
-            fail();
+            fail(description + ": null value is not deemed present");
             return EXTRA_VALUE;
         }), null, description);
         assertTrue(map.containsKey(null));
-        assertSame(map.get(null), null, description);
+        assertNull(map.get(null), description);
+        assertNull(map.remove(EXTRA_KEY), description + ": unexpected mapping");
+        assertNull(map.put(EXTRA_KEY, null), description + ": unexpected value");
+        assertSame(map.computeIfPresent(EXTRA_KEY, (k, v) -> {
+            fail(description + ": null value is not deemed present");
+            return EXTRA_VALUE;
+        }), null, description);
+        assertNull(map.get(EXTRA_KEY), description + ": null mapping gone");
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public void testComputeIfPresent(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object value = map.get(KEYS[1]);
@@ -267,10 +343,31 @@ public class Defaults {
         assertSame(map.get(EXTRA_KEY), null);
     }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeIfPresentNPEHashMap() {
+        Object value = new HashMap().computeIfPresent(KEYS[1], null);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeIfPresentNPEHashtable() {
+        Object value = new Hashtable().computeIfPresent(KEYS[1], null);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeIfPresentNPETreeMap() {
+        Object value = new TreeMap().computeIfPresent(KEYS[1], null);
+    }
+
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public void testComputeNulls(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(null), "null key absent");
         assertNull(map.get(null), "value not null");
+        assertSame(map.compute(null, (k, v) -> {
+            assertNull(k);
+            assertNull(v);
+            return null;
+        }), null, description);
+        assertFalse(map.containsKey(null), description + ": null key present.");
         assertSame(map.compute(null, (k, v) -> {
             assertSame(k, null);
             assertNull(v);
@@ -278,16 +375,50 @@ public class Defaults {
         }), EXTRA_VALUE, description);
         assertTrue(map.containsKey(null));
         assertSame(map.get(null), EXTRA_VALUE, description);
-        assertSame(map.remove(null), EXTRA_VALUE, "removed value not expected");
-        assertFalse(map.containsKey(null), "null key present");
+        assertSame(map.remove(null), EXTRA_VALUE, description + ": removed value not expected");
+        // no mapping before and after
+        assertFalse(map.containsKey(null), description + ": null key present");
         assertSame(map.compute(null, (k, v) -> {
-            assertSame(k, null);
+            assertNull(k);
+            assertNull(v);
+            return null;
+        }), null, description + ": expected null result" );
+        assertFalse(map.containsKey(null), description + ": null key present");
+        // compute with map not containing value
+        assertNull(map.remove(EXTRA_KEY),  description + ": unexpected mapping");
+        assertFalse(map.containsKey(EXTRA_KEY),  description + ": key present");
+        assertSame(map.compute(EXTRA_KEY, (k, v) -> {
+            assertSame(k, EXTRA_KEY);
             assertNull(v);
             return null;
         }), null, description);
+        assertFalse(map.containsKey(EXTRA_KEY),  description + ": null key present");
+        // ensure removal.
+        assertNull(map.put(EXTRA_KEY, EXTRA_VALUE));
+        assertSame(map.compute(EXTRA_KEY, (k, v) -> {
+            assertSame(k, EXTRA_KEY);
+            assertSame(v, EXTRA_VALUE);
+            return null;
+        }), null, description + ": null resulted expected");
+        assertFalse(map.containsKey(EXTRA_KEY),  description + ": null key present");
+       // compute with map containing null value
+        assertNull(map.put(EXTRA_KEY, null),  description + ": unexpected value");
+        assertSame(map.compute(EXTRA_KEY, (k, v) -> {
+            assertSame(k, EXTRA_KEY);
+            assertNull(v);
+            return null;
+        }), null, description);
+        assertFalse(map.containsKey(EXTRA_KEY),  description + ": null key present");
+        assertNull(map.put(EXTRA_KEY, null),  description + ": unexpected value");
+        assertSame(map.compute(EXTRA_KEY, (k, v) -> {
+            assertSame(k, EXTRA_KEY);
+            assertNull(v);
+            return EXTRA_VALUE;
+        }), EXTRA_VALUE, description);
+        assertTrue(map.containsKey(EXTRA_KEY), "null key present");
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public void testCompute(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object value = map.get(KEYS[1]);
@@ -313,8 +444,22 @@ public class Defaults {
         assertSame(map.get(EXTRA_KEY), EXTRA_VALUE);
     }
 
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeNPEHashMap() {
+        Object value = new HashMap().compute(KEYS[1], null);
+    }
 
-    @Test(dataProvider = "R/W Nulls Map<IntegerEnum,String>")
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeNPEHashtable() {
+        Object value = new Hashtable().compute(KEYS[1], null);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testComputeNPETreeMap() {
+        Object value = new TreeMap().compute(KEYS[1], null);
+    }
+
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull")
     public void testMergeNulls(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(null), "null key absent");
         assertNull(map.get(null), "value not null");
@@ -327,7 +472,7 @@ public class Defaults {
         assertSame(map.get(null), EXTRA_VALUE, description);
     }
 
-    @Test(dataProvider = "R/W Map<IntegerEnum,String>")
+    @Test(dataProvider = "Map<IntegerEnum,String> rw=true keys=all values=all")
     public void testMerge(String description, Map<IntegerEnum, String> map) {
         assertTrue(map.containsKey(KEYS[1]));
         Object value = map.get(KEYS[1]);
@@ -353,6 +498,21 @@ public class Defaults {
         }), EXTRA_VALUE);
         assertTrue(map.containsKey(EXTRA_KEY));
         assertSame(map.get(EXTRA_KEY), EXTRA_VALUE);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testMergeNPEHashMap() {
+        Object value = new HashMap().merge(KEYS[1], VALUES[1], null);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testMergeNPEHashtable() {
+        Object value = new Hashtable().merge(KEYS[1], VALUES[1], null);
+    }
+
+    @Test(expectedExceptions = {NullPointerException.class})
+    public void testMergeNPETreeMap() {
+        Object value = new TreeMap().merge(KEYS[1], VALUES[1], null);
     }
 
     enum IntegerEnum {
@@ -388,55 +548,64 @@ public class Defaults {
             VALUES[each] = String.valueOf(each);
         }
     }
+
+    private static final IntegerEnum FIRST_KEY = KEYS[0];
+    private static final String FIRST_VALUE = VALUES[0];
     private static final IntegerEnum EXTRA_KEY = IntegerEnum.EXTRA_KEY;
     private static final String EXTRA_VALUE = String.valueOf(TEST_SIZE);
 
-    @DataProvider(name = "Map<IntegerEnum,String>", parallel = true)
-    public static Iterator<Object[]> allNullsMapProvider() {
+    @DataProvider(name = "Map<IntegerEnum,String> rw=all keys=all values=all", parallel = true)
+    public static Iterator<Object[]> allMapProvider() {
         return makeAllMaps().iterator();
     }
 
-    @DataProvider(name = "Nulls Map<IntegerEnum,String>", parallel = true)
-    public static Iterator<Object[]> allMapProvider() {
-        return makeRWMaps(true).iterator();
+    @DataProvider(name = "Map<IntegerEnum,String> rw=all keys=withNull values=withNull", parallel = true)
+    public static Iterator<Object[]> allMapWithNullsProvider() {
+        return makeAllMapsWithNulls().iterator();
     }
 
-    @DataProvider(name = "R/W Map<IntegerEnum,String>", parallel = true)
-    public static Iterator<Object[]> rwMapProvider() {
+    @DataProvider(name = "Map<IntegerEnum,String> rw=true keys=nonNull values=nonNull", parallel = true)
+    public static Iterator<Object[]> rwNonNullMapProvider() {
+        return makeRWNoNullsMaps().iterator();
+    }
+
+    @DataProvider(name = "Map<IntegerEnum,String> rw=true keys=nonNull values=all", parallel = true)
+    public static Iterator<Object[]> rwNonNullKeysMapProvider() {
         return makeRWMapsNoNulls().iterator();
     }
 
-    @DataProvider(name = "R/W Nulls Map<IntegerEnum,String>", parallel = true)
-    public static Iterator<Object[]> rwNullsMapProvider() {
-        return makeRWMaps(true).iterator();
+    @DataProvider(name = "Map<IntegerEnum,String> rw=true keys=all values=all", parallel = true)
+    public static Iterator<Object[]> rwMapProvider() {
+        return makeAllRWMaps().iterator();
     }
 
-    private static Collection<Object[]> makeAllMapsNoNulls() {
+    @DataProvider(name = "Map<IntegerEnum,String> rw=true keys=withNull values=withNull", parallel = true)
+    public static Iterator<Object[]> rwNullsMapProvider() {
+        return makeAllRWMapsWithNulls().iterator();
+    }
+
+    private static Collection<Object[]> makeAllRWMapsWithNulls() {
         Collection<Object[]> all = new ArrayList<>();
 
-        all.addAll(makeRWMaps(false));
-        all.addAll(makeRWNoNullsMaps());
-        all.addAll(makeROMaps(false));
+        all.addAll(makeRWMaps(true, true));
 
         return all;
     }
+
 
     private static Collection<Object[]> makeRWMapsNoNulls() {
         Collection<Object[]> all = new ArrayList<>();
 
-        all.addAll(makeRWMaps(false));
+        all.addAll(makeRWNoNullKeysMaps(false));
         all.addAll(makeRWNoNullsMaps());
 
         return all;
     }
 
-    private static Collection<Object[]> makeAllMaps() {
+    private static Collection<Object[]> makeAllROMaps() {
         Collection<Object[]> all = new ArrayList<>();
 
         all.addAll(makeROMaps(false));
-        all.addAll(makeRWMaps(false));
-        all.addAll(makeRWNoNullsMaps());
-        all.addAll(makeRWMaps(true));
         all.addAll(makeROMaps(true));
 
         return all;
@@ -445,52 +614,102 @@ public class Defaults {
     private static Collection<Object[]> makeAllRWMaps() {
         Collection<Object[]> all = new ArrayList<>();
 
-        all.addAll(makeRWMaps(false));
         all.addAll(makeRWNoNullsMaps());
-        all.addAll(makeRWMaps(true));
+        all.addAll(makeRWMaps(false,true));
+        all.addAll(makeRWMaps(true,true));
+        all.addAll(makeRWNoNullKeysMaps(true));
+        return all;
+    }
+
+    private static Collection<Object[]> makeAllMaps() {
+        Collection<Object[]> all = new ArrayList<>();
+
+        all.addAll(makeAllROMaps());
+        all.addAll(makeAllRWMaps());
 
         return all;
     }
 
-    private static Collection<Object[]> makeRWMaps(boolean nulls) {
+    private static Collection<Object[]> makeAllMapsWithNulls() {
+        Collection<Object[]> all = new ArrayList<>();
+
+        all.addAll(makeROMaps(true));
+        all.addAll(makeRWMaps(true,true));
+
+        return all;
+    }
+    /**
+     *
+     * @param nullKeys include null keys
+     * @param nullValues include null values
+     * @return
+     */
+    private static Collection<Object[]> makeRWMaps(boolean nullKeys, boolean nullValues) {
         return Arrays.asList(
-            new Object[]{"HashMap", makeMap(HashMap::new, nulls)},
-            new Object[]{"IdentityHashMap", makeMap(IdentityHashMap::new, nulls)},
-            new Object[]{"LinkedHashMap", makeMap(LinkedHashMap::new, nulls)},
-            new Object[]{"WeakHashMap", makeMap(WeakHashMap::new, nulls)},
-            new Object[]{"Collections.checkedMap(HashMap)", Collections.checkedMap(makeMap(HashMap::new, nulls), IntegerEnum.class, String.class)},
-            new Object[]{"Collections.synchronizedMap(HashMap)", Collections.synchronizedMap(makeMap(HashMap::new, nulls))},
-            new Object[]{"ExtendsAbstractMap", makeMap(ExtendsAbstractMap::new, nulls)});
+            new Object[]{"HashMap", makeMap(HashMap::new, nullKeys, nullValues)},
+            new Object[]{"IdentityHashMap", makeMap(IdentityHashMap::new, nullKeys, nullValues)},
+            new Object[]{"LinkedHashMap", makeMap(LinkedHashMap::new, nullKeys, nullValues)},
+            new Object[]{"WeakHashMap", makeMap(WeakHashMap::new, nullKeys, nullValues)},
+            new Object[]{"Collections.checkedMap(HashMap)", Collections.checkedMap(makeMap(HashMap::new, nullKeys, nullValues), IntegerEnum.class, String.class)},
+            new Object[]{"Collections.synchronizedMap(HashMap)", Collections.synchronizedMap(makeMap(HashMap::new, nullKeys, nullValues))},
+            new Object[]{"ExtendsAbstractMap", makeMap(ExtendsAbstractMap::new, nullKeys, nullValues)});
+    }
+
+    /**
+     *
+     * @param nulls include null values
+     * @return
+     */
+    private static Collection<Object[]> makeRWNoNullKeysMaps(boolean nulls) {
+        return Arrays.asList(
+                // null key hostile
+                new Object[]{"EnumMap", makeMap(() -> new EnumMap(IntegerEnum.class), false, nulls)},
+                new Object[]{"TreeMap", makeMap(TreeMap::new, false, nulls)},
+                new Object[]{"ExtendsAbstractMap(TreeMap)", makeMap(() -> {return new ExtendsAbstractMap(new TreeMap());}, false, nulls)},
+                new Object[]{"Collections.synchronizedMap(EnumMap)", Collections.synchronizedMap(makeMap(() -> new EnumMap(IntegerEnum.class), false, nulls))}
+                );
     }
 
     private static Collection<Object[]> makeRWNoNullsMaps() {
         return Arrays.asList(
-            // null hostile
-            new Object[]{"EnumMap", makeMap(() -> new EnumMap(IntegerEnum.class), false)},
-            new Object[]{"Hashtable", makeMap(Hashtable::new, false)},
-            new Object[]{"TreeMap", makeMap(TreeMap::new, false)},
-            new Object[]{"ConcurrentHashMap", makeMap(ConcurrentHashMap::new, false)},
-            new Object[]{"ConcurrentSkipListMap", makeMap(ConcurrentSkipListMap::new, false)},
-            new Object[]{"Collections.checkedMap(ConcurrentHashMap)", Collections.checkedMap(makeMap(ConcurrentHashMap::new, false), IntegerEnum.class, String.class)},
-            new Object[]{"Collections.synchronizedMap(EnumMap)", Collections.synchronizedMap(makeMap(() -> new EnumMap(IntegerEnum.class), false))},
-            new Object[]{"ImplementsConcurrentMap", makeMap(ImplementsConcurrentMap::new, false)});
+            // null key and value hostile
+            new Object[]{"Hashtable", makeMap(Hashtable::new, false, false)},
+            new Object[]{"ConcurrentHashMap", makeMap(ConcurrentHashMap::new, false, false)},
+            new Object[]{"ConcurrentSkipListMap", makeMap(ConcurrentSkipListMap::new, false, false)},
+            new Object[]{"Collections.synchronizedMap(ConcurrentHashMap)", Collections.synchronizedMap(makeMap(ConcurrentHashMap::new, false, false))},
+            new Object[]{"Collections.checkedMap(ConcurrentHashMap)", Collections.checkedMap(makeMap(ConcurrentHashMap::new, false, false), IntegerEnum.class, String.class)},
+            new Object[]{"ExtendsAbstractMap(ConcurrentHashMap)", makeMap(() -> {return new ExtendsAbstractMap(new ConcurrentHashMap());}, false, false)},
+            new Object[]{"ImplementsConcurrentMap", makeMap(ImplementsConcurrentMap::new, false, false)}
+            );
     }
 
+    /**
+     *
+     * @param nulls include nulls
+     * @return
+     */
     private static Collection<Object[]> makeROMaps(boolean nulls) {
         return Arrays.asList(new Object[][]{
-            new Object[]{"Collections.unmodifiableMap(HashMap)", Collections.unmodifiableMap(makeMap(HashMap::new, nulls))}
+            new Object[]{"Collections.unmodifiableMap(HashMap)", Collections.unmodifiableMap(makeMap(HashMap::new, nulls, nulls))}
         });
     }
 
-    private static Map<IntegerEnum, String> makeMap(Supplier<Map<IntegerEnum, String>> supplier, boolean nulls) {
+     /**
+     *
+     * @param supplier a supplier of mutable map instances.
+     *
+     * @param nullKeys   include null keys
+     * @param nullValues include null values
+     * @return
+     */
+    private static Map<IntegerEnum, String> makeMap(Supplier<Map<IntegerEnum, String>> supplier, boolean nullKeys, boolean nullValues) {
         Map<IntegerEnum, String> result = supplier.get();
 
         for (int each = 0; each < TEST_SIZE; each++) {
-            if (nulls) {
-                result.put((each == 0) ? null : KEYS[each], null);
-            } else {
-                result.put(KEYS[each], VALUES[each]);
-            }
+            IntegerEnum key = nullKeys ? (each == 0) ? null : KEYS[each] : KEYS[each];
+            String value = nullValues ? (each == 0) ? null : VALUES[each] : VALUES[each];
+
+            result.put(key, value);
         }
 
         return result;
@@ -506,25 +725,30 @@ public class Defaults {
     }
 
     public static <T extends Throwable> void assertThrows(Thrower<T> thrower, Class<T> throwable, String message) {
-        Throwable result;
+        Throwable thrown;
         try {
             thrower.run();
-            result = null;
+            thrown = null;
         } catch (Throwable caught) {
-            result = caught;
+            thrown = caught;
         }
 
-        assertInstance(result, throwable,
-            (null != message)
-            ? message
-            : "Failed to throw " + throwable.getCanonicalName());
+        assertInstance(thrown, throwable,
+            ((null != message) ? message : "") +
+            " Failed to throw " + throwable.getCanonicalName());
     }
 
-    public static <T> void assertInstance(T actual, Class<? extends T> expected) {
+    public static <T extends Throwable> void assertThrows(Class<T> throwable, String message, Thrower<T>... throwers) {
+        for(Thrower<T> thrower : throwers) {
+            assertThrows(thrower, throwable, message);
+        }
+    }
+
+    public static void assertInstance(Object actual, Class<?> expected) {
         assertInstance(expected.isInstance(actual), null);
     }
 
-    public static <T> void assertInstance(T actual, Class<? extends T> expected, String message) {
+    public static void assertInstance(Object actual, Class<?> expected, String message) {
         assertTrue(expected.isInstance(actual), message);
     }
 

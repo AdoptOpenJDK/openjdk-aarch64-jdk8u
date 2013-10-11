@@ -179,6 +179,10 @@ JNIEXPORT void JNICALL Java_sun_font_SunLayoutEngine_nativeLayout
   FontInstanceAdapter fia(env, font2d, strike, mat, 72, 72, (le_int32) upem, (TTLayoutTableCache *) layoutTables);
   LEErrorCode success = LE_NO_ERROR;
   LayoutEngine *engine = LayoutEngine::layoutEngineFactory(&fia, script, lang, typo_flags & TYPO_MASK, success);
+  if (engine == NULL) {
+    env->SetIntField(gvdata, gvdCountFID, -1); // flag failure
+    return;
+  }
 
   if (min < 0) min = 0; if (max < min) max = min; /* defensive coding */
   // have to copy, yuck, since code does upcalls now.  this will be soooo slow
@@ -203,16 +207,19 @@ JNIEXPORT void JNICALL Java_sun_font_SunLayoutEngine_nativeLayout
   getFloat(env, pt, x, y);
   jboolean rtl = (typo_flags & TYPO_RTL) != 0;
   int glyphCount = engine->layoutChars(chars, start - min, limit - start, len, rtl, x, y, success);
-  //   fprintf(stderr, "sle nl len %d -> gc: %d\n", len, glyphCount); fflush(stderr);
+    // fprintf(stderr, "sle nl len %d -> gc: %d\n", len, glyphCount); fflush(stderr);
 
   engine->getGlyphPosition(glyphCount, x, y, success);
 
-  //  fprintf(stderr, "layout glyphs: %d x: %g y: %g\n", glyphCount, x, y); fflush(stderr);
-
-  if (putGV(env, gmask, baseIndex, gvdata, engine, glyphCount)) {
-    // !!! hmmm, could use current value in positions array of GVData...
-    putFloat(env, pt, x, y);
-  }
+   // fprintf(stderr, "layout glyphs: %d x: %g y: %g\n", glyphCount, x, y); fflush(stderr);
+   if (LE_FAILURE(success)) {
+       env->SetIntField(gvdata, gvdCountFID, -1); // flag failure
+   } else {
+      if (putGV(env, gmask, baseIndex, gvdata, engine, glyphCount)) {
+        // !!! hmmm, could use current value in positions array of GVData...
+        putFloat(env, pt, x, y);
+      }
+   }
 
   if (chars != buffer) {
     free(chars);

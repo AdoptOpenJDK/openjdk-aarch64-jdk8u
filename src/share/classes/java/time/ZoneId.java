@@ -63,6 +63,7 @@ package java.time;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.TextStyle;
@@ -157,7 +158,7 @@ import java.util.TimeZone;
  * This approach is designed to allow a {@link ZonedDateTime} to be loaded and
  * queried, but not modified, on a Java Runtime with incomplete time-zone information.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This abstract class has two implementations, both of which are immutable and thread-safe.
  * One implementation models region-based IDs, the other is {@code ZoneOffset} modelling
  * offset-based IDs. This difference is visible in serialization.
@@ -401,6 +402,36 @@ public abstract class ZoneId implements Serializable {
     }
 
     /**
+     * Obtains an instance of {@code ZoneId} wrapping an offset.
+     * <p>
+     * If the prefix is "GMT", "UTC", or "UT" a {@code ZoneId}
+     * with the prefix and the non-zero offset is returned.
+     * If the prefix is empty {@code ""} the {@code ZoneOffset} is returned.
+     *
+     * @param prefix  the time-zone ID, not null
+     * @param offset  the offset, not null
+     * @return the zone ID, not null
+     * @throws IllegalArgumentException if the prefix is not one of
+     *     "GMT", "UTC", or "UT", or ""
+     */
+    public static ZoneId ofOffset(String prefix, ZoneOffset offset) {
+        Objects.requireNonNull(prefix, "prefix");
+        Objects.requireNonNull(offset, "offset");
+        if (prefix.length() == 0) {
+            return offset;
+        }
+
+        if (!prefix.equals("GMT") && !prefix.equals("UTC") && !prefix.equals("UT")) {
+             throw new IllegalArgumentException("prefix should be GMT, UTC or UT, is: " + prefix);
+        }
+
+        if (offset.getTotalSeconds() != 0) {
+            prefix = prefix.concat(offset.getId());
+        }
+        return new ZoneRegion(prefix, offset.getRules());
+    }
+
+    /**
      * Parses the ID, taking a flag to indicate whether {@code ZoneRulesException}
      * should be thrown or not, used in deserialization.
      *
@@ -433,7 +464,7 @@ public abstract class ZoneId implements Serializable {
     private static ZoneId ofWithPrefix(String zoneId, int prefixLength, boolean checkAvailable) {
         String prefix = zoneId.substring(0, prefixLength);
         if (zoneId.length() == prefixLength) {
-            return ZoneRegion.ofPrefixedOffset(prefix, ZoneOffset.UTC);
+            return ofOffset(prefix, ZoneOffset.UTC);
         }
         if (zoneId.charAt(prefixLength) != '+' && zoneId.charAt(prefixLength) != '-') {
             return ZoneRegion.ofId(zoneId, checkAvailable);  // drop through to ZoneRulesProvider
@@ -441,9 +472,9 @@ public abstract class ZoneId implements Serializable {
         try {
             ZoneOffset offset = ZoneOffset.of(zoneId.substring(prefixLength));
             if (offset == ZoneOffset.UTC) {
-                return ZoneRegion.ofPrefixedOffset(prefix, offset);
+                return ofOffset(prefix, offset);
             }
-            return ZoneRegion.ofPrefixedOffset(prefix + offset.toString(), offset);
+            return ofOffset(prefix, offset);
         } catch (DateTimeException ex) {
             throw new DateTimeException("Invalid ID for offset-based ZoneId: " + zoneId, ex);
         }
@@ -632,6 +663,15 @@ public abstract class ZoneId implements Serializable {
 
     //-----------------------------------------------------------------------
     /**
+     * Defend against malicious streams.
+     * @return never
+     * @throws InvalidObjectException always
+     */
+    private Object readResolve() throws InvalidObjectException {
+        throw new InvalidObjectException("Deserialization via serialization delegate");
+    }
+
+    /**
      * Outputs this zone as a {@code String}, using the ID.
      *
      * @return a string representation of this time-zone ID, not null
@@ -645,9 +685,10 @@ public abstract class ZoneId implements Serializable {
     /**
      * Writes the object using a
      * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
      * <pre>
-     *  out.writeByte(7);  // identifies this as a ZoneId (not ZoneOffset)
-     *  out.writeUTF(zoneId);
+     *  out.writeByte(7);  // identifies a ZoneId (not ZoneOffset)
+     *  out.writeUTF(getId());
      * </pre>
      * <p>
      * When read back in, the {@code ZoneId} will be created as though using

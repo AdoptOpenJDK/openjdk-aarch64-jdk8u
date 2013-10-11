@@ -29,20 +29,30 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ContainerEvent;
+import java.awt.event.ContainerListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.security.AccessController;
 
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.LayoutFocusTraversalPolicy;
 import javax.swing.RootPaneContainer;
+import javax.swing.SwingUtilities;
 
 import sun.awt.LightweightFrame;
+import sun.security.action.GetPropertyAction;
 
 /**
  * The frame serves as a lightweight container which paints its content
@@ -66,16 +76,60 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
     private BufferedImage bbImage;
 
     /**
+     * {@code copyBufferEnabled}, true by default, defines the following strategy.
+     * A duplicating (copy) buffer is created for the original pixel buffer.
+     * The copy buffer is synchronized with the original buffer every time the
+     * latter changes. {@code JLightweightFrame} passes the copy buffer array
+     * to the {@link LightweightContent#imageBufferReset} method. The code spot
+     * which synchronizes two buffers becomes the only critical section guarded
+     * by the lock (managed with the {@link LightweightContent#paintLock()},
+     * {@link LightweightContent#paintUnlock()} methods).
+     */
+    private boolean copyBufferEnabled;
+    private int[] copyBuffer;
+
+    private PropertyChangeListener layoutSizeListener;
+
+    static {
+        SwingAccessor.setJLightweightFrameAccessor(new SwingAccessor.JLightweightFrameAccessor() {
+            @Override
+            public void updateCursor(JLightweightFrame frame) {
+                frame.updateClientCursor();
+            }
+        });
+    }
+
+    /**
      * Constructs a new, initially invisible {@code JLightweightFrame}
      * instance.
      */
     public JLightweightFrame() {
         super();
+        copyBufferEnabled = "true".equals(AccessController.
+            doPrivileged(new GetPropertyAction("swing.jlf.copyBufferEnabled", "true")));
+
         add(rootPane, BorderLayout.CENTER);
         setFocusTraversalPolicy(new LayoutFocusTraversalPolicy());
         if (getGraphicsConfiguration().isTranslucencyCapable()) {
             setBackground(new Color(0, 0, 0, 0));
         }
+
+        layoutSizeListener = new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent e) {
+                Dimension d = (Dimension)e.getNewValue();
+
+                if ("preferredSize".equals(e.getPropertyName())) {
+                    content.preferredSizeChanged(d.width, d.height);
+
+                } else if ("maximumSize".equals(e.getPropertyName())) {
+                    content.maximumSizeChanged(d.width, d.height);
+
+                } else if ("minimumSize".equals(e.getPropertyName())) {
+                    content.minimumSizeChanged(d.width, d.height);
+                }
+            }
+        };
     }
 
     /**
@@ -86,9 +140,22 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
      *
      * @param content the {@link LightweightContent} instance
      */
-    public void setContent(LightweightContent content) {
+    public void setContent(final LightweightContent content) {
+        if (content == null) {
+            System.err.println("JLightweightFrame.setContent: content may not be null!");
+            return;
+        }
         this.content = content;
         this.component = content.getComponent();
+
+        Dimension d = this.component.getPreferredSize();
+        content.preferredSizeChanged(d.width, d.height);
+
+        d = this.component.getMaximumSize();
+        content.maximumSizeChanged(d.width, d.height);
+
+        d = this.component.getMinimumSize();
+        content.minimumSizeChanged(d.width, d.height);
 
         initInterior();
     }
@@ -124,16 +191,37 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
         if (content != null) content.focusUngrabbed();
     }
 
+    private void syncCopyBuffer(boolean reset, int x, int y, int w, int h) {
+        content.paintLock();
+        try {
+            int[] srcBuffer = ((DataBufferInt)bbImage.getRaster().getDataBuffer()).getData();
+            if (reset) {
+                copyBuffer = new int[srcBuffer.length];
+            }
+            int linestride = bbImage.getWidth();
+
+            for (int i=0; i<h; i++) {
+                int from = (y + i) * linestride + x;
+                System.arraycopy(srcBuffer, from, copyBuffer, from, w);
+            }
+        } finally {
+            content.paintUnlock();
+        }
+    }
+
     private void initInterior() {
         contentPane = new JPanel() {
             @Override
             public void paint(Graphics g) {
-                content.paintLock();
+                if (!copyBufferEnabled) {
+                    content.paintLock();
+                }
                 try {
                     super.paint(g);
 
                     final Rectangle clip = g.getClipBounds() != null ?
-                            g.getClipBounds() : new Rectangle(0, 0, contentPane.getWidth(), contentPane.getHeight());
+                            g.getClipBounds() :
+                            new Rectangle(0, 0, contentPane.getWidth(), contentPane.getHeight());
 
                     clip.x = Math.max(0, clip.x);
                     clip.y = Math.max(0, clip.y);
@@ -143,11 +231,16 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
                     EventQueue.invokeLater(new Runnable() {
                         @Override
                         public void run() {
+                            if (copyBufferEnabled) {
+                                syncCopyBuffer(false, clip.x, clip.y, clip.width, clip.height);
+                            }
                             content.imageUpdated(clip.x, clip.y, clip.width, clip.height);
                         }
                     });
                 } finally {
-                    content.paintUnlock();
+                    if (!copyBufferEnabled) {
+                        content.paintUnlock();
+                    }
                 }
             }
             @Override
@@ -157,7 +250,31 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
         };
         contentPane.setLayout(new BorderLayout());
         contentPane.add(component);
+        if ("true".equals(AccessController.
+            doPrivileged(new GetPropertyAction("swing.jlf.contentPaneTransparent", "false"))))
+        {
+            contentPane.setOpaque(false);
+        }
         setContentPane(contentPane);
+
+        contentPane.addContainerListener(new ContainerListener() {
+            @Override
+            public void componentAdded(ContainerEvent e) {
+                Component c = JLightweightFrame.this.component;
+                if (e.getChild() == c) {
+                    c.addPropertyChangeListener("preferredSize", layoutSizeListener);
+                    c.addPropertyChangeListener("maximumSize", layoutSizeListener);
+                    c.addPropertyChangeListener("minimumSize", layoutSizeListener);
+                }
+            }
+            @Override
+            public void componentRemoved(ContainerEvent e) {
+                Component c = JLightweightFrame.this.component;
+                if (e.getChild() == c) {
+                    c.removePropertyChangeListener(layoutSizeListener);
+                }
+            }
+        });
     }
 
     @SuppressWarnings("deprecation")
@@ -167,8 +284,9 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
         if (width == 0 || height == 0) {
             return;
         }
-
-        content.paintLock();
+        if (!copyBufferEnabled) {
+            content.paintLock();
+        }
         try {
             if ((bbImage == null) || (width != bbImage.getWidth()) || (height != bbImage.getHeight())) {
                 boolean createBB = true;
@@ -204,14 +322,21 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
                             oldBB.flush();
                         }
                     }
-                    DataBufferInt dataBuf = (DataBufferInt)bbImage.getRaster().getDataBuffer();
-                    content.imageBufferReset(dataBuf.getData(), 0, 0, width, height, bbImage.getWidth());
-                } else {
-                    content.imageReshaped(0, 0, width, height);
+                    int[] pixels = ((DataBufferInt)bbImage.getRaster().getDataBuffer()).getData();
+                    if (copyBufferEnabled) {
+                        syncCopyBuffer(true, 0, 0, width, height);
+                        pixels = copyBuffer;
+                    }
+                    content.imageBufferReset(pixels, 0, 0, width, height, bbImage.getWidth());
+                    return;
                 }
             }
+            content.imageReshaped(0, 0, width, height);
+
         } finally {
-            content.paintUnlock();
+            if (!copyBufferEnabled) {
+                content.paintUnlock();
+            }
         }
     }
 
@@ -248,5 +373,22 @@ public final class JLightweightFrame extends LightweightFrame implements RootPan
     @Override
     public Component getGlassPane() {
         return getRootPane().getGlassPane();
+    }
+
+
+    /*
+     * Notifies client toolkit that it should change a cursor.
+     *
+     * Called from the peer via SwingAccessor, because the
+     * Component.updateCursorImmediately method is final
+     * and could not be overridden.
+     */
+    private void updateClientCursor() {
+        Point p = MouseInfo.getPointerInfo().getLocation();
+        SwingUtilities.convertPointFromScreen(p, this);
+        Component target = SwingUtilities.getDeepestComponentAt(this, p.x, p.y);
+        if (target != null) {
+            content.setCursor(target.getCursor());
+        }
     }
 }

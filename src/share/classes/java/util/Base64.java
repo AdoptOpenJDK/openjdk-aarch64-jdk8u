@@ -42,24 +42,21 @@ import java.nio.charset.StandardCharsets;
  *
  * <p>
  * <ul>
- * <a name="basic">
- * <li><b>Basic</b>
+ * <li><a name="basic"><b>Basic</b></a>
  * <p> Uses "The Base64 Alphabet" as specified in Table 1 of
  *     RFC 4648 and RFC 2045 for encoding and decoding operation.
  *     The encoder does not add any line feed (line separator)
  *     character. The decoder rejects data that contains characters
  *     outside the base64 alphabet.</p></li>
  *
- * <a name="url">
- * <li><b>URL and Filename safe</b>
+ * <li><a name="url"><b>URL and Filename safe</b></a>
  * <p> Uses the "URL and Filename safe Base64 Alphabet" as specified
  *     in Table 2 of RFC 4648 for encoding and decoding. The
  *     encoder does not add any line feed (line separator) character.
  *     The decoder rejects data that contains characters outside the
  *     base64 alphabet.</p></li>
  *
- * <a name="mime">
- * <li><b>MIME</b>
+ * <li><a name="mime"><b>MIME</b></a>
  * <p> Uses the "The Base64 Alphabet" as specified in Table 1 of
  *     RFC 2045 for encoding and decoding operation. The encoded output
  *     must be represented in lines of no more than 76 characters each
@@ -625,7 +622,8 @@ public class Base64 {
      * character(s) padded), they are decoded as if followed by padding
      * character(s). If there is padding character present in the
      * final unit, the correct number of padding character(s) must be
-     * present, otherwise {@code IllegalArgumentException} is thrown
+     * present, otherwise {@code IllegalArgumentException} (
+     * {@code IOException} when reading from a Base64 stream) is thrown
      * during decoding.
      *
      * <p> Instances of {@link Decoder} class are safe for use by
@@ -1306,7 +1304,12 @@ public class Base64 {
                         return off - oldOff;
                 }
                 if (v == '=') {                  // padding byte(s)
-                    if (nextin != 6 && nextin != 0) {
+                    // =     shiftto==18 unnecessary padding
+                    // x=    shiftto==12 invalid unit
+                    // xx=   shiftto==6 && missing last '='
+                    // xx=y                or last is not '='
+                    if (nextin == 18 || nextin == 12 ||
+                        nextin == 6 && is.read() != '=') {
                         throw new IOException("Illegal base64 ending sequence:" + nextin);
                     }
                     b[off++] = (byte)(bits >> (16));

@@ -56,6 +56,8 @@
  */
 package java.time.chrono;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
 import static java.time.temporal.ChronoField.PROLEPTIC_MONTH;
 import static java.time.temporal.ChronoField.YEAR;
 
@@ -65,13 +67,16 @@ import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
 import java.time.temporal.ValueRange;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * The Thai Buddhist calendar system.
@@ -96,7 +101,7 @@ import java.util.Locale;
  *  are never out of step.
  * </ul><p>
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -289,16 +294,19 @@ public final class ThaiBuddhistChronology extends Chronology implements Serializ
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public ChronoLocalDateTime<ThaiBuddhistDate> localDateTime(TemporalAccessor temporal) {
         return (ChronoLocalDateTime<ThaiBuddhistDate>)super.localDateTime(temporal);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public ChronoZonedDateTime<ThaiBuddhistDate> zonedDateTime(TemporalAccessor temporal) {
         return (ChronoZonedDateTime<ThaiBuddhistDate>)super.zonedDateTime(temporal);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public ChronoZonedDateTime<ThaiBuddhistDate> zonedDateTime(Instant instant, ZoneId zone) {
         return (ChronoZonedDateTime<ThaiBuddhistDate>)super.zonedDateTime(instant, zone);
     }
@@ -328,7 +336,7 @@ public final class ThaiBuddhistChronology extends Chronology implements Serializ
     }
 
     @Override
-    public Era eraOf(int eraValue) {
+    public ThaiBuddhistEra eraOf(int eraValue) {
         return ThaiBuddhistEra.of(eraValue);
     }
 
@@ -357,4 +365,35 @@ public final class ThaiBuddhistChronology extends Chronology implements Serializ
         return field.range();
     }
 
+    //-----------------------------------------------------------------------
+    @Override  // override for return type
+    public ThaiBuddhistDate resolveDate(Map<TemporalField, Long> fieldValues, ResolverStyle resolverStyle) {
+        return (ThaiBuddhistDate) super.resolveDate(fieldValues, resolverStyle);
+    }
+
+    //-----------------------------------------------------------------------
+    /**
+     * Writes the Chronology using a
+     * <a href="../../../serialized-form.html#java.time.chrono.Ser">dedicated serialized form</a>.
+     * @serialData
+     * <pre>
+     *  out.writeByte(1);     // identifies a Chronology
+     *  out.writeUTF(getId());
+     * </pre>
+     *
+     * @return the instance of {@code Ser}, not null
+     */
+    @Override
+    Object writeReplace() {
+        return super.writeReplace();
+    }
+
+    /**
+     * Defend against malicious streams.
+     * @return never
+     * @throws InvalidObjectException always
+     */
+    private Object readResolve() throws InvalidObjectException {
+        throw new InvalidObjectException("Deserialization via serialization delegate");
+    }
 }

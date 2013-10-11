@@ -1023,6 +1023,22 @@ public class IPPPrintService implements PrintService, SunPrinterJobService {
 
             // this is already supported in UnixPrintJob
             catList.add(Destination.class);
+
+            // It is unfortunate that CUPS doesn't provide a way to query
+            // if printer supports collation but since most printers
+            // now supports collation and that most OS has a way
+            // of setting it, it is a safe assumption to just always
+            // include SheetCollate as supported attribute.
+
+            /*
+               In Linux, we use Postscript for rendering but Linux still
+               has issues in propagating Postscript-embedded setpagedevice
+               setting like collation.  Therefore, we temporarily exclude
+               Linux.
+            */
+            if (!UnixPrintServiceLookup.isLinux()) {
+                catList.add(SheetCollate.class);
+            }
         }
 
         // With the assumption that  Chromaticity is equivalent to
@@ -1083,6 +1099,15 @@ public class IPPPrintService implements PrintService, SunPrinterJobService {
 
         if (category == PrinterName.class) {
             return (T)(new PrinterName(printer, null));
+        } else if (category == PrinterInfo.class) {
+            PrinterInfo pInfo = new PrinterInfo(printer, null);
+            AttributeClass ac = (getAttMap != null) ?
+                (AttributeClass)getAttMap.get(pInfo.getName())
+                : null;
+            if (ac != null) {
+                return (T)(new PrinterInfo(ac.getStringValue(), null));
+            }
+            return (T)pInfo;
         } else if (category == QueuedJobCount.class) {
             QueuedJobCount qjc = new QueuedJobCount(0);
             AttributeClass ac = (getAttMap != null) ?
@@ -1550,7 +1575,24 @@ public class IPPPrintService implements PrintService, SunPrinterJobService {
         }
     }
 
+    String getDest() {
+        return printer;
+    }
+
     public String getName() {
+        /*
+         * Mac is using printer-info IPP attribute for its human-readable printer
+         * name and is also the identifier used in NSPrintInfo:setPrinter.
+         */
+        if (UnixPrintServiceLookup.isMac()) {
+            PrintServiceAttributeSet psaSet = this.getAttributes();
+            if (psaSet != null) {
+                PrinterInfo pName = (PrinterInfo)psaSet.get(PrinterInfo.class);
+                if (pName != null) {
+                    return pName.toString();
+                }
+            }
+        }
         return printer;
     }
 

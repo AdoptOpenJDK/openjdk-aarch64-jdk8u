@@ -409,16 +409,16 @@ public final class Spliterators {
      *
      * @param <T> Type of elements
      * @param c The collection
-     * @param additionalCharacteristics Additional spliterator characteristics
-     *        of this spliterator's source or elements beyond {@code SIZED} and
-     *        {@code SUBSIZED} which are are always reported
+     * @param characteristics Characteristics of this spliterator's source or
+     *        elements.  The characteristics {@code SIZED} and {@code SUBSIZED}
+     *        are additionally reported unless {@code CONCURRENT} is supplied.
      * @return A spliterator from an iterator
      * @throws NullPointerException if the given collection is {@code null}
      */
     public static <T> Spliterator<T> spliterator(Collection<? extends T> c,
-                                                 int additionalCharacteristics) {
+                                                 int characteristics) {
         return new IteratorSpliterator<>(Objects.requireNonNull(c),
-                                         additionalCharacteristics);
+                                         characteristics);
     }
 
     /**
@@ -439,17 +439,17 @@ public final class Spliterators {
      * @param iterator The iterator for the source
      * @param size The number of elements in the source, to be reported as
      *        initial {@code estimateSize}
-     * @param additionalCharacteristics Additional spliterator characteristics
-     *        of this spliterator's source or elements beyond {@code SIZED} and
-     *        {@code SUBSIZED} which are are always reported
+     * @param characteristics Characteristics of this spliterator's source or
+     *        elements.  The characteristics {@code SIZED} and {@code SUBSIZED}
+     *        are additionally reported unless {@code CONCURRENT} is supplied.
      * @return A spliterator from an iterator
      * @throws NullPointerException if the given iterator is {@code null}
      */
     public static <T> Spliterator<T> spliterator(Iterator<? extends T> iterator,
                                                  long size,
-                                                 int additionalCharacteristics) {
+                                                 int characteristics) {
         return new IteratorSpliterator<>(Objects.requireNonNull(iterator), size,
-                                         additionalCharacteristics);
+                                         characteristics);
     }
 
     /**
@@ -467,7 +467,7 @@ public final class Spliterators {
      *
      * @param <T> Type of elements
      * @param iterator The iterator for the source
-     * @param characteristics Properties of this spliterator's source
+     * @param characteristics Characteristics of this spliterator's source
      *        or elements ({@code SIZED} and {@code SUBSIZED}, if supplied, are
      *        ignored and are not reported.)
      * @return A spliterator from an iterator
@@ -496,17 +496,17 @@ public final class Spliterators {
      * @param iterator The iterator for the source
      * @param size The number of elements in the source, to be reported as
      *        initial {@code estimateSize}.
-     * @param additionalCharacteristics Additional spliterator characteristics
-     *        of this spliterator's source or elements beyond {@code SIZED} and
-     *        {@code SUBSIZED} which are are always reported
+     * @param characteristics Characteristics of this spliterator's source or
+     *        elements.  The characteristics {@code SIZED} and {@code SUBSIZED}
+     *        are additionally reported unless {@code CONCURRENT} is supplied.
      * @return A spliterator from an iterator
      * @throws NullPointerException if the given iterator is {@code null}
      */
     public static Spliterator.OfInt spliterator(PrimitiveIterator.OfInt iterator,
                                                 long size,
-                                                int additionalCharacteristics) {
+                                                int characteristics) {
         return new IntIteratorSpliterator(Objects.requireNonNull(iterator),
-                                          size, additionalCharacteristics);
+                                          size, characteristics);
     }
 
     /**
@@ -524,7 +524,7 @@ public final class Spliterators {
      * operated on after the spliterator is returned.
      *
      * @param iterator The iterator for the source
-     * @param characteristics Properties of this spliterator's source
+     * @param characteristics Characteristics of this spliterator's source
      *        or elements ({@code SIZED} and {@code SUBSIZED}, if supplied, are
      *        ignored and are not reported.)
      * @return A spliterator from an iterator
@@ -553,17 +553,17 @@ public final class Spliterators {
      * @param iterator The iterator for the source
      * @param size The number of elements in the source, to be reported as
      *        initial {@code estimateSize}.
-     * @param additionalCharacteristics Additional spliterator characteristics
-     *        of this spliterator's source or elements beyond {@code SIZED} and
-     *        {@code SUBSIZED} which are are always reported
+     * @param characteristics Characteristics of this spliterator's source or
+     *        elements.  The characteristics {@code SIZED} and {@code SUBSIZED}
+     *        are additionally reported unless {@code CONCURRENT} is supplied.
      * @return A spliterator from an iterator
      * @throws NullPointerException if the given iterator is {@code null}
      */
     public static Spliterator.OfLong spliterator(PrimitiveIterator.OfLong iterator,
                                                  long size,
-                                                 int additionalCharacteristics) {
+                                                 int characteristics) {
         return new LongIteratorSpliterator(Objects.requireNonNull(iterator),
-                                           size, additionalCharacteristics);
+                                           size, characteristics);
     }
 
     /**
@@ -581,7 +581,7 @@ public final class Spliterators {
      * operated on after the spliterator is returned.
      *
      * @param iterator The iterator for the source
-     * @param characteristics Properties of this spliterator's source
+     * @param characteristics Characteristics of this spliterator's source
      *        or elements ({@code SIZED} and {@code SUBSIZED}, if supplied, are
      *        ignored and are not reported.)
      * @return A spliterator from an iterator
@@ -610,17 +610,17 @@ public final class Spliterators {
      * @param iterator The iterator for the source
      * @param size The number of elements in the source, to be reported as
      *        initial {@code estimateSize}
-     * @param additionalCharacteristics Additional spliterator characteristics
-     *        of this spliterator's source or elements beyond {@code SIZED} and
-     *        {@code SUBSIZED} which are are always reported
+     * @param characteristics Characteristics of this spliterator's source or
+     *        elements.  The characteristics {@code SIZED} and {@code SUBSIZED}
+     *        are additionally reported unless {@code CONCURRENT} is supplied.
      * @return A spliterator from an iterator
      * @throws NullPointerException if the given iterator is {@code null}
      */
     public static Spliterator.OfDouble spliterator(PrimitiveIterator.OfDouble iterator,
                                                    long size,
-                                                   int additionalCharacteristics) {
+                                                   int characteristics) {
         return new DoubleIteratorSpliterator(Objects.requireNonNull(iterator),
-                                             size, additionalCharacteristics);
+                                             size, characteristics);
     }
 
     /**
@@ -638,7 +638,7 @@ public final class Spliterators {
      * operated on after the spliterator is returned.
      *
      * @param iterator The iterator for the source
-     * @param characteristics Properties of this spliterator's source
+     * @param characteristics Characteristics of this spliterator's source
      *        or elements ({@code SIZED} and {@code SUBSIZED}, if supplied, are
      *        ignored and are not reported.)
      * @return A spliterator from an iterator
@@ -663,7 +663,7 @@ public final class Spliterators {
      * @return An iterator
      * @throws NullPointerException if the given spliterator is {@code null}
      */
-    public static<T> Iterator<T> iteratorFromSpliterator(Spliterator<? extends T> spliterator) {
+    public static<T> Iterator<T> iterator(Spliterator<? extends T> spliterator) {
         Objects.requireNonNull(spliterator);
         class Adapter implements Iterator<T>, Consumer<T> {
             boolean valueReady = false;
@@ -708,7 +708,7 @@ public final class Spliterators {
      * @return An iterator
      * @throws NullPointerException if the given spliterator is {@code null}
      */
-    public static PrimitiveIterator.OfInt iteratorFromSpliterator(Spliterator.OfInt spliterator) {
+    public static PrimitiveIterator.OfInt iterator(Spliterator.OfInt spliterator) {
         Objects.requireNonNull(spliterator);
         class Adapter implements PrimitiveIterator.OfInt, IntConsumer {
             boolean valueReady = false;
@@ -753,7 +753,7 @@ public final class Spliterators {
      * @return An iterator
      * @throws NullPointerException if the given spliterator is {@code null}
      */
-    public static PrimitiveIterator.OfLong iteratorFromSpliterator(Spliterator.OfLong spliterator) {
+    public static PrimitiveIterator.OfLong iterator(Spliterator.OfLong spliterator) {
         Objects.requireNonNull(spliterator);
         class Adapter implements PrimitiveIterator.OfLong, LongConsumer {
             boolean valueReady = false;
@@ -798,7 +798,7 @@ public final class Spliterators {
      * @return An iterator
      * @throws NullPointerException if the given spliterator is {@code null}
      */
-    public static PrimitiveIterator.OfDouble iteratorFromSpliterator(Spliterator.OfDouble spliterator) {
+    public static PrimitiveIterator.OfDouble iterator(Spliterator.OfDouble spliterator) {
         Objects.requireNonNull(spliterator);
         class Adapter implements PrimitiveIterator.OfDouble, DoubleConsumer {
             boolean valueReady = false;
@@ -1314,12 +1314,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                Object[] a;
-                try {
-                    a = new Object[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                Object[] a = new Object[n];
                 int j = 0;
                 do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
                 batch = j;
@@ -1429,12 +1424,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                int[] a;
-                try {
-                    a = new int[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                int[] a = new int[n];
                 int j = 0;
                 do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
                 batch = j;
@@ -1544,12 +1534,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                long[] a;
-                try {
-                    a = new long[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                long[] a = new long[n];
                 int j = 0;
                 do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
                 batch = j;
@@ -1659,12 +1644,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                double[] a;
-                try {
-                    a = new double[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                double[] a = new double[n];
                 int j = 0;
                 do { a[j] = holder.value; } while (++j < n && tryAdvance(holder));
                 batch = j;
@@ -1730,7 +1710,9 @@ public final class Spliterators {
         public IteratorSpliterator(Collection<? extends T> collection, int characteristics) {
             this.collection = collection;
             this.it = null;
-            this.characteristics = characteristics | Spliterator.SIZED | Spliterator.SUBSIZED;
+            this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
+                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                                   : characteristics;
         }
 
         /**
@@ -1747,7 +1729,9 @@ public final class Spliterators {
             this.collection = null;
             this.it = iterator;
             this.est = size;
-            this.characteristics = characteristics | Spliterator.SIZED | Spliterator.SUBSIZED;
+            this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
+                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                                   : characteristics;
         }
 
         /**
@@ -1795,12 +1779,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                Object[] a;
-                try {
-                    a = new Object[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                Object[] a = new Object[n];
                 int j = 0;
                 do { a[j] = i.next(); } while (++j < n && i.hasNext());
                 batch = j;
@@ -1882,7 +1861,9 @@ public final class Spliterators {
         public IntIteratorSpliterator(PrimitiveIterator.OfInt iterator, long size, int characteristics) {
             this.it = iterator;
             this.est = size;
-            this.characteristics = characteristics | Spliterator.SIZED | Spliterator.SUBSIZED;
+            this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
+                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                                   : characteristics;
         }
 
         /**
@@ -1910,12 +1891,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                int[] a;
-                try {
-                    a = new int[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                int[] a = new int[n];
                 int j = 0;
                 do { a[j] = i.nextInt(); } while (++j < n && i.hasNext());
                 batch = j;
@@ -1979,7 +1955,9 @@ public final class Spliterators {
         public LongIteratorSpliterator(PrimitiveIterator.OfLong iterator, long size, int characteristics) {
             this.it = iterator;
             this.est = size;
-            this.characteristics = characteristics | Spliterator.SIZED | Spliterator.SUBSIZED;
+            this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
+                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                                   : characteristics;
         }
 
         /**
@@ -2007,12 +1985,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                long[] a;
-                try {
-                    a = new long[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                long[] a = new long[n];
                 int j = 0;
                 do { a[j] = i.nextLong(); } while (++j < n && i.hasNext());
                 batch = j;
@@ -2076,7 +2049,9 @@ public final class Spliterators {
         public DoubleIteratorSpliterator(PrimitiveIterator.OfDouble iterator, long size, int characteristics) {
             this.it = iterator;
             this.est = size;
-            this.characteristics = characteristics | Spliterator.SIZED | Spliterator.SUBSIZED;
+            this.characteristics = (characteristics & Spliterator.CONCURRENT) == 0
+                                   ? characteristics | Spliterator.SIZED | Spliterator.SUBSIZED
+                                   : characteristics;
         }
 
         /**
@@ -2104,12 +2079,7 @@ public final class Spliterators {
                     n = (int) s;
                 if (n > MAX_BATCH)
                     n = MAX_BATCH;
-                double[] a;
-                try {
-                    a = new double[n];
-                } catch (OutOfMemoryError oome) {
-                    return null;
-                }
+                double[] a = new double[n];
                 int j = 0;
                 do { a[j] = i.nextDouble(); } while (++j < n && i.hasNext());
                 batch = j;

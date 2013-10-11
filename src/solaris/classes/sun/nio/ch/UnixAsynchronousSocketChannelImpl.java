@@ -241,7 +241,7 @@ class UnixAsynchronousSocketChannelImpl
         synchronized (stateLock) {
             state = ST_CONNECTED;
             localAddress = Net.localAddress(fd);
-            remoteAddress = pendingRemote;
+            remoteAddress = (InetSocketAddress)pendingRemote;
         }
     }
 
@@ -748,6 +748,6 @@ class UnixAsynchronousSocketChannelImpl
     private static native void checkConnect(int fdVal) throws IOException;
 
     static {
-        Util.load();
+        IOUtil.load();
     }
 }

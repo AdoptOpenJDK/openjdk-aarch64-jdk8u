@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -633,7 +633,7 @@ public final class StrictMath {
 
     /**
      * Returns the closest {@code int} to the argument, with ties
-     * rounding up.
+     * rounding to positive infinity.
      *
      * <p>Special cases:
      * <ul><li>If the argument is NaN, the result is 0.
@@ -656,7 +656,7 @@ public final class StrictMath {
 
     /**
      * Returns the closest {@code long} to the argument, with ties
-     * rounding up.
+     * rounding to positive infinity.
      *
      * <p>Special cases:
      * <ul><li>If the argument is NaN, the result is 0.
@@ -678,11 +678,8 @@ public final class StrictMath {
         return Math.round(a);
     }
 
-    private static Random randomNumberGenerator;
-
-    private static synchronized Random initRNG() {
-        Random rnd = randomNumberGenerator;
-        return (rnd == null) ? (randomNumberGenerator = new Random()) : rnd;
+    private static final class RandomNumberGeneratorHolder {
+        static final Random randomNumberGenerator = new Random();
     }
 
     /**
@@ -709,9 +706,7 @@ public final class StrictMath {
      * @see Random#nextDouble()
      */
     public static double random() {
-        Random rnd = randomNumberGenerator;
-        if (rnd == null) rnd = initRNG();
-        return rnd.nextDouble();
+        return RandomNumberGeneratorHolder.randomNumberGenerator.nextDouble();
     }
 
     /**
@@ -1419,6 +1414,7 @@ public final class StrictMath {
      * {@link Float#MIN_EXPONENT} -1.
      * </ul>
      * @param f a {@code float} value
+     * @return the unbiased exponent of the argument
      * @since 1.6
      */
     public static int getExponent(float f) {
@@ -1436,6 +1432,7 @@ public final class StrictMath {
      * {@link Double#MIN_EXPONENT} -1.
      * </ul>
      * @param d a {@code double} value
+     * @return the unbiased exponent of the argument
      * @since 1.6
      */
     public static int getExponent(double d) {

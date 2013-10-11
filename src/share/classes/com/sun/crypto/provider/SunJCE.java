@@ -124,7 +124,8 @@ public final class SunJCE extends Provider {
                     put("Cipher.RSA", "com.sun.crypto.provider.RSACipher");
                     put("Cipher.RSA SupportedModes", "ECB");
                     put("Cipher.RSA SupportedPaddings",
-                            "NOPADDING|PKCS1PADDING|OAEPWITHMD5ANDMGF1PADDING"
+                            "NOPADDING|PKCS1PADDING|OAEPPADDING"
+                            + "|OAEPWITHMD5ANDMGF1PADDING"
                             + "|OAEPWITHSHA1ANDMGF1PADDING"
                             + "|OAEPWITHSHA-1ANDMGF1PADDING"
                             + "|OAEPWITHSHA-224ANDMGF1PADDING"
@@ -731,10 +732,11 @@ public final class SunJCE extends Provider {
                     put("Mac.HmacSHA384 SupportedKeyFormats", "RAW");
                     put("Mac.HmacSHA512 SupportedKeyFormats", "RAW");
                     put("Mac.HmacPBESHA1 SupportedKeyFormats", "RAW");
-                    put("Mac.HmacPBESHA224 SupportedKeyFormats", "RAW");
-                    put("Mac.HmacPBESHA256 SupportedKeyFormats", "RAW");
-                    put("Mac.HmacPBESHA384 SupportedKeyFormats", "RAW");
-                    put("Mac.HmacPBESHA512 SupportedKeyFormats", "RAW");
+                    put("Mac.PBEWithHmacSHA1 SupportedKeyFormatS", "RAW");
+                    put("Mac.PBEWithHmacSHA224 SupportedKeyFormats", "RAW");
+                    put("Mac.PBEWithHmacSHA256 SupportedKeyFormats", "RAW");
+                    put("Mac.PBEWithHmacSHA384 SupportedKeyFormats", "RAW");
+                    put("Mac.PBEWithHmacSHA512 SupportedKeyFormats", "RAW");
                     put("Mac.SslMacMD5 SupportedKeyFormats", "RAW");
                     put("Mac.SslMacSHA1 SupportedKeyFormats", "RAW");
 

@@ -42,7 +42,7 @@ import java.io.*;
  */
 public final class ContentModel implements Serializable {
     /**
-     * Type. Either '*', '?', '+', ',', '|', '&'.
+     * Type. Either '*', '?', '+', ',', '|', '&amp;'.
      */
     public int type;
 
@@ -52,7 +52,7 @@ public final class ContentModel implements Serializable {
     public Object content;
 
     /**
-     * The next content model (in a ',', '|' or '&' expression).
+     * The next content model (in a ',', '|' or '&amp;' expression).
      */
     public ContentModel next;
 
@@ -170,8 +170,8 @@ public final class ContentModel implements Serializable {
           case '&': {
             Element e = (Element) token;
             if (valSet == null) {
-                valSet = new boolean[Element.maxIndex + 1];
-                val = new boolean[Element.maxIndex + 1];
+                valSet = new boolean[Element.getMaxIndex() + 1];
+                val = new boolean[valSet.length];
                 // All Element instances are created before this ever executes
             }
             if (valSet[e.index]) {

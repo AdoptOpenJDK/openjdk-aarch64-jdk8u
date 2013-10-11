@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,10 +34,14 @@ import java.awt.peer.ScrollbarPeer;
 
 import javax.swing.JScrollBar;
 
+/**
+ * Lightweight implementation of {@link ScrollbarPeer}. Delegates most of the
+ * work to the {@link JScrollBar}.
+ */
 final class LWScrollBarPeer extends LWComponentPeer<Scrollbar, JScrollBar>
         implements ScrollbarPeer, AdjustmentListener {
 
-    //JScrollBar fires two changes with firePropertyChange (one for old value
+    // JScrollBar fires two changes with firePropertyChange (one for old value
     // and one for new one.
     // We save the last value and don't fire event if not changed.
     private int currentValue;
@@ -48,7 +52,7 @@ final class LWScrollBarPeer extends LWComponentPeer<Scrollbar, JScrollBar>
     }
 
     @Override
-    protected JScrollBar createDelegate() {
+    JScrollBar createDelegate() {
         return new JScrollBar();
     }
 
@@ -56,6 +60,8 @@ final class LWScrollBarPeer extends LWComponentPeer<Scrollbar, JScrollBar>
     void initializeImpl() {
         super.initializeImpl();
         final Scrollbar target = getTarget();
+        setLineIncrement(target.getUnitIncrement());
+        setPageIncrement(target.getBlockIncrement());
         setValues(target.getValue(), target.getVisibleAmount(),
                   target.getMinimum(), target.getMaximum());
 

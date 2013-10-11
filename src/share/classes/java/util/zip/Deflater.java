@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -261,6 +261,12 @@ class Deflater {
 
     /**
      * Sets the compression strategy to the specified value.
+     *
+     * <p> If the compression strategy is changed, the next invocation
+     * of {@code deflate} will compress the input available so far with
+     * the old strategy (and may be flushed); the new strategy will take
+     * effect only after that invocation.
+     *
      * @param strategy the new compression strategy
      * @exception IllegalArgumentException if the compression strategy is
      *                                     invalid
@@ -283,7 +289,13 @@ class Deflater {
     }
 
     /**
-     * Sets the current compression level to the specified value.
+     * Sets the compression level to the specified value.
+     *
+     * <p> If the compression level is changed, the next invocation
+     * of {@code deflate} will compress the input available so far
+     * with the old level (and may be flushed); the new level will
+     * take effect only after that invocation.
+     *
      * @param level the new compression level (0-9)
      * @exception IllegalArgumentException if the compression level is invalid
      */
@@ -461,7 +473,7 @@ class Deflater {
     }
 
     /**
-     * Returns the total number of uncompressed bytes input so far.</p>
+     * Returns the total number of uncompressed bytes input so far.
      *
      * @return the total (non-negative) number of uncompressed bytes input so far
      * @since 1.5
@@ -487,7 +499,7 @@ class Deflater {
     }
 
     /**
-     * Returns the total number of compressed bytes output so far.</p>
+     * Returns the total number of compressed bytes output so far.
      *
      * @return the total (non-negative) number of compressed bytes output so far
      * @since 1.5

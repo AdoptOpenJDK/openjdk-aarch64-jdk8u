@@ -382,7 +382,7 @@ static unichar NsGetDeadKeyChar(unsigned short keyCode)
 {
     TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
     CFDataRef uchr = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
-    if (uchr == nil) { return; }
+    if (uchr == nil) { return 0; }
     const UCKeyboardLayout *keyboardLayout = (const UCKeyboardLayout*)CFDataGetBytePtr(uchr);
     // Carbon modifiers should be used instead of NSEvent modifiers
     UInt32 modifierKeyState = (GetCurrentEventKeyModifiers() >> 8) & 0xFF;
@@ -759,7 +759,7 @@ JNF_COCOA_EXIT(env);
  */
 JNIEXPORT jint JNICALL
 Java_sun_lwawt_macosx_event_NSEvent_nsToJavaChar
-(JNIEnv *env, jclass cls, char nsChar, jint modifierFlags)
+(JNIEnv *env, jclass cls, jchar nsChar, jint modifierFlags)
 {
     jchar javaChar = 0;
 

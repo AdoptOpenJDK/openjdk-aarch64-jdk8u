@@ -42,6 +42,9 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
 
 /**
  * An unbounded {@link TransferQueue} based on linked nodes.
@@ -777,6 +780,24 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     }
 
     /**
+     * Version of firstOfMode used by Spliterator
+     */
+    final Node firstDataNode() {
+        for (Node p = head; p != null;) {
+            Object item = p.item;
+            if (p.isData) {
+                if (item != null && item != p)
+                    return p;
+            }
+            else if (item == null)
+                break;
+            if (p == (p = p.next))
+                p = head;
+        }
+        return null;
+    }
+
+    /**
      * Returns the item in the first unmatched node with isData; or
      * null if none.  Used by peek.
      */
@@ -908,6 +929,114 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (lastRet.tryMatchData())
                 unsplice(lastPred, lastRet);
         }
+    }
+
+    /** A customized variant of Spliterators.IteratorSpliterator */
+    static final class LTQSpliterator<E> implements Spliterator<E> {
+        static final int MAX_BATCH = 1 << 25;  // max batch array size;
+        final LinkedTransferQueue<E> queue;
+        Node current;    // current node; null until initialized
+        int batch;          // batch size for splits
+        boolean exhausted;  // true when no more nodes
+        LTQSpliterator(LinkedTransferQueue<E> queue) {
+            this.queue = queue;
+        }
+
+        public Spliterator<E> trySplit() {
+            Node p;
+            final LinkedTransferQueue<E> q = this.queue;
+            int b = batch;
+            int n = (b <= 0) ? 1 : (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.firstDataNode()) != null) &&
+                p.next != null) {
+                Object[] a = new Object[n];
+                int i = 0;
+                do {
+                    if ((a[i] = p.item) != null)
+                        ++i;
+                    if (p == (p = p.next))
+                        p = q.firstDataNode();
+                } while (p != null && i < n);
+                if ((current = p) == null)
+                    exhausted = true;
+                if (i > 0) {
+                    batch = i;
+                    return Spliterators.spliterator
+                        (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
+                         Spliterator.CONCURRENT);
+                }
+            }
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        public void forEachRemaining(Consumer<? super E> action) {
+            Node p;
+            if (action == null) throw new NullPointerException();
+            final LinkedTransferQueue<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.firstDataNode()) != null)) {
+                exhausted = true;
+                do {
+                    Object e = p.item;
+                    if (p == (p = p.next))
+                        p = q.firstDataNode();
+                    if (e != null)
+                        action.accept((E)e);
+                } while (p != null);
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        public boolean tryAdvance(Consumer<? super E> action) {
+            Node p;
+            if (action == null) throw new NullPointerException();
+            final LinkedTransferQueue<E> q = this.queue;
+            if (!exhausted &&
+                ((p = current) != null || (p = q.firstDataNode()) != null)) {
+                Object e;
+                do {
+                    e = p.item;
+                    if (p == (p = p.next))
+                        p = q.firstDataNode();
+                } while (e == null && p != null);
+                if ((current = p) == null)
+                    exhausted = true;
+                if (e != null) {
+                    action.accept((E)e);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public long estimateSize() { return Long.MAX_VALUE; }
+
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL |
+                Spliterator.CONCURRENT;
+        }
+    }
+
+    /**
+     * Returns a {@link Spliterator} over the elements in this queue.
+     *
+     * <p>The returned spliterator is
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
+     *
+     * <p>The {@code Spliterator} reports {@link Spliterator#CONCURRENT},
+     * {@link Spliterator#ORDERED}, and {@link Spliterator#NONNULL}.
+     *
+     * @implNote
+     * The {@code Spliterator} implements {@code trySplit} to permit limited
+     * parallelism.
+     *
+     * @return a {@code Spliterator} over the elements in this queue
+     * @since 1.8
+     */
+    public Spliterator<E> spliterator() {
+        return new LTQSpliterator<E>(this);
     }
 
     /* -------------- Removal methods -------------- */
@@ -1189,12 +1318,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * Returns an iterator over the elements in this queue in proper sequence.
      * The elements will be returned in order from first (head) to last (tail).
      *
-     * <p>The returned iterator is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException
-     * ConcurrentModificationException}, and guarantees to traverse
-     * elements as they existed upon construction of the iterator, and
-     * may (but is not guaranteed to) reflect any modifications
-     * subsequent to construction.
+     * <p>The returned iterator is
+     * <a href="package-summary.html#Weakly"><i>weakly consistent</i></a>.
      *
      * @return an iterator over the elements in this queue in proper sequence
      */
@@ -1295,6 +1420,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     /**
      * Saves this queue to a stream (that is, serializes it).
      *
+     * @param s the stream
+     * @throws java.io.IOException if an I/O error occurs
      * @serialData All of the elements (each an {@code E}) in
      * the proper order, followed by a null
      */
@@ -1309,6 +1436,10 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
 
     /**
      * Reconstitutes this queue from a stream (that is, deserializes it).
+     * @param s the stream
+     * @throws ClassNotFoundException if the class of a serialized object
+     *         could not be found
+     * @throws java.io.IOException if an I/O error occurs
      */
     private void readObject(java.io.ObjectInputStream s)
         throws java.io.IOException, ClassNotFoundException {

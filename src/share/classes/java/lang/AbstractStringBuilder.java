@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -689,7 +689,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return  a reference to this object.
      */
     public AbstractStringBuilder append(float f) {
-        new FloatingDecimal(f).appendTo(this);
+        FloatingDecimal.appendTo(f,this);
         return this;
     }
 
@@ -706,7 +706,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return  a reference to this object.
      */
     public AbstractStringBuilder append(double d) {
-        new FloatingDecimal(d).appendTo(this);
+        FloatingDecimal.appendTo(d,this);
         return this;
     }
 
@@ -1307,7 +1307,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * specified substring, starting at the specified index.  The integer
      * returned is the smallest value {@code k} for which:
      * <blockquote><pre>
-     *     k >= Math.min(fromIndex, str.length()) &&
+     *     k >= Math.min(fromIndex, this.length()) &&
      *                   this.toString().startsWith(str, k)
      * </pre></blockquote>
      * If no such value of <i>k</i> exists, then -1 is returned.
@@ -1346,7 +1346,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * specified substring. The integer returned is the largest value <i>k</i>
      * such that:
      * <blockquote><pre>
-     *     k <= Math.min(fromIndex, str.length()) &&
+     *     k <= Math.min(fromIndex, this.length()) &&
      *                   this.toString().startsWith(str, k)
      * </pre></blockquote>
      * If no such value of <i>k</i> exists, then -1 is returned.

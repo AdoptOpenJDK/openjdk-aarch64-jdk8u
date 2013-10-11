@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,10 +37,9 @@
  * this sample code.
  */
 
-
 /*
  * This is a collection of utilities for Monitoring
- * and management API. 
+ * and management API.
  *
  * File dependency:
  *    conc.js -> for concurrency utilities
@@ -71,14 +70,14 @@ function jmxConnect(hostport) {
 }
 jmxConnect.docString = "connects to the given host, port (specified as name:port)";
 
-function mbeanConnection() {    
-    if (mmConnection == null) {        
+function mbeanConnection() {
+    if (mmConnection == null) {
         throw "Not connected to MBeanServer yet!";
     }
 
     return mmConnection;
 }
-mbeanConnection.docString = "returns the current MBeanServer connection"
+mbeanConnection.docString = "returns the current MBeanServer connection";
 
 /**
  * Returns a platform MXBean proxy for given MXBean name and interface class
@@ -101,7 +100,6 @@ function objectName(objName) {
     }
 }
 objectName.docString = "creates JMX ObjectName for a given String";
-
 
 /**
  * Creates a new (M&M) Attribute object
@@ -146,7 +144,6 @@ function queryNames(objName, query) {
 }
 queryNames.docString = "returns QueryNames using given ObjectName and optional query";
 
-
 /**
  * Queries with given ObjectName and QueryExp.
  * QueryExp may be null.
@@ -162,22 +159,12 @@ queryMBeans.docString = "return MBeans using given ObjectName and optional query
 
 // wraps a script array as java.lang.Object[]
 function objectArray(array) {
-    var len = array.length;
-    var res = java.lang.reflect.Array.newInstance(java.lang.Object, len);
-    for (var i = 0; i < array.length; i++) {
-        res[i] = array[i];
-    }
-    return res;
+    return Java.to(array, "java.lang.Object[]");
 }
 
 // wraps a script (string) array as java.lang.String[]
 function stringArray(array) {
-    var len = array.length;
-    var res = java.lang.reflect.Array.newInstance(java.lang.String, len);
-    for (var i = 0; i < array.length; i++) {
-        res[i] = String(array[i]);
-    }
-    return res;
+    return Java.to(array, "java.lang.String[]");
 }
 
 // script array to Java List
@@ -220,7 +207,6 @@ function getMBeanAttribute(objName, attrName) {
 }
 getMBeanAttribute.docString = "returns a single Attribute of given ObjectName";
 
-
 // sets MBean attributes
 function setMBeanAttributes(objName, attrList) {
     objName = objectName(objName);
@@ -236,7 +222,6 @@ function setMBeanAttribute(objName, attrName, attrValue) {
     mbeanConnection().setAttribute(objName, new Attribute(attrName, attrValue));
 }
 setMBeanAttribute.docString = "sets a single Attribute of given ObjectName";
-
 
 // invokes an operation on given MBean
 function invokeMBean(objName, operation, params, signature) {
@@ -260,16 +245,17 @@ invokeMBean.docString = "invokes MBean operation on given ObjectName";
  * will be of type FutureTask. When you need value, call 'get' on it.
  */
 function mbean(objName, async) {
+    var index;
     objName = objectName(objName);
-    var info = mbeanInfo(objName);    
+    var info = mbeanInfo(objName);
     var attrs = info.attributes;
     var attrMap = new Object;
-    for (var index in attrs) {
+    for (index in attrs) {
         attrMap[attrs[index].name] = attrs[index];
     }
     var opers = info.operations;
     var operMap = new Object;
-    for (var index in opers) {
+    for (index in opers) {
         operMap[opers[index].name] = opers[index];
     }
 
@@ -292,21 +278,30 @@ function mbean(objName, async) {
                 } else {
                     return getMBeanAttribute(objName, name); 
                 }
-            } else if (isOperation(name)) {
+            } else {
+                return undefined;
+            }
+        },
+        __call__: function(name) {
+            if (isOperation(name)) {
                 var oper = operMap[name];
-                return function() {
-                    var params = objectArray(arguments);
-                    var sigs = oper.signature;
-                    var sigNames = new Array(sigs.length);
-                    for (var index in sigs) {
-                        sigNames[index] = sigs[index].getType();
-                    }
-                    if (async) {
-                        return invokeMBean.future(objName, name, 
-                                                  params, sigNames);
-                    } else {
-                        return invokeMBean(objName, name, params, sigNames);
-                    }
+
+                var params = [];
+                for (var j = 1; j < arguments.length; j++) {
+                    params[j-1]= arguments[j];
+                }
+
+                var sigs = oper.signature;
+
+                var sigNames = new Array(sigs.length);
+                for (var index in sigs) {
+                    sigNames[index] = sigs[index].getType();
+                }
+
+                if (async) {
+                    return invokeMBean.future(objName, name, params, sigNames);
+                } else {
+                    return invokeMBean(objName, name, params, sigNames);
                 }
             } else {
                 return undefined;
@@ -327,9 +322,9 @@ function mbean(objName, async) {
 }
 mbean.docString = "returns a conveninent script wrapper for a MBean of given ObjectName";
 
-if (this.application != undefined) {    
-    this.application.addTool("JMX Connect", 
-        // connect to a JMX MBean Server 
+if (this.application != undefined) {
+    this.application.addTool("JMX Connect",
+        // connect to a JMX MBean Server
         function () {
             var url = prompt("Connect to JMX server (host:port)");
             if (url != null) {

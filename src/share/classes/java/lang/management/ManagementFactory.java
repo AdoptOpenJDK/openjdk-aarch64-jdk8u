@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,7 +42,9 @@ import javax.management.StandardMBean;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.security.AccessController;
 import java.security.Permission;
 import java.security.PrivilegedAction;
@@ -59,7 +61,7 @@ import sun.management.ManagementFactoryHelper;
  * the management interface of a component of the Java virtual
  * machine.
  * <p>
- * <h4><a name="MXBean">Platform MXBeans</a></h4>
+ * <h3><a name="MXBean">Platform MXBeans</a></h3>
  * <p>
  * A platform MXBean is a <i>managed bean</i> that
  * conforms to the <a href="../../../javax/management/package-summary.html">JMX</a>
@@ -85,7 +87,7 @@ import sun.management.ManagementFactoryHelper;
  *
  * <p>
  * An application can access a platform MXBean in the following ways:
- * <h5>1. Direct access to an MXBean interface</h5>
+ * <h4>1. Direct access to an MXBean interface</h4>
  * <blockquote>
  * <ul>
  *     <li>Get an MXBean instance by calling the
@@ -105,7 +107,7 @@ import sun.management.ManagementFactoryHelper;
  *         an MXBean of another running virtual machine.
  *         </li>
  * </ul>
- * <h5>2. Indirect access to an MXBean interface via MBeanServer</h5>
+ * <h4>2. Indirect access to an MXBean interface via MBeanServer</h4>
  * <ul>
  *     <li>Go through the platform {@code MBeanServer} to access MXBeans
  *         locally or a specific <tt>MBeanServerConnection</tt> to access
@@ -133,7 +135,7 @@ import sun.management.ManagementFactoryHelper;
  * interfaces:
  *
  * <blockquote>
- * <table border>
+ * <table border summary="The list of Management Interfaces and their single instances">
  * <tr>
  * <th>Management Interface</th>
  * <th>ObjectName</th>
@@ -176,7 +178,7 @@ import sun.management.ManagementFactoryHelper;
  * the following management interfaces.
  *
  * <blockquote>
- * <table border>
+ * <table border summary="The list of Management Interfaces and their single instances">
  * <tr>
  * <th>Management Interface</th>
  * <th>ObjectName</th>
@@ -193,7 +195,7 @@ import sun.management.ManagementFactoryHelper;
  * A Java virtual machine may have one or more instances of the following
  * management interfaces.
  * <blockquote>
- * <table border>
+ * <table border summary="The list of Management Interfaces and their single instances">
  * <tr>
  * <th>Management Interface</th>
  * <th>ObjectName</th>
@@ -482,6 +484,11 @@ public class ManagementFactory {
                     }
                 }
             }
+            HashMap<ObjectName, DynamicMBean> dynmbeans =
+                    ManagementFactoryHelper.getPlatformDynamicMBeans();
+            for (Map.Entry<ObjectName, DynamicMBean> e : dynmbeans.entrySet()) {
+                addDynamicMBean(platformMBeanServer, e.getValue(), e.getKey());
+            }
         }
         return platformMBeanServer;
     }
@@ -554,6 +561,12 @@ public class ManagementFactory {
      * in the format of {@link ObjectName ObjectName}.
      * @param mxbeanInterface the MXBean interface to be implemented
      * by the proxy.
+     * @param <T> an {@code mxbeanInterface} type parameter
+     *
+     * @return a proxy for a platform MXBean interface of a
+     * given <a href="#MXBeanNames">MXBean name</a>
+     * that forwards its method calls through the given
+     * <tt>MBeanServerConnection</tt>, or {@code null} if not exist.
      *
      * @throws IllegalArgumentException if
      * <ul>
@@ -628,6 +641,7 @@ public class ManagementFactory {
      * @param mxbeanInterface a management interface for a platform
      *     MXBean with one single instance in the Java virtual machine
      *     if implemented.
+     * @param <T> an {@code mxbeanInterface} type parameter
      *
      * @return the platform MXBean that implements
      * {@code mxbeanInterface}, or {@code null} if not exist.
@@ -663,6 +677,7 @@ public class ManagementFactory {
      *
      * @param mxbeanInterface a management interface for a platform
      *                        MXBean
+     * @param <T> an {@code mxbeanInterface} type parameter
      *
      * @return the list of platform MXBeans that implement
      * {@code mxbeanInterface}.
@@ -700,6 +715,7 @@ public class ManagementFactory {
      * @param mxbeanInterface a management interface for a platform
      *     MXBean with one single instance in the Java virtual machine
      *     being monitored, if implemented.
+     * @param <T> an {@code mxbeanInterface} type parameter
      *
      * @return the platform MXBean proxy for
      * forwarding the method calls of the {@code mxbeanInterface}
@@ -743,6 +759,7 @@ public class ManagementFactory {
      * @param connection the {@code MBeanServerConnection} to forward to.
      * @param mxbeanInterface a management interface for a platform
      *                        MXBean
+     * @param <T> an {@code mxbeanInterface} type parameter
      *
      * @return the list of platform MXBean proxies for
      * forwarding the method calls of the {@code mxbeanInterface}
@@ -825,4 +842,24 @@ public class ManagementFactory {
         }
     }
 
+    /**
+     * Registers a DynamicMBean.
+     */
+    private static void addDynamicMBean(final MBeanServer mbs,
+                                        final DynamicMBean dmbean,
+                                        final ObjectName on) {
+        try {
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
+                @Override
+                public Void run() throws InstanceAlreadyExistsException,
+                                         MBeanRegistrationException,
+                                         NotCompliantMBeanException {
+                    mbs.registerMBean(dmbean, on);
+                    return null;
+                }
+            });
+        } catch (PrivilegedActionException e) {
+            throw new RuntimeException(e.getException());
+        }
+    }
 }

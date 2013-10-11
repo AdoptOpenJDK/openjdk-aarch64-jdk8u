@@ -24,10 +24,15 @@
  */
 package java.util.function;
 
+import java.util.Objects;
+
 /**
- * An operation on a {@code double} operand yielding a {@code double}
- * result. This is the primitive type specialization of {@link UnaryOperator}
- * for {@code double}.
+ * Represents an operation on a single {@code double}-valued operand that produces
+ * a {@code double}-valued result.  This is the primitive type specialization of
+ * {@link UnaryOperator} for {@code double}.
+ *
+ * <p>This is a <a href="package-summary.html">functional interface</a>
+ * whose functional method is {@link #applyAsDouble(double)}.
  *
  * @see UnaryOperator
  * @since 1.8
@@ -36,11 +41,55 @@ package java.util.function;
 public interface DoubleUnaryOperator {
 
     /**
-     * Returns the {@code double} result of the operation upon the
-     * {@code double} operand.
+     * Applies this operator to the given operand.
      *
-     * @param operand the operand value
-     * @return the operation result value
+     * @param operand the operand
+     * @return the operator result
      */
-    public double applyAsDouble(double operand);
+    double applyAsDouble(double operand);
+
+    /**
+     * Returns a composed operator that first applies the {@code before}
+     * operator to its input, and then applies this operator to the result.
+     * If evaluation of either operator throws an exception, it is relayed to
+     * the caller of the composed operator.
+     *
+     * @param before the operator to apply before this operator is applied
+     * @return a composed operator that first applies the {@code before}
+     * operator and then applies this operator
+     * @throws NullPointerException if before is null
+     *
+     * @see #andThen(DoubleUnaryOperator)
+     */
+    default DoubleUnaryOperator compose(DoubleUnaryOperator before) {
+        Objects.requireNonNull(before);
+        return (double v) -> applyAsDouble(before.applyAsDouble(v));
+    }
+
+    /**
+     * Returns a composed operator that first applies this operator to
+     * its input, and then applies the {@code after} operator to the result.
+     * If evaluation of either operator throws an exception, it is relayed to
+     * the caller of the composed operator.
+     *
+     * @param after the operator to apply after this operator is applied
+     * @return a composed operator that first applies this operator and then
+     * applies the {@code after} operator
+     * @throws NullPointerException if after is null
+     *
+     * @see #compose(DoubleUnaryOperator)
+     */
+    default DoubleUnaryOperator andThen(DoubleUnaryOperator after) {
+        Objects.requireNonNull(after);
+        return (double t) -> after.applyAsDouble(applyAsDouble(t));
+    }
+
+    /**
+     * Returns a unary operator that always returns its input argument.
+     *
+     * @return a unary operator that always returns its input argument
+     */
+    static DoubleUnaryOperator identity() {
+        return t -> t;
+    }
 }

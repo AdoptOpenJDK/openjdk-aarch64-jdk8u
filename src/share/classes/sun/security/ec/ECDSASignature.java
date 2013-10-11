@@ -275,7 +275,8 @@ abstract class ECDSASignature extends SignatureSpi {
     protected byte[] engineSign() throws SignatureException {
         byte[] s = privateKey.getS().toByteArray();
         ECParameterSpec params = privateKey.getParams();
-        byte[] encodedParams = ECParameters.encodeParameters(params); // DER OID
+        // DER OID
+        byte[] encodedParams = ECUtil.encodeECParameterSpec(null, params);
         int keySize = params.getCurve().getField().getFieldSize();
 
         // seed is twice the key size (in bytes) plus 1
@@ -301,12 +302,13 @@ abstract class ECDSASignature extends SignatureSpi {
 
         byte[] w;
         ECParameterSpec params = publicKey.getParams();
-        byte[] encodedParams = ECParameters.encodeParameters(params); // DER OID
+        // DER OID
+        byte[] encodedParams = ECUtil.encodeECParameterSpec(null, params);
 
         if (publicKey instanceof ECPublicKeyImpl) {
             w = ((ECPublicKeyImpl)publicKey).getEncodedPublicValue();
         } else { // instanceof ECPublicKey
-            w = ECParameters.encodePoint(publicKey.getW(), params.getCurve());
+            w = ECUtil.encodePoint(publicKey.getW(), params.getCurve());
         }
 
         try {
@@ -321,6 +323,7 @@ abstract class ECDSASignature extends SignatureSpi {
 
     // set parameter, not supported. See JCA doc
     @Override
+    @Deprecated
     protected void engineSetParameter(String param, Object value)
             throws InvalidParameterException {
         throw new UnsupportedOperationException("setParameter() not supported");
@@ -328,6 +331,7 @@ abstract class ECDSASignature extends SignatureSpi {
 
     // get parameter, not supported. See JCA doc
     @Override
+    @Deprecated
     protected Object engineGetParameter(String param)
             throws InvalidParameterException {
         throw new UnsupportedOperationException("getParameter() not supported");

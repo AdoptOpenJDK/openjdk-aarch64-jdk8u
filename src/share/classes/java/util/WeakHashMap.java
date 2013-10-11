@@ -27,6 +27,9 @@ package java.util;
 
 import java.lang.ref.WeakReference;
 import java.lang.ref.ReferenceQueue;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 
@@ -187,12 +190,6 @@ public class WeakHashMap<K,V>
      */
     int modCount;
 
-    /**
-     * A randomizing value associated with this instance that is applied to
-     * hash code of keys to make hash collisions harder to find.
-     */
-    transient final int hashSeed = sun.misc.Hashing.randomHashSeed(this);
-
     @SuppressWarnings("unchecked")
     private Entry<K,V>[] newTable(int n) {
         return (Entry<K,V>[]) new Entry<?,?>[n];
@@ -298,10 +295,7 @@ public class WeakHashMap<K,V>
      * in lower bits.
      */
     final int hash(Object k) {
-        if (k instanceof String) {
-            return ((String) k).hash32();
-        }
-        int  h = hashSeed ^ k.hashCode();
+        int h = k.hashCode();
 
         // This function ensures that hashCodes that differ only by
         // constant multiples at each bit position have a bounded
@@ -755,8 +749,7 @@ public class WeakHashMap<K,V>
         public int hashCode() {
             K k = getKey();
             V v = getValue();
-            return ((k==null ? 0 : k.hashCode()) ^
-                    (v==null ? 0 : v.hashCode()));
+            return Objects.hashCode(k) ^ Objects.hashCode(v);
         }
 
         public String toString() {
@@ -1010,6 +1003,50 @@ public class WeakHashMap<K,V>
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public void forEach(BiConsumer<? super K, ? super V> action) {
+        Objects.requireNonNull(action);
+        int expectedModCount = modCount;
+
+        Entry<K, V>[] tab = getTable();
+        for (Entry<K, V> entry : tab) {
+            while (entry != null) {
+                Object key = entry.get();
+                if (key != null) {
+                    action.accept((K)WeakHashMap.unmaskNull(key), entry.value);
+                }
+                entry = entry.next;
+
+                if (expectedModCount != modCount) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        Objects.requireNonNull(function);
+        int expectedModCount = modCount;
+
+        Entry<K, V>[] tab = getTable();;
+        for (Entry<K, V> entry : tab) {
+            while (entry != null) {
+                Object key = entry.get();
+                if (key != null) {
+                    entry.value = function.apply((K)WeakHashMap.unmaskNull(key), entry.value);
+                }
+                entry = entry.next;
+
+                if (expectedModCount != modCount) {
+                    throw new ConcurrentModificationException();
+                }
+            }
+        }
+    }
+
     /**
      * Similar form as other hash Spliterators, but skips dead
      * elements.
@@ -1076,9 +1113,10 @@ public class WeakHashMap<K,V>
             }
             else
                 mc = expectedModCount;
-            if (tab.length >= hi && (i = index) >= 0 && i < hi) {
-                index = hi;
+            if (tab.length >= hi && (i = index) >= 0 &&
+                (i < (index = hi) || current != null)) {
                 WeakHashMap.Entry<K,V> p = current;
+                current = null; // exhaust
                 do {
                     if (p == null)
                         p = tab[i++];
@@ -1155,9 +1193,10 @@ public class WeakHashMap<K,V>
             }
             else
                 mc = expectedModCount;
-            if (tab.length >= hi && (i = index) >= 0 && i < hi) {
-                index = hi;
+            if (tab.length >= hi && (i = index) >= 0 &&
+                (i < (index = hi) || current != null)) {
                 WeakHashMap.Entry<K,V> p = current;
+                current = null; // exhaust
                 do {
                     if (p == null)
                         p = tab[i++];
@@ -1232,9 +1271,10 @@ public class WeakHashMap<K,V>
             }
             else
                 mc = expectedModCount;
-            if (tab.length >= hi && (i = index) >= 0 && i < hi) {
-                index = hi;
+            if (tab.length >= hi && (i = index) >= 0 &&
+                (i < (index = hi) || current != null)) {
                 WeakHashMap.Entry<K,V> p = current;
+                current = null; // exhaust
                 do {
                     if (p == null)
                         p = tab[i++];

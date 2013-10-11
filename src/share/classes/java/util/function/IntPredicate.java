@@ -27,8 +27,12 @@ package java.util.function;
 import java.util.Objects;
 
 /**
- * Determines if the {@code int} input value matches some criteria. This is the
- * {@code int}-consuming primitive type specialization of {@link Predicate}.
+ * Represents a predicate (boolean-valued function) of one {@code int}-valued
+ * argument. This is the {@code int}-consuming primitive type specialization of
+ * {@link Predicate}.
+ *
+ * <p>This is a <a href="package-summary.html">functional interface</a>
+ * whose functional method is {@link #test(int)}.
  *
  * @see Predicate
  * @since 1.8
@@ -37,64 +41,64 @@ import java.util.Objects;
 public interface IntPredicate {
 
     /**
-     * Returns {@code true} if the input value matches some criteria.
+     * Evaluates this predicate on the given argument.
      *
-     * @param value the value to be tested.
-     * @return {@code true} if the input value matches some criteria, otherwise
-     * {@code false}
+     * @param value the input argument
+     * @return {@code true} if the input argument matches the predicate,
+     * otherwise {@code false}
      */
-    public boolean test(int value);
+    boolean test(int value);
 
     /**
-     * Returns a predicate which evaluates to {@code true} only if this
-     * predicate and the provided predicate both evaluate to {@code true}. If
-     * this predicate returns {@code false} then the remaining predicate is not
-     * evaluated.
+     * Returns a composed predicate that represents a short-circuiting logical
+     * AND of this predicate and another.  When evaluating the composed
+     * predicate, if this predicate is {@code false}, then the {@code other}
+     * predicate is not evaluated.
      *
-     * @param p a predicate which will be logically-ANDed with this predicate.
-     * @return a new predicate which returns {@code true} only if both
-     * predicates return {@code true}.
+     * <p>Any exceptions thrown during evaluation of either predicate are relayed
+     * to the caller; if evaluation of this predicate throws an exception, the
+     * {@code other} predicate will not be evaluated.
+     *
+     * @param other a predicate that will be logically-ANDed with this
+     *              predicate
+     * @return a composed predicate that represents the short-circuiting logical
+     * AND of this predicate and the {@code other} predicate
+     * @throws NullPointerException if other is null
      */
-    public default IntPredicate and(IntPredicate p) {
-        Objects.requireNonNull(p);
-        return (value) -> test(value) && p.test(value);
+    default IntPredicate and(IntPredicate other) {
+        Objects.requireNonNull(other);
+        return (value) -> test(value) && other.test(value);
     }
 
     /**
-     * Returns a predicate which negates the result of this predicate.
-     *
-     * @return a new predicate who's result is always the opposite of this
+     * Returns a predicate that represents the logical negation of this
      * predicate.
+     *
+     * @return a predicate that represents the logical negation of this
+     * predicate
      */
-    public default IntPredicate negate() {
+    default IntPredicate negate() {
         return (value) -> !test(value);
     }
 
     /**
-     * Returns a predicate which evaluates to {@code true} if either this
-     * predicate or the provided predicate evaluates to {@code true}. If this
-     * predicate returns {@code true} then the remaining predicate is not
-     * evaluated.
+     * Returns a composed predicate that represents a short-circuiting logical
+     * OR of this predicate and another.  When evaluating the composed
+     * predicate, if this predicate is {@code true}, then the {@code other}
+     * predicate is not evaluated.
      *
-     * @param p a predicate which will be logically-ORed with this predicate.
-     * @return a new predicate which returns {@code true} if either predicate
-     * returns {@code true}.
-     */
-    public default IntPredicate or(IntPredicate p) {
-        Objects.requireNonNull(p);
-        return (value) -> test(value) || p.test(value);
-    }
-
-    /**
-     * Returns a predicate that evaluates to {@code true} if both or neither of
-     * the component predicates evaluate to {@code true}.
+     * <p>Any exceptions thrown during evaluation of either predicate are relayed
+     * to the caller; if evaluation of this predicate throws an exception, the
+     * {@code other} predicate will not be evaluated.
      *
-     * @param p a predicate which will be logically-XORed with this predicate.
-     * @return a predicate that evaluates to {@code true} if both or neither of
-     * the component predicates evaluate to {@code true}
+     * @param other a predicate that will be logically-ORed with this
+     *              predicate
+     * @return a composed predicate that represents the short-circuiting logical
+     * OR of this predicate and the {@code other} predicate
+     * @throws NullPointerException if other is null
      */
-    public default IntPredicate xor(IntPredicate p) {
-        Objects.requireNonNull(p);
-        return (value) -> test(value) ^ p.test(value);
+    default IntPredicate or(IntPredicate other) {
+        Objects.requireNonNull(other);
+        return (value) -> test(value) || other.test(value);
     }
 }

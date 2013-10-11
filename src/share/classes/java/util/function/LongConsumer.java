@@ -24,11 +24,16 @@
  */
 package java.util.function;
 
+import java.util.Objects;
+
 /**
- * An operation which accepts a single long argument and returns no result.
- * This is the {@code long}-consuming primitive type specialization of
- * {@link Consumer}. Unlike most other functional interfaces, {@code LongConsumer}
- * is expected to operate via side-effects.
+ * Represents an operation that accepts a single {@code long}-valued argument and
+ * returns no result.  This is the primitive type specialization of
+ * {@link Consumer} for {@code long}.  Unlike most other functional interfaces,
+ * {@code LongConsumer} is expected to operate via side-effects.
+ *
+ * <p>This is a <a href="package-summary.html">functional interface</a>
+ * whose functional method is {@link #accept(long)}.
  *
  * @see Consumer
  * @since 1.8
@@ -37,9 +42,26 @@ package java.util.function;
 public interface LongConsumer {
 
     /**
-     * Accept an input value.
+     * Performs this operation on the given argument.
      *
-     * @param value the input value
+     * @param value the input argument
      */
-    public void accept(long value);
+    void accept(long value);
+
+    /**
+     * Returns a composed {@code LongConsumer} that performs, in sequence, this
+     * operation followed by the {@code after} operation. If performing either
+     * operation throws an exception, it is relayed to the caller of the
+     * composed operation.  If performing this operation throws an exception,
+     * the {@code after} operation will not be performed.
+     *
+     * @param after the operation to perform after this operation
+     * @return a composed {@code LongConsumer} that performs in sequence this
+     * operation followed by the {@code after} operation
+     * @throws NullPointerException if {@code after} is null
+     */
+    default LongConsumer andThen(LongConsumer after) {
+        Objects.requireNonNull(after);
+        return (long t) -> { accept(t); after.accept(t); };
+    }
 }

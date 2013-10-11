@@ -61,7 +61,6 @@
  */
 package java.time;
 
-import java.time.temporal.UnsupportedTemporalTypeException;
 import static java.time.LocalTime.MINUTES_PER_HOUR;
 import static java.time.LocalTime.SECONDS_PER_HOUR;
 import static java.time.LocalTime.SECONDS_PER_MINUTE;
@@ -71,7 +70,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
@@ -79,6 +78,7 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalQuery;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.time.temporal.ValueRange;
 import java.time.zone.ZoneRules;
 import java.util.Objects;
@@ -114,7 +114,7 @@ import java.util.concurrent.ConcurrentMap;
  * Implementations may choose to cache certain common offsets, however
  * applications must not rely on such caching.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -581,7 +581,7 @@ public final class ZoneOffset
         if (field == OFFSET_SECONDS) {
             return totalSeconds;
         } else if (field instanceof ChronoField) {
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return range(field).checkValidIntValue(getLong(field), field);
     }
@@ -613,7 +613,7 @@ public final class ZoneOffset
         if (field == OFFSET_SECONDS) {
             return totalSeconds;
         } else if (field instanceof ChronoField) {
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.getFrom(this);
     }
@@ -740,12 +740,13 @@ public final class ZoneOffset
     /**
      * Writes the object using a
      * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
      * <pre>
-     *  out.writeByte(8);  // identifies this as a ZoneOffset
+     *  out.writeByte(8);                  // identifies a ZoneOffset
      *  int offsetByte = totalSeconds % 900 == 0 ? totalSeconds / 900 : 127;
      *  out.writeByte(offsetByte);
      *  if (offsetByte == 127) {
-     *    out.writeInt(totalSeconds);
+     *      out.writeInt(totalSeconds);
      *  }
      * </pre>
      *
@@ -760,7 +761,7 @@ public final class ZoneOffset
      * @return never
      * @throws InvalidObjectException always
      */
-    private Object readResolve() throws ObjectStreamException {
+    private Object readResolve() throws InvalidObjectException {
         throw new InvalidObjectException("Deserialization via serialization delegate");
     }
 

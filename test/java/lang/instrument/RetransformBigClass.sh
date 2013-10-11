@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2013 Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -22,8 +22,7 @@
 #
 
 # @test
-# @bug 7122253
-# @ignore until the fix for 7122253 (from HotSpot) is in a promoted build
+# @bug 7122253 8016838
 # @summary Retransform a big class.
 # @author Daniel D. Daugherty
 #

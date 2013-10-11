@@ -150,6 +150,7 @@ abstract class IntPipeline<E_IN>
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     final Spliterator.OfInt lazySpliterator(Supplier<? extends Spliterator<Integer>> supplier) {
         return new StreamSpliterators.DelegatingSpliterator.OfInt((Supplier<Spliterator.OfInt>) supplier);
     }
@@ -172,7 +173,7 @@ abstract class IntPipeline<E_IN>
 
     @Override
     public final PrimitiveIterator.OfInt iterator() {
-        return Spliterators.iteratorFromSpliterator(spliterator());
+        return Spliterators.iterator(spliterator());
     }
 
     @Override
@@ -183,12 +184,12 @@ abstract class IntPipeline<E_IN>
     // Stateless intermediate ops from IntStream
 
     @Override
-    public final LongStream longs() {
+    public final LongStream asLongStream() {
         return new LongPipeline.StatelessOp<Integer>(this, StreamShape.INT_VALUE,
                                                      StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Long> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Long>(sink) {
                     @Override
                     public void accept(int t) {
                         downstream.accept((long) t);
@@ -199,12 +200,12 @@ abstract class IntPipeline<E_IN>
     }
 
     @Override
-    public final DoubleStream doubles() {
+    public final DoubleStream asDoubleStream() {
         return new DoublePipeline.StatelessOp<Integer>(this, StreamShape.INT_VALUE,
                                                        StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Double> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Double>(sink) {
                     @Override
                     public void accept(int t) {
                         downstream.accept((double) t);
@@ -226,7 +227,7 @@ abstract class IntPipeline<E_IN>
                                         StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Integer> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Integer>(sink) {
                     @Override
                     public void accept(int t) {
                         downstream.accept(mapper.applyAsInt(t));
@@ -243,7 +244,7 @@ abstract class IntPipeline<E_IN>
                                                              StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<U> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<U>(sink) {
                     @Override
                     public void accept(int t) {
                         downstream.accept(mapper.apply(t));
@@ -260,7 +261,7 @@ abstract class IntPipeline<E_IN>
                                                      StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Long> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Long>(sink) {
                     @Override
                     public void accept(int t) {
                         downstream.accept(mapper.applyAsLong(t));
@@ -277,7 +278,7 @@ abstract class IntPipeline<E_IN>
                                                        StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Double> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Double>(sink) {
                     @Override
                     public void accept(int t) {
                         downstream.accept(mapper.applyAsDouble(t));
@@ -293,12 +294,19 @@ abstract class IntPipeline<E_IN>
                                         StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT | StreamOpFlag.NOT_SIZED) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Integer> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Integer>(sink) {
+                    @Override
+                    public void begin(long size) {
+                        downstream.begin(-1);
+                    }
+
+                    @Override
                     public void accept(int t) {
-                        // We can do better that this too; optimize for depth=0 case and just grab spliterator and forEach it
-                        IntStream result = mapper.apply(t);
-                        if (result != null)
-                            result.sequential().forEach(i -> downstream.accept(i));
+                        try (IntStream result = mapper.apply(t)) {
+                            // We can do better that this too; optimize for depth=0 case and just grab spliterator and forEach it
+                            if (result != null)
+                                result.sequential().forEach(i -> downstream.accept(i));
+                        }
                     }
                 };
             }
@@ -324,7 +332,12 @@ abstract class IntPipeline<E_IN>
                                         StreamOpFlag.NOT_SIZED) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Integer> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Integer>(sink) {
+                    @Override
+                    public void begin(long size) {
+                        downstream.begin(-1);
+                    }
+
                     @Override
                     public void accept(int t) {
                         if (predicate.test(t))
@@ -336,16 +349,16 @@ abstract class IntPipeline<E_IN>
     }
 
     @Override
-    public final IntStream peek(IntConsumer consumer) {
-        Objects.requireNonNull(consumer);
+    public final IntStream peek(IntConsumer action) {
+        Objects.requireNonNull(action);
         return new StatelessOp<Integer>(this, StreamShape.INT_VALUE,
                                         0) {
             @Override
             Sink<Integer> opWrapSink(int flags, Sink<Integer> sink) {
-                return new Sink.ChainedInt(sink) {
+                return new Sink.ChainedInt<Integer>(sink) {
                     @Override
                     public void accept(int t) {
-                        consumer.accept(t);
+                        action.accept(t);
                         downstream.accept(t);
                     }
                 };
@@ -424,7 +437,7 @@ abstract class IntPipeline<E_IN>
 
     @Override
     public final long count() {
-        return longs().map(e -> 1L).sum();
+        return asLongStream().map(e -> 1L).sum();
     }
 
     @Override
@@ -460,14 +473,14 @@ abstract class IntPipeline<E_IN>
     }
 
     @Override
-    public final <R> R collect(Supplier<R> resultFactory,
+    public final <R> R collect(Supplier<R> supplier,
                                ObjIntConsumer<R> accumulator,
                                BiConsumer<R, R> combiner) {
         BinaryOperator<R> operator = (left, right) -> {
             combiner.accept(left, right);
             return left;
         };
-        return evaluate(ReduceOps.makeInt(resultFactory, accumulator, operator));
+        return evaluate(ReduceOps.makeInt(supplier, accumulator, operator));
     }
 
     @Override
@@ -498,7 +511,7 @@ abstract class IntPipeline<E_IN>
     @Override
     public final int[] toArray() {
         return Nodes.flattenInt((Node.OfInt) evaluateToArrayNode(Integer[]::new))
-                        .asIntArray();
+                        .asPrimitiveArray();
     }
 
     //

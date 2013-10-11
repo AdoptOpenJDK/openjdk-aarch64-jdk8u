@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,13 +42,14 @@ import javax.swing.plaf.TreeUI;
 import javax.swing.tree.*;
 import javax.swing.text.Position;
 import javax.swing.plaf.basic.DragRecognitionSupport.BeforeDrag;
+import sun.awt.AWTAccessor;
 import sun.swing.SwingUtilities2;
 
 import sun.swing.DefaultLookup;
 import sun.swing.UIAction;
 
 /**
- * The basic L&F for a hierarchical data structure.
+ * The basic L&amp;F for a hierarchical data structure.
  * <p>
  *
  * @author Scott Violet
@@ -2165,11 +2166,7 @@ public class BasicTreeUI extends TreeUI
                                            nodeBounds.width,
                                            nodeBounds.height);
                 editingPath = path;
-                if (editingComponent instanceof JComponent) {
-                    ((JComponent)editingComponent).revalidate();
-                } else {
-                    editingComponent.validate();
-                }
+                AWTAccessor.getComponentAccessor().revalidateSynchronously(editingComponent);
                 editingComponent.repaint();
                 if(cellEditor.shouldSelectCell(event)) {
                     stopEditingInCompleteEditing = false;
@@ -3827,7 +3824,7 @@ public class BasicTreeUI extends TreeUI
         //
         public void treeNodesChanged(TreeModelEvent e) {
             if(treeState != null && e != null) {
-                TreePath parentPath = e.getTreePath();
+                TreePath parentPath = SwingUtilities2.getTreePath(e, getModel());
                 int[] indices = e.getChildIndices();
                 if (indices == null || indices.length == 0) {
                     // The root has changed
@@ -3882,7 +3879,7 @@ public class BasicTreeUI extends TreeUI
 
                 updateLeadSelectionRow();
 
-                TreePath       path = e.getTreePath();
+                TreePath       path = SwingUtilities2.getTreePath(e, getModel());
 
                 if(treeState.isExpanded(path)) {
                     updateSize();
@@ -3907,7 +3904,7 @@ public class BasicTreeUI extends TreeUI
 
                 updateLeadSelectionRow();
 
-                TreePath       path = e.getTreePath();
+                TreePath       path = SwingUtilities2.getTreePath(e, getModel());
 
                 if(treeState.isExpanded(path) ||
                    treeModel.getChildCount(path.getLastPathComponent()) == 0)
@@ -3921,7 +3918,7 @@ public class BasicTreeUI extends TreeUI
 
                 updateLeadSelectionRow();
 
-                TreePath       pPath = e.getTreePath();
+                TreePath       pPath = SwingUtilities2.getTreePath(e, getModel());
 
                 if (pPath != null) {
                     pPath = pPath.getParentPath();

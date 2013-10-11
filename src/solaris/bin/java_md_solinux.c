@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,7 +59,6 @@
  */
 
 #ifdef __solaris__
-#  define DUAL_MODE
 #  ifndef LIBARCH32NAME
 #    error "The macro LIBARCH32NAME was not defined on the compile line"
 #  endif
@@ -649,9 +648,9 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
                         && (dmpath == NULL) /* data model specific variables not set  */
 #endif /* __solaris__ */
                         ) {
-
+                    JLI_MemFree(newargv);
+                    JLI_MemFree(new_runpath);
                     return;
-
                 }
             }
 
@@ -935,7 +934,7 @@ SetExecname(char **argv)
         char buf[PATH_MAX+1];
         int len = readlink(self, buf, PATH_MAX);
         if (len >= 0) {
-            buf[len] = '\0';            /* readlink doesn't nul terminate */
+            buf[len] = '\0';            /* readlink(2) doesn't NUL terminate */
             exec_path = JLI_StringDup(buf);
         }
     }

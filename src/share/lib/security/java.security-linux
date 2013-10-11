@@ -132,7 +132,7 @@ securerandom.strongAlgorithms=NativePRNGBlocking:SUN
 # Class to instantiate as the javax.security.auth.login.Configuration
 # provider.
 #
-login.configuration.provider=com.sun.security.auth.login.ConfigFile
+login.configuration.provider=sun.security.provider.ConfigFile
 
 #
 # Default login configuration file
@@ -181,6 +181,7 @@ package.access=sun.,\
                com.sun.imageio.,\
                com.sun.istack.internal.,\
                com.sun.jmx.,\
+               com.sun.media.sound.,\
                com.sun.proxy.,\
                com.sun.org.apache.bcel.internal.,\
                com.sun.org.apache.regexp.internal.,\
@@ -197,11 +198,14 @@ package.access=sun.,\
                com.sun.org.apache.xalan.internal.xsltc.trax.,\
                com.sun.org.apache.xalan.internal.xsltc.util.,\
                com.sun.org.apache.xml.internal.res.,\
+               com.sun.org.apache.xml.internal.security.,\
                com.sun.org.apache.xml.internal.serializer.utils.,\
                com.sun.org.apache.xml.internal.utils.,\
                com.sun.org.glassfish.,\
                com.oracle.xmlns.internal.,\
                com.oracle.webservices.internal.,\
+	       oracle.jrockit.jfr.,\
+               org.jcp.xml.dsig.internal.,\
                jdk.internal.,\
                jdk.nashorn.internal.,\
                jdk.nashorn.tools.
@@ -222,6 +226,7 @@ package.definition=sun.,\
                    com.sun.imageio.,\
                    com.sun.istack.internal.,\
                    com.sun.jmx.,\
+                   com.sun.media.sound.,\
                    com.sun.proxy.,\
                    com.sun.org.apache.bcel.internal.,\
                    com.sun.org.apache.regexp.internal.,\
@@ -238,11 +243,14 @@ package.definition=sun.,\
                    com.sun.org.apache.xalan.internal.xsltc.trax.,\
                    com.sun.org.apache.xalan.internal.xsltc.util.,\
                    com.sun.org.apache.xml.internal.res.,\
+                   com.sun.org.apache.xml.internal.security.,\
                    com.sun.org.apache.xml.internal.serializer.utils.,\
                    com.sun.org.apache.xml.internal.utils.,\
                    com.sun.org.glassfish.,\
                    com.oracle.xmlns.internal.,\
                    com.oracle.webservices.internal.,\
+		   oracle.jrockit.jfr.,\
+                   org.jcp.xml.dsig.internal.,\
                    jdk.internal.,\
                    jdk.nashorn.internal.,\
                    jdk.nashorn.tools.

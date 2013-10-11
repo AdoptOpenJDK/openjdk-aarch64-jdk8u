@@ -61,7 +61,6 @@
  */
 package java.time;
 
-import java.time.temporal.UnsupportedTemporalTypeException;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoUnit.MONTHS;
 
@@ -75,6 +74,7 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalQuery;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.time.temporal.ValueRange;
 import java.util.Locale;
 
@@ -97,7 +97,7 @@ import java.util.Locale;
  * As such, this enum may be used by any calendar system that has the month-of-year
  * concept defined exactly equivalent to the ISO-8601 calendar system.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This is an immutable and thread-safe enum.
  *
  * @since 1.8
@@ -370,7 +370,7 @@ public enum Month implements TemporalAccessor, TemporalAdjuster {
         if (field == MONTH_OF_YEAR) {
             return getValue();
         } else if (field instanceof ChronoField) {
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.getFrom(this);
     }

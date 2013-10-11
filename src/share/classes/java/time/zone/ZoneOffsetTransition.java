@@ -64,6 +64,7 @@ package java.time.zone;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
@@ -89,7 +90,7 @@ import java.util.Objects;
  * An example would be when the offset changes from {@code +04:00} to {@code +03:00}.
  * This might be described as 'the clocks will move back one hour tonight at 2am'.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -170,8 +171,29 @@ public final class ZoneOffsetTransition
 
     //-----------------------------------------------------------------------
     /**
-     * Uses a serialization delegate.
+     * Defend against malicious streams.
+     * @return never
+     * @throws InvalidObjectException always
+     */
+    private Object readResolve() throws InvalidObjectException {
+        throw new InvalidObjectException("Deserialization via serialization delegate");
+    }
+
+    /**
+     * Writes the object using a
+     * <a href="../../../serialized-form.html#java.time.zone.Ser">dedicated serialized form</a>.
+     * @serialData
+     * Refer to the serialized form of
+     * <a href="../../../serialized-form.html#java.time.zone.ZoneRules">ZoneRules.writeReplace</a>
+     * for the encoding of epoch seconds and offsets.
+     * <pre style="font-size:1.0em">{@code
      *
+     *   out.writeByte(2);                // identifies a ZoneOffsetTransition
+     *   out.writeEpochSec(toEpochSecond);
+     *   out.writeOffset(offsetBefore);
+     *   out.writeOfset(offsetAfter);
+     * }
+     * </pre>
      * @return the replacing object, not null
      */
     private Object writeReplace() {

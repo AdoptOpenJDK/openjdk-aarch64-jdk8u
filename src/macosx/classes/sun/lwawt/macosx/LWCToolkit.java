@@ -44,6 +44,8 @@ import sun.lwawt.*;
 import sun.lwawt.LWWindowPeer.PeerType;
 import sun.security.action.GetBooleanAction;
 
+import sun.util.CoreResourceBundleControl;
+
 class NamedCursor extends Cursor {
     NamedCursor(String name) {
         super(name);
@@ -67,17 +69,44 @@ public final class LWCToolkit extends LWToolkit {
 
     static {
         System.err.flush();
-        java.security.AccessController.doPrivileged(new java.security.PrivilegedAction<Object>() {
-            public Object run() {
+
+        ResourceBundle platformResources = java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedAction<ResourceBundle>() {
+            public ResourceBundle run() {
+                ResourceBundle platformResources = null;
+                try {
+                    platformResources =
+                            ResourceBundle.getBundle("sun.awt.resources.awtosx",
+                                    CoreResourceBundleControl.getRBControlInstance());
+                } catch (MissingResourceException e) {
+                    // No resource file; defaults will be used.
+                }
+
                 System.loadLibrary("awt");
                 System.loadLibrary("fontmanager");
-                return null;
+
+                return platformResources;
             }
         });
+
+        AWTAccessor.getToolkitAccessor().setPlatformResources(platformResources);
+
         if (!GraphicsEnvironment.isHeadless()) {
             initIDs();
         }
+        inAWT = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
+            @Override
+            public Boolean run() {
+                return !Boolean.parseBoolean(System.getProperty("javafx.embed.singleThread", "false"));
+            }
+        });
     }
+
+    /*
+     * If true  we operate in normal mode and nested runloop is executed in JavaRunLoopMode
+     * If false we operate in singleThreaded FX/AWT interop mode and nested loop uses NSDefaultRunLoopMode
+     */
+    private static final boolean inAWT;
 
     public LWCToolkit() {
         SunToolkit.setDataTransfererClassName("sun.lwawt.macosx.CDataTransferer");
@@ -167,6 +196,11 @@ public final class LWCToolkit extends LWToolkit {
     }
 
     @Override
+    protected SecurityWarningWindow createSecurityWarning(Window ownerWindow, LWWindowPeer ownerPeer) {
+        return new CWarningWindow(ownerWindow, ownerPeer);
+    }
+
+    @Override
     protected PlatformComponent createPlatformComponent() {
         return new CPlatformComponent();
     }
@@ -190,9 +224,9 @@ public final class LWCToolkit extends LWToolkit {
 
     @Override
     public MenuBarPeer createMenuBar(MenuBar target) {
-         MenuBarPeer peer = new CMenuBar(target);
-         targetCreatedPeer(target, peer);
-             return peer;
+        MenuBarPeer peer = new CMenuBar(target);
+        targetCreatedPeer(target, peer);
+        return peer;
     }
 
     @Override
@@ -283,11 +317,6 @@ public final class LWCToolkit extends LWToolkit {
     }
     public FontPeer getFontPeer(String name, int style) {
         return new OSXPlatformFont(name, style);
-    }
-
-    @Override
-    protected MouseInfoPeer createMouseInfoPeerImpl() {
-        return new CMouseInfoPeer();
     }
 
     @Override
@@ -701,7 +730,10 @@ public final class LWCToolkit extends LWToolkit {
      *
      *                      if false - all events come after exit form the nested loop
      */
-    static native void doAWTRunLoop(long mediator, boolean processEvents);
+    static void doAWTRunLoop(long mediator, boolean processEvents) {
+        doAWTRunLoopImpl(mediator, processEvents, inAWT);
+    }
+    static private native void doAWTRunLoopImpl(long mediator, boolean processEvents, boolean inAWT);
     static native void stopAWTRunLoop(long mediator);
 
     private native boolean nativeSyncQueue(long timeout);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2004, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -55,6 +55,8 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
     private VMInternalFrame vmIF = null;
     private static ArrayList<TabInfo> tabInfos = new ArrayList<TabInfo>();
     private boolean wasConnected = false;
+    private boolean userDisconnected = false;
+    private boolean shouldUseSSL = true;
 
     // The everConnected flag keeps track of whether the window can be
     // closed if the user clicks Cancel after a failed connection attempt.
@@ -69,7 +71,7 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
 
     // Each VMPanel has its own instance of the JConsolePlugin
     // A map of JConsolePlugin to the previous SwingWorker
-    private Map<JConsolePlugin, SwingWorker<?, ?>> plugins = null;
+    private Map<ExceptionSafePlugin, SwingWorker<?, ?>> plugins = null;
     private boolean pluginTabsAdded = false;
 
     // Update these only on the EDT
@@ -105,10 +107,10 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
             }
         }
 
-        plugins = new LinkedHashMap<JConsolePlugin, SwingWorker<?, ?>>();
+        plugins = new LinkedHashMap<ExceptionSafePlugin, SwingWorker<?, ?>>();
         for (JConsolePlugin p : JConsole.getPlugins()) {
             p.setContext(proxyClient);
-            plugins.put(p, null);
+            plugins.put(new ExceptionSafePlugin(p), null);
         }
 
         Utilities.updateTransparency(this);
@@ -125,6 +127,7 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
                 if (connectedIconBounds != null && (e.getModifiers() & MouseEvent.BUTTON1_MASK) != 0 && connectedIconBounds.contains(e.getPoint())) {
 
                     if (isConnected()) {
+                        userDisconnected = true;
                         disconnect();
                         wasConnected = false;
                     } else {
@@ -150,9 +153,11 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
     // in order to reserve space for the connect toggle.
     public void setUI(TabbedPaneUI ui) {
         Insets insets = (Insets) UIManager.getLookAndFeelDefaults().get("TabbedPane.tabAreaInsets");
-        insets = (Insets) insets.clone();
-        insets.right += connectedIcon24.getIconWidth() + 8;
-        UIManager.put("TabbedPane.tabAreaInsets", insets);
+        if (insets != null) {
+            insets = (Insets) insets.clone();
+            insets.right += connectedIcon24.getIconWidth() + 8;
+            UIManager.put("TabbedPane.tabAreaInsets", insets);
+        }
         super.setUI(ui);
     }
 
@@ -286,7 +291,7 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
             new Thread("VMPanel.connect") {
 
                 public void run() {
-                    proxyClient.connect();
+                    proxyClient.connect(shouldUseSSL);
                 }
             }.start();
         }
@@ -452,6 +457,11 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
     private void vmPanelDied() {
         disconnect();
 
+        if (userDisconnected) {
+            userDisconnected = false;
+            return;
+        }
+
         JOptionPane optionPane;
         String msgTitle, msgExplanation, buttonStr;
 
@@ -460,8 +470,12 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
             msgTitle = Messages.CONNECTION_LOST1;
             msgExplanation = Resources.format(Messages.CONNECTING_TO2, getConnectionName());
             buttonStr = Messages.RECONNECT;
+        } else if (shouldUseSSL) {
+            msgTitle = Messages.CONNECTION_FAILED_SSL1;
+            msgExplanation = Resources.format(Messages.CONNECTION_FAILED_SSL2, getConnectionName());
+            buttonStr = Messages.INSECURE;
         } else {
-            msgTitle =Messages.CONNECTION_FAILED1;
+            msgTitle = Messages.CONNECTION_FAILED1;
             msgExplanation = Resources.format(Messages.CONNECTION_FAILED2, getConnectionName());
             buttonStr = Messages.CONNECT;
         }
@@ -482,6 +496,9 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
                     Object value = event.getNewValue();
 
                     if (value == Messages.RECONNECT || value == Messages.CONNECT) {
+                        connect();
+                    } else if (value == Messages.INSECURE) {
+                        shouldUseSSL = false;
                         connect();
                     } else if (!everConnected) {
                         try {
@@ -551,7 +568,7 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
             }
 
             // plugin GUI update
-            for (JConsolePlugin p : plugins.keySet()) {
+            for (ExceptionSafePlugin p : plugins.keySet()) {
                 SwingWorker<?, ?> sw = p.newSwingWorker();
                 SwingWorker<?, ?> prevSW = plugins.get(p);
                 // schedule SwingWorker to run only if the previous
@@ -560,7 +577,7 @@ public class VMPanel extends JTabbedPane implements PropertyChangeListener {
                     if (sw == null || sw.getState() == SwingWorker.StateValue.PENDING) {
                         plugins.put(p, sw);
                         if (sw != null) {
-                            sw.execute();
+                            p.executeSwingWorker(sw);
                         }
                     }
                 }

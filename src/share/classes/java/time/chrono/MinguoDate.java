@@ -64,6 +64,7 @@ import static java.time.temporal.ChronoField.YEAR;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.Clock;
 import java.time.DateTimeException;
@@ -89,14 +90,14 @@ import java.util.Objects;
  * This calendar system is primarily used in the Republic of China, often known as Taiwan.
  * Dates are aligned such that {@code 0001-01-01 (Minguo)} is {@code 1912-01-01 (ISO)}.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
  */
 public final class MinguoDate
         extends ChronoDateImpl<MinguoDate>
-        implements ChronoLocalDate<MinguoDate>, Serializable {
+        implements ChronoLocalDate, Serializable {
 
     /**
      * Serialization version.
@@ -106,7 +107,7 @@ public final class MinguoDate
     /**
      * The underlying date.
      */
-    private final LocalDate isoDate;
+    private final transient LocalDate isoDate;
 
     //-----------------------------------------------------------------------
     /**
@@ -152,7 +153,7 @@ public final class MinguoDate
      * @throws DateTimeException if the current date cannot be obtained
      */
     public static MinguoDate now(Clock clock) {
-        return MinguoChronology.INSTANCE.date(LocalDate.now(clock));
+        return new MinguoDate(LocalDate.now(clock));
     }
 
     /**
@@ -264,7 +265,7 @@ public final class MinguoDate
                 }
                 return getChronology().range(f);
             }
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.rangeRefinedBy(this);
     }
@@ -325,7 +326,7 @@ public final class MinguoDate
             }
             return with(isoDate.with(field, newValue));
         }
-        return ChronoLocalDate.super.with(field, newValue);
+        return super.with(field, newValue);
     }
 
     /**
@@ -370,6 +371,11 @@ public final class MinguoDate
     }
 
     @Override
+    MinguoDate plusWeeks(long weeksToAdd) {
+        return super.plusWeeks(weeksToAdd);
+    }
+
+    @Override
     MinguoDate plusDays(long days) {
         return with(isoDate.plusDays(days));
     }
@@ -382,11 +388,6 @@ public final class MinguoDate
     @Override
     public MinguoDate minus(long amountToAdd, TemporalUnit unit) {
         return super.minus(amountToAdd, unit);
-    }
-
-    @Override
-    MinguoDate plusWeeks(long weeksToAdd) {
-        return super.plusWeeks(weeksToAdd);
     }
 
     @Override
@@ -414,13 +415,14 @@ public final class MinguoDate
     }
 
     @Override        // for javadoc and covariant return type
+    @SuppressWarnings("unchecked")
     public final ChronoLocalDateTime<MinguoDate> atTime(LocalTime localTime) {
-        return super.atTime(localTime);
+        return (ChronoLocalDateTime<MinguoDate>)super.atTime(localTime);
     }
 
     @Override
-    public Period periodUntil(ChronoLocalDate<?> endDate) {
-        return isoDate.periodUntil(endDate);
+    public Period until(ChronoLocalDate endDate) {
+        return isoDate.until(endDate);
     }
 
     @Override  // override for performance
@@ -447,6 +449,28 @@ public final class MinguoDate
     }
 
     //-----------------------------------------------------------------------
+    /**
+     * Defend against malicious streams.
+     * @return never
+     * @throws InvalidObjectException always
+     */
+    private Object readResolve() throws InvalidObjectException {
+        throw new InvalidObjectException("Deserialization via serialization delegate");
+    }
+
+    /**
+     * Writes the object using a
+     * <a href="../../../serialized-form.html#java.time.chrono.Ser">dedicated serialized form</a>.
+     * @serialData
+     * <pre>
+     *  out.writeByte(8);                 // identifies a MinguoDate
+     *  out.writeInt(get(YEAR));
+     *  out.writeByte(get(MONTH_OF_YEAR));
+     *  out.writeByte(get(DAY_OF_MONTH));
+     * </pre>
+     *
+     * @return the instance of {@code Ser}, not null
+     */
     private Object writeReplace() {
         return new Ser(Ser.MINGUO_DATE_TYPE, this);
     }
@@ -458,7 +482,7 @@ public final class MinguoDate
         out.writeByte(get(DAY_OF_MONTH));
     }
 
-    static ChronoLocalDate<?> readExternal(DataInput in) throws IOException {
+    static MinguoDate readExternal(DataInput in) throws IOException {
         int year = in.readInt();
         int month = in.readByte();
         int dayOfMonth = in.readByte();

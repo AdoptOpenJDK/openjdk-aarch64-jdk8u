@@ -63,9 +63,6 @@ package java.time.chrono;
 
 import static java.time.temporal.ChronoField.ERA;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalField;
@@ -81,7 +78,7 @@ import java.time.temporal.ValueRange;
  * <b>Do not use {@code ordinal()} to obtain the numeric representation of {@code HijrahEra}.
  * Use {@code getValue()} instead.</b>
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This is an immutable and thread-safe enum.
  *
  * @since 1.8
@@ -156,20 +153,6 @@ public enum HijrahEra implements Era {
             return ValueRange.of(1, 1);
         }
         return Era.super.range(field);
-    }
-
-    //-----------------------------------------------------------------------
-    private Object writeReplace() {
-        return new Ser(Ser.HIJRAH_ERA_TYPE, this);
-    }
-
-    void writeExternal(DataOutput out) throws IOException {
-        out.writeByte(this.getValue());
-    }
-
-    static HijrahEra readExternal(DataInput in) throws IOException {
-        byte eraValue = in.readByte();
-        return HijrahEra.of(eraValue);
     }
 
 }

@@ -69,7 +69,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInput;
-import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -142,7 +142,7 @@ import java.util.Objects;
  * a vital, but secondary, piece of information, used to ensure that the class
  * represents an instant, especially during a daylight savings overlap.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * A {@code ZonedDateTime} holds state equivalent to three separate objects,
  * a {@code LocalDateTime}, a {@code ZoneId} and the resolved {@code ZoneOffset}.
  * The offset and local date-time are used to define an instant when necessary.
@@ -642,8 +642,9 @@ public final class ZonedDateTime
      * Checks if the specified field is supported.
      * <p>
      * This checks if this date-time can be queried for the specified field.
-     * If false, then calling the {@link #range(TemporalField) range} and
-     * {@link #get(TemporalField) get} methods will throw an exception.
+     * If false, then calling the {@link #range(TemporalField) range},
+     * {@link #get(TemporalField) get} and {@link #with(TemporalField, long)}
+     * methods will throw an exception.
      * <p>
      * If the field is a {@link ChronoField} then the query is implemented here.
      * The supported fields are:
@@ -694,6 +695,48 @@ public final class ZonedDateTime
         return field instanceof ChronoField || (field != null && field.isSupportedBy(this));
     }
 
+    /**
+     * Checks if the specified unit is supported.
+     * <p>
+     * This checks if the specified unit can be added to, or subtracted from, this date-time.
+     * If false, then calling the {@link #plus(long, TemporalUnit)} and
+     * {@link #minus(long, TemporalUnit) minus} methods will throw an exception.
+     * <p>
+     * If the unit is a {@link ChronoUnit} then the query is implemented here.
+     * The supported units are:
+     * <ul>
+     * <li>{@code NANOS}
+     * <li>{@code MICROS}
+     * <li>{@code MILLIS}
+     * <li>{@code SECONDS}
+     * <li>{@code MINUTES}
+     * <li>{@code HOURS}
+     * <li>{@code HALF_DAYS}
+     * <li>{@code DAYS}
+     * <li>{@code WEEKS}
+     * <li>{@code MONTHS}
+     * <li>{@code YEARS}
+     * <li>{@code DECADES}
+     * <li>{@code CENTURIES}
+     * <li>{@code MILLENNIA}
+     * <li>{@code ERAS}
+     * </ul>
+     * All other {@code ChronoUnit} instances will return false.
+     * <p>
+     * If the unit is not a {@code ChronoUnit}, then the result of this method
+     * is obtained by invoking {@code TemporalUnit.isSupportedBy(Temporal)}
+     * passing {@code this} as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    @Override  // override for Javadoc
+    public boolean isSupported(TemporalUnit unit) {
+        return ChronoZonedDateTime.super.isSupported(unit);
+    }
+
+    //-----------------------------------------------------------------------
     /**
      * Gets the range of valid values for the specified field.
      * <p>
@@ -1540,8 +1583,7 @@ public final class ZonedDateTime
     @Override
     public ZonedDateTime plus(long amountToAdd, TemporalUnit unit) {
         if (unit instanceof ChronoUnit) {
-            ChronoUnit u = (ChronoUnit) unit;
-            if (u.isDateUnit()) {
+            if (unit.isDateBased()) {
                 return resolveLocal(dateTime.plus(amountToAdd, unit));
             } else {
                 return resolveInstant(dateTime.plus(amountToAdd, unit));
@@ -1983,14 +2025,14 @@ public final class ZonedDateTime
     }
 
     /**
-     * Calculates the period between this date-time and another date-time in
-     * terms of the specified unit.
+     * Calculates the amount of time until another date-time in terms of the specified unit.
      * <p>
-     * This calculates the period between two date-times in terms of a single unit.
+     * This calculates the amount of time between two {@code ZonedDateTime}
+     * objects in terms of a single {@code TemporalUnit}.
      * The start and end points are {@code this} and the specified date-time.
      * The result will be negative if the end is before the start.
      * For example, the period in days between two date-times can be calculated
-     * using {@code startDateTime.periodUntil(endDateTime, DAYS)}.
+     * using {@code startDateTime.until(endDateTime, DAYS)}.
      * <p>
      * The {@code Temporal} passed to this method must be a {@code ZonedDateTime}.
      * If the time-zone differs between the two zoned date-times, the specified
@@ -2006,7 +2048,7 @@ public final class ZonedDateTime
      * The second is to use {@link TemporalUnit#between(Temporal, Temporal)}:
      * <pre>
      *   // these two lines are equivalent
-     *   amount = start.periodUntil(end, MONTHS);
+     *   amount = start.until(end, MONTHS);
      *   amount = MONTHS.between(start, end);
      * </pre>
      * The choice should be made based on which makes the code more readable.
@@ -2040,26 +2082,25 @@ public final class ZonedDateTime
      * This instance is immutable and unaffected by this method call.
      *
      * @param endDateTime  the end date-time, which must be a {@code ZonedDateTime}, not null
-     * @param unit  the unit to measure the period in, not null
-     * @return the amount of the period between this date-time and the end date-time
-     * @throws DateTimeException if the period cannot be calculated
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this date-time and the end date-time
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
     @Override
-    public long periodUntil(Temporal endDateTime, TemporalUnit unit) {
+    public long until(Temporal endDateTime, TemporalUnit unit) {
         if (endDateTime instanceof ZonedDateTime == false) {
             Objects.requireNonNull(endDateTime, "endDateTime");
-            throw new DateTimeException("Unable to calculate period between objects of two different types");
+            throw new DateTimeException("Unable to calculate amount as objects are of two different types");
         }
         if (unit instanceof ChronoUnit) {
             ZonedDateTime end = (ZonedDateTime) endDateTime;
             end = end.withZoneSameInstant(zone);
-            ChronoUnit u = (ChronoUnit) unit;
-            if (u.isDateUnit()) {
-                return dateTime.periodUntil(end.dateTime, unit);
+            if (unit.isDateBased()) {
+                return dateTime.until(end.dateTime, unit);
             } else {
-                return toOffsetDateTime().periodUntil(end.toOffsetDateTime(), unit);
+                return toOffsetDateTime().until(end.toOffsetDateTime(), unit);
             }
         }
         return unit.between(this, endDateTime);
@@ -2151,9 +2192,10 @@ public final class ZonedDateTime
     /**
      * Writes the object using a
      * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
      * <pre>
-     *  out.writeByte(6);  // identifies this as a ZonedDateTime
-     *  // the <a href="../../serialized-form.html#java.time.LocalDateTime">date-time</a> excluding the one byte header
+     *  out.writeByte(6);  // identifies a ZonedDateTime
+     *  // the <a href="../../serialized-form.html#java.time.LocalDateTime">dateTime</a> excluding the one byte header
      *  // the <a href="../../serialized-form.html#java.time.ZoneOffset">offset</a> excluding the one byte header
      *  // the <a href="../../serialized-form.html#java.time.ZoneId">zone ID</a> excluding the one byte header
      * </pre>
@@ -2169,7 +2211,7 @@ public final class ZonedDateTime
      * @return never
      * @throws InvalidObjectException always
      */
-    private Object readResolve() throws ObjectStreamException {
+    private Object readResolve() throws InvalidObjectException {
         throw new InvalidObjectException("Deserialization via serialization delegate");
     }
 

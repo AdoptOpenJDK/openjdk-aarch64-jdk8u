@@ -81,6 +81,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -98,6 +99,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.JulianFields;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.TemporalUnit;
@@ -406,6 +408,68 @@ public class TCKYearMonth extends AbstractDateTimeTest {
     }
 
     //-----------------------------------------------------------------------
+    // isSupported(TemporalField)
+    //-----------------------------------------------------------------------
+    @Test
+    public void test_isSupported_TemporalField() {
+        assertEquals(TEST_2008_06.isSupported((TemporalField) null), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.NANO_OF_SECOND), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.NANO_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.MICRO_OF_SECOND), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.MICRO_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.MILLI_OF_SECOND), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.MILLI_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.SECOND_OF_MINUTE), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.SECOND_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.MINUTE_OF_HOUR), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.MINUTE_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.HOUR_OF_AMPM), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.CLOCK_HOUR_OF_AMPM), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.HOUR_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.CLOCK_HOUR_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.AMPM_OF_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.DAY_OF_WEEK), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.ALIGNED_DAY_OF_WEEK_IN_YEAR), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.DAY_OF_MONTH), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.DAY_OF_YEAR), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.EPOCH_DAY), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.ALIGNED_WEEK_OF_MONTH), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.ALIGNED_WEEK_OF_YEAR), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.MONTH_OF_YEAR), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.PROLEPTIC_MONTH), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.YEAR), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.YEAR_OF_ERA), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.ERA), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.INSTANT_SECONDS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoField.OFFSET_SECONDS), false);
+    }
+
+    //-----------------------------------------------------------------------
+    // isSupported(TemporalUnit)
+    //-----------------------------------------------------------------------
+    @Test
+    public void test_isSupported_TemporalUnit() {
+        assertEquals(TEST_2008_06.isSupported((TemporalUnit) null), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.NANOS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.MICROS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.MILLIS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.SECONDS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.MINUTES), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.HOURS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.HALF_DAYS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.DAYS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.WEEKS), false);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.MONTHS), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.YEARS), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.DECADES), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.CENTURIES), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.MILLENNIA), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.ERAS), true);
+        assertEquals(TEST_2008_06.isSupported(ChronoUnit.FOREVER), false);
+    }
+
+    //-----------------------------------------------------------------------
     // get(TemporalField)
     //-----------------------------------------------------------------------
     @Test
@@ -689,6 +753,106 @@ public class TCKYearMonth extends AbstractDateTimeTest {
     }
 
     //-----------------------------------------------------------------------
+    // plus(long, TemporalUnit)
+    //-----------------------------------------------------------------------
+    @DataProvider(name="plus_long_TemporalUnit")
+    Object[][] data_plus_long_TemporalUnit() {
+        return new Object[][] {
+            {YearMonth.of(1, 10), 1, ChronoUnit.YEARS, YearMonth.of(2, 10), null},
+            {YearMonth.of(1, 10), -12, ChronoUnit.YEARS, YearMonth.of(-11, 10), null},
+            {YearMonth.of(1, 10), 0, ChronoUnit.YEARS, YearMonth.of(1, 10), null},
+            {YearMonth.of(999999999, 12), 0, ChronoUnit.YEARS, YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), 0, ChronoUnit.YEARS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 1), -999999999, ChronoUnit.YEARS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 12), 999999999, ChronoUnit.YEARS, YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(1, 10), 1, ChronoUnit.MONTHS, YearMonth.of(1, 11), null},
+            {YearMonth.of(1, 10), -12, ChronoUnit.MONTHS, YearMonth.of(0, 10), null},
+            {YearMonth.of(1, 10), 0, ChronoUnit.MONTHS, YearMonth.of(1, 10), null},
+            {YearMonth.of(999999999, 12), 0, ChronoUnit.MONTHS, YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), 0, ChronoUnit.MONTHS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(-999999999, 2), -1, ChronoUnit.MONTHS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(999999999, 3), 9, ChronoUnit.MONTHS, YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(-1, 10), 1, ChronoUnit.ERAS, YearMonth.of(2, 10), null},
+            {YearMonth.of(5, 10), 1, ChronoUnit.CENTURIES, YearMonth.of(105, 10), null},
+            {YearMonth.of(5, 10), 1, ChronoUnit.DECADES, YearMonth.of(15, 10), null},
+
+            {YearMonth.of(999999999, 12), 1, ChronoUnit.MONTHS, null, DateTimeException.class},
+            {YearMonth.of(-999999999, 1), -1, ChronoUnit.MONTHS, null, DateTimeException.class},
+
+            {YearMonth.of(1, 1), 0, ChronoUnit.DAYS, null, DateTimeException.class},
+            {YearMonth.of(1, 1), 0, ChronoUnit.WEEKS, null, DateTimeException.class},
+        };
+    }
+
+    @Test(groups={"tck"}, dataProvider="plus_long_TemporalUnit")
+    public void test_plus_long_TemporalUnit(YearMonth base, long amount, TemporalUnit unit, YearMonth expectedYearMonth, Class expectedEx) {
+        if (expectedEx == null) {
+            assertEquals(base.plus(amount, unit), expectedYearMonth);
+        } else {
+            try {
+                YearMonth result = base.plus(amount, unit);
+                fail();
+            } catch (Exception ex) {
+                assertTrue(expectedEx.isInstance(ex));
+            }
+        }
+    }
+
+    //-----------------------------------------------------------------------
+    // plus(TemporalAmount)
+    //-----------------------------------------------------------------------
+    @DataProvider(name="plus_TemporalAmount")
+    Object[][] data_plus_TemporalAmount() {
+        return new Object[][] {
+            {YearMonth.of(1, 1), Period.ofYears(1), YearMonth.of(2, 1), null},
+            {YearMonth.of(1, 1), Period.ofYears(-12), YearMonth.of(-11, 1), null},
+            {YearMonth.of(1, 1), Period.ofYears(0), YearMonth.of(1, 1), null},
+            {YearMonth.of(999999999, 12), Period.ofYears(0), YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), Period.ofYears(0), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 1), Period.ofYears(-999999999), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 12), Period.ofYears(999999999), YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(1, 1), Period.ofMonths(1), YearMonth.of(1, 2), null},
+            {YearMonth.of(1, 1), Period.ofMonths(-12), YearMonth.of(0, 1), null},
+            {YearMonth.of(1, 1), Period.ofMonths(121), YearMonth.of(11, 2), null},
+            {YearMonth.of(1, 1), Period.ofMonths(0), YearMonth.of(1, 1), null},
+            {YearMonth.of(999999999, 12), Period.ofMonths(0), YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), Period.ofMonths(0), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(-999999999, 2), Period.ofMonths(-1), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(999999999, 11), Period.ofMonths(1), YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(1, 1), Period.ofYears(1).withMonths(2), YearMonth.of(2, 3), null},
+            {YearMonth.of(1, 1), Period.ofYears(-12).withMonths(-1), YearMonth.of(-12, 12), null},
+
+            {YearMonth.of(1, 1), Period.ofMonths(2).withYears(1), YearMonth.of(2, 3), null},
+            {YearMonth.of(1, 1), Period.ofMonths(-1).withYears(-12), YearMonth.of(-12, 12), null},
+
+            {YearMonth.of(1, 1), Period.ofDays(365), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofDays(365), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofHours(365*24), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofMinutes(365*24*60), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofSeconds(365*24*3600), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofNanos(365*24*3600*1000000000), null, DateTimeException.class},
+        };
+    }
+
+    @Test(groups={"tck"}, dataProvider="plus_TemporalAmount")
+    public void test_plus_TemporalAmount(YearMonth base, TemporalAmount temporalAmount, YearMonth expectedYearMonth, Class expectedEx) {
+        if (expectedEx == null) {
+            assertEquals(base.plus(temporalAmount), expectedYearMonth);
+        } else {
+            try {
+                YearMonth result = base.plus(temporalAmount);
+                fail();
+            } catch (Exception ex) {
+                assertTrue(expectedEx.isInstance(ex));
+            }
+        }
+    }
+
+    //-----------------------------------------------------------------------
     // minusYears()
     //-----------------------------------------------------------------------
     @Test
@@ -801,6 +965,106 @@ public class TCKYearMonth extends AbstractDateTimeTest {
     public void test_minusMonths_long_invalidTooSmall() {
         YearMonth test = YearMonth.of(Year.MIN_VALUE, 1);
         test.minusMonths(1);
+    }
+
+    //-----------------------------------------------------------------------
+    // minus(long, TemporalUnit)
+    //-----------------------------------------------------------------------
+    @DataProvider(name="minus_long_TemporalUnit")
+    Object[][] data_minus_long_TemporalUnit() {
+        return new Object[][] {
+            {YearMonth.of(1, 10), 1, ChronoUnit.YEARS, YearMonth.of(0, 10), null},
+            {YearMonth.of(1, 10), 12, ChronoUnit.YEARS, YearMonth.of(-11, 10), null},
+            {YearMonth.of(1, 10), 0, ChronoUnit.YEARS, YearMonth.of(1, 10), null},
+            {YearMonth.of(999999999, 12), 0, ChronoUnit.YEARS, YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), 0, ChronoUnit.YEARS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 1), 999999999, ChronoUnit.YEARS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 12), -999999999, ChronoUnit.YEARS, YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(1, 10), 1, ChronoUnit.MONTHS, YearMonth.of(1, 9), null},
+            {YearMonth.of(1, 10), 12, ChronoUnit.MONTHS, YearMonth.of(0, 10), null},
+            {YearMonth.of(1, 10), 0, ChronoUnit.MONTHS, YearMonth.of(1, 10), null},
+            {YearMonth.of(999999999, 12), 0, ChronoUnit.MONTHS, YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), 0, ChronoUnit.MONTHS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(-999999999, 2), 1, ChronoUnit.MONTHS, YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(999999999, 11), -1, ChronoUnit.MONTHS, YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(1, 10), 1, ChronoUnit.ERAS, YearMonth.of(0, 10), null},
+            {YearMonth.of(5, 10), 1, ChronoUnit.CENTURIES, YearMonth.of(-95, 10), null},
+            {YearMonth.of(5, 10), 1, ChronoUnit.DECADES, YearMonth.of(-5, 10), null},
+
+            {YearMonth.of(999999999, 12), -1, ChronoUnit.MONTHS, null, DateTimeException.class},
+            {YearMonth.of(-999999999, 1), 1, ChronoUnit.MONTHS, null, DateTimeException.class},
+
+            {YearMonth.of(1, 1), 0, ChronoUnit.DAYS, null, DateTimeException.class},
+            {YearMonth.of(1, 1), 0, ChronoUnit.WEEKS, null, DateTimeException.class},
+        };
+    }
+
+    @Test(groups={"tck"}, dataProvider="minus_long_TemporalUnit")
+    public void test_minus_long_TemporalUnit(YearMonth base, long amount, TemporalUnit unit, YearMonth expectedYearMonth, Class expectedEx) {
+        if (expectedEx == null) {
+            assertEquals(base.minus(amount, unit), expectedYearMonth);
+        } else {
+            try {
+                YearMonth result = base.minus(amount, unit);
+                fail();
+            } catch (Exception ex) {
+                assertTrue(expectedEx.isInstance(ex));
+            }
+        }
+    }
+
+    //-----------------------------------------------------------------------
+    // minus(TemporalAmount)
+    //-----------------------------------------------------------------------
+    @DataProvider(name="minus_TemporalAmount")
+    Object[][] data_minus_TemporalAmount() {
+        return new Object[][] {
+            {YearMonth.of(1, 1), Period.ofYears(1), YearMonth.of(0, 1), null},
+            {YearMonth.of(1, 1), Period.ofYears(-12), YearMonth.of(13, 1), null},
+            {YearMonth.of(1, 1), Period.ofYears(0), YearMonth.of(1, 1), null},
+            {YearMonth.of(999999999, 12), Period.ofYears(0), YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), Period.ofYears(0), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 1), Period.ofYears(999999999), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(0, 12), Period.ofYears(-999999999), YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(1, 1), Period.ofMonths(1), YearMonth.of(0, 12), null},
+            {YearMonth.of(1, 1), Period.ofMonths(-12), YearMonth.of(2, 1), null},
+            {YearMonth.of(1, 1), Period.ofMonths(121), YearMonth.of(-10, 12), null},
+            {YearMonth.of(1, 1), Period.ofMonths(0), YearMonth.of(1, 1), null},
+            {YearMonth.of(999999999, 12), Period.ofMonths(0), YearMonth.of(999999999, 12), null},
+            {YearMonth.of(-999999999, 1), Period.ofMonths(0), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(-999999999, 2), Period.ofMonths(1), YearMonth.of(-999999999, 1), null},
+            {YearMonth.of(999999999, 11), Period.ofMonths(-1), YearMonth.of(999999999, 12), null},
+
+            {YearMonth.of(1, 1), Period.ofYears(1).withMonths(2), YearMonth.of(-1, 11), null},
+            {YearMonth.of(1, 1), Period.ofYears(-12).withMonths(-1), YearMonth.of(13, 2), null},
+
+            {YearMonth.of(1, 1), Period.ofMonths(2).withYears(1), YearMonth.of(-1, 11), null},
+            {YearMonth.of(1, 1), Period.ofMonths(-1).withYears(-12), YearMonth.of(13, 2), null},
+
+            {YearMonth.of(1, 1), Period.ofDays(365), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofDays(365), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofHours(365*24), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofMinutes(365*24*60), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofSeconds(365*24*3600), null, DateTimeException.class},
+            {YearMonth.of(1, 1), Duration.ofNanos(365*24*3600*1000000000), null, DateTimeException.class},
+        };
+    }
+
+    @Test(groups={"tck"}, dataProvider="minus_TemporalAmount")
+    public void test_minus_TemporalAmount(YearMonth base, TemporalAmount temporalAmount, YearMonth expectedYearMonth, Class expectedEx) {
+        if (expectedEx == null) {
+            assertEquals(base.minus(temporalAmount), expectedYearMonth);
+        } else {
+            try {
+                YearMonth result = base.minus(temporalAmount);
+                fail();
+            } catch (Exception ex) {
+                assertTrue(expectedEx.isInstance(ex));
+            }
+        }
     }
 
     //-----------------------------------------------------------------------
@@ -918,7 +1182,7 @@ public class TCKYearMonth extends AbstractDateTimeTest {
     }
 
     //-----------------------------------------------------------------------
-    // periodUntil(Temporal, TemporalUnit)
+    // until(Temporal, TemporalUnit)
     //-----------------------------------------------------------------------
     @DataProvider(name="periodUntilUnit")
     Object[][] data_periodUntilUnit() {
@@ -998,29 +1262,29 @@ public class TCKYearMonth extends AbstractDateTimeTest {
 
     @Test(dataProvider="periodUntilUnit")
     public void test_periodUntil_TemporalUnit(YearMonth ym1, YearMonth ym2, TemporalUnit unit, long expected) {
-        long amount = ym1.periodUntil(ym2, unit);
+        long amount = ym1.until(ym2, unit);
         assertEquals(amount, expected);
     }
 
     @Test(dataProvider="periodUntilUnit")
     public void test_periodUntil_TemporalUnit_negated(YearMonth ym1, YearMonth ym2, TemporalUnit unit, long expected) {
-        long amount = ym2.periodUntil(ym1, unit);
+        long amount = ym2.until(ym1, unit);
         assertEquals(amount, -expected);
     }
 
     @Test(expectedExceptions = UnsupportedTemporalTypeException.class)
     public void test_periodUntil_TemporalUnit_unsupportedUnit() {
-        TEST_2008_06.periodUntil(TEST_2008_06, HOURS);
+        TEST_2008_06.until(TEST_2008_06, HOURS);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void test_periodUntil_TemporalUnit_nullEnd() {
-        TEST_2008_06.periodUntil(null, DAYS);
+        TEST_2008_06.until(null, DAYS);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
     public void test_periodUntil_TemporalUnit_nullUnit() {
-        TEST_2008_06.periodUntil(TEST_2008_06, null);
+        TEST_2008_06.until(TEST_2008_06, null);
     }
 
     //-----------------------------------------------------------------------

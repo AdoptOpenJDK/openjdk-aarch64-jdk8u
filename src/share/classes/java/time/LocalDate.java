@@ -78,7 +78,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
-import java.io.ObjectStreamException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.Era;
@@ -121,13 +121,13 @@ import java.util.Objects;
  * However, any application that makes use of historical dates, and requires them
  * to be accurate will find the ISO-8601 approach unsuitable.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
  */
 public final class LocalDate
-        implements Temporal, TemporalAdjuster, ChronoLocalDate<LocalDate>, Serializable {
+        implements Temporal, TemporalAdjuster, ChronoLocalDate, Serializable {
 
     /**
      * The minimum supported {@code LocalDate}, '-999999999-01-01'.
@@ -466,8 +466,9 @@ public final class LocalDate
      * Checks if the specified field is supported.
      * <p>
      * This checks if this date can be queried for the specified field.
-     * If false, then calling the {@link #range(TemporalField) range} and
-     * {@link #get(TemporalField) get} methods will throw an exception.
+     * If false, then calling the {@link #range(TemporalField) range},
+     * {@link #get(TemporalField) get} and {@link #with(TemporalField, long)}
+     * methods will throw an exception.
      * <p>
      * If the field is a {@link ChronoField} then the query is implemented here.
      * The supported fields are:
@@ -501,6 +502,41 @@ public final class LocalDate
         return ChronoLocalDate.super.isSupported(field);
     }
 
+    /**
+     * Checks if the specified unit is supported.
+     * <p>
+     * This checks if the specified unit can be added to, or subtracted from, this date-time.
+     * If false, then calling the {@link #plus(long, TemporalUnit)} and
+     * {@link #minus(long, TemporalUnit) minus} methods will throw an exception.
+     * <p>
+     * If the unit is a {@link ChronoUnit} then the query is implemented here.
+     * The supported units are:
+     * <ul>
+     * <li>{@code DAYS}
+     * <li>{@code WEEKS}
+     * <li>{@code MONTHS}
+     * <li>{@code YEARS}
+     * <li>{@code DECADES}
+     * <li>{@code CENTURIES}
+     * <li>{@code MILLENNIA}
+     * <li>{@code ERAS}
+     * </ul>
+     * All other {@code ChronoUnit} instances will return false.
+     * <p>
+     * If the unit is not a {@code ChronoUnit}, then the result of this method
+     * is obtained by invoking {@code TemporalUnit.isSupportedBy(Temporal)}
+     * passing {@code this} as the argument.
+     * Whether the unit is supported is determined by the unit.
+     *
+     * @param unit  the unit to check, null returns false
+     * @return true if the unit can be added/subtracted, false if not
+     */
+    @Override  // override for Javadoc
+    public boolean isSupported(TemporalUnit unit) {
+        return ChronoLocalDate.super.isSupported(unit);
+    }
+
+    //-----------------------------------------------------------------------
     /**
      * Gets the range of valid values for the specified field.
      * <p>
@@ -538,7 +574,7 @@ public final class LocalDate
                 }
                 return field.range();
             }
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.rangeRefinedBy(this);
     }
@@ -631,7 +667,7 @@ public final class LocalDate
             case YEAR: return year;
             case ERA: return (year >= 1 ? 1 : 0);
         }
-        throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+        throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
     }
 
     private long getProlepticMonth() {
@@ -988,7 +1024,7 @@ public final class LocalDate
                 case YEAR: return withYear((int) newValue);
                 case ERA: return (getLong(ERA) == newValue ? this : withYear(1 - year));
             }
-            throw new UnsupportedTemporalTypeException("Unsupported field: " + field.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
         return field.adjustInto(this, newValue);
     }
@@ -1187,7 +1223,7 @@ public final class LocalDate
                 case MILLENNIA: return plusYears(Math.multiplyExact(amountToAdd, 1000));
                 case ERAS: return with(ERA, Math.addExact(getLong(ERA), amountToAdd));
             }
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
         return unit.addTo(this, amountToAdd);
     }
@@ -1489,19 +1525,19 @@ public final class LocalDate
     }
 
     /**
-     * Calculates the period between this date and another date in
-     * terms of the specified unit.
+     * Calculates the amount of time until another date in terms of the specified unit.
      * <p>
-     * This calculates the period between two dates in terms of a single unit.
+     * This calculates the amount of time between two {@code LocalDate}
+     * objects in terms of a single {@code TemporalUnit}.
      * The start and end points are {@code this} and the specified date.
      * The result will be negative if the end is before the start.
      * The {@code Temporal} passed to this method must be a {@code LocalDate}.
-     * For example, the period in days between two dates can be calculated
-     * using {@code startDate.periodUntil(endDate, DAYS)}.
+     * For example, the amount in days between two dates can be calculated
+     * using {@code startDate.until(endDate, DAYS)}.
      * <p>
      * The calculation returns a whole number, representing the number of
      * complete units between the two dates.
-     * For example, the period in months between 2012-06-15 and 2012-08-14
+     * For example, the amount in months between 2012-06-15 and 2012-08-14
      * will only be one month as it is one day short of two months.
      * <p>
      * There are two equivalent ways of using this method.
@@ -1509,7 +1545,7 @@ public final class LocalDate
      * The second is to use {@link TemporalUnit#between(Temporal, Temporal)}:
      * <pre>
      *   // these two lines are equivalent
-     *   amount = start.periodUntil(end, MONTHS);
+     *   amount = start.until(end, MONTHS);
      *   amount = MONTHS.between(start, end);
      * </pre>
      * The choice should be made based on which makes the code more readable.
@@ -1527,18 +1563,18 @@ public final class LocalDate
      * This instance is immutable and unaffected by this method call.
      *
      * @param endDate  the end date, which must be a {@code LocalDate}, not null
-     * @param unit  the unit to measure the period in, not null
-     * @return the amount of the period between this date and the end date
-     * @throws DateTimeException if the period cannot be calculated
+     * @param unit  the unit to measure the amount in, not null
+     * @return the amount of time between this date and the end date
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
     @Override
-    public long periodUntil(Temporal endDate, TemporalUnit unit) {
+    public long until(Temporal endDate, TemporalUnit unit) {
         Objects.requireNonNull(unit, "unit");
         if (endDate instanceof LocalDate == false) {
             Objects.requireNonNull(endDate, "endDate");
-            throw new DateTimeException("Unable to calculate period between objects of two different types");
+            throw new DateTimeException("Unable to calculate amount as objects are of two different types");
         }
         LocalDate end = (LocalDate) endDate;
         if (unit instanceof ChronoUnit) {
@@ -1552,7 +1588,7 @@ public final class LocalDate
                 case MILLENNIA: return monthsUntil(end) / 12000;
                 case ERAS: return end.getLong(ERA) - getLong(ERA);
             }
-            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit.getName());
+            throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
         return unit.between(this, endDate);
     }
@@ -1591,7 +1627,7 @@ public final class LocalDate
      * The second is to use {@link Period#between(LocalDate, LocalDate)}:
      * <pre>
      *   // these two lines are equivalent
-     *   period = start.periodUntil(end);
+     *   period = start.until(end);
      *   period = Period.between(start, end);
      * </pre>
      * The choice should be made based on which makes the code more readable.
@@ -1600,7 +1636,7 @@ public final class LocalDate
      * @return the period between this date and the end date, not null
      */
     @Override
-    public Period periodUntil(ChronoLocalDate<?> endDate) {
+    public Period until(ChronoLocalDate endDate) {
         LocalDate end = LocalDate.from(endDate);
         long totalMonths = end.getProlepticMonth() - this.getProlepticMonth();  // safe
         int days = end.day - this.day;
@@ -1803,7 +1839,7 @@ public final class LocalDate
      * @return the comparator value, negative if less, positive if greater
      */
     @Override  // override for Javadoc and performance
-    public int compareTo(ChronoLocalDate<?> other) {
+    public int compareTo(ChronoLocalDate other) {
         if (other instanceof LocalDate) {
             return compareTo0((LocalDate) other);
         }
@@ -1843,7 +1879,7 @@ public final class LocalDate
      * @return true if this date is after the specified date
      */
     @Override  // override for Javadoc and performance
-    public boolean isAfter(ChronoLocalDate<?> other) {
+    public boolean isAfter(ChronoLocalDate other) {
         if (other instanceof LocalDate) {
             return compareTo0((LocalDate) other) > 0;
         }
@@ -1872,7 +1908,7 @@ public final class LocalDate
      * @return true if this date is before the specified date
      */
     @Override  // override for Javadoc and performance
-    public boolean isBefore(ChronoLocalDate<?> other) {
+    public boolean isBefore(ChronoLocalDate other) {
         if (other instanceof LocalDate) {
             return compareTo0((LocalDate) other) < 0;
         }
@@ -1901,7 +1937,7 @@ public final class LocalDate
      * @return true if this date is equal to the specified date
      */
     @Override  // override for Javadoc and performance
-    public boolean isEqual(ChronoLocalDate<?> other) {
+    public boolean isEqual(ChronoLocalDate other) {
         if (other instanceof LocalDate) {
             return compareTo0((LocalDate) other) == 0;
         }
@@ -1983,8 +2019,9 @@ public final class LocalDate
     /**
      * Writes the object using a
      * <a href="../../serialized-form.html#java.time.Ser">dedicated serialized form</a>.
+     * @serialData
      * <pre>
-     *  out.writeByte(3);  // identifies this as a LocalDate
+     *  out.writeByte(3);  // identifies a LocalDate
      *  out.writeInt(year);
      *  out.writeByte(month);
      *  out.writeByte(day);
@@ -2001,7 +2038,7 @@ public final class LocalDate
      * @return never
      * @throws InvalidObjectException always
      */
-    private Object readResolve() throws ObjectStreamException {
+    private Object readResolve() throws InvalidObjectException {
         throw new InvalidObjectException("Deserialization via serialization delegate");
     }
 

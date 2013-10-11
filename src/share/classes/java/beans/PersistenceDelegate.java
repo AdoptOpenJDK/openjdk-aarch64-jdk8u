@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -162,6 +162,7 @@ public abstract class PersistenceDelegate {
      * @return An expression whose value is <code>oldInstance</code>.
      *
      * @throws NullPointerException if {@code out} is {@code null}
+     *                              and this value is used in the method
      */
     protected abstract Expression instantiate(Object oldInstance, Encoder out);
 
@@ -197,6 +198,7 @@ public abstract class PersistenceDelegate {
      * The default implementation, calls the <code>initialize</code>
      * method of the type's superclass.
      *
+     * @param type the type of the instances
      * @param oldInstance The instance to be copied.
      * @param newInstance The instance that is to be modified.
      * @param out The stream to which any initialization statements should be written.

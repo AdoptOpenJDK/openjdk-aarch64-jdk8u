@@ -24,12 +24,17 @@
  */
 package java.util.function;
 
+import java.util.Objects;
+
 /**
- * An operation which accepts a single input argument and returns no result.
- * Unlike most other functional interfaces, {@code Consumer} is expected to
- * operate via side-effects.
+ * Represents an operation that accepts a single input argument and returns no
+ * result. Unlike most other functional interfaces, {@code Consumer} is expected
+ * to operate via side-effects.
  *
- * @param <T> The type of input objects to {@code accept}
+ * <p>This is a <a href="package-summary.html">functional interface</a>
+ * whose functional method is {@link #accept(Object)}.
+ *
+ * @param <T> the type of the input to the operation
  *
  * @since 1.8
  */
@@ -37,9 +42,26 @@ package java.util.function;
 public interface Consumer<T> {
 
     /**
-     * Accept an input value.
+     * Performs this operation on the given argument.
      *
-     * @param t the input object
+     * @param t the input argument
      */
-    public void accept(T t);
+    void accept(T t);
+
+    /**
+     * Returns a composed {@code Consumer} that performs, in sequence, this
+     * operation followed by the {@code after} operation. If performing either
+     * operation throws an exception, it is relayed to the caller of the
+     * composed operation.  If performing this operation throws an exception,
+     * the {@code after} operation will not be performed.
+     *
+     * @param after the operation to perform after this operation
+     * @return a composed {@code Consumer} that performs in sequence this
+     * operation followed by the {@code after} operation
+     * @throws NullPointerException if {@code after} is null
+     */
+    default Consumer<T> andThen(Consumer<? super T> after) {
+        Objects.requireNonNull(after);
+        return (T t) -> { accept(t); after.accept(t); };
+    }
 }

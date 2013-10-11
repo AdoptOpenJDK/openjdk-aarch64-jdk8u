@@ -154,20 +154,28 @@ public abstract class ProviderSkeleton implements InvocationHandler, Provider {
      * @return always null, if the method is a user-defined probe
      */
     public Object invoke(Object proxy, Method method, Object[] args) {
-        if (method.getDeclaringClass() != providerType) {
+        Class declaringClass = method.getDeclaringClass();
+        // not a provider subtype's own method
+        if (declaringClass != providerType) {
             try {
-                return method.invoke(this, args);
+                // delegate only to methods declared by
+                // com.sun.tracing.Provider or java.lang.Object
+                if (declaringClass == Provider.class ||
+                    declaringClass == Object.class) {
+                    return method.invoke(this, args);
+                } else {
+                    // assert false : "this should never happen"
+                    //    reaching here would indicate a breach
+                    //    in security in the higher layers
+                    throw new SecurityException();
+                }
             } catch (IllegalAccessException e) {
                 assert false;
             } catch (InvocationTargetException e) {
                 assert false;
             }
-        } else if (active) {
-            ProbeSkeleton p = probes.get(method);
-            if (p != null) {
-                // Skips argument check -- already done by javac
-                p.uncheckedTrigger(args);
-            }
+        } else {
+            triggerProbe(method, args);
         }
         return null;
     }
@@ -251,5 +259,15 @@ public abstract class ProviderSkeleton implements InvocationHandler, Provider {
             assert false;
         }
         return ret;
+    }
+
+    protected void triggerProbe(Method method, Object[] args) {
+        if (active) {
+            ProbeSkeleton p = probes.get(method);
+            if (p != null) {
+                // Skips argument check -- already done by javac
+                p.uncheckedTrigger(args);
+            }
+        }
     }
 }

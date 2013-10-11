@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import static java.io.ObjectStreamClass.processQueue;
 import java.io.SerialCallbackContext;
+import sun.reflect.misc.ReflectUtil;
 
 /**
  * An ObjectOutputStream writes primitive data types and graphs of Java objects
@@ -264,6 +265,7 @@ public class ObjectOutputStream
      * @throws  SecurityException if a security manager exists and its
      *          <code>checkPermission</code> method denies enabling
      *          subclassing.
+     * @throws  IOException if an I/O error occurs while creating this stream
      * @see SecurityManager#checkPermission
      * @see java.io.SerializablePermission
      */
@@ -1228,6 +1230,12 @@ public class ObjectOutputStream
         }
     }
 
+    private boolean isCustomSubclass() {
+        // Return true if this class is a custom subclass of ObjectOutputStream
+        return getClass().getClassLoader()
+                   != ObjectOutputStream.class.getClassLoader();
+    }
+
     /**
      * Writes class descriptor representing a dynamic proxy class to stream.
      */
@@ -1245,6 +1253,9 @@ public class ObjectOutputStream
         }
 
         bout.setBlockDataMode(true);
+        if (isCustomSubclass()) {
+            ReflectUtil.checkPackageAccess(cl);
+        }
         annotateProxyClass(cl);
         bout.setBlockDataMode(false);
         bout.writeByte(TC_ENDBLOCKDATA);
@@ -1271,6 +1282,9 @@ public class ObjectOutputStream
 
         Class<?> cl = desc.forClass();
         bout.setBlockDataMode(true);
+        if (isCustomSubclass()) {
+            ReflectUtil.checkPackageAccess(cl);
+        }
         annotateClass(cl);
         bout.setBlockDataMode(false);
         bout.writeByte(TC_ENDBLOCKDATA);

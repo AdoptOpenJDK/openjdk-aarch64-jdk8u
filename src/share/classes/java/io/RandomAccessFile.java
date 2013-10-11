@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1994, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -123,12 +123,12 @@ public class RandomAccessFile implements DataOutput, DataInput, Closeable {
      * write to, the file specified by the {@link File} argument.  A new {@link
      * FileDescriptor} object is created to represent this file connection.
      *
-     * <a name="mode"><p> The <tt>mode</tt> argument specifies the access mode
+     * <p>The <a name="mode"><tt>mode</tt></a> argument specifies the access mode
      * in which the file is to be opened.  The permitted values and their
      * meanings are:
      *
-     * <blockquote><table summary="Access mode permitted values and meanings">
-     * <tr><th><p align="left">Value</p></th><th><p align="left">Meaning</p></th></tr>
+     * <table summary="Access mode permitted values and meanings">
+     * <tr><th align="left">Value</th><th align="left">Meaning</th></tr>
      * <tr><td valign="top"><tt>"r"</tt></td>
      *     <td> Open for reading only.  Invoking any of the <tt>write</tt>
      *     methods of the resulting object will cause an {@link
@@ -144,7 +144,7 @@ public class RandomAccessFile implements DataOutput, DataInput, Closeable {
      *     <td> Open for reading and writing, as with <tt>"rw"</tt>, and also
      *     require that every update to the file's content be written
      *     synchronously to the underlying storage device. </td></tr>
-     * </table></blockquote>
+     * </table>
      *
      * The <tt>"rws"</tt> and <tt>"rwd"</tt> modes work much like the {@link
      * java.nio.channels.FileChannel#force(boolean) force(boolean)} method of
@@ -158,13 +158,13 @@ public class RandomAccessFile implements DataOutput, DataInput, Closeable {
      * event of a system crash.  If the file does not reside on a local device
      * then no such guarantee is made.
      *
-     * <p> The <tt>"rwd"</tt> mode can be used to reduce the number of I/O
+     * <p>The <tt>"rwd"</tt> mode can be used to reduce the number of I/O
      * operations performed.  Using <tt>"rwd"</tt> only requires updates to the
      * file's content to be written to storage; using <tt>"rws"</tt> requires
      * updates to both the file's content and its metadata to be written, which
      * generally requires at least one more low-level I/O operation.
      *
-     * <p> If there is a security manager, its {@code checkRead} method is
+     * <p>If there is a security manager, its {@code checkRead} method is
      * called with the pathname of the {@code file} argument as its
      * argument to see if read access to the file is allowed.  If the mode
      * allows writing, the security manager's {@code checkWrite} method is
@@ -228,6 +228,9 @@ public class RandomAccessFile implements DataOutput, DataInput, Closeable {
         if (name == null) {
             throw new NullPointerException();
         }
+        if (file.isInvalid()) {
+            throw new FileNotFoundException("Invalid file path");
+        }
         fd = new FileDescriptor();
         fd.attach(this);
         open(name, imode);
@@ -235,7 +238,7 @@ public class RandomAccessFile implements DataOutput, DataInput, Closeable {
 
     /**
      * Returns the opaque file descriptor object associated with this
-     * stream. </p>
+     * stream.
      *
      * @return     the file descriptor object associated with this stream.
      * @exception  IOException  if an I/O error occurs.
@@ -515,7 +518,15 @@ public class RandomAccessFile implements DataOutput, DataInput, Closeable {
      * @exception  IOException  if {@code pos} is less than
      *                          {@code 0} or if an I/O error occurs.
      */
-    public native void seek(long pos) throws IOException;
+    public void seek(long pos) throws IOException {
+        if (pos < 0) {
+            throw new IOException("Negative seek offset");
+        } else {
+            seek0(pos);
+        }
+    }
+
+    private native void seek0(long pos) throws IOException;
 
     /**
      * Returns the length of this file.

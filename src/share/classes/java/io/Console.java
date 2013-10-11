@@ -75,7 +75,7 @@ import sun.nio.cs.StreamEncoder;
  * manually zero the returned character array after processing to minimize the
  * lifetime of sensitive data in memory.
  *
- * <blockquote><pre>
+ * <blockquote><pre>{@code
  * Console cons;
  * char[] passwd;
  * if ((cons = System.console()) != null &&
@@ -83,7 +83,7 @@ import sun.nio.cs.StreamEncoder;
  *     ...
  *     java.util.Arrays.fill(passwd, ' ');
  * }
- * </pre></blockquote>
+ * }</pre></blockquote>
  *
  * @author  Xueming Shen
  * @since   1.6
@@ -124,9 +124,11 @@ public final class Console implements Flushable
     * {@link java.io.Reader#read(java.nio.CharBuffer) read(java.nio.CharBuffer)}
     * on the returned object will not read in characters beyond the line
     * bound for each invocation, even if the destination buffer has space for
-    * more characters. A line bound is considered to be any one of a line feed
-    * (<tt>'\n'</tt>), a carriage return (<tt>'\r'</tt>), a carriage return
-    * followed immediately by a linefeed, or an end of stream.
+    * more characters. The {@code Reader}'s {@code read} methods may block if a
+    * line bound has not been entered or reached on the console's input device.
+    * A line bound is considered to be any one of a line feed (<tt>'\n'</tt>),
+    * a carriage return (<tt>'\r'</tt>), a carriage return followed immediately
+    * by a linefeed, or an end of stream.
     *
     * @return  The reader associated with this console
     */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -146,7 +146,6 @@ final public class Messages {
     public static String HELP_ABOUT_DIALOG_MASTHEAD_ACCESSIBLE_NAME;
     public static String HELP_ABOUT_DIALOG_MASTHEAD_TITLE;
     public static String HELP_ABOUT_DIALOG_TITLE;
-    public static String HELP_ABOUT_DIALOG_USER_GUIDE_LINK;
     public static String HELP_ABOUT_DIALOG_USER_GUIDE_LINK_URL;
     public static String HELP_MENU_ABOUT_TITLE;
     public static String HELP_MENU_USER_GUIDE_TITLE;
@@ -156,6 +155,7 @@ final public class Messages {
     public static String IMPACT;
     public static String INFO;
     public static String INFO_CAPITALIZED;
+    public static String INSECURE;
     public static String INVALID_PLUGIN_PATH;
     public static String INVALID_URL;
     public static String IS;
@@ -239,6 +239,11 @@ final public class Messages {
     public static String PLOTTER_ACCESSIBLE_NAME_NO_DATA;
     public static String PLOTTER_SAVE_AS_MENU_ITEM;
     public static String PLOTTER_TIME_RANGE_MENU;
+    public static String PLUGIN_EXCEPTION_DIALOG_BUTTON_EXIT;
+    public static String PLUGIN_EXCEPTION_DIALOG_BUTTON_IGNORE;
+    public static String PLUGIN_EXCEPTION_DIALOG_BUTTON_OK;
+    public static String PLUGIN_EXCEPTION_DIALOG_MESSAGE;
+    public static String PLUGIN_EXCEPTION_DIALOG_TITLE;
     public static String PROBLEM_ADDING_LISTENER;
     public static String PROBLEM_DISPLAYING_MBEAN;
     public static String PROBLEM_INVOKING;
@@ -266,6 +271,7 @@ final public class Messages {
     public static String THREADS;
     public static String THREAD_TAB_THREAD_INFO_ACCESSIBLE_NAME;
     public static String THREAD_TAB_THREAD_PLOTTER_ACCESSIBLE_NAME;
+    public static String THREAD_TAB_INITIAL_STACK_TRACE_MESSAGE;
     public static String THRESHOLD;
     public static String TILE;
     public static String TIME_RANGE_COLON;
@@ -303,6 +309,8 @@ final public class Messages {
     public static String WRITABLE;
     public static String CONNECTION_FAILED1;
     public static String CONNECTION_FAILED2;
+    public static String CONNECTION_FAILED_SSL1;
+    public static String CONNECTION_FAILED_SSL2;
     public static String CONNECTION_LOST1;
     public static String CONNECTING_TO1;
     public static String CONNECTING_TO2;

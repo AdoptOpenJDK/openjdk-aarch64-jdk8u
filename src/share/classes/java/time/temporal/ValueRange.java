@@ -79,7 +79,7 @@ import java.time.DateTimeException;
  * <p>
  * Instances of this class are not tied to a specific field.
  *
- * <h3>Specification for implementors</h3>
+ * @implSpec
  * This class is immutable and thread-safe.
  *
  * @since 1.8
@@ -331,7 +331,7 @@ public final class ValueRange implements Serializable {
 
     private String genInvalidFieldMessage(TemporalField field, long value) {
         if (field != null) {
-            return "Invalid value for " + field.getName() + " (valid values " + this + "): " + value;
+            return "Invalid value for " + field + " (valid values " + this + "): " + value;
         } else {
             return "Invalid value (valid values " + this + "): " + value;
         }

@@ -23,7 +23,7 @@
 # questions.
 #
 
-defalt: all
+default: all
 
 include $(SPEC)
 include MakeBase.gmk
@@ -199,18 +199,19 @@ LIBJAVA_CFLAGS:=$(foreach dir,$(LIBJAVA_SRC_DIRS),-I$(dir)) \
 LIBJAVA_CFLAGS += -DJDK_MAJOR_VERSION='"$(JDK_MAJOR_VERSION)"' \
                   -DJDK_MINOR_VERSION='"$(JDK_MINOR_VERSION)"' \
                   -DJDK_MICRO_VERSION='"$(JDK_MICRO_VERSION)"' \
-                  -DJDK_BUILD_NUMBER='"$(JDK_BUILD_NUMBER)"' 
+                  -DJDK_BUILD_NUMBER='"$(JDK_BUILD_NUMBER)"'
 
 ifneq (,$(JDK_UPDATE_VERSION))
 	LIBJAVA_CFLAGS += -DJDK_UPDATE_VERSION='"$(JDK_UPDATE_VERSION)"'
 endif
 
-LIBJAVA_EXCLUDE_FILES:=check_code.c check_format.c
+LIBJAVA_EXCLUDE_FILES:=check_code.c check_format.c jspawnhelper.c
 
 ifneq ($(OPENJDK_TARGET_OS),macosx)
 	LIBJAVA_EXCLUDE_FILES += java_props_macosx.c
 else
 	BUILD_LIBJAVA_java_props_md.c_CFLAGS:=-x objective-c
+        BUILD_LIBJAVA_java_props_macosx.c_CFLAGS:=-x objective-c
 endif
 
 ifeq ($(OPENJDK_TARGET_OS),windows)
@@ -252,6 +253,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBJAVA,\
 		LDFLAGS_SUFFIX_linux:=$(LIBDL) $(BUILD_LIBFDLIBM),\
 		LDFLAGS_SUFFIX_macosx:=-L$(JDK_OUTPUTDIR)/objs/ -lfdlibm \
                                          -framework CoreFoundation \
+                                         -framework Foundation \
                                          -framework Security -framework SystemConfiguration, \
 		LDFLAGS_SUFFIX_windows:=-export:winFileHandleOpen -export:handleLseek \
 					jvm.lib $(BUILD_LIBFDLIBM) $(WIN_VERIFY_LIB) \
@@ -279,7 +281,7 @@ $(BUILD_LIBJAVA) : $(BUILD_LIBFDLIBM)
 BUILD_LIBMLIB_SRC:=$(JDK_TOPDIR)/src/share/native/sun/awt/medialib
 BUILD_LIBMLIB_CFLAGS:=-D__USE_J2D_NAMES -D__MEDIALIB_OLD_NAMES \
 			-I$(BUILD_LIBMLIB_SRC) \
-			-I$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/awt/medialib 
+			-I$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/awt/medialib
 
 BUILD_LIBMLIB_LDLIBS:=
 BUILD_LIBMLIB_IMAGE_MAPFILE:=$(JDK_TOPDIR)/makefiles/mapfiles/libmlib_image/mapfile-vers
@@ -472,7 +474,6 @@ ifeq ($(OPENJDK_TARGET_OS),windows)
 	$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/windows \
 	$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/java2d/windows \
 	$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/java2d/d3d
-    LIBAWT_CFLAGS+=-I$(DXSDK_INCLUDE_PATH)
 else
     LIBAWT_DIRS+=\
 	$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/java2d/x11
@@ -798,6 +799,16 @@ ifeq ($(OPENJDK_TARGET_OS),solaris)
 	LIBAWT_XAWT_CFLAGS += -DFUNCPROTO=15
 endif
 
+ifeq ($(OPENJDK_TARGET_OS),linux)
+ifndef OPENJDK
+include $(JDK_TOPDIR)/make/closed/xawt.gmk
+endif
+
+ifeq ($(DISABLE_XRENDER),true)
+	LIBAWT_XAWT_CFLAGS += -DDISABLE_XRENDER_BY_DEFAULT=true
+endif
+endif
+
 ifeq ($(MILESTONE),internal)
 	LIBAWT_XAWT_CFLAGS += -DINTERNAL_BUILD
 endif
@@ -1032,6 +1043,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBATTACH,\
 		LANG:=C,\
 		OPTIMIZATION:=LOW, \
 		CFLAGS:=$(CFLAGS_JDKLIB),\
+		CFLAGS_windows:=/Gy,\
 		MAPFILE:=$(JDK_TOPDIR)/makefiles/mapfiles/libattach/mapfile-$(OPENJDK_TARGET_OS), \
 		VERSIONINFO_RESOURCE:=$(JDK_TOPDIR)/src/windows/resource/version.rc,\
 		RC_FLAGS:=$(RC_FLAGS) \
@@ -1041,6 +1053,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBATTACH,\
 		LDFLAGS:=$(LDFLAGS_JDKLIB) \
 			 $(call SET_SHARED_LIBRARY_ORIGIN),\
 		LDFLAGS_solaris:=-ldoor,\
+		LDFLAGS_windows:=/ORDER:@$(JDK_TOPDIR)/makefiles/mapfiles/libattach/reorder-windows-$(OPENJDK_TARGET_CPU),\
 		LDFLAGS_SUFFIX:=$(LDFLAGS_JDKLIB_SUFFIX),\
 		LDFLAGS_SUFFIX_windows:=$(WIN_JAVA_LIB) advapi32.lib psapi.lib,\
 		OBJECT_DIR:=$(JDK_OUTPUTDIR)/objs/libattach,\
@@ -1143,7 +1156,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBJDWP,\
 			  -D "JDK_INTERNAL_NAME=jdwp" \
 			  -D "JDK_FTYPE=0x2L",\
 		OBJECT_DIR:=$(JDK_OUTPUTDIR)/objs/libjdwp,\
-		DEBUG_SYMBOLS:=$(DEBUG_ALL_BINARIES)))
+		DEBUG_SYMBOLS:=true))
 
 $(BUILD_LIBJDWP) : $(BUILD_LIBJAVA)
 
@@ -1332,7 +1345,7 @@ LIBFONTMANAGER_OPTIMIZATION:=HIGH
 ifeq ($(OPENJDK_TARGET_OS),windows)
     LIBFONTMANAGER_EXCLUDE_FILES += X11FontScaler.c \
 				    X11TextRenderer.c
-    LIBFONTMANAGER_OPTIMIZATION:=LOW
+LIBFONTMANAGER_OPTIMIZATION:=HIGHEST
 else
     LIBFONTMANAGER_EXCLUDE_FILES += fontpath.c \
 				    lcdglyph.c
@@ -1403,10 +1416,10 @@ ifndef OPENJDK
 #    ifeq ($(OPENJDK_TARGET_OS), linux)
 #        ifeq ("$(CC_VER_MAJOR)", "3")
 #            OTHER_LDLIBS  += -Wl,-Bstatic -lgcc_eh -Wl,-Bdynamic
-#        endif                           
+#        endif
 #    endif
 #
-# The resulting size of the t2k lib file is (at least on linux) dependant on the order of 
+# The resulting size of the t2k lib file is (at least on linux) dependant on the order of
 # the input .o files. Because of this the new build will differ in size to the old build.
     BUILD_LIBT2K_CFLAGS_COMMON:=-I$(JDK_TOPDIR)/src/share/native/sun/font \
 		            -I$(JDK_TOPDIR)/src/closed/share/native/sun/font/t2k \
@@ -1470,8 +1483,7 @@ ifeq ($(OPENJDK_TARGET_OS), windows)
 		        -I$(JDK_TOPDIR)/src/share/native/sun/awt/debug \
 		        -I$(JDK_TOPDIR)/src/share/native/sun/java2d \
 			-I$(JDK_TOPDIR)/src/share/native/sun/awt/image/cvutils \
-			-I$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/java2d/windows \
-			-I$(DXSDK_INCLUDE_PATH), \
+			-I$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/java2d/windows, \
 		LDFLAGS:=$(LDFLAGS_JDKLIB) $(KERNEL32_LIB) $(LDFLAGS_CXX_JDK) \
 			 advapi32.lib $(WIN_AWT_LIB),\
 		LDFLAGS_SUFFIX:=$(LDFLAGS_JDKLIB_SUFFIX),\
@@ -1580,8 +1592,8 @@ LIBINSTRUMENT_LDFLAGS_SUFFIX:=
 ifeq ($(OPENJDK_TARGET_OS), windows)
     LIBINSTRUMENT_LDFLAGS += $(JDK_OUTPUTDIR)/objs/jli_static.lib $(WIN_JAVA_LIB) \
 				 -export:Agent_OnAttach advapi32.lib
-    # Statically link the C runtime so that there are not dependencies on modules 
-    # not on the search patch when invoked from the Windows system directory 
+    # Statically link the C runtime so that there are not dependencies on modules
+    # not on the search patch when invoked from the Windows system directory
     # (or elsewhere).
     LIBINSTRUMENT_CFLAGS := $(filter-out -MD,$(LIBINSTRUMENT_CFLAGS))
     # equivalent of strcasecmp is stricmp on Windows
@@ -2061,7 +2073,7 @@ ifeq ($(OPENJDK_TARGET_OS), windows)
 else ifneq ($(OPENJDK_TARGET_OS), macosx)
 
 	BUILD_LIBJLI_FILES += java_md_common.c
-	BUILD_LIBJLI_FILES += java_md_solinux.c ergo.c 
+	BUILD_LIBJLI_FILES += java_md_solinux.c ergo.c
 
 	ERGO_ARCH_FILE = ergo_$(ERGO_FAMILY).c
 
@@ -2314,6 +2326,10 @@ LIBAWT_HEADLESS_DIRS:=$(JDK_TOPDIR)/src/share/native/sun/font \
 			$(JDK_TOPDIR)/src/solaris/native/sun/java2d/opengl \
 			$(JDK_TOPDIR)/src/solaris/native/sun/java2d/x11
 
+ifeq ($(OPENJDK_TARGET_OS),macosx)
+	LIBAWT_HEADLESS_DIRS+=$(JDK_TOPDIR)/src/macosx/native/sun/font
+endif
+
 LIBAWT_HEADLESS_CFLAGS:=-DHEADLESS=true \
                           -DX11_PATH=\"$(X11_PATH)\" -DPACKAGE_PATH=\"$(PACKAGE_PATH)\" \
 			  $(CUPS_CFLAGS) \
@@ -2327,6 +2343,12 @@ LIBAWT_HEADLESS_CFLAGS:=-DHEADLESS=true \
 			  -I$(JDK_TOPDIR)/src/share/native/sun/awt/debug \
 			  -I$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/jdga \
                           $(foreach dir,$(LIBAWT_HEADLESS_DIRS),-I$(dir))
+
+ifeq ($(OPENJDK_TARGET_OS),macosx)
+	LIBAWT_HEADLESS_CFLAGS+=\
+		-F/System/Library/Frameworks/JavaVM.framework/Frameworks \
+		-F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
+endif
 
 LIBAWT_HEADLESS_FILES:=\
 	awt_Font.c \
@@ -2356,6 +2378,16 @@ LIBAWT_HEADLESS_FILES:=\
         AccelGlyphCache.c \
 	CUPSfuncs.c
 
+ifeq ($(OPENJDK_TARGET_OS),macosx)
+	LIBAWT_HEADLESS_FILES+=\
+		AWTFont.m \
+		AWTStrike.m \
+		CCharToGlyphMapper.m \
+		CGGlyphImages.m \
+		CGGlyphOutlines.m \
+		CoreTextSupport.m
+endif
+
 LIBAWT_HEADLESS_REORDER:=
 ifeq ($(OPENJDK_TARGET_OS), solaris)
 	ifneq ($(OPENJDK_TARGET_CPU), x86_64)
@@ -2382,7 +2414,13 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBAWT_HEADLESS,\
 		REORDER:=$(LIBAWT_HEADLESS_REORDER), \
 		LDFLAGS_SUFFIX_linux:=-ljvm -lawt -lm $(LIBDL) -ljava,\
 		LDFLAGS_SUFFIX_solaris:=$(LIBDL) -ljvm -lawt -lm -ljava $(LIBCXX) -lc,\
-		LDFLAGS_SUFFIX_macosx:=-ljvm $(LIBCXX) -lawt $(LIBDL) -ljava,\
+		LDFLAGS_SUFFIX_macosx:=-ljvm $(LIBCXX) -lawt $(LIBDL) -ljava \
+				 -framework Accelerate \
+				 -framework ApplicationServices \
+				 -framework Cocoa \
+				 -F/System/Library/Frameworks/JavaVM.framework/Frameworks \
+				 -framework JavaNativeFoundation \
+				 -framework JavaRuntimeSupport,\
 		OBJECT_DIR:=$(JDK_OUTPUTDIR)/objs/libawt_headless,\
 		DEBUG_SYMBOLS:=$(DEBUG_ALL_BINARIES)))
 
@@ -2482,7 +2520,7 @@ $(eval $(call SetupNativeCompilation,LIBSPLASHSCREEN,\
 BUILD_LIBRARIES += $(LIBSPLASHSCREEN)
 
 ifeq ($(OPENJDK_TARGET_OS),macosx)
-$(LIBSPLASHSCREEN) :  $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)osxapp$(SHARED_LIBRARY_SUFFIX) 
+$(LIBSPLASHSCREEN) :  $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)osxapp$(SHARED_LIBRARY_SUFFIX)
 endif
 
 endif
@@ -2560,7 +2598,6 @@ BUILD_LIBRARIES += $(BUILD_LIBJ2PCSC)
 ##########################################################################################
 
 ifneq ($(OPENJDK_TARGET_OS), windows)
-ifneq ($(OPENJDK_TARGET_OS), macosx)
 $(eval $(call SetupNativeCompilation,BUILD_LIBJ2GSS,\
 		LIBRARY:=j2gss,\
                 OUTPUT_DIR:=$(INSTALL_LIBRARIES_HERE),\
@@ -2581,25 +2618,25 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBJ2GSS,\
 
 BUILD_LIBRARIES += $(BUILD_LIBJ2GSS)
 endif
-endif
 
 ##########################################################################################
 
-BUILD_LIBKRB5_NAME:=
-ifeq ($(OPENJDK_TARGET_OS), windows)
+ifneq ($(BUILD_CRYPTO),no)
+  BUILD_LIBKRB5_NAME:=
+  ifeq ($(OPENJDK_TARGET_OS), windows)
      BUILD_LIBKRB5_NAME:=w2k_lsa_auth
      BUILD_LIBKRB5_SRC:=$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/security/krb5
      BUILD_LIBKRB5_LIBS:=advapi32.lib Secur32.lib netapi32.lib kernel32.lib user32.lib \
 			 gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib \
 			 ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib
-else ifeq ($(OPENJDK_TARGET_OS), macosx)
+  else ifeq ($(OPENJDK_TARGET_OS), macosx)
      BUILD_LIBKRB5_NAME:=osxkrb5
      BUILD_LIBKRB5_SRC:=$(JDK_TOPDIR)/src/share/native/sun/security/krb5
      BUILD_LIBKRB5_LIBS:=-framework Kerberos
-endif
+  endif
 
-ifneq ($(BUILD_LIBKRB5_NAME),)
-$(eval $(call SetupNativeCompilation,BUILD_LIBKRB5,\
+  ifneq ($(BUILD_LIBKRB5_NAME),)
+    $(eval $(call SetupNativeCompilation,BUILD_LIBKRB5,\
 		LIBRARY:=$(BUILD_LIBKRB5_NAME),\
                 OUTPUT_DIR:=$(INSTALL_LIBRARIES_HERE),\
 		SRC:=$(BUILD_LIBKRB5_SRC),\
@@ -2619,7 +2656,8 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBKRB5,\
 		OBJECT_DIR:=$(JDK_OUTPUTDIR)/objs/libkrb5,\
 		DEBUG_SYMBOLS:=$(DEBUG_ALL_BINARIES)))
 
-BUILD_LIBRARIES += $(BUILD_LIBKRB5)
+    BUILD_LIBRARIES += $(BUILD_LIBKRB5)
+  endif
 endif
 
 ##########################################################################################
@@ -2894,7 +2932,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBJSOUNDALSA,\
 				PLATFORM_API_LinuxOS_ALSA_Ports.c,\
 		LANG:=C,\
 		OPTIMIZATION:=LOW, \
-		CFLAGS:=$(CFLAGS_JDKLIB) \
+		CFLAGS:=$(CFLAGS_JDKLIB) $(ALSA_CFLAGS) \
 			$(LIBJSOUND_CFLAGS) \
 			-DUSE_DAUDIO=TRUE \
 			-DUSE_PORTS=TRUE  \
@@ -2903,7 +2941,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBJSOUNDALSA,\
 		MAPFILE:=$(JDK_TOPDIR)/makefiles/mapfiles/libjsoundalsa/mapfile-vers, \
 		LDFLAGS:=$(LDFLAGS_JDKLIB)\
 			 $(call SET_SHARED_LIBRARY_ORIGIN),\
-		LDFLAGS_SUFFIX:=-lasound -ljava -ljvm,\
+		LDFLAGS_SUFFIX:=$(ALSA_LIBS) -ljava -ljvm,\
 		OBJECT_DIR:=$(JDK_OUTPUTDIR)/objs/libjsoundalsa,\
 		DEBUG_SYMBOLS:=$(DEBUG_ALL_BINARIES)))
 
@@ -2927,8 +2965,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBJSOUNDDS,\
 		OPTIMIZATION:=LOW, \
 		CFLAGS:=$(CFLAGS_JDKLIB) \
 			$(LIBJSOUND_CFLAGS) \
-			-DUSE_DAUDIO=TRUE \
-                        -I$(DXSDK_INCLUDE_PATH), \
+			-DUSE_DAUDIO=TRUE, \
 		LDFLAGS:=$(LDFLAGS_JDKLIB) $(LDFLAGS_CXX_JDK) \
 			 $(call SET_SHARED_LIBRARY_ORIGIN),\
 		LDFLAGS_SUFFIX:=$(LDFLAGS_JDKLIB_SUFFIX) dsound.lib winmm.lib user32.lib ole32.lib,\
@@ -3214,7 +3251,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBAWT_LWAWT,\
 
 BUILD_LIBRARIES += $(BUILD_LIBAWT_LWAWT)
 
-$(BUILD_LIBAWT_LWAWT) : $(BUILD_LIBAWT) 
+$(BUILD_LIBAWT_LWAWT) : $(BUILD_LIBAWT)
 
 $(BUILD_LIBAWT_LWAWT) : $(BUILD_LIBMLIB_IMAGE)
 
@@ -3255,7 +3292,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBOSXUI,\
 
 BUILD_LIBRARIES += $(BUILD_LIBOSXUI)
 
-$(BUILD_LIBOSXUI) : $(BUILD_LIBAWT) 
+$(BUILD_LIBOSXUI) : $(BUILD_LIBAWT)
 
 $(BUILD_LIBOSXUI) : $(BUILD_LIBOSXAPP)
 

@@ -148,6 +148,7 @@ abstract class LongPipeline<E_IN>
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     final Spliterator.OfLong lazySpliterator(Supplier<? extends Spliterator<Long>> supplier) {
         return new StreamSpliterators.DelegatingSpliterator.OfLong((Supplier<Spliterator.OfLong>) supplier);
     }
@@ -169,7 +170,7 @@ abstract class LongPipeline<E_IN>
 
     @Override
     public final PrimitiveIterator.OfLong iterator() {
-        return Spliterators.iteratorFromSpliterator(spliterator());
+        return Spliterators.iterator(spliterator());
     }
 
     @Override
@@ -180,12 +181,12 @@ abstract class LongPipeline<E_IN>
     // Stateless intermediate ops from LongStream
 
     @Override
-    public final DoubleStream doubles() {
+    public final DoubleStream asDoubleStream() {
         return new DoublePipeline.StatelessOp<Long>(this, StreamShape.LONG_VALUE,
                                                     StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<Double> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<Double>(sink) {
                     @Override
                     public void accept(long t) {
                         downstream.accept((double) t);
@@ -207,7 +208,7 @@ abstract class LongPipeline<E_IN>
                                      StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<Long> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<Long>(sink) {
                     @Override
                     public void accept(long t) {
                         downstream.accept(mapper.applyAsLong(t));
@@ -224,7 +225,7 @@ abstract class LongPipeline<E_IN>
                                                           StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<U> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<U>(sink) {
                     @Override
                     public void accept(long t) {
                         downstream.accept(mapper.apply(t));
@@ -241,7 +242,7 @@ abstract class LongPipeline<E_IN>
                                                  StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<Integer> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<Integer>(sink) {
                     @Override
                     public void accept(long t) {
                         downstream.accept(mapper.applyAsInt(t));
@@ -258,7 +259,7 @@ abstract class LongPipeline<E_IN>
                                                     StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<Double> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<Double>(sink) {
                     @Override
                     public void accept(long t) {
                         downstream.accept(mapper.applyAsDouble(t));
@@ -274,12 +275,19 @@ abstract class LongPipeline<E_IN>
                                      StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT | StreamOpFlag.NOT_SIZED) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<Long> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<Long>(sink) {
+                    @Override
+                    public void begin(long size) {
+                        downstream.begin(-1);
+                    }
+
+                    @Override
                     public void accept(long t) {
-                        // We can do better that this too; optimize for depth=0 case and just grab spliterator and forEach it
-                        LongStream result = mapper.apply(t);
-                        if (result != null)
-                            result.sequential().forEach(i -> downstream.accept(i));
+                        try (LongStream result = mapper.apply(t)) {
+                            // We can do better that this too; optimize for depth=0 case and just grab spliterator and forEach it
+                            if (result != null)
+                                result.sequential().forEach(i -> downstream.accept(i));
+                        }
                     }
                 };
             }
@@ -305,7 +313,12 @@ abstract class LongPipeline<E_IN>
                                      StreamOpFlag.NOT_SIZED) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<Long> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<Long>(sink) {
+                    @Override
+                    public void begin(long size) {
+                        downstream.begin(-1);
+                    }
+
                     @Override
                     public void accept(long t) {
                         if (predicate.test(t))
@@ -317,16 +330,16 @@ abstract class LongPipeline<E_IN>
     }
 
     @Override
-    public final LongStream peek(LongConsumer consumer) {
-        Objects.requireNonNull(consumer);
+    public final LongStream peek(LongConsumer action) {
+        Objects.requireNonNull(action);
         return new StatelessOp<Long>(this, StreamShape.LONG_VALUE,
                                      0) {
             @Override
             Sink<Long> opWrapSink(int flags, Sink<Long> sink) {
-                return new Sink.ChainedLong(sink) {
+                return new Sink.ChainedLong<Long>(sink) {
                     @Override
                     public void accept(long t) {
-                        consumer.accept(t);
+                        action.accept(t);
                         downstream.accept(t);
                     }
                 };
@@ -442,14 +455,14 @@ abstract class LongPipeline<E_IN>
     }
 
     @Override
-    public final <R> R collect(Supplier<R> resultFactory,
+    public final <R> R collect(Supplier<R> supplier,
                                ObjLongConsumer<R> accumulator,
                                BiConsumer<R, R> combiner) {
         BinaryOperator<R> operator = (left, right) -> {
             combiner.accept(left, right);
             return left;
         };
-        return evaluate(ReduceOps.makeLong(resultFactory, accumulator, operator));
+        return evaluate(ReduceOps.makeLong(supplier, accumulator, operator));
     }
 
     @Override
@@ -479,7 +492,8 @@ abstract class LongPipeline<E_IN>
 
     @Override
     public final long[] toArray() {
-        return Nodes.flattenLong((Node.OfLong) evaluateToArrayNode(Long[]::new)).asLongArray();
+        return Nodes.flattenLong((Node.OfLong) evaluateToArrayNode(Long[]::new))
+                .asPrimitiveArray();
     }
 
 

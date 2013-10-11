@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,7 +59,7 @@ import sun.util.locale.provider.TimeZoneNameUtility;
  * <code>DateFormatSymbols</code> is a public class for encapsulating
  * localizable date-time formatting data, such as the names of the
  * months, the names of the days of the week, and the time zone data.
- * <code>DateFormat</code> and <code>SimpleDateFormat</code> both use
+ * <code>SimpleDateFormat</code> uses
  * <code>DateFormatSymbols</code> to encapsulate this information.
  *
  * <p>
@@ -135,6 +135,7 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * implementations. For full locale coverage, use the
      * {@link #getInstance(Locale) getInstance} method.
      *
+     * @param locale the desired locale
      * @see #getInstance(Locale)
      * @exception  java.util.MissingResourceException
      *             if the resources for the specified locale cannot be
