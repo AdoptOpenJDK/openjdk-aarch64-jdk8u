@@ -633,6 +633,22 @@ CheckJvmType(int *pargc, char ***argv, jboolean speculative) {
     return jvmtype;
 }
 
+/*
+ * This is called if the jvmtype returned by CheckJvmType above
+ * didn't exist. In this case if it was the default VM and we
+ * selected the server vm we will allow it to use the client vm
+ * instead.
+ */
+char *
+GetAltJvmType(char *jvmtype)
+{
+    if ((knownVMs[0].flag == VM_IF_SERVER_CLASS) &&
+        (jvmtype == knownVMs[0].server_class+1)) {
+      return knownVMs[0].name+1;
+    }
+    return NULL;
+}
+
 /* copied from HotSpot function "atomll()" */
 static int
 parse_size(const char *s, jlong *result) {

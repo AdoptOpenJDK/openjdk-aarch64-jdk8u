@@ -164,6 +164,7 @@ void SetJavaLauncherProp(void);
  */
 jint ReadKnownVMs(const char *jvmcfg, jboolean speculative);
 char *CheckJvmType(int *argc, char ***argv, jboolean speculative);
+char *GetAltJvmType(char *jvmtype);
 void AddOption(char *str, void *info);
 
 enum ergo_policy {
