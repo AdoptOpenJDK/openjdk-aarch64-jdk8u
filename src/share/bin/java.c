@@ -642,9 +642,9 @@ CheckJvmType(int *pargc, char ***argv, jboolean speculative) {
 char *
 GetAltJvmType(char *jvmtype)
 {
-    if ((knownVMs[0].flag == VM_IF_SERVER_CLASS) &&
-        (jvmtype == knownVMs[0].server_class+1)) {
-      return knownVMs[0].name+1;
+    if ((knownVMs[0].flag == VM_IF_SERVER_CLASS)) {
+        if (jvmtype == knownVMs[0].server_class+1) return knownVMs[0].name+1;
+        if (jvmtype == knownVMs[0].name+1) return knownVMs[0].server_class+1;
     }
     return NULL;
 }
