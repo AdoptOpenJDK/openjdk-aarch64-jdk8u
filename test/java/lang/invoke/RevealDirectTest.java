@@ -4,9 +4,7 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -104,6 +102,9 @@ public class RevealDirectTest {
         private static Lookup localLookup() { return lookup(); }
         private static List<Member> members() { return getMembers(lookup().lookupClass()); };
     }
+    static class Nestmate {
+        private static Lookup localLookup() { return lookup(); }
+    }
 
     static boolean VERBOSE = false;
 
@@ -152,7 +153,10 @@ public class RevealDirectTest {
                                   getMembers(Method.class, "invoke"));
         mems = callerSensitive(true, publicOnly(mems));
         // CS methods cannot be looked up with publicLookup
-        testOnMembersNoLookup("testCallerSensitiveNegative", mems, publicLookup());
+        testOnMembersNoLookup("testCallerSensitiveNegative/1", mems, publicLookup());
+        // CS methods have to be revealed with a matching lookupClass
+        testOnMembersNoReveal("testCallerSensitiveNegative/2", mems, Simple.localLookup(), publicLookup());
+        testOnMembersNoReveal("testCallerSensitiveNegative/3", mems, Simple.localLookup(), Nestmate.localLookup());
     }
     @Test public void testMethodHandleNatives() throws Throwable {
         if (VERBOSE)  System.out.println("@Test testMethodHandleNatives");
@@ -703,7 +707,7 @@ public class RevealDirectTest {
             try {
                 info = revLookup.revealDirect(mh);
                 if (expectEx2)  throw new AssertionError("unexpected revelation for negative test");
-            } catch (Throwable ex2) {
+            } catch (IllegalArgumentException|SecurityException ex2) {
                 if (VERBOSE)  System.out.println("  "+variation+": "+res+" => "+mh.getClass().getName()+" => (EX2)"+ex2);
                 if (expectEx2)
                     continue;  // this is OK; we expected the reflect to fail

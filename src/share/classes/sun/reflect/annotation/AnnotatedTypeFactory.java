@@ -34,7 +34,7 @@ import java.util.Map;
 
 import static sun.reflect.annotation.TypeAnnotation.*;
 
-public class AnnotatedTypeFactory {
+public final class AnnotatedTypeFactory {
     /**
      * Create an AnnotatedType.
      *
@@ -47,10 +47,10 @@ public class AnnotatedTypeFactory {
      *                          corresponds to
      */
     public static AnnotatedType buildAnnotatedType(Type type,
-                                                   LocationInfo currentLoc,
-                                                   TypeAnnotation[] actualTypeAnnos,
-                                                   TypeAnnotation[] allOnSameTarget,
-                                                   AnnotatedElement decl) {
+            LocationInfo currentLoc,
+            TypeAnnotation[] actualTypeAnnos,
+            TypeAnnotation[] allOnSameTarget,
+            AnnotatedElement decl) {
         if (type == null) {
             return EMPTY_ANNOTATED_TYPE;
         }
@@ -95,6 +95,8 @@ public class AnnotatedTypeFactory {
             Class<?> clz = (Class)type;
             if (clz.getEnclosingClass() == null)
                 return addTo;
+            if (Modifier.isStatic(clz.getModifiers()))
+                return addNesting(clz.getEnclosingClass(), addTo);
             return addNesting(clz.getEnclosingClass(), addTo.pushInner());
         } else if (type instanceof ParameterizedType) {
             ParameterizedType t = (ParameterizedType)type;
@@ -118,6 +120,7 @@ public class AnnotatedTypeFactory {
 
     static final AnnotatedType EMPTY_ANNOTATED_TYPE = new AnnotatedTypeBaseImpl(null, LocationInfo.BASE_LOCATION,
                                                             new TypeAnnotation[0], new TypeAnnotation[0], null);
+    static final AnnotatedType[] EMPTY_ANNOTATED_TYPE_ARRAY = new AnnotatedType[0];
 
     private static class AnnotatedTypeBaseImpl implements AnnotatedType {
         private final Type type;
@@ -153,40 +156,40 @@ public class AnnotatedTypeFactory {
         }
 
         @Override
-        public Annotation[] getDeclaredAnnotations() {
+        public final Annotation[] getDeclaredAnnotations() {
             return annotations.values().toArray(new Annotation[0]);
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        public <T extends Annotation> T getDeclaredAnnotation(Class<T> annotation) {
+        public final <T extends Annotation> T getDeclaredAnnotation(Class<T> annotation) {
             return (T)annotations.get(annotation);
         }
 
         @Override
-        public <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotation) {
-            return AnnotationSupport.getMultipleAnnotations(annotations, annotation);
+        public final <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotation) {
+            return AnnotationSupport.getDirectlyAndIndirectlyPresent(annotations, annotation);
         }
 
         // AnnotatedType
         @Override
-        public Type getType() {
+        public final Type getType() {
             return type;
         }
 
         // Implementation details
-        LocationInfo getLocation() {
+        final LocationInfo getLocation() {
             return location;
         }
-        TypeAnnotation[] getTypeAnnotations() {
+        final TypeAnnotation[] getTypeAnnotations() {
             return allOnSameTargetTypeAnnotations;
         }
-        AnnotatedElement getDecl() {
+        final AnnotatedElement getDecl() {
             return decl;
         }
     }
 
-    private static class AnnotatedArrayTypeImpl extends AnnotatedTypeBaseImpl implements AnnotatedArrayType {
+    private static final class AnnotatedArrayTypeImpl extends AnnotatedTypeBaseImpl implements AnnotatedArrayType {
         AnnotatedArrayTypeImpl(Type type, LocationInfo location,
                 TypeAnnotation[] actualTypeAnnotations, TypeAnnotation[] allOnSameTargetTypeAnnotations,
                 AnnotatedElement decl) {
@@ -212,7 +215,7 @@ public class AnnotatedTypeFactory {
         }
     }
 
-    private static class AnnotatedTypeVariableImpl extends AnnotatedTypeBaseImpl implements AnnotatedTypeVariable {
+    private static final class AnnotatedTypeVariableImpl extends AnnotatedTypeBaseImpl implements AnnotatedTypeVariable {
         AnnotatedTypeVariableImpl(TypeVariable<?> type, LocationInfo location,
                 TypeAnnotation[] actualTypeAnnotations, TypeAnnotation[] allOnSameTargetTypeAnnotations,
                 AnnotatedElement decl) {
@@ -229,7 +232,8 @@ public class AnnotatedTypeFactory {
         }
     }
 
-    private static class AnnotatedParameterizedTypeImpl extends AnnotatedTypeBaseImpl implements AnnotatedParameterizedType {
+    private static final class AnnotatedParameterizedTypeImpl extends AnnotatedTypeBaseImpl
+            implements AnnotatedParameterizedType {
         AnnotatedParameterizedTypeImpl(ParameterizedType type, LocationInfo location,
                 TypeAnnotation[] actualTypeAnnotations, TypeAnnotation[] allOnSameTargetTypeAnnotations,
                 AnnotatedElement decl) {
@@ -262,7 +266,7 @@ public class AnnotatedTypeFactory {
         }
     }
 
-    private static class AnnotatedWildcardTypeImpl extends AnnotatedTypeBaseImpl implements AnnotatedWildcardType {
+    private static final class AnnotatedWildcardTypeImpl extends AnnotatedTypeBaseImpl implements AnnotatedWildcardType {
         private final boolean hasUpperBounds;
         AnnotatedWildcardTypeImpl(WildcardType type, LocationInfo location,
                 TypeAnnotation[] actualTypeAnnotations, TypeAnnotation[] allOnSameTargetTypeAnnotations,

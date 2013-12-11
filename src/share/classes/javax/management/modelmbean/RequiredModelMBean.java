@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -298,11 +298,15 @@ public class RequiredModelMBean
                     RequiredModelMBean.class.getName(),
                 "setModelMBeanInfo(ModelMBeanInfo)",
                 "Setting ModelMBeanInfo to " + printModelMBeanInfo(mbi));
+            int noOfNotifications = 0;
+            if (mbi.getNotifications() != null) {
+                noOfNotifications = mbi.getNotifications().length;
+            }
             MODELMBEAN_LOGGER.logp(Level.FINER,
                     RequiredModelMBean.class.getName(),
                 "setModelMBeanInfo(ModelMBeanInfo)",
                 "ModelMBeanInfo notifications has " +
-                (mbi.getNotifications()).length + " elements");
+                noOfNotifications + " elements");
         }
 
         modelMBeanInfo = (ModelMBeanInfo)mbi.clone();
@@ -356,7 +360,7 @@ public class RequiredModelMBean
                 MODELMBEAN_LOGGER.logp(Level.FINER,
                         RequiredModelMBean.class.getName(),
                     "setManagedResource(Object,String)",
-                    "Managed Resouce Type is not supported: " + mr_type);
+                    "Managed Resource Type is not supported: " + mr_type);
             }
             throw new InvalidTargetObjectTypeException(mr_type);
         }
@@ -365,7 +369,7 @@ public class RequiredModelMBean
             MODELMBEAN_LOGGER.logp(Level.FINER,
                     RequiredModelMBean.class.getName(),
                 "setManagedResource(Object,String)",
-                "Managed Resouce is valid");
+                "Managed Resource is valid");
         }
         managedResource = mr;
 
@@ -417,19 +421,19 @@ public class RequiredModelMBean
      * is used to guide execution of this method. The MBean should be
      * stored if 'persistPolicy' field is:</p>
      *
-     * <PRE>  != "never"
+     * <PRE>{@literal  != "never"
      *   = "always"
      *   = "onTimer" and now > 'lastPersistTime' + 'persistPeriod'
      *   = "NoMoreOftenThan" and now > 'lastPersistTime' + 'persistPeriod'
      *   = "onUnregister"
-     * </PRE>
+     * }</PRE>
      *
      * <p>Do not store the MBean if 'persistPolicy' field is:</p>
-     * <PRE>
+     * <PRE>{@literal
      *    = "never"
      *    = "onUpdate"
      *    = "onTimer" && now < 'lastPersistTime' + 'persistPeriod'
-     * </PRE>
+     * }</PRE>
      *
      * @exception MBeanException Wraps another exception, or
      * persistence is not supported
@@ -465,11 +469,14 @@ public class RequiredModelMBean
      *   <li><b>&gt;0</b> Represents the number of seconds that the
      *         'value' field is valid.
      *         The 'value' field is no longer valid when
-     *         'lastUpdatedTimeStamp' + 'currencyTimeLimit' &gt; Now.</li>
+     *         'lastUpdatedTimeStamp' + 'currencyTimeLimit' &gt; Now.
+     *       <ul>
+     *       <li>When 'value' is valid, 'valid' is returned.</li>
+     *       <li>When 'value' is no longer valid then null is returned and
+     *           'value' and 'lastUpdatedTimeStamp' fields are cleared.</li>
+     *       </ul>
+     *   </li>
      * </ul>
-     * <li>When 'value' is valid, 'valid' is returned.</li>
-     * <li>When 'value' is no longer valid then null is returned and
-     *     'value' and 'lastUpdatedTimeStamp' fields are cleared.</li>
      *
      **/
     private Object resolveForCacheValue(Descriptor descr)
@@ -1838,17 +1845,17 @@ public class RequiredModelMBean
      * <Li> != "never"</Li>
      * <Li> = "always"</Li>
      * <Li> = "onUpdate"</Li>
-     * <Li> = "onTimer" and now &gt; 'lastPersistTime' + 'persistPeriod'</Li>
-     * <Li> = "NoMoreOftenThan" and now &gt; 'lastPersistTime' +
-     *         'persistPeriod'</Li>
+     * <Li> {@literal = "onTimer" and now > 'lastPersistTime' + 'persistPeriod'}</Li>
+     * <Li> {@literal = "NoMoreOftenThan" and now > 'lastPersistTime' +
+     *         'persistPeriod'}</Li>
      * </UL>
      * Do not store the MBean if 'persistPolicy' field is:
      * <UL>
      * <Li> = "never"</Li>
-     * <Li> = "onTimer" && now &lt; 'lastPersistTime' + 'persistPeriod'</Li>
+     * <Li> = {@literal = "onTimer" && now < 'lastPersistTime' + 'persistPeriod'}</Li>
      * <Li> = "onUnregister"</Li>
-     * <Li> = "NoMoreOftenThan" and now &lt; 'lastPersistTime' +
-     *        'persistPeriod'</Li>
+     * <Li> = {@literal = "NoMoreOftenThan" and now < 'lastPersistTime' +
+     *        'persistPeriod'}</Li>
      * </UL>
      *
      * <p>The ModelMBeanInfo of the Model MBean is stored in a file.

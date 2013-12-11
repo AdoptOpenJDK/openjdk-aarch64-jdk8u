@@ -146,7 +146,7 @@ import static sun.swing.SwingUtilities2.Section.*;
  * Responsibility for listening to selection changes in order to keep the list's
  * visual representation up to date lies with the list's {@code ListUI}.
  * <p>
- * <a name="renderer">
+ * <a name="renderer"></a>
  * Painting of cells in a {@code JList} is handled by a delegate called a
  * cell renderer, installed on the list as the {@code cellRenderer} property.
  * The renderer provides a {@code java.awt.Component} that is used
@@ -202,7 +202,7 @@ import static sun.swing.SwingUtilities2.Section.*;
  * To avoid these calculations, you can set a {@code fixedCellWidth} and
  * {@code fixedCellHeight} on the list, or have these values calculated
  * automatically based on a single prototype value:
- * <a name="prototype_example">
+ * <a name="prototype_example"></a>
  * <pre>
  * {@code
  * JList<String> bigDataList = new JList<String>(bigData);
@@ -253,15 +253,13 @@ import static sun.swing.SwingUtilities2.Section.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  * <p>
- * See <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/list.html">How to Use Lists</a>
- * in <a href="http://java.sun.com/Series/Tutorial/index.html"><em>The Java Tutorial</em></a>
+ * See <a href="http://docs.oracle.com/javase/tutorial/uiswing/components/list.html">How to Use Lists</a>
+ * in <a href="http://docs.oracle.com/javase/tutorial/"><em>The Java Tutorial</em></a>
  * for further documentation.
- * Also see the article <a href="http://java.sun.com/products/jfc/tsc/tech_topics/jlist_1/jlist.html">Advanced JList Programming</a>
- * in <a href="http://java.sun.com/products/jfc/tsc"><em>The Swing Connection</em></a>.
  * <p>
  * @see ListModel
  * @see AbstractListModel
@@ -972,7 +970,7 @@ public class JList<E> extends JComponent implements Scrollable, Accessible
      *
      * <table border="1"
      *  summary="Describes layouts VERTICAL, HORIZONTAL_WRAP, and VERTICAL_WRAP">
-     *   <tr><th><p align="left">Value</p></th><th><p align="left">Description</p></th></tr>
+     *   <tr><th><p style="text-align:left">Value</p></th><th><p style="text-align:left">Description</p></th></tr>
      *   <tr><td><code>VERTICAL</code>
      *       <td>Cells are layed out vertically in a single column.
      *   <tr><td><code>HORIZONTAL_WRAP</code>
@@ -1514,7 +1512,7 @@ public class JList<E> extends JComponent implements Scrollable, Accessible
      * tooltip text on the cell level, by using {@code setToolTipText} on your
      * cell renderer component.
      * <p>
-     * <bold>Note:</bold> For <code>JList</code> to properly display the
+     * <strong>Note:</strong> For <code>JList</code> to properly display the
      * tooltips of its renderers in this manner, <code>JList</code> must be a
      * registered component with the <code>ToolTipManager</code>. This registration
      * is done automatically in the constructor. However, if at a later point
@@ -2879,7 +2877,7 @@ public class JList<E> extends JComponent implements Scrollable, Accessible
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
