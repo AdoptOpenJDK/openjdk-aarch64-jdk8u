@@ -34,9 +34,8 @@ package com.sun.jdi.connect;
  * @author Gordon Hirsch
  * @since  1.3
  */
-@jdk.Exported
-public class VMStartException extends Exception {
-
+public class VMStartException extends Exception
+{
     private static final long serialVersionUID = 6408644824640801020L;
     Process process;
 

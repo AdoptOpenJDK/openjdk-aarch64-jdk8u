@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2005, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,7 @@ import java.awt.*;
 import java.awt.peer.*;
 import java.awt.event.ItemEvent;
 
-final class WCheckboxPeer extends WComponentPeer implements CheckboxPeer {
+public class WCheckboxPeer extends WComponentPeer implements CheckboxPeer {
 
     // CheckboxPeer implementation
 
@@ -100,4 +100,12 @@ final class WCheckboxPeer extends WComponentPeer implements CheckboxPeer {
             }
         });
     }
+
+    /**
+     * DEPRECATED
+     */
+    public Dimension minimumSize() {
+            return getMinimumSize();
+    }
+
 }

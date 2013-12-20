@@ -29,9 +29,10 @@ import java.awt.*;
 import java.awt.MultipleGradientPaint.*;
 import java.awt.geom.*;
 import java.awt.image.*;
+
 import sun.java2d.*;
 import sun.java2d.loops.*;
-import sun.java2d.xr.XRSurfaceData.XRInternalSurfaceData;
+import sun.java2d.pipe.*;
 
 abstract class XRPaints {
     static XRCompositeManager xrCompMan;
@@ -107,16 +108,27 @@ abstract class XRPaints {
         void setXRPaint(SunGraphics2D sg2d, Paint pt) {
             GradientPaint paint = (GradientPaint) pt;
 
-            int repeat = paint.isCyclic() ? XRUtils.RepeatReflect : XRUtils.RepeatPad;
-            float fractions[] = {0, 1};
-            int[] pixels = convertToIntArgbPixels(new Color[] { paint.getColor1(), paint.getColor2() });
+            int[] pixels = convertToIntArgbPixels(new Color[] { paint.getColor1(), paint.getColor2() }, false);
+
+            float fractions[] = new float[2];
+            fractions[0] = 0;
+            fractions[1] = 1;
 
             Point2D pt1 = paint.getPoint1();
             Point2D pt2 = paint.getPoint2();
 
+            AffineTransform at = (AffineTransform) sg2d.transform.clone();
+            try {
+                at.invert();
+            } catch (NoninvertibleTransformException ex) {
+                at.setToIdentity();
+            }
+
+            int repeat = paint.isCyclic() ? XRUtils.RepeatReflect : XRUtils.RepeatPad;
+
             XRBackend con = xrCompMan.getBackend();
-            int gradient = con.createLinearGradient(pt1, pt2, fractions, pixels, repeat);
-            xrCompMan.setGradientPaint(new XRSurfaceData.XRInternalSurfaceData(con, gradient));
+            int gradient = con.createLinearGradient(pt1, pt2, fractions, pixels, repeat, at);
+            xrCompMan.setGradientPaint(new XRSurfaceData.XRInternalSurfaceData(con, gradient, at));
         }
     }
 
@@ -130,22 +142,26 @@ abstract class XRPaints {
 
         @Override
         boolean isPaintValid(SunGraphics2D sg2d) {
-            return ((LinearGradientPaint) sg2d.getPaint()).getColorSpace() == ColorSpaceType.SRGB;
+            return true;
         }
 
         @Override
         void setXRPaint(SunGraphics2D sg2d, Paint pt) {
             LinearGradientPaint paint = (LinearGradientPaint) pt;
+            boolean linear = (paint.getColorSpace() == ColorSpaceType.LINEAR_RGB);
 
             Color[] colors = paint.getColors();
             Point2D pt1 = paint.getStartPoint();
             Point2D pt2 = paint.getEndPoint();
 
-            int repeat = XRUtils.getRepeatForCycleMethod(paint.getCycleMethod());
-            float[] fractions = paint.getFractions();
-            int[] pixels = convertToIntArgbPixels(colors);
 
             AffineTransform at = paint.getTransform();
+            at.preConcatenate(sg2d.transform);
+
+            int repeat = XRUtils.getRepeatForCycleMethod(paint.getCycleMethod());
+            float[] fractions = paint.getFractions();
+            int[] pixels = convertToIntArgbPixels(colors, linear);
+
             try {
                 at.invert();
             } catch (NoninvertibleTransformException ex) {
@@ -153,10 +169,8 @@ abstract class XRPaints {
             }
 
             XRBackend con = xrCompMan.getBackend();
-            int gradient = con.createLinearGradient(pt1, pt2, fractions, pixels, repeat);
-            XRInternalSurfaceData x11sd = new XRSurfaceData.XRInternalSurfaceData(con, gradient);
-            x11sd.setStaticSrcTx(at);
-            xrCompMan.setGradientPaint(x11sd);
+            int gradient = con.createLinearGradient(pt1, pt2, fractions, pixels, repeat, at);
+            xrCompMan.setGradientPaint(new XRSurfaceData.XRInternalSurfaceData(con, gradient, at));
         }
     }
 
@@ -165,55 +179,58 @@ abstract class XRPaints {
         @Override
         boolean isPaintValid(SunGraphics2D sg2d) {
             RadialGradientPaint grad = (RadialGradientPaint) sg2d.paint;
-            return grad.getFocusPoint().equals(grad.getCenterPoint())
-                   && grad.getColorSpace() == ColorSpaceType.SRGB;
+            return grad.getFocusPoint().equals(grad.getCenterPoint());
         }
 
         @Override
         void setXRPaint(SunGraphics2D sg2d, Paint pt) {
             RadialGradientPaint paint = (RadialGradientPaint) pt;
+            boolean linear = (paint.getColorSpace() == ColorSpaceType.LINEAR_RGB);
             Color[] colors = paint.getColors();
             Point2D center = paint.getCenterPoint();
+            Point2D focus = paint.getFocusPoint();
 
             int repeat = XRUtils.getRepeatForCycleMethod(paint.getCycleMethod());
             float[] fractions = paint.getFractions();
-            int[] pixels = convertToIntArgbPixels(colors);
+            int[] pixels = convertToIntArgbPixels(colors, linear);
             float radius = paint.getRadius();
 
-            float cx = (float) center.getX();
-            float cy = (float) center.getY();
+            // save original (untransformed) center and focus points
+            double cx = center.getX();
+            double cy = center.getY();
+            double fx = focus.getX();
+            double fy = focus.getY();
 
             AffineTransform at = paint.getTransform();
+            at.preConcatenate(sg2d.transform);
+            focus = at.transform(focus, focus);
+
+            // transform unit circle to gradient coords; we start with the
+            // unit circle (center=(0,0), focus on positive x-axis, radius=1)
+            // and then transform into gradient space
+            at.translate(cx, cy);
+            at.rotate(fx - cx, fy - cy);
+            // at.scale(radius, radius);
+
+            // invert to get mapping from device coords to unit circle
             try {
                 at.invert();
-            } catch (NoninvertibleTransformException ex) {
-                ex.printStackTrace();
+            } catch (Exception e) {
+                at.setToScale(0.0, 0.0);
             }
+            focus = at.transform(focus, focus);
+
+            // clamp the focus point so that it does not rest on, or outside
+            // of, the circumference of the gradient circle
+            fx = Math.min(focus.getX(), 0.99);
 
             XRBackend con = xrCompMan.getBackend();
-            int gradient = con.createRadialGradient(cx, cy, 0, radius, fractions, pixels, repeat);
-            XRInternalSurfaceData x11sd = new XRSurfaceData.XRInternalSurfaceData(con, gradient);
-            x11sd.setStaticSrcTx(at);
-            xrCompMan.setGradientPaint(x11sd);
+            int gradient = con.createRadialGradient(new Point2D.Float(0, 0), new Point2D.Float(0, 0), 0, radius, fractions, pixels, repeat, at);
+            xrCompMan.setGradientPaint(new XRSurfaceData.XRInternalSurfaceData(con, gradient, at));
         }
     }
 
     private static class XRTexture extends XRPaints {
-
-        private XRSurfaceData getAccSrcSurface(XRSurfaceData dstData, BufferedImage bi) {
-            // REMIND: this is a hack that attempts to cache the system
-            // memory image from the TexturePaint instance into an
-            // XRender pixmap...
-            SurfaceData srcData = dstData.getSourceSurfaceData(bi, SunGraphics2D.TRANSFORM_ISIDENT, CompositeType.SrcOver, null);
-            if (!(srcData instanceof XRSurfaceData)) {
-                srcData = dstData.getSourceSurfaceData(bi, SunGraphics2D.TRANSFORM_ISIDENT, CompositeType.SrcOver, null);
-                if (!(srcData instanceof XRSurfaceData)) {
-                    throw new InternalError("Surface not cachable");
-                }
-            }
-
-            return (XRSurfaceData) srcData;
-        }
 
         @Override
         boolean isPaintValid(SunGraphics2D sg2d) {
@@ -221,45 +238,77 @@ abstract class XRPaints {
             BufferedImage bi = paint.getImage();
             XRSurfaceData dstData = (XRSurfaceData) sg2d.getDestSurface();
 
-            return getAccSrcSurface(dstData, bi) != null;
+            SurfaceData srcData = dstData.getSourceSurfaceData(bi, SunGraphics2D.TRANSFORM_ISIDENT, CompositeType.SrcOver, null);
+            if (!(srcData instanceof XRSurfaceData)) {
+                // REMIND: this is a hack that attempts to cache the system
+                // memory image from the TexturePaint instance into an
+                // OpenGL texture...
+                srcData = dstData.getSourceSurfaceData(bi, SunGraphics2D.TRANSFORM_ISIDENT, CompositeType.SrcOver, null);
+                if (!(srcData instanceof XRSurfaceData)) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         @Override
         void setXRPaint(SunGraphics2D sg2d, Paint pt) {
             TexturePaint paint = (TexturePaint) pt;
+
             BufferedImage bi = paint.getImage();
+            SurfaceData dstData = sg2d.surfaceData;
+            SurfaceData srcData = dstData.getSourceSurfaceData(bi, SunGraphics2D.TRANSFORM_ISIDENT, CompositeType.SrcOver, null);
+
+            // REMIND: this hack tries to ensure that we have a cached texture
+            if (!(srcData instanceof XRSurfaceData)) {
+                srcData = dstData.getSourceSurfaceData(paint.getImage(), SunGraphics2D.TRANSFORM_ISIDENT, CompositeType.SrcOver, null);
+                if (!(srcData instanceof XRSurfaceData)) {
+                    throw new InternalError("Surface not cachable");
+                }
+            }
+
+            XRSurfaceData x11SrcData = (XRSurfaceData) srcData;
+
+            AffineTransform at = (AffineTransform) sg2d.transform.clone();
             Rectangle2D anchor = paint.getAnchorRect();
-
-            XRSurfaceData dstData = (XRSurfaceData) sg2d.surfaceData;
-            XRSurfaceData srcData = (XRSurfaceData) getAccSrcSurface(dstData, bi);
-
-            AffineTransform at = new AffineTransform();
             at.translate(anchor.getX(), anchor.getY());
             at.scale(anchor.getWidth() / ((double) bi.getWidth()), anchor.getHeight() / ((double) bi.getHeight()));
 
             try {
                 at.invert();
             } catch (NoninvertibleTransformException ex) {
-                at.setToIdentity();
+                at.setToIdentity(); /* TODO: Right thing to do in this case? */
             }
-            srcData.setStaticSrcTx(at);
 
-            srcData.validateAsSource(at, XRUtils.RepeatNormal, XRUtils.ATransOpToXRQuality(sg2d.interpolationType));
-            xrCompMan.setTexturePaint(srcData);
+            x11SrcData.validateAsSource(at, XRUtils.RepeatNormal, XRUtils.ATransOpToXRQuality(sg2d.interpolationType));
+            xrCompMan.setTexturePaint(((XRSurfaceData) srcData));
         }
     }
 
-    public int[] convertToIntArgbPixels(Color[] colors) {
+    public int[] convertToIntArgbPixels(Color[] colors, boolean linear) {
         int[] pixels = new int[colors.length];
         for (int i = 0; i < colors.length; i++) {
-            pixels[i] = colorToIntArgbPixel(colors[i]);
+            pixels[i] = colorToIntArgbPixel(colors[i], linear);
         }
         return pixels;
     }
 
-    public int colorToIntArgbPixel(Color c) {
+    public int colorToIntArgbPixel(Color c, boolean linear) {
         int rgb = c.getRGB();
-        int a = (int) Math.round(xrCompMan.getExtraAlpha() * (rgb >>> 24));
-        return ((a << 24) | (rgb & 0x00FFFFFF));
+
+        int a = rgb >>> 24;
+        int r = (rgb >> 16) & 0xff;
+        int g = (rgb >> 8) & 0xff;
+        int b = (rgb) & 0xff;
+        if (linear) {
+            r = BufferedPaints.convertSRGBtoLinearRGB(r);
+            g = BufferedPaints.convertSRGBtoLinearRGB(g);
+            b = BufferedPaints.convertSRGBtoLinearRGB(b);
+        }
+
+        a *= xrCompMan.getExtraAlpha();
+
+        return ((a << 24) | (r << 16) | (g << 8) | (b));
     }
 }

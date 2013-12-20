@@ -60,7 +60,7 @@ public class XMenuItemPeer implements MenuItemPeer {
      */
 
     /**
-     * Rectangle occupied by menu item in container's
+     * Rectange occupied by menu item in container's
      * coordinates. Filled by map(...) function from
      * XBaseMenuWindow.map()
      */

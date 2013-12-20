@@ -34,9 +34,8 @@ package com.sun.jdi;
  * @author James McIlree
  * @since  1.3
  */
-@jdk.Exported
-public interface LongValue extends PrimitiveValue, Comparable<LongValue> {
-
+public interface LongValue extends PrimitiveValue, Comparable<LongValue>
+{
     /**
      * Returns this LongValue as a long.
      *

@@ -78,7 +78,7 @@ class LinuxFileSystem extends UnixFileSystem {
     Iterable<UnixMountEntry> getMountEntries(String fstab) {
         ArrayList<UnixMountEntry> entries = new ArrayList<>();
         try {
-            long fp = setmntent(Util.toBytes(fstab), Util.toBytes("r"));
+            long fp = setmntent(fstab.getBytes(), "r".getBytes());
             try {
                 for (;;) {
                     UnixMountEntry entry = new UnixMountEntry();

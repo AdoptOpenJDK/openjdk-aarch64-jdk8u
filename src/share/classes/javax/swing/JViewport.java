@@ -94,7 +94,7 @@ import java.io.Serializable;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans&trade;
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -463,7 +463,7 @@ public class JViewport extends JComponent implements Accessible
                     // and paint is received another repaint is queued
                     // indicating part of the view is invalid. There
                     // is no way for JViewport to notice another
-                    // repaint has occurred and it ends up blitting
+                    // repaint has occured and it ends up blitting
                     // what is now a dirty region and the repaint is
                     // never delivered.
                     // It just so happens JTable encounters this
@@ -585,7 +585,7 @@ public class JViewport extends JComponent implements Accessible
      * Returns the insets (border) dimensions as (0,0,0,0), since borders
      * are not supported on a <code>JViewport</code>.
      *
-     * @return a <code>Rectangle</code> of zero dimension and zero origin
+     * @return a <code>Rectange</code> of zero dimension and zero origin
      * @see #setBorder
      */
     public final Insets getInsets() {
@@ -1292,7 +1292,7 @@ public class JViewport extends JComponent implements Accessible
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans&trade;
+     * of all JavaBeans<sup><font size="-2">TM</font></sup>
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
@@ -1761,7 +1761,7 @@ public class JViewport extends JComponent implements Accessible
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans&trade;
+     * of all JavaBeans<sup><font size="-2">TM</font></sup>
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */

@@ -26,7 +26,6 @@
 package sun.util.calendar;
 
 import java.io.ByteArrayInputStream;
-import java.io.BufferedInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.File;
@@ -66,17 +65,8 @@ public final class ZoneInfoFile {
      * @return a set of time zone IDs.
      */
     public static String[] getZoneIds() {
-        int len = regions.length + oldMappings.length;
-        if (!USE_OLDMAPPING) {
-            len += 3;    // EST/HST/MST not in tzdb.dat
-        }
-        String[] ids = Arrays.copyOf(regions, len);
+        String[] ids = Arrays.copyOf(regions, regions.length + oldMappings.length);
         int i = regions.length;
-        if (!USE_OLDMAPPING) {
-            ids[i++] = "EST";
-            ids[i++] = "HST";
-            ids[i++] = "MST";
-        }
         for (int j = 0; j < oldMappings.length; j++) {
             ids[i++] = oldMappings[j][0];
         }
@@ -253,8 +243,7 @@ public final class ZoneInfoFile {
                 try {
                     String libDir = System.getProperty("java.home") + File.separator + "lib";
                     try (DataInputStream dis = new DataInputStream(
-                             new BufferedInputStream(new FileInputStream(
-                                 new File(libDir, "tzdb.dat"))))) {
+                             new FileInputStream(new File(libDir, "tzdb.dat")))) {
                         load(dis);
                     }
                 } catch (Exception x) {
@@ -273,15 +262,7 @@ public final class ZoneInfoFile {
             aliases.put("EST", "America/New_York");
             aliases.put("MST", "America/Denver");
             aliases.put("HST", "Pacific/Honolulu");
-        } else {
-            zones.put("EST", new ZoneInfo("EST", -18000000));
-            zones.put("MST", new ZoneInfo("MST", -25200000));
-            zones.put("HST", new ZoneInfo("HST", -36000000));
         }
-    }
-
-    public static boolean useOldMapping() {
-       return USE_OLDMAPPING;
     }
 
     /**

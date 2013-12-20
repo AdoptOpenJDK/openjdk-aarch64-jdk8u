@@ -50,7 +50,7 @@ public class XMLStreamException extends Exception {
     }
 
     /**
-     * Construct an exception with the associated message.
+     * Construct an exception with the assocated message.
      *
      * @param msg the message to report
      */
@@ -59,7 +59,7 @@ public class XMLStreamException extends Exception {
     }
 
     /**
-     * Construct an exception with the associated exception
+     * Construct an exception with the assocated exception
      *
      * @param th a nested exception
      */
@@ -69,7 +69,7 @@ public class XMLStreamException extends Exception {
     }
 
     /**
-     * Construct an exception with the associated message and exception
+     * Construct an exception with the assocated message and exception
      *
      * @param th a nested exception
      * @param msg the message to report

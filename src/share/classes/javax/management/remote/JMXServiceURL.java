@@ -29,9 +29,6 @@ package javax.management.remote;
 
 import com.sun.jmx.remote.util.ClassLogger;
 import com.sun.jmx.remote.util.EnvHelp;
-import java.io.IOException;
-import java.io.InvalidObjectException;
-import java.io.ObjectInputStream;
 
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -300,7 +297,7 @@ public class JMXServiceURL implements Serializable {
                If we're given an explicit host name that is illegal we
                have to reject it.  (Bug 5057532.)  */
             try {
-                validateHost(host, port);
+                validateHost(host);
             } catch (MalformedURLException e) {
                 if (logger.fineOn()) {
                     logger.fine("JMXServiceURL",
@@ -339,88 +336,48 @@ public class JMXServiceURL implements Serializable {
         validate();
     }
 
-    private static final String INVALID_INSTANCE_MSG =
-            "Trying to deserialize an invalid instance of JMXServiceURL";
-    private void readObject(ObjectInputStream  inputStream) throws IOException, ClassNotFoundException {
-        ObjectInputStream.GetField gf = inputStream.readFields();
-        String h = (String)gf.get("host", null);
-        int p = (int)gf.get("port", -1);
-        String proto = (String)gf.get("protocol", null);
-        String url = (String)gf.get("urlPath", null);
+    private void validate() throws MalformedURLException {
 
-        if (proto == null || url == null || h == null) {
-            StringBuilder sb = new StringBuilder(INVALID_INSTANCE_MSG).append('[');
-            boolean empty = true;
-            if (proto == null) {
-                sb.append("protocol=null");
-                empty = false;
-            }
-            if (h == null) {
-                sb.append(empty ? "" : ",").append("host=null");
-                empty = false;
-            }
-            if (url == null) {
-                sb.append(empty ? "" : ",").append("urlPath=null");
-            }
-            sb.append(']');
-            throw new InvalidObjectException(sb.toString());
-        }
-
-        if (h.contains("[") || h.contains("]")) {
-            throw new InvalidObjectException("Invalid host name: " + h);
-        }
-
-        try {
-            validate(proto, h, p, url);
-            this.protocol = proto;
-            this.host = h;
-            this.port = p;
-            this.urlPath = url;
-        } catch (MalformedURLException e) {
-            throw new InvalidObjectException(INVALID_INSTANCE_MSG + ": " +
-                                             e.getMessage());
-        }
-
-    }
-
-    private void validate(String proto, String h, int p, String url)
-        throws MalformedURLException {
         // Check protocol
-        final int protoEnd = indexOfFirstNotInSet(proto, protocolBitSet, 0);
-        if (protoEnd == 0 || protoEnd < proto.length()
-            || !alphaBitSet.get(proto.charAt(0))) {
+
+        final int protoEnd = indexOfFirstNotInSet(protocol, protocolBitSet, 0);
+        if (protoEnd == 0 || protoEnd < protocol.length()
+            || !alphaBitSet.get(protocol.charAt(0))) {
             throw new MalformedURLException("Missing or invalid protocol " +
-                                            "name: \"" + proto + "\"");
+                                            "name: \"" + protocol + "\"");
         }
 
         // Check host
-        validateHost(h, p);
+
+        validateHost();
 
         // Check port
-        if (p < 0)
-            throw new MalformedURLException("Bad port: " + p);
+
+        if (port < 0)
+            throw new MalformedURLException("Bad port: " + port);
 
         // Check URL path
-        if (url.length() > 0) {
-            if (!url.startsWith("/") && !url.startsWith(";"))
-                throw new MalformedURLException("Bad URL path: " + url);
+
+        if (urlPath.length() > 0) {
+            if (!urlPath.startsWith("/") && !urlPath.startsWith(";"))
+                throw new MalformedURLException("Bad URL path: " + urlPath);
         }
     }
 
-    private void validate() throws MalformedURLException {
-        validate(this.protocol, this.host, this.port, this.urlPath);
-    }
-
-    private static void validateHost(String h, int port)
-            throws MalformedURLException {
-
-        if (h.length() == 0) {
+    private void validateHost() throws MalformedURLException {
+        if (host.length() == 0) {
             if (port != 0) {
                 throw new MalformedURLException("Cannot give port number " +
                                                 "without host name");
             }
             return;
         }
+
+        validateHost(host);
+    }
+
+    private static void validateHost(String h)
+            throws MalformedURLException {
 
         if (isNumericIPv6Address(h)) {
             /* We assume J2SE >= 1.4 here.  Otherwise you can't
@@ -706,22 +663,22 @@ public class JMXServiceURL implements Serializable {
     /**
      * The value returned by {@link #getProtocol()}.
      */
-    private String protocol;
+    private final String protocol;
 
     /**
      * The value returned by {@link #getHost()}.
      */
-    private String host;
+    private final String host;
 
     /**
      * The value returned by {@link #getPort()}.
      */
-    private int port;
+    private final int port;
 
     /**
      * The value returned by {@link #getURLPath()}.
      */
-    private String urlPath;
+    private final String urlPath;
 
     /**
      * Cached result of {@link #toString()}.

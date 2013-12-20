@@ -36,7 +36,6 @@ import java.io.PrintWriter;
 
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
-import java.io.StringWriter;
 
 import java.net.URLEncoder;
 import java.io.UnsupportedEncodingException;
@@ -97,7 +96,7 @@ abstract class QueryHandler {
     }
 
     protected void error(String msg) {
-        println(msg);
+        out.println(msg);
     }
 
     protected void printAnchorStart() {
@@ -161,6 +160,7 @@ abstract class QueryHandler {
             out.println("null");
             return;
         }
+        String name = clazz.getName();
         printAnchorStart();
         out.print("class/");
         print(encodeForURL(clazz));
@@ -208,15 +208,6 @@ abstract class QueryHandler {
         }
     }
 
-    protected void printException(Throwable t) {
-        println(t.getMessage());
-        out.println("<pre>");
-        StringWriter sw = new StringWriter();
-        t.printStackTrace(new PrintWriter(sw));
-        print(sw.toString());
-        out.println("</pre>");
-    }
-
     protected void printHex(long addr) {
         if (snapshot.getIdentifierSize() == 4) {
             out.print(Misc.toHex((int)addr));
@@ -231,9 +222,5 @@ abstract class QueryHandler {
 
     protected void print(String str) {
         out.print(Misc.encodeHtml(str));
-    }
-
-    protected void println(String str) {
-        out.println(Misc.encodeHtml(str));
     }
 }

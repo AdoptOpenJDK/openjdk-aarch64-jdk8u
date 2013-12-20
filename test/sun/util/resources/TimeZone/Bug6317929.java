@@ -130,12 +130,12 @@ public class Bug6317929 {
                                        "(New South Wales)\"");
         tzLocale = locales2Test[1];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("Eastern Normalzeit (Neus\u00fcdwales)"))
+           ("\u00d6stliche Normalzeit (New South Wales)"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"Eastern Normalzeit " +
-                                       "(Neus\u00fcdwales)\"");
+                                       "\"\u00d6stliche Normalzeit " +
+                                       "(New South Wales)\"");
         tzLocale = locales2Test[2];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
            ("Hora est\u00e1ndar Oriental (Nueva Gales del Sur)"))
@@ -154,53 +154,53 @@ public class Bug6317929 {
                                        "(Nouvelle-Galles du Sud)\"");
         tzLocale = locales2Test[4];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("Ora standard dell'Australia orientale (Nuovo Galles del Sud)"))
+           ("Ora solare dell'Australia orientale (Nuovo Galles del Sud)"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"Ora standard dell'Australia orientale " +
+                                       "\"Ora solare dell'Australia orientale " +
                                        "(Nuovo Galles del Sud)\"");
         tzLocale = locales2Test[5];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("\u6771\u90E8\u6A19\u6E96\u6642" +
-            "(\u30CB\u30E5\u30FC\u30B5\u30A6\u30B9\u30A6\u30A7\u30FC\u30EB\u30BA)"))
+           ("\u6771\u90e8\u6a19\u6e96\u6642 " +
+            "(\u30cb\u30e5\u30fc\u30b5\u30a6\u30b9\u30a6\u30a7\u30fc\u30eb\u30ba)"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"\u6771\u90E8\u6A19\u6E96\u6642" +
-                                       "(\u30CB\u30E5\u30FC\u30B5\u30A6\u30B9" +
-                                       "\u30A6\u30A7\u30FC\u30EB\u30BA)\"");
+                                       "\"\u6771\u90e8\u6a19\u6e96\u6642 " +
+                                       "(\u30cb\u30e5\u30fc\u30b5\u30a6\u30b9" +
+                                       "\u30a6\u30a7\u30fc\u30eb\u30ba)\"");
         tzLocale = locales2Test[6];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("\uB3D9\uBD80 \uD45C\uC900\uC2DC(\uB274\uC0AC\uC6B0\uC2A4\uC6E8\uC77C\uC988)"))
+           ("\ub3d9\ubd80 \ud45c\uc900\uc2dc(\ub274 \uc0ac\uc6b0\uc2a4 \uc6e8\uc77c\uc988)"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"\uB3D9\uBD80 \uD45C\uC900\uC2DC" +
-                                       "(\uB274\uC0AC\uC6B0\uC2A4\uC6E8\uC77C\uC988)\"");
+                                       "\"\ub3d9\ubd80 \ud45c\uc900\uc2dc" +
+                                       "(\ub274 \uc0ac\uc6b0\uc2a4 \uc6e8\uc77c\uc988)\"");
         tzLocale = locales2Test[7];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("\u00D6stlig standardtid (New South Wales)"))
+           ("Eastern, normaltid (Nya Sydwales)"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"\u00D6stlig standardtid " +
-                                       "(New South Wales)\"");
+                                       "\"Eastern, normaltid " +
+                                       "(Nya Sydwales)\"");
         tzLocale = locales2Test[8];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("\u4E1C\u90E8\u6807\u51C6\u65F6\u95F4 (\u65B0\u5357\u5A01\u5C14\u65AF)"))
+           ("\u4e1c\u90e8\u6807\u51c6\u65f6\u95f4\uff08\u65b0\u5357\u5a01\u5c14\u65af\uff09"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"\u4E1C\u90E8\u6807\u51C6\u65F6\u95F4 " +
-                                       "(\u65B0\u5357\u5A01\u5C14\u65AF)\"");
+                                       "\"\u4e1c\u90e8\u6807\u51c6\u65f6\u95f4 " +
+                                       "\uff08\u65b0\u5357\u5a01\u5c14\u65af\uff09\"");
         tzLocale = locales2Test[9];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("\u6771\u90E8\u6A19\u6E96\u6642\u9593 (\u65B0\u5357\u5A01\u723E\u65AF)"))
+           ("\u6771\u65b9\u6a19\u6e96\u6642\u9593 (\u65b0\u5357\u5a01\u723e\u65af)"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"\u6771\u90E8\u6A19\u6E96\u6642\u9593 " +
-                                       "(\u65B0\u5357\u5A01\u723E\u65AF)\"");
+                                       "\"\u6771\u65b9\u6a19\u6e96\u6642\u9593 " +
+                                       "(\u65b0\u5357\u5a01\u723e\u65af)\"");
    }
 }

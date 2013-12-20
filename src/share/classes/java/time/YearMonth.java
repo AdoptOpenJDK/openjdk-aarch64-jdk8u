@@ -77,6 +77,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.chrono.Chronology;
 import java.time.chrono.IsoChronology;
@@ -91,7 +92,6 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.TemporalUnit;
 import java.time.temporal.UnsupportedTemporalTypeException;
@@ -245,15 +245,13 @@ public final class YearMonth
         if (temporal instanceof YearMonth) {
             return (YearMonth) temporal;
         }
-        Objects.requireNonNull(temporal, "temporal");
         try {
             if (IsoChronology.INSTANCE.equals(Chronology.from(temporal)) == false) {
                 temporal = LocalDate.from(temporal);
             }
             return of(temporal.get(YEAR), temporal.get(MONTH_OF_YEAR));
         } catch (DateTimeException ex) {
-            throw new DateTimeException("Unable to obtain YearMonth from TemporalAccessor: " +
-                    temporal + " of type " + temporal.getClass().getName(), ex);
+            throw new DateTimeException("Unable to obtain YearMonth from TemporalAccessor: " + temporal.getClass(), ex);
         }
     }
 
@@ -945,9 +943,9 @@ public final class YearMonth
     @SuppressWarnings("unchecked")
     @Override
     public <R> R query(TemporalQuery<R> query) {
-        if (query == TemporalQueries.chronology()) {
+        if (query == TemporalQuery.chronology()) {
             return (R) IsoChronology.INSTANCE;
-        } else if (query == TemporalQueries.precision()) {
+        } else if (query == TemporalQuery.precision()) {
             return (R) MONTHS;
         }
         return Temporal.super.query(query);
@@ -994,8 +992,7 @@ public final class YearMonth
      * objects in terms of a single {@code TemporalUnit}.
      * The start and end points are {@code this} and the specified year-month.
      * The result will be negative if the end is before the start.
-     * The {@code Temporal} passed to this method is converted to a
-     * {@code YearMonth} using {@link #from(TemporalAccessor)}.
+     * The {@code Temporal} passed to this method must be a {@code YearMonth}.
      * For example, the period in years between two year-months can be calculated
      * using {@code startYearMonth.until(endYearMonth, YEARS)}.
      * <p>
@@ -1021,22 +1018,25 @@ public final class YearMonth
      * <p>
      * If the unit is not a {@code ChronoUnit}, then the result of this method
      * is obtained by invoking {@code TemporalUnit.between(Temporal, Temporal)}
-     * passing {@code this} as the first argument and the converted input temporal
-     * as the second argument.
+     * passing {@code this} as the first argument and the input temporal as
+     * the second argument.
      * <p>
      * This instance is immutable and unaffected by this method call.
      *
-     * @param endExclusive  the end date, exclusive, which is converted to a {@code YearMonth}, not null
+     * @param endYearMonth  the end year-month, which must be a {@code YearMonth}, not null
      * @param unit  the unit to measure the amount in, not null
      * @return the amount of time between this year-month and the end year-month
-     * @throws DateTimeException if the amount cannot be calculated, or the end
-     *  temporal cannot be converted to a {@code YearMonth}
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws UnsupportedTemporalTypeException if the unit is not supported
      * @throws ArithmeticException if numeric overflow occurs
      */
     @Override
-    public long until(Temporal endExclusive, TemporalUnit unit) {
-        YearMonth end = YearMonth.from(endExclusive);
+    public long until(Temporal endYearMonth, TemporalUnit unit) {
+        if (endYearMonth instanceof YearMonth == false) {
+            Objects.requireNonNull(endYearMonth, "endYearMonth");
+            throw new DateTimeException("Unable to calculate amount as objects are of two different types");
+        }
+        YearMonth end = (YearMonth) endYearMonth;
         if (unit instanceof ChronoUnit) {
             long monthsUntil = end.getProlepticMonth() - getProlepticMonth();  // no overflow
             switch ((ChronoUnit) unit) {
@@ -1049,7 +1049,7 @@ public final class YearMonth
             }
             throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
-        return unit.between(this, end);
+        return unit.between(this, endYearMonth);
     }
 
     /**

@@ -82,6 +82,9 @@ md_connect(char *hostname, unsigned short port)
     struct sockaddr_in s;
     int fd;
 
+    /* create a socket */
+    fd = (int)socket(AF_INET, SOCK_STREAM, 0);
+
     /* find remote host's addr from name */
     if ((hentry = gethostbyname(hostname)) == NULL) {
         return -1;
@@ -94,15 +97,8 @@ md_connect(char *hostname, unsigned short port)
     s.sin_port = htons(port);
     s.sin_family = AF_INET;
 
-    /* create a socket */
-    fd = (int)socket(AF_INET, SOCK_STREAM, 0);
-    if (INVALID_SOCKET == fd) {
-        return 0;
-    }
-
     /* now try connecting */
-    if (SOCKET_ERROR == connect(fd, (struct sockaddr*)&s, sizeof(s))) {
-        closesocket(fd);
+    if (-1 == connect(fd, (struct sockaddr*)&s, sizeof(s))) {
         return 0;
     }
     return fd;

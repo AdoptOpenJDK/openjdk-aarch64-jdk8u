@@ -278,7 +278,7 @@ final class SortedOps {
     }
 
     /**
-     * {@link Sink} for implementing sort on SIZED reference streams.
+     * {@link ForkJoinTask} for implementing sort on SIZED reference streams.
      */
     private static final class SizedRefSortingSink<T> extends Sink.ChainedReference<T, T> {
         private final Comparator<? super T> comparator;
@@ -293,12 +293,16 @@ final class SortedOps {
         @Override
         public void begin(long size) {
             if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             array = (T[]) new Object[(int) size];
         }
 
         @Override
         public void end() {
+            // Need to use offset rather than array.length since the downstream
+            // many be short-circuiting
+            // @@@ A better approach is to know if the downstream short-circuits
+            //     and check sink.cancellationRequested
             Arrays.sort(array, 0, offset, comparator);
             downstream.begin(offset);
             for (int i = 0; i < offset; i++)
@@ -327,8 +331,6 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
             list = (size >= 0) ? new ArrayList<T>((int) size) : new ArrayList<T>();
         }
 
@@ -361,7 +363,7 @@ final class SortedOps {
         @Override
         public void begin(long size) {
             if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             array = new int[(int) size];
         }
 
@@ -393,8 +395,6 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
             b = (size > 0) ? new SpinedBuffer.OfInt((int) size) : new SpinedBuffer.OfInt();
         }
 
@@ -428,7 +428,7 @@ final class SortedOps {
         @Override
         public void begin(long size) {
             if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             array = new long[(int) size];
         }
 
@@ -460,8 +460,6 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
             b = (size > 0) ? new SpinedBuffer.OfLong((int) size) : new SpinedBuffer.OfLong();
         }
 
@@ -495,7 +493,7 @@ final class SortedOps {
         @Override
         public void begin(long size) {
             if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             array = new double[(int) size];
         }
 
@@ -527,8 +525,6 @@ final class SortedOps {
 
         @Override
         public void begin(long size) {
-            if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
             b = (size > 0) ? new SpinedBuffer.OfDouble((int) size) : new SpinedBuffer.OfDouble();
         }
 

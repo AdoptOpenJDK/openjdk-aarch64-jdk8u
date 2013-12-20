@@ -227,7 +227,7 @@ static void AWT_NSUncaughtExceptionHandler(NSException *exception) {
     id jrsAppKitAWTClass = objc_getClass("JRSAppKitAWT");
     SEL markAppSel = @selector(markAppIsDaemon);
     if (![jrsAppKitAWTClass respondsToSelector:markAppSel]) return NO;
-    return [jrsAppKitAWTClass performSelector:markAppSel] ? YES : NO;
+    return (BOOL)[jrsAppKitAWTClass performSelector:markAppSel];
 }
 
 + (void)appKitIsRunning:(id)arg {
@@ -312,17 +312,15 @@ AWT_ASSERT_APPKIT_THREAD;
         if (verbose) AWT_DEBUG_LOG(@"got out of the AppKit startup mutex");
     }
 
-    if (!headless) {
-        // Don't set the delegate until the NSApplication has been created and
-        // its finishLaunching has initialized it.
-        //  ApplicationDelegate is the support code for com.apple.eawt.
-        [ThreadUtilities performOnMainThreadWaiting:YES block:^(){
-            id<NSApplicationDelegate> delegate = [ApplicationDelegate sharedDelegate];
-            if (delegate != nil) {
-                OSXAPP_SetApplicationDelegate(delegate);
-            }        
-        }];
-    }
+    // Don't set the delegate until the NSApplication has been created and
+    // its finishLaunching has initialized it.
+    //  ApplicationDelegate is the support code for com.apple.eawt.
+    [ThreadUtilities performOnMainThreadWaiting:YES block:^(){
+        id<NSApplicationDelegate> delegate = [ApplicationDelegate sharedDelegate];
+        if (delegate != nil) {
+            OSXAPP_SetApplicationDelegate(delegate);
+        }        
+    }];
 }
 
 - (void)starter:(NSArray*)args {
@@ -339,8 +337,6 @@ AWT_ASSERT_APPKIT_THREAD;
 
     // Headless mode trumps either ordinary AWT or SWT-in-AWT mode.  Declare us a daemon and return.
     if (headless) {
-        // Note that we don't install run loop observers in headless mode
-        // because we don't need them (see 7174704)
         if (!forceEmbeddedMode) {
             setUpAppKitThreadName();
         }

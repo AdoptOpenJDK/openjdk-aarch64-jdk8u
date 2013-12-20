@@ -156,7 +156,7 @@ class $classname {
         // a resume.
 
         $classname xx = new $classname();
-        System.out.println("threadid="+Thread.currentThread().getId());
+        
         bkpt();
 
         // test all possible return types
@@ -197,8 +197,6 @@ dojdbCmds()
 
     # test all possible return types
     runToBkpt @1
-    debuggeeMatchRegexp "s/threadid=\(.*\)/\1/g"
-    threadid=$?
     cmd untrace
 
     cmd trace methods
@@ -228,7 +226,7 @@ dojdbCmds()
 
     # trace exit of methods with all the return values
     # (but just check a couple of them)
-    cmd trace go method exits $threadid
+    cmd trace go exits
     cmd cont
     jdbFailIfNotPresent "instance of JdbMethodExitTest"
     jdbFailIfNotPresent "return value = 8"
@@ -237,7 +235,7 @@ dojdbCmds()
     cmd step up
 
 
-    cmd trace methods $threadid
+    cmd trace methods
     cmd cont
     jdbFailIfNotPresent "Method entered:"
     cmd cont
@@ -245,9 +243,7 @@ dojdbCmds()
     cmd step up
 
 
-    cmd trace go methods $threadid
-    cmd cont
-    cmd cont
+    cmd trace go methods
     cmd cont
     jdbFailIfNotPresent "Method entered: \"thread=main\", JdbMethodExitTest.traceMethods1"
     jdbFailIfNotPresent 'Method exited: .* JdbMethodExitTest.traceMethods1'
@@ -255,14 +251,14 @@ dojdbCmds()
     cmd step up
     
 
-    cmd trace method exits $threadid
+    cmd trace method exits
     cmd cont
     jdbFailIfNotPresent "Method exited: return value = \"traceExits\""
     cmd untrace
     cmd step up
 
 
-    cmd trace go method exits $threadid
+    cmd trace go method exits
     cmd cont
     jdbFailIfNotPresent 'Method exited: .* JdbMethodExitTest.traceExits1'
     cmd untrace
@@ -270,7 +266,7 @@ dojdbCmds()
 
 
     cmd step            # step into traceExit()
-    cmd trace method exit $threadid
+    cmd trace method exit
     cmd cont
     jdbFailIfNotPresent "Method exited: return value = \"traceExit\""
     cmd untrace
@@ -279,7 +275,7 @@ dojdbCmds()
 
     cmd step
     cmd step           # skip over setting return value in caller :-(
-    cmd trace go method exit $threadid
+    cmd trace go method exit
     cmd cont
     jdbFailIfNotPresent 'Method exited: .*JdbMethodExitTest.traceExit1'
     cmd quit

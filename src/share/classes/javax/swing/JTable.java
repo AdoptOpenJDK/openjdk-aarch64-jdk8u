@@ -52,7 +52,6 @@ import java.text.MessageFormat;
 
 import javax.print.attribute.*;
 import javax.print.PrintService;
-import sun.reflect.misc.ReflectUtil;
 
 import sun.swing.SwingUtilities2;
 import sun.swing.SwingUtilities2.Section;
@@ -63,7 +62,7 @@ import sun.swing.SwingLazyValue;
 /**
  * The <code>JTable</code> is used to display and edit regular two-dimensional tables
  * of cells.
- * See <a href="http://docs.oracle.com/javase/tutorial/uiswing/components/table.html">How to Use Tables</a>
+ * See <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/table.html">How to Use Tables</a>
  * in <em>The Java Tutorial</em>
  * for task-oriented documentation and examples of using <code>JTable</code>.
  *
@@ -201,7 +200,7 @@ import sun.swing.SwingLazyValue;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans&trade;
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -2490,7 +2489,7 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
      * The default value of this property is defined by the look
      * and feel implementation.
      * <p>
-     * This is a <a href="http://docs.oracle.com/javase/tutorial/javabeans/writing/properties.html">JavaBeans</a> bound property.
+     * This is a <a href="http://java.sun.com/docs/books/tutorial/javabeans/properties/bound.html">JavaBeans</a> bound property.
      *
      * @param selectionForeground  the <code>Color</code> to use in the foreground
      *                             for selected list items
@@ -2528,7 +2527,7 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
      * The default value of this property is defined by the look
      * and feel implementation.
      * <p>
-     * This is a <a href="http://docs.oracle.com/javase/tutorial/javabeans/writing/properties.html">JavaBeans</a> bound property.
+     * This is a <a href="http://java.sun.com/docs/books/tutorial/javabeans/properties/bound.html">JavaBeans</a> bound property.
      *
      * @param selectionBackground  the <code>Color</code> to use for the background
      *                             of selected cells
@@ -2991,7 +2990,7 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
 
     /**
      * Causes this table to lay out its rows and columns.  Overridden so
-     * that columns can be resized to accommodate a change in the size of
+     * that columns can be resized to accomodate a change in the size of
      * a containing parent.
      * Resizes one or more of the columns in the table
      * so that the total width of all of this <code>JTable</code>'s
@@ -3014,7 +3013,7 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
      * The modes are:
      * <ul>
      * <li>  AUTO_RESIZE_OFF: Don't automatically adjust the column's
-     * widths at all. Use a horizontal scrollbar to accommodate the
+     * widths at all. Use a horizontal scrollbar to accomodate the
      * columns when their sum exceeds the width of the
      * <code>Viewport</code>.  If the <code>JTable</code> is not
      * enclosed in a <code>JScrollPane</code> this may
@@ -3104,7 +3103,7 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
      * <P>
      * The overall effect is that the total size moves that same percentage,
      * k, towards the total minimum or maximum and that percentage guarantees
-     * accommodation of the required space, DELTA.
+     * accomodation of the required space, DELTA.
      *
      * <H4>Details</H4>
      * <P>
@@ -5463,15 +5462,14 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
             // they have the option to replace the value with
             // null or use escape to restore the original.
             // For Strings, return "" for backward compatibility.
-            try {
-                if ("".equals(s)) {
-                    if (constructor.getDeclaringClass() == String.class) {
-                        value = s;
-                    }
-                    return super.stopCellEditing();
+            if ("".equals(s)) {
+                if (constructor.getDeclaringClass() == String.class) {
+                    value = s;
                 }
+                return super.stopCellEditing();
+            }
 
-                SwingUtilities2.checkAccess(constructor.getModifiers());
+            try {
                 value = constructor.newInstance(new Object[]{s});
             }
             catch (Exception e) {
@@ -5495,8 +5493,6 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
                 if (type == Object.class) {
                     type = String.class;
                 }
-                ReflectUtil.checkPackageAccess(type);
-                SwingUtilities2.checkAccess(type.getModifiers());
                 constructor = type.getConstructor(argTypes);
             }
             catch (Exception e) {
@@ -6579,7 +6575,7 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans&trade;
+     * of all JavaBeans<sup><font size="-2">TM</font></sup>
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */

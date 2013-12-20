@@ -49,7 +49,7 @@ public class SignatureGetAlgorithm {
 
     public static class TestProvider extends Provider {
         TestProvider() {
-            super("testSignatureGetAlgorithm", 1.0, "test Signatures");
+            super("test", 1.0, "test");
             put("Signature.MySignatureAlg",
                 "SignatureGetAlgorithm$MySignatureAlg");
         }

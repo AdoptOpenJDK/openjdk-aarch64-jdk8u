@@ -632,7 +632,7 @@ public class PiscesRenderingEngine extends RenderingEngine {
 
     /**
      * Returns the minimum pen width that the antialiasing rasterizer
-     * can represent without dropouts occurring.
+     * can represent without dropouts occuring.
      * @since 1.7
      */
     public float getMinimumAAPenSize() {

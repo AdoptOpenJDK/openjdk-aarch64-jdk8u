@@ -56,9 +56,9 @@ class WRobotPeer extends WObjectPeer implements RobotPeer
     public native void keyRelease( int keycode );
 
     public int getRGBPixel(int x, int y) {
-         // See 7002846: that's ineffective, but works correctly with non-opaque windows
-        return getRGBPixels(new Rectangle(x, y, 1, 1))[0];
+        return getRGBPixelImpl(x, y);
     }
+    public native int getRGBPixelImpl(int x, int y);
 
     public int [] getRGBPixels(Rectangle bounds) {
         int pixelArray[] = new int[bounds.width*bounds.height];

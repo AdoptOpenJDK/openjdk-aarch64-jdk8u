@@ -284,15 +284,10 @@ public class GeneratorAdapter extends LocalVariablesSorter {
      *            the method's name.
      * @param desc
      *            the method's descriptor (see {@link Type Type}).
-     * @throws IllegalStateException
-     *             If a subclass calls this constructor.
      */
     public GeneratorAdapter(final MethodVisitor mv, final int access,
             final String name, final String desc) {
         this(Opcodes.ASM5, mv, access, name, desc);
-        if (getClass() != GeneratorAdapter.class) {
-            throw new IllegalStateException();
-        }
     }
 
     /**
@@ -1405,11 +1400,11 @@ public class GeneratorAdapter extends LocalVariablesSorter {
      *            the method to be invoked.
      */
     private void invokeInsn(final int opcode, final Type type,
-            final Method method, final boolean itf) {
+            final Method method) {
         String owner = type.getSort() == Type.ARRAY ? type.getDescriptor()
                 : type.getInternalName();
         mv.visitMethodInsn(opcode, owner, method.getName(),
-                method.getDescriptor(), itf);
+                method.getDescriptor());
     }
 
     /**
@@ -1421,7 +1416,7 @@ public class GeneratorAdapter extends LocalVariablesSorter {
      *            the method to be invoked.
      */
     public void invokeVirtual(final Type owner, final Method method) {
-        invokeInsn(Opcodes.INVOKEVIRTUAL, owner, method, false);
+        invokeInsn(Opcodes.INVOKEVIRTUAL, owner, method);
     }
 
     /**
@@ -1433,7 +1428,7 @@ public class GeneratorAdapter extends LocalVariablesSorter {
      *            the constructor to be invoked.
      */
     public void invokeConstructor(final Type type, final Method method) {
-        invokeInsn(Opcodes.INVOKESPECIAL, type, method, false);
+        invokeInsn(Opcodes.INVOKESPECIAL, type, method);
     }
 
     /**
@@ -1445,7 +1440,7 @@ public class GeneratorAdapter extends LocalVariablesSorter {
      *            the method to be invoked.
      */
     public void invokeStatic(final Type owner, final Method method) {
-        invokeInsn(Opcodes.INVOKESTATIC, owner, method, false);
+        invokeInsn(Opcodes.INVOKESTATIC, owner, method);
     }
 
     /**
@@ -1457,7 +1452,7 @@ public class GeneratorAdapter extends LocalVariablesSorter {
      *            the method to be invoked.
      */
     public void invokeInterface(final Type owner, final Method method) {
-        invokeInsn(Opcodes.INVOKEINTERFACE, owner, method, true);
+        invokeInsn(Opcodes.INVOKEINTERFACE, owner, method);
     }
 
     /**

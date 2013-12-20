@@ -188,7 +188,7 @@ public class JVM_MANAGEMENT_MIB_IMPL extends JVM_MANAGEMENT_MIB {
                     sendTrap(trap, list);
                 }catch(Exception e) {
                     log.error("handleNotification",
-                              "Exception occurred : " + e);
+                              "Exception occured : " + e);
                 }
             }
         }
@@ -243,7 +243,7 @@ public class JVM_MANAGEMENT_MIB_IMPL extends JVM_MANAGEMENT_MIB {
                 adaptor.snmpV2Trap(peer, trap, list, null);
             }catch(Exception e) {
                 log.error("sendTrap",
-                          "Exception occurred while sending trap to [" +
+                          "Exception occured while sending trap to [" +
                           target + "]. Exception : " + e);
                 log.debug("sendTrap",e);
             }

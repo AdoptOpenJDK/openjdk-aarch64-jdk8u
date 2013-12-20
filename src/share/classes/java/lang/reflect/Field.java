@@ -82,6 +82,8 @@ class Field extends AccessibleObject implements Member {
     // currently only two levels deep (i.e., one root Field and
     // potentially many Field objects pointing to it.)
     private Field               root;
+    // This is set by the vm at Field creation
+    private byte[]              typeAnnotations;
 
     // Generics infrastructure
 
@@ -147,6 +149,7 @@ class Field extends AccessibleObject implements Member {
         res.fieldAccessor = fieldAccessor;
         res.overrideFieldAccessor = overrideFieldAccessor;
 
+        res.typeAnnotations = typeAnnotations;
         return res;
     }
 
@@ -1123,7 +1126,7 @@ class Field extends AccessibleObject implements Member {
     public <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
         Objects.requireNonNull(annotationClass);
 
-        return AnnotationSupport.getDirectlyAndIndirectlyPresent(declaredAnnotations(), annotationClass);
+        return AnnotationSupport.getMultipleAnnotations(declaredAnnotations(), annotationClass);
     }
 
     /**
@@ -1145,8 +1148,6 @@ class Field extends AccessibleObject implements Member {
         return declaredAnnotations;
     }
 
-    private native byte[] getTypeAnnotationBytes0();
-
     /**
      * Returns an AnnotatedType object that represents the use of a type to specify
      * the declared type of the field represented by this Field.
@@ -1156,7 +1157,7 @@ class Field extends AccessibleObject implements Member {
      * @since 1.8
      */
     public AnnotatedType getAnnotatedType() {
-        return TypeAnnotationParser.buildAnnotatedType(getTypeAnnotationBytes0(),
+        return TypeAnnotationParser.buildAnnotatedType(typeAnnotations,
                                                        sun.misc.SharedSecrets.getJavaLangAccess().
                                                            getConstantPool(getDeclaringClass()),
                                                        this,

@@ -44,7 +44,7 @@ import sun.awt.AWTAccessor;
  * <p>
  * <img src="doc-files/MenuBar-1.gif"
  * alt="Menu labeled Examples, containing items Basic, Simple, Check, and More Examples. The Check item is a CheckBoxMenuItem instance, in the off state."
- * style="float:center; margin: 7px 10px;">
+ * ALIGN=center HSPACE=10 VSPACE=7>
  * <p>
  * The item labeled <code>Check</code> shows a check box menu item
  * in its "off" state.
@@ -180,7 +180,7 @@ public class CheckboxMenuItem extends MenuItem implements ItemSelectable, Access
     }
 
     /**
-     * Sets this check box menu item to the specified state.
+     * Sets this check box menu item to the specifed state.
      * The boolean value <code>true</code> indicates "on" while
      * <code>false</code> indicates "off."
      *

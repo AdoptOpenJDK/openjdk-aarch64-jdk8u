@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,10 +26,8 @@
 
 package sun.reflect.misc;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import java.util.Arrays;
 import sun.reflect.Reflection;
 
 public final class ReflectUtil {
@@ -251,60 +249,5 @@ public final class ReflectUtil {
         int i = name.lastIndexOf('.');
         String pkg = (i != -1) ? name.substring(0, i) : "";
         return Proxy.isProxyClass(cls) && !pkg.equals(PROXY_PACKAGE);
-    }
-
-    /**
-     * Check if the given method is a method declared in the proxy interface
-     * implemented by the given proxy instance.
-     *
-     * @param proxy a proxy instance
-     * @param method an interface method dispatched to a InvocationHandler
-     *
-     * @throws IllegalArgumentException if the given proxy or method is invalid.
-     */
-    public static void checkProxyMethod(Object proxy, Method method) {
-        // check if it is a valid proxy instance
-        if (proxy == null || !Proxy.isProxyClass(proxy.getClass())) {
-            throw new IllegalArgumentException("Not a Proxy instance");
-}
-        if (Modifier.isStatic(method.getModifiers())) {
-            throw new IllegalArgumentException("Can't handle static method");
-        }
-
-        Class<?> c = method.getDeclaringClass();
-        if (c == Object.class) {
-            String name = method.getName();
-            if (name.equals("hashCode") || name.equals("equals") || name.equals("toString")) {
-                return;
-            }
-        }
-
-        if (isSuperInterface(proxy.getClass(), c)) {
-            return;
-        }
-
-        // disallow any method not declared in one of the proxy intefaces
-        throw new IllegalArgumentException("Can't handle: " + method);
-    }
-
-    private static boolean isSuperInterface(Class<?> c, Class<?> intf) {
-        for (Class<?> i : c.getInterfaces()) {
-            if (i == intf) {
-                return true;
-            }
-            if (isSuperInterface(i, intf)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Checks if {@code Class cls} is a VM-anonymous class
-     * as defined by {@link sun.misc.Unsafe#defineAnonymousClass}
-     * (not to be confused with a Java Language anonymous inner class).
-     */
-    public static boolean isVMAnonymousClass(Class<?> cls) {
-        return cls.getName().indexOf("/") > -1;
     }
 }

@@ -73,7 +73,6 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.UnsupportedTemporalTypeException;
 import java.time.temporal.ValueRange;
@@ -218,8 +217,7 @@ public enum Month implements TemporalAccessor, TemporalAdjuster {
             }
             return of(temporal.get(MONTH_OF_YEAR));
         } catch (DateTimeException ex) {
-            throw new DateTimeException("Unable to obtain Month from TemporalAccessor: " +
-                    temporal + " of type " + temporal.getClass().getName(), ex);
+            throw new DateTimeException("Unable to obtain Month from TemporalAccessor: " + temporal.getClass(), ex);
         }
     }
 
@@ -561,9 +559,9 @@ public enum Month implements TemporalAccessor, TemporalAdjuster {
     @SuppressWarnings("unchecked")
     @Override
     public <R> R query(TemporalQuery<R> query) {
-        if (query == TemporalQueries.chronology()) {
+        if (query == TemporalQuery.chronology()) {
             return (R) IsoChronology.INSTANCE;
-        } else if (query == TemporalQueries.precision()) {
+        } else if (query == TemporalQuery.precision()) {
             return (R) MONTHS;
         }
         return TemporalAccessor.super.query(query);

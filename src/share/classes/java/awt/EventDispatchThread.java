@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2010, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,11 +25,19 @@
 
 package java.awt;
 
+import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.Method;
+import java.security.AccessController;
+import sun.security.action.GetPropertyAction;
+import sun.awt.AWTAutoShutdown;
+import sun.awt.SunToolkit;
+import sun.awt.AppContext;
 
 import java.util.ArrayList;
+import java.util.List;
 import sun.util.logging.PlatformLogger;
 
 import sun.awt.dnd.SunDragSourceContextPeer;
@@ -59,7 +67,8 @@ class EventDispatchThread extends Thread {
     private static final PlatformLogger eventLog = PlatformLogger.getLogger("java.awt.event.EventDispatchThread");
 
     private EventQueue theQueue;
-    private volatile boolean doDispatch = true;
+    private boolean doDispatch = true;
+    private volatile boolean shutdown = false;
 
     private static final int ANY_EVENT = -1;
 
@@ -77,15 +86,24 @@ class EventDispatchThread extends Thread {
         doDispatch = false;
     }
 
+    public void interrupt() {
+        shutdown = true;
+        super.interrupt();
+    }
+
     public void run() {
-        try {
-            pumpEvents(new Conditional() {
-                public boolean evaluate() {
-                    return true;
+        while (true) {
+            try {
+                pumpEvents(new Conditional() {
+                    public boolean evaluate() {
+                        return true;
+                    }
+                });
+            } finally {
+                if(getEventQueue().detachDispatchThread(this, shutdown)) {
+                    break;
                 }
-            });
-        } finally {
-            getEventQueue().detachDispatchThread(this);
+            }
         }
     }
 
@@ -112,7 +130,8 @@ class EventDispatchThread extends Thread {
     void pumpEventsForFilter(int id, Conditional cond, EventFilter filter) {
         addEventFilter(filter);
         doDispatch = true;
-        while (doDispatch && !isInterrupted() && cond.evaluate()) {
+        shutdown |= isInterrupted();
+        while (doDispatch && !shutdown && cond.evaluate()) {
             pumpOneEventForFilters(id);
         }
         removeEventFilter(filter);
@@ -204,12 +223,12 @@ class EventDispatchThread extends Thread {
             }
         }
         catch (ThreadDeath death) {
-            doDispatch = false;
+            shutdown = true;
             throw death;
         }
         catch (InterruptedException interruptedException) {
-            doDispatch = false; // AppContext.dispose() interrupts all
-                                // Threads in the AppContext
+            shutdown = true; // AppContext.dispose() interrupts all
+                             // Threads in the AppContext
         }
         catch (Throwable e) {
             processException(e);

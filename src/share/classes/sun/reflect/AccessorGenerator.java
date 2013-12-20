@@ -379,10 +379,6 @@ class AccessorGenerator implements ClassFileConstants {
         return Modifier.isStatic(modifiers);
     }
 
-    protected boolean isPrivate() {
-        return Modifier.isPrivate(modifiers);
-    }
-
     /** Returns class name in "internal" form (i.e., '/' separators
         instead of '.') */
     protected static String getClassName

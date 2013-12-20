@@ -31,15 +31,16 @@ package com.sun.jdi.request;
  * @author Robert Field
  * @since  1.3
  */
-@jdk.Exported
-public class DuplicateRequestException extends RuntimeException {
+public class DuplicateRequestException extends RuntimeException
+{
     private static final long serialVersionUID = -3719784920313411060L;
-
-    public DuplicateRequestException() {
+    public DuplicateRequestException()
+    {
         super();
     }
 
-    public DuplicateRequestException(String s) {
+    public DuplicateRequestException(String s)
+    {
         super(s);
     }
 }

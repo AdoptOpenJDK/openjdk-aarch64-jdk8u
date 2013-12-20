@@ -45,7 +45,7 @@ case "$OS" in
     ;;
 esac
 
-KT="$TESTJAVA${FS}bin${FS}keytool -storepass changeit -keypass changeit -keyalg rsa"
+KT="$TESTJAVA${FS}bin${FS}keytool -storepass changeit -keypass changeit"
 JAR=$TESTJAVA${FS}bin${FS}jar
 JARSIGNER="$TESTJAVA${FS}bin${FS}jarsigner"
 

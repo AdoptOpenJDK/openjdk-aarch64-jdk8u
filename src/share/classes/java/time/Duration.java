@@ -141,7 +141,7 @@ public final class Duration
     /**
      * The pattern for parsing.
      */
-    private static final Pattern PATTERN =
+    private final static Pattern PATTERN =
             Pattern.compile("([-+]?)P(?:([-+]?[0-9]+)D)?" +
                     "(T(?:([-+]?[0-9]+)H)?(?:([-+]?[0-9]+)M)?(?:([-+]?[0-9]+)(?:[.,]([0-9]{0,9}))?S)?)?",
                     Pattern.CASE_INSENSITIVE);
@@ -441,13 +441,9 @@ public final class Duration
 
     //-----------------------------------------------------------------------
     /**
-     * Obtains a {@code Duration} representing the duration between two temporal objects.
+     * Obtains a {@code Duration} representing the duration between two instants.
      * <p>
-     * This calculates the duration between two temporal objects. If the objects
-     * are of different types, then the duration is calculated based on the type
-     * of the first object. For example, if the first argument is a {@code LocalTime}
-     * then the second argument is converted to a {@code LocalTime}.
-     * <p>
+     * This calculates the duration between two temporal objects of the same type.
      * The specified temporal objects must support the {@link ChronoUnit#SECONDS SECONDS} unit.
      * For full accuracy, either the {@link ChronoUnit#NANOS NANOS} unit or the
      * {@link ChronoField#NANO_OF_SECOND NANO_OF_SECOND} field should be supported.
@@ -554,7 +550,7 @@ public final class Duration
      * the simple initialization in Duration.
      */
     private static class DurationUnits {
-        static final List<TemporalUnit> UNITS =
+        final static List<TemporalUnit> UNITS =
                 Collections.unmodifiableList(Arrays.<TemporalUnit>asList(SECONDS, NANOS));
     }
 

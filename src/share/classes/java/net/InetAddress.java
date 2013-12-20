@@ -212,13 +212,6 @@ class InetAddress implements java.io.Serializable {
             this.family = family;
         }
 
-        void init(String hostName, int family) {
-            this.hostName = hostName;
-            if (family != -1) {
-                this.family = family;
-            }
-        }
-
         String hostName;
 
         String getHostName() {
@@ -246,7 +239,7 @@ class InetAddress implements java.io.Serializable {
     }
 
     /* Used to store the serializable fields of InetAddress */
-    final transient InetAddressHolder holder;
+    private final transient InetAddressHolder holder;
 
     InetAddressHolder holder() {
         return holder;
@@ -1135,7 +1128,7 @@ class InetAddress implements java.io.Serializable {
             // see if it is IPv4 address
             addr = IPAddressUtil.textToNumericFormatV4(host);
             if (addr == null) {
-                // This is supposed to be an IPv6 literal
+                // see if it is IPv6 address
                 // Check if a numeric or string zone id is present
                 int pos;
                 if ((pos=host.indexOf ("%")) != -1) {
@@ -1144,9 +1137,7 @@ class InetAddress implements java.io.Serializable {
                         ifname = host.substring (pos+1);
                     }
                 }
-                if ((addr = IPAddressUtil.textToNumericFormatV6(host)) == null && host.contains(":")) {
-                    throw new UnknownHostException(host + ": invalid IPv6 address");
-                }
+                addr = IPAddressUtil.textToNumericFormatV6(host);
             } else if (ipv6Expected) {
                 // Means an IPv4 litteral between brackets!
                 throw new UnknownHostException("["+host+"]");
@@ -1164,10 +1155,10 @@ class InetAddress implements java.io.Serializable {
                 }
                 return ret;
             }
-        } else if (ipv6Expected) {
-            // We were expecting an IPv6 Litteral, but got something else
-            throw new UnknownHostException("["+host+"]");
-        }
+            } else if (ipv6Expected) {
+                // We were expecting an IPv6 Litteral, but got something else
+                throw new UnknownHostException("["+host+"]");
+            }
         return getAllByName0(host, reqAddr, true);
     }
 

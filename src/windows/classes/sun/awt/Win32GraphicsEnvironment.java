@@ -25,7 +25,6 @@
 
 package sun.awt;
 
-import java.awt.AWTError;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -94,12 +93,7 @@ public class Win32GraphicsEnvironment
     protected native int getDefaultScreen();
 
     public GraphicsDevice getDefaultScreenDevice() {
-        GraphicsDevice[] screens = getScreenDevices();
-        if (screens.length == 0) {
-            throw new AWTError("no screen devices");
-        }
-        int index = getDefaultScreen();
-        return screens[0 < index && index < screens.length ? index : 0];
+        return getScreenDevices()[getDefaultScreen()];
     }
 
     /**

@@ -302,7 +302,7 @@ public class BeanContextChildSupport implements BeanContextChild, BeanContextSer
 
     /**
      * This method may be overridden by subclasses to provide their own
-     * initialization behaviors. When invoked any resources required by the
+     * initialization behaviors. When invoked any resources requried by the
      * BeanContextChild should be obtained from the current BeanContext.
      */
 
@@ -317,7 +317,7 @@ public class BeanContextChildSupport implements BeanContextChild, BeanContextSer
     private void writeObject(ObjectOutputStream oos) throws IOException {
 
         /*
-         * don't serialize if we are delegated and the delegator is not also
+         * dont serialize if we are delegated and the delegator isnt also
          * serializable.
          */
 

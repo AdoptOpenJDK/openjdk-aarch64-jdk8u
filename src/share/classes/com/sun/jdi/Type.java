@@ -127,9 +127,8 @@ package com.sun.jdi;
  * @author James McIlree
  * @since  1.3
  */
-@jdk.Exported
-public interface Type extends Mirror {
-
+public interface Type extends Mirror
+{
     /**
      * Returns the JNI-style signature for this type.
      * <p>

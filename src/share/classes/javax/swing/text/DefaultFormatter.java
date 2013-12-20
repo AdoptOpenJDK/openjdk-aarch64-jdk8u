@@ -24,8 +24,7 @@
  */
 package javax.swing.text;
 
-import sun.reflect.misc.ReflectUtil;
-import sun.swing.SwingUtilities2;
+import sun.reflect.misc.ConstructorUtil;
 
 import java.io.Serializable;
 import java.lang.reflect.*;
@@ -34,7 +33,7 @@ import javax.swing.*;
 import javax.swing.text.*;
 
 /**
- * <code>DefaultFormatter</code> formats arbitrary objects. Formatting is done
+ * <code>DefaultFormatter</code> formats aribtrary objects. Formatting is done
  * by invoking the <code>toString</code> method. In order to convert the
  * value back to a String, your class must provide a constructor that
  * takes a String argument. If no single argument constructor that takes a
@@ -51,7 +50,7 @@ import javax.swing.text.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans&trade;
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -137,7 +136,7 @@ public class DefaultFormatter extends JFormattedTextField.AbstractFormatter
      * <code>JFormattedTextField</code>, typically when enter is pressed
      * or focus leaves the <code>JFormattedTextField</code>.
      *
-     * @param commit Used to indicate when edits are committed back to the
+     * @param commit Used to indicate when edits are commited back to the
      *               JTextComponent
      */
     public void setCommitsOnValidEdit(boolean commit) {
@@ -148,7 +147,7 @@ public class DefaultFormatter extends JFormattedTextField.AbstractFormatter
      * Returns when edits are published back to the
      * <code>JFormattedTextField</code>.
      *
-     * @return true if edits are committed after every valid edit
+     * @return true if edits are commited after evey valid edit
      */
     public boolean getCommitsOnValidEdit() {
         return commitOnEdit;
@@ -213,7 +212,7 @@ public class DefaultFormatter extends JFormattedTextField.AbstractFormatter
     /**
      * Returns that class that is used to create new Objects.
      *
-     * @return Class used to construct return value from stringToValue
+     * @return Class used to constuct return value from stringToValue
      */
     public Class<?> getValueClass() {
         return valueClass;
@@ -225,7 +224,7 @@ public class DefaultFormatter extends JFormattedTextField.AbstractFormatter
      * takes a String argument. If <code>getValueClass</code>
      * returns null, the Class of the current value in the
      * <code>JFormattedTextField</code> will be used. If this is null, a
-     * String will be returned. If the constructor throws an exception, a
+     * String will be returned. If the constructor thows an exception, a
      * <code>ParseException</code> will be thrown. If there is no single
      * argument String constructor, <code>string</code> will be returned.
      *
@@ -248,9 +247,7 @@ public class DefaultFormatter extends JFormattedTextField.AbstractFormatter
             Constructor cons;
 
             try {
-                ReflectUtil.checkPackageAccess(vc);
-                SwingUtilities2.checkAccess(vc.getModifiers());
-                cons = vc.getConstructor(new Class[]{String.class});
+                cons = ConstructorUtil.getConstructor(vc, new Class[]{String.class});
 
             } catch (NoSuchMethodException nsme) {
                 cons = null;
@@ -258,7 +255,6 @@ public class DefaultFormatter extends JFormattedTextField.AbstractFormatter
 
             if (cons != null) {
                 try {
-                    SwingUtilities2.checkAccess(cons.getModifiers());
                     return cons.newInstance(new Object[] { string });
                 } catch (Throwable ex) {
                     throw new ParseException("Error creating instance", 0);
@@ -500,7 +496,7 @@ public class DefaultFormatter extends JFormattedTextField.AbstractFormatter
 
 
     /**
-     * Finds the next navigable character.
+     * Finds the next navigatable character.
      */
     int getNextVisualPositionFrom(JTextComponent text, int pos,
                                   Position.Bias bias, int direction,

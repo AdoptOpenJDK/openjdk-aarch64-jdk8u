@@ -217,7 +217,8 @@ public class JMX {
     }
 
     /**
-     * Make a proxy for an MXBean in a local or remote MBean Server.
+     * <p>Make a proxy for an MXBean in a local or remote
+     * MBean Server.</p>
      *
      * <p>If you have an MBean Server {@code mbs} containing an
      * MXBean with {@link ObjectName} {@code name}, and if the
@@ -252,7 +253,7 @@ public class JMX {
      * <li><p>{@code proxy.setSimpleAttribute("whatever")} will result
      * in a call to {@code mbs.}{@link
      * MBeanServerConnection#setAttribute setAttribute}<code>(name,
-     * new Attribute("SimpleAttribute", "whatever"))</code>.</p>
+     * new Attribute("SimpleAttribute", "whatever"))</code>.<p>
      *
      *     <p>Because {@code String} is a <em>simple type</em>, in the
      *     sense of {@link javax.management.openmbean.SimpleType}, it

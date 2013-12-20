@@ -81,7 +81,7 @@ public class AccelDeviceEventNotifier {
     }
 
     /**
-     * Called to indicate that a device event had occurred.
+     * Called to indicate that a device event had occured.
      * If a singleton exists, the listeners (those associated with
      * the device) will be notified.
      *

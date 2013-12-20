@@ -110,7 +110,7 @@ public interface EncryptionMethod {
      * Returns an iterator over all the additional elements contained in the
      * <code>EncryptionMethod</code>.
      *
-     * @return an <code>Iterator</code> over all the additional information
+     * @return an <code>Iterator</code> over all the additional infomation
      *   about the <code>EncryptionMethod</code>.
      */
     Iterator<Element> getEncryptionMethodInformation();

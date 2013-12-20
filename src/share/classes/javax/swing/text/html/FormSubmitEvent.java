@@ -29,7 +29,7 @@ import java.net.URL;
 
 /**
  * FormSubmitEvent is used to notify interested
- * parties that a form was submitted.
+ * parties that a form was submited.
  *
  * @since 1.5
  * @author    Denis Sharypov

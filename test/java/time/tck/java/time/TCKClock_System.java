@@ -62,6 +62,7 @@ package tck.java.time;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -77,6 +78,13 @@ public class TCKClock_System extends AbstractTCKTest {
 
     private static final ZoneId MOSCOW = ZoneId.of("Europe/Moscow");
     private static final ZoneId PARIS = ZoneId.of("Europe/Paris");
+
+    //-----------------------------------------------------------------------
+    public void test_isSerializable() throws IOException, ClassNotFoundException {
+        assertSerializable(Clock.systemUTC());
+        assertSerializable(Clock.systemDefaultZone());
+        assertSerializable(Clock.system(PARIS));
+    }
 
     //-----------------------------------------------------------------------
     public void test_instant() {

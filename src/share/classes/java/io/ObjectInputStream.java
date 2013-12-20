@@ -109,7 +109,7 @@ import sun.reflect.misc.ReflectUtil;
  *
  * <p>Serializable classes that require special handling during the
  * serialization and deserialization process should implement the following
- * methods:
+ * methods:<p>
  *
  * <pre>
  * private void writeObject(java.io.ObjectOutputStream stream)
@@ -491,12 +491,11 @@ public class ObjectInputStream
     public void defaultReadObject()
         throws IOException, ClassNotFoundException
     {
-        SerialCallbackContext ctx = curContext;
-        if (ctx == null) {
+        if (curContext == null) {
             throw new NotActiveException("not in call to readObject");
         }
-        Object curObj = ctx.getObj();
-        ObjectStreamClass curDesc = ctx.getDesc();
+        Object curObj = curContext.getObj();
+        ObjectStreamClass curDesc = curContext.getDesc();
         bin.setBlockDataMode(false);
         defaultReadFields(curObj, curDesc);
         bin.setBlockDataMode(true);
@@ -530,12 +529,11 @@ public class ObjectInputStream
     public ObjectInputStream.GetField readFields()
         throws IOException, ClassNotFoundException
     {
-        SerialCallbackContext ctx = curContext;
-        if (ctx == null) {
+        if (curContext == null) {
             throw new NotActiveException("not in call to readObject");
         }
-        Object curObj = ctx.getObj();
-        ObjectStreamClass curDesc = ctx.getDesc();
+        Object curObj = curContext.getObj();
+        ObjectStreamClass curDesc = curContext.getDesc();
         bin.setBlockDataMode(false);
         GetFieldImpl getField = new GetFieldImpl(curDesc);
         getField.readFields();
@@ -1970,6 +1968,7 @@ public class ObjectInputStream
     private void defaultReadFields(Object obj, ObjectStreamClass desc)
         throws IOException
     {
+        // REMIND: is isInstance check necessary?
         Class<?> cl = desc.forClass();
         if (cl != null && obj != null && !cl.isInstance(obj)) {
             throw new ClassCastException();

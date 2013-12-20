@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2003, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,36 +30,34 @@ import java.awt.peer.*;
 import java.awt.im.InputMethodRequests;
 
 
-final class WTextAreaPeer extends WTextComponentPeer implements TextAreaPeer {
+class WTextAreaPeer extends WTextComponentPeer implements TextAreaPeer {
 
     // WComponentPeer overrides
 
-    @Override
     public Dimension getMinimumSize() {
         return getMinimumSize(10, 60);
     }
 
     // TextAreaPeer implementation
 
-    @Override
-    public void insert(String text, int pos) {
-        replaceRange(text, pos, pos);
+    /* This should eventually be a direct native method. */
+    public void insert(String txt, int pos) {
+        insertText(txt, pos);
     }
 
-    @Override
-    public native void replaceRange(String text, int start, int end);
+    /* This should eventually be a direct native method. */
+    public void replaceRange(String txt, int start, int end) {
+        replaceText(txt, start, end);
+    }
 
-    @Override
     public Dimension getPreferredSize(int rows, int cols) {
         return getMinimumSize(rows, cols);
     }
-    @Override
     public Dimension getMinimumSize(int rows, int cols) {
         FontMetrics fm = getFontMetrics(((TextArea)target).getFont());
         return new Dimension(fm.charWidth('0') * cols + 20, fm.getHeight() * rows + 20);
     }
 
-    @Override
     public InputMethodRequests getInputMethodRequests() {
            return null;
     }
@@ -70,6 +68,42 @@ final class WTextAreaPeer extends WTextComponentPeer implements TextAreaPeer {
         super(target);
     }
 
-    @Override
     native void create(WComponentPeer parent);
+
+    // native callbacks
+
+
+    // deprecated methods
+
+    /**
+     * DEPRECATED but, for now, still called by insert(String, int).
+     */
+    public native void insertText(String txt, int pos);
+
+    /**
+     * DEPRECATED but, for now, still called by replaceRange(String, int, int).
+     */
+    public native void replaceText(String txt, int start, int end);
+
+    /**
+     * DEPRECATED
+     */
+    public Dimension minimumSize() {
+        return getMinimumSize();
+    }
+
+    /**
+     * DEPRECATED
+     */
+    public Dimension minimumSize(int rows, int cols) {
+        return getMinimumSize(rows, cols);
+    }
+
+    /**
+     * DEPRECATED
+     */
+    public Dimension preferredSize(int rows, int cols) {
+        return getPreferredSize(rows, cols);
+    }
+
 }

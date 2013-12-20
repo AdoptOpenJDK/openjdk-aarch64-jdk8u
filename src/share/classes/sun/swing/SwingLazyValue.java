@@ -30,7 +30,6 @@ import java.lang.reflect.AccessibleObject;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import javax.swing.UIDefaults;
-import sun.reflect.misc.ReflectUtil;
 
 /**
  * SwingLazyValue is a copy of ProxyLazyValue that does not snapshot the
@@ -64,7 +63,7 @@ public class SwingLazyValue implements UIDefaults.LazyValue {
 
     public Object createValue(final UIDefaults table) {
         try {
-            ReflectUtil.checkPackageAccess(className);
+            Object cl;
             Class<?> c = Class.forName(className, true, null);
             if (methodName != null) {
                 Class[] types = getClassArray(args);

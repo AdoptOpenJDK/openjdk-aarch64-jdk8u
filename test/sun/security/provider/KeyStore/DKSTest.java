@@ -81,7 +81,8 @@ public class DKSTest {
         int expected;
         KeyStore keystore = KeyStore.getInstance("DKS");
         // load entries
-        keystore.load(new DomainLoadStoreParameter(config, PASSWORDS));
+        keystore.load(
+            new KeyStore.DomainLoadStoreParameter(config, PASSWORDS));
         cacertsCount = expected = keystore.size();
         System.out.println("\nLoading domain keystore: " + config + "\t[" +
             expected + " entries]");
@@ -94,7 +95,8 @@ public class DKSTest {
         expected = cacertsCount + 1;
         keystore = KeyStore.getInstance("DKS");
         // load entries
-        keystore.load(new DomainLoadStoreParameter(config, PASSWORDS));
+        keystore.load(
+            new KeyStore.DomainLoadStoreParameter(config, PASSWORDS));
         System.out.println("\nLoading domain keystore: " + config + "\t[" +
             expected + " entries]");
         checkEntries(keystore, expected);
@@ -107,7 +109,7 @@ public class DKSTest {
         keystore = KeyStore.getInstance("DKS");
         // load entries
         keystore.load(
-            new DomainLoadStoreParameter(config,
+            new KeyStore.DomainLoadStoreParameter(config,
                 Collections.<String, KeyStore.ProtectionParameter>emptyMap()));
         System.out.println("\nLoading domain keystore: " + config + "\t[" +
             expected + " entries]");
@@ -127,7 +129,8 @@ public class DKSTest {
         expected = 0;
         keystore = KeyStore.getInstance("DKS");
         // load entries
-        keystore.load(new DomainLoadStoreParameter(config, PASSWORDS));
+        keystore.load(
+            new KeyStore.DomainLoadStoreParameter(config, PASSWORDS));
         System.out.println("\nLoading domain keystore: " + config + "\t[" +
             expected + " entries]");
         checkEntries(keystore, expected);
@@ -139,7 +142,8 @@ public class DKSTest {
         expected = 2 + 1 + 1 + 1;
         keystore = KeyStore.getInstance("DKS");
         // load entries
-        keystore.load(new DomainLoadStoreParameter(config, PASSWORDS));
+        keystore.load(
+            new KeyStore.DomainLoadStoreParameter(config, PASSWORDS));
         System.out.println("\nLoading domain keystore: " + config + "\t[" +
             expected + " entries]");
         checkEntries(keystore, expected);
@@ -154,10 +158,12 @@ public class DKSTest {
         config = new URI(CONFIG + "#keystores_tmp");
         System.out.println("Storing domain keystore: " + config + "\t[" +
             expected + " entries]");
-        keystore.store(new DomainLoadStoreParameter(config, PASSWORDS));
+        keystore.store(
+            new KeyStore.DomainLoadStoreParameter(config, PASSWORDS));
         keystore = KeyStore.getInstance("DKS");
         // reload entries
-        keystore.load(new DomainLoadStoreParameter(config, PASSWORDS));
+        keystore.load(
+            new KeyStore.DomainLoadStoreParameter(config, PASSWORDS));
         System.out.println("Reloading domain keystore: " + config + "\t[" +
             expected + " entries]");
         checkEntries(keystore, expected);

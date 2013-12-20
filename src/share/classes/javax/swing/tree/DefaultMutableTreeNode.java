@@ -26,7 +26,6 @@
 package javax.swing.tree;
    // ISSUE: this class depends on nothing in AWT -- move to java.util?
 
-import java.beans.Transient;
 import java.io.*;
 import java.util.*;
 
@@ -36,7 +35,7 @@ import java.util.*;
  * structure.
  * For examples of using default mutable tree nodes, see
  * <a
- href="http://docs.oracle.com/javase/tutorial/uiswing/components/tree.html">How to Use Trees</a>
+ href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Trees</a>
  * in <em>The Java Tutorial.</em>
  *
  * <p>
@@ -77,7 +76,7 @@ import java.util.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans&trade;
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -216,7 +215,6 @@ public class DefaultMutableTreeNode implements Cloneable,
      *
      * @param   newParent       this node's new parent
      */
-    @Transient
     public void setParent(MutableTreeNode newParent) {
         parent = newParent;
     }

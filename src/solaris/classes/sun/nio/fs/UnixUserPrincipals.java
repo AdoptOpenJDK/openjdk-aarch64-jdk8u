@@ -115,7 +115,7 @@ class UnixUserPrincipals {
     static User fromUid(int uid) {
         String name = null;
         try {
-            name = Util.toString(getpwuid(uid));
+            name = new String(getpwuid(uid));
         } catch (UnixException x) {
             name = Integer.toString(uid);
         }
@@ -126,7 +126,7 @@ class UnixUserPrincipals {
     static Group fromGid(int gid) {
         String name = null;
         try {
-            name = Util.toString(getgrgid(gid));
+            name = new String(getgrgid(gid));
         } catch (UnixException x) {
             name = Integer.toString(gid);
         }

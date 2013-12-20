@@ -64,8 +64,7 @@ JNIEXPORT void JNICALL Java_sun_java2d_loops_FillPath_FillPath
     CompositeInfo compInfo;
     jint ret;
     NativePrimitive *pPrim = GetNativePrim(env, self);
-    jint stroke;
-    jboolean throwExc = JNI_FALSE;
+    jint stroke = (*env)->GetIntField(env, sg2d, sg2dStrokeHintID);
 
     if (pPrim == NULL) {
         return;
@@ -73,8 +72,6 @@ JNIEXPORT void JNICALL Java_sun_java2d_loops_FillPath_FillPath
     if (pPrim->pCompType->getCompInfo != NULL) {
         GrPrim_Sg2dGetCompInfo(env, sg2d, pPrim, &compInfo);
     }
-
-    stroke = (*env)->GetIntField(env, sg2d, sg2dStrokeHintID);
 
     sdOps = SurfaceData_GetOps(env, sData);
     if (sdOps == 0) {
@@ -105,10 +102,6 @@ JNIEXPORT void JNICALL Java_sun_java2d_loops_FillPath_FillPath
     maxCoords = (*env)->GetArrayLength(env, coordsArray);
     coords = (jfloat*)(*env)->GetPrimitiveArrayCritical(
             env, coordsArray, NULL);
-    if (coords == NULL) {
-        SurfaceData_InvokeUnlock(env, sdOps, &rasInfo);
-        return;
-    }
 
     if (ret == SD_SLOWLOCK) {
         GrPrim_RefineBounds(&rasInfo.bounds, transX, transY,
@@ -153,31 +146,24 @@ JNIEXPORT void JNICALL Java_sun_java2d_loops_FillPath_FillPath
                 drawHandler.yMax = rasInfo.bounds.y2;
                 drawHandler.pData = &dHData;
 
-                if (types != NULL) {
-                    if (!doFillPath(&drawHandler,
-                                    transX, transY, coords,
-                                    maxCoords, types, numTypes,
-                                    (stroke == sunHints_INTVAL_STROKE_PURE)?
-                                            PH_STROKE_PURE : PH_STROKE_DEFAULT,
-                                    fillRule))
-                    {
-                        throwExc = JNI_TRUE;
-                    }
-
-                    (*env)->ReleasePrimitiveArrayCritical(env, typesArray, types,
-                                                      JNI_ABORT);
+                if (!doFillPath(&drawHandler,
+                                transX, transY, coords,
+                                maxCoords, types, numTypes,
+                                (stroke == sunHints_INTVAL_STROKE_PURE)?
+                                     PH_STROKE_PURE : PH_STROKE_DEFAULT,
+                                fillRule))
+                {
+                    JNU_ThrowArrayIndexOutOfBoundsException(env,
+                                                            "coords array");
                 }
+
+                (*env)->ReleasePrimitiveArrayCritical(env, typesArray, types,
+                                                      JNI_ABORT);
             }
         }
         SurfaceData_InvokeRelease(env, sdOps, &rasInfo);
     }
     (*env)->ReleasePrimitiveArrayCritical(env, coordsArray, coords,
                                           JNI_ABORT);
-
-    if (throwExc) {
-        JNU_ThrowArrayIndexOutOfBoundsException(env,
-                                                "coords array");
-    }
-
     SurfaceData_InvokeUnlock(env, sdOps, &rasInfo);
 }

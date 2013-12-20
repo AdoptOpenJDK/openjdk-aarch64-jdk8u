@@ -489,8 +489,7 @@ public abstract class AbstractQueuedLongSynchronizer
         /*
          * Try to signal next queued node if:
          *   Propagation was indicated by caller,
-         *     or was recorded (as h.waitStatus either before
-         *     or after setHead) by a previous operation
+         *     or was recorded (as h.waitStatus) by a previous operation
          *     (note: this uses sign-check of waitStatus because
          *      PROPAGATE status may transition to SIGNAL.)
          * and
@@ -502,8 +501,7 @@ public abstract class AbstractQueuedLongSynchronizer
          * racing acquires/releases, so most need signals now or soon
          * anyway.
          */
-        if (propagate > 0 || h == null || h.waitStatus < 0 ||
-            (h = head) == null || h.waitStatus < 0) {
+        if (propagate > 0 || h == null || h.waitStatus < 0) {
             Node s = node.next;
             if (s == null || s.isShared())
                 doReleaseShared();

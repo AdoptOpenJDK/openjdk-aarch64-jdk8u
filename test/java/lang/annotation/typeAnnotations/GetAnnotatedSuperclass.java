@@ -23,16 +23,12 @@
 
 /*
  * @test
- * @bug 8022343 8007072
- * @summary Test Class.getAnnotatedSuperclass() returns null/non-null
- *          AnnotatedType as specified
+ * @bug 8022343
+ * @summary make sure Class.getAnnotatedSuperclass() returns null when specified to do so
  */
 
-import java.lang.reflect.AnnotatedType;
-import java.util.Arrays;
-
 public class GetAnnotatedSuperclass {
-    private static final Class<?>[] nullTestData = {
+    private static final Class<?>[] testData = {
         Object.class,
         If.class,
         Object[].class,
@@ -40,31 +36,9 @@ public class GetAnnotatedSuperclass {
         int.class,
     };
 
-    private static final Class<?>[] nonNullTestData = {
-        Class.class,
-        GetAnnotatedSuperclass.class,
-        (new If() {}).getClass(),
-        (new Clz() {}).getClass(),
-        (new Object() {}).getClass(),
-    };
-
-    private static int failed = 0;
-    private static int tests = 0;
-
     public static void main(String[] args) throws Exception {
-        testReturnsNull();
-        testReturnsEmptyAT();
-
-        if (failed != 0)
-            throw new RuntimeException("Test failed, check log for details");
-        if (tests != 10)
-            throw new RuntimeException("Not all cases ran, failing");
-    }
-
-    private static void testReturnsNull() {
-        for (Class<?> toTest : nullTestData) {
-            tests++;
-
+        int failed = 0;
+        for (Class<?> toTest : testData) {
             Object res = toTest.getAnnotatedSuperclass();
 
             if (res != null) {
@@ -73,26 +47,10 @@ public class GetAnnotatedSuperclass {
                         + res + ", should be null");
             }
         }
-    }
 
-    private static void testReturnsEmptyAT() {
-        for (Class<?> toTest : nonNullTestData) {
-            tests++;
-
-            AnnotatedType res = toTest.getAnnotatedSuperclass();
-
-            if (res == null) {
-                failed++;
-                System.out.println(toTest + ".getAnnotatedSuperclass() returns 'null' should  be non-null");
-            } else if (res.getAnnotations().length != 0) {
-                failed++;
-                System.out.println(toTest + ".getAnnotatedSuperclass() returns: "
-                        + Arrays.asList(res.getAnnotations()) + ", should be an empty AnnotatedType");
-            }
-        }
+        if (failed != 0)
+            throw new RuntimeException("Test failed, check log for details");
     }
 
     interface If {}
-
-    static abstract class Clz {}
 }

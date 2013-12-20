@@ -100,13 +100,14 @@ public interface XRBackend {
                                      int xSrc, int ySrc, int xDst, int yDst,
                                      int glyphset, GrowableEltArray elts);
 
-    public int createRadialGradient(float centerX, float centerY,
+    public int createRadialGradient(Point2D inner, Point2D outer,
                                     float innerRadius, float outerRadius,
                                     float[] fractions, int[] pixels,
-                                    int repeat);
+                                    int repeat, AffineTransform transform);
 
     public int createLinearGradient(Point2D p1, Point2D p2, float[] fractions,
-                                    int[] pixels, int repeat);
+                                    int[] pixels, int repeat,
+                                     AffineTransform transform);
 
     public void setGCMode(long gc, boolean copy);
 

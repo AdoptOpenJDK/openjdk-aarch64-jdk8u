@@ -240,14 +240,9 @@ public final class XToolkit extends UNIXToolkit implements Runnable {
                 @Override
                 public void dispatchEvent(XEvent ev) {
                     if (ev.get_type() == XConstants.ConfigureNotify) {
-                        awtUnlock();
-                        try {
-                            ((X11GraphicsEnvironment)GraphicsEnvironment.
-                             getLocalGraphicsEnvironment()).
-                                displayChanged();
-                        } finally {
-                            awtLock();
-                        }
+                        ((X11GraphicsEnvironment)GraphicsEnvironment.
+                         getLocalGraphicsEnvironment()).
+                            displayChanged();
                     }
                 }
             });
@@ -560,7 +555,7 @@ public final class XToolkit extends UNIXToolkit implements Runnable {
             awtLock();
             try {
                 if (loop == SECONDARY_LOOP) {
-                    // In the secondary loop we may have already acquired awt_lock
+                    // In the secondary loop we may have already aquired awt_lock
                     // several times, so waitForEvents() might be unable to release
                     // the awt_lock and this causes lock up.
                     // For now, we just avoid waitForEvents in the secondary loop.

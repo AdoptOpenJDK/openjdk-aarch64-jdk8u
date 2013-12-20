@@ -83,7 +83,7 @@ import sun.util.CoreResourceBundleControl;
  * <p>
  * <li>Moving the focus from one component to another.
  * <br>For more information, see
- * <a href="http://docs.oracle.com/javase/tutorial/uiswing/misc/focus.html#transferTiming">Timing
+ * <a href="http://java.sun.com/docs/books/tutorial/uiswing/misc/focus.html#transferTiming">Timing
  * Focus Transfers</a>, a section in
  * <a href="http://java.sun.com/docs/books/tutorial/uiswing/">The Swing
  * Tutorial</a>.
@@ -1457,7 +1457,7 @@ public abstract class Toolkit {
      * <p>Note that multi-frame images are invalid and may cause this
      * method to hang.
      *
-     * @param cursor the image to display when the cursor is activated
+     * @param cursor the image to display when the cursor is actived
      * @param hotSpot the X and Y of the large cursor's hot spot; the
      *   hotSpot values must be less than the Dimension returned by
      *   <code>getBestCursorSize</code>
@@ -1809,7 +1809,8 @@ public abstract class Toolkit {
 
         // This property should never be cached
         if (propertyName.equals("awt.dynamicLayoutSupported")) {
-            return getDefaultToolkit().lazilyLoadDesktopProperty(propertyName);
+            value = lazilyLoadDesktopProperty(propertyName);
+            return value;
         }
 
         value = desktopProperties.get(propertyName);

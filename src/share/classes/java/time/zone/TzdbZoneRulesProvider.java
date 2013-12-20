@@ -62,7 +62,6 @@
 package java.time.zone;
 
 import java.io.ByteArrayInputStream;
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -108,8 +107,7 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider {
         try {
             String libDir = System.getProperty("java.home") + File.separator + "lib";
             try (DataInputStream dis = new DataInputStream(
-                     new BufferedInputStream(new FileInputStream(
-                         new File(libDir, "tzdb.dat"))))) {
+                     new FileInputStream(new File(libDir, "tzdb.dat")))) {
                 load(dis);
             }
         } catch (Exception ex) {

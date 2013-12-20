@@ -179,7 +179,7 @@ public class ReplaceableUCharacterIterator extends UCharacterIterator {
     // private data members ----------------------------------------------------
 
     /**
-     * Replaceable object
+     * Replacable object
      */
     private Replaceable replaceable;
     /**

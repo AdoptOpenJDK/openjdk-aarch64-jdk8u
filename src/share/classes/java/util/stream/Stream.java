@@ -67,11 +67,6 @@ import java.util.function.UnaryOperator;
  * transform it into a stream of {@code int} values representing the weight of
  * each red widget. Then this stream is summed to produce a total weight.
  *
- * <p>In addition to {@code Stream}, which is a stream of object references,
- * there are primitive specializations for {@link IntStream}, {@link LongStream},
- * and {@link DoubleStream}, all of which are referred to as "streams" and
- * conform to the characteristics and restrictions described here.
- *
  * <p>To perform a computation, stream
  * <a href="package-summary.html#StreamOps">operations</a> are composed into a
  * <em>stream pipeline</em>.  A stream pipeline consists of a source (which
@@ -102,21 +97,14 @@ import java.util.function.UnaryOperator;
  *
  * <p>Most stream operations accept parameters that describe user-specified
  * behavior, such as the lambda expression {@code w -> w.getWeight()} passed to
- * {@code mapToInt} in the example above.  To preserve correct behavior,
- * these <em>behavioral parameters</em>:
- * <ul>
- * <li>must be <a href="package-summary.html#NonInterference">non-interfering</a>
- * (they do not modify the stream source); and</li>
- * <li>in most cases must be <a href="package-summary.html#Statelessness">stateless</a>
- * (their result should not depend on any state that might change during execution
- * of the stream pipeline).</li>
- * </ul>
- *
- * <p>Such parameters are always instances of a
- * <a href="../function/package-summary.html">functional interface</a> such
+ * {@code mapToInt} in the example above.  Such parameters are always instances
+ * of a <a href="../function/package-summary.html">functional interface</a> such
  * as {@link java.util.function.Function}, and are often lambda expressions or
- * method references.  Unless otherwise specified these parameters must be
- * <em>non-null</em>.
+ * method references.  These parameters can never be null, should not modify the
+ * stream source, and should be
+ * <a href="package-summary.html#NonInterference">effectively stateless</a>
+ * (their result should not depend on any state that might change during
+ * execution of the stream pipeline.)
  *
  * <p>A stream should be operated on (invoking an intermediate or terminal stream
  * operation) only once.  This rules out, for example, "forked" streams, where
@@ -146,9 +134,6 @@ import java.util.function.UnaryOperator;
  *
  * @param <T> the type of the stream elements
  * @since 1.8
- * @see IntStream
- * @see LongStream
- * @see DoubleStream
  * @see <a href="package-summary.html">java.util.stream</a>
  */
 public interface Stream<T> extends BaseStream<T, Stream<T>> {
@@ -160,10 +145,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
      *
-     * @param predicate a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                  <a href="package-summary.html#Statelessness">stateless</a>
-     *                  predicate to apply to each element to determine if it
-     *                  should be included
+     * @param predicate a <a href="package-summary.html#NonInterference">
+     *                  non-interfering, stateless</a> predicate to apply to
+     *                  each element to determine if it should be included
      * @return the new stream
      */
     Stream<T> filter(Predicate<? super T> predicate);
@@ -176,9 +160,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * operation</a>.
      *
      * @param <R> The element type of the new stream
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to each
+     *               element
      * @return the new stream
      */
     <R> Stream<R> map(Function<? super T, ? extends R> mapper);
@@ -190,9 +174,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is an <a href="package-summary.html#StreamOps">
      *     intermediate operation</a>.
      *
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to each
+     *               element
      * @return the new stream
      */
     IntStream mapToInt(ToIntFunction<? super T> mapper);
@@ -204,9 +188,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
      *
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to each
+     *               element
      * @return the new stream
      */
     LongStream mapToLong(ToLongFunction<? super T> mapper);
@@ -218,9 +202,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
      *
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to each
+     *               element
      * @return the new stream
      */
     DoubleStream mapToDouble(ToDoubleFunction<? super T> mapper);
@@ -237,33 +221,19 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      *
      * @apiNote
      * The {@code flatMap()} operation has the effect of applying a one-to-many
-     * transformation to the elements of the stream, and then flattening the
-     * resulting elements into a new stream.
-     *
-     * <p><b>Examples.</b>
-     *
-     * <p>If {@code orders} is a stream of purchase orders, and each purchase
-     * order contains a collection of line items, then the following produces a
-     * stream containing all the line items in all the orders:
+     * tranformation to the elements of the stream, and then flattening the
+     * resulting elements into a new stream. For example, if {@code orders}
+     * is a stream of purchase orders, and each purchase order contains a
+     * collection of line items, then the following produces a stream of line
+     * items:
      * <pre>{@code
-     *     orders.flatMap(order -> order.getLineItems().stream())...
+     *     orderStream.flatMap(order -> order.getLineItems().stream())...
      * }</pre>
-     *
-     * <p>If {@code path} is the path to a file, then the following produces a
-     * stream of the {@code words} contained in that file:
-     * <pre>{@code
-     *     Stream<String> lines = Files.lines(path, StandardCharsets.UTF_8);
-     *     Stream<String> words = lines.flatMap(line -> Stream.of(line.split(" +")));
-     * }</pre>
-     * The {@code mapper} function passed to {@code flatMap} splits a line,
-     * using a simple regular expression, into an array of words, and then
-     * creates a stream of words from that array.
      *
      * @param <R> The element type of the new stream
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element which produces a stream
-     *               of new values
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to each
+     *               element which produces a stream of new values
      * @return the new stream
      */
     <R> Stream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper);
@@ -278,12 +248,10 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
      *
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element which produces a stream
-     *               of new values
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to each
+     *               element which produces a stream of new values
      * @return the new stream
-     * @see #flatMap(Function)
      */
     IntStream flatMapToInt(Function<? super T, ? extends IntStream> mapper);
 
@@ -297,12 +265,10 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
      *
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element which produces a stream
-     *               of new values
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to
+     *               each element which produces a stream of new values
      * @return the new stream
-     * @see #flatMap(Function)
      */
     LongStream flatMapToLong(Function<? super T, ? extends LongStream> mapper);
 
@@ -316,12 +282,10 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
      *
-     * @param mapper a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *               <a href="package-summary.html#Statelessness">stateless</a>
-     *               function to apply to each element which produces a stream
-     *               of new values
+     * @param mapper a <a href="package-summary.html#NonInterference">
+     *               non-interfering, stateless</a> function to apply to each
+     *               element which produces a stream of new values
      * @return the new stream
-     * @see #flatMap(Function)
      */
     DoubleStream flatMapToDouble(Function<? super T, ? extends DoubleStream> mapper);
 
@@ -329,26 +293,8 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * Returns a stream consisting of the distinct elements (according to
      * {@link Object#equals(Object)}) of this stream.
      *
-     * <p>For ordered streams, the selection of distinct elements is stable
-     * (for duplicated elements, the element appearing first in the encounter
-     * order is preserved.)  For unordered streams, no stability guarantees
-     * are made.
-     *
      * <p>This is a <a href="package-summary.html#StreamOps">stateful
      * intermediate operation</a>.
-     *
-     * @apiNote
-     * Preserving stability for {@code distinct()} in parallel pipelines is
-     * relatively expensive (requires that the operation act as a full barrier,
-     * with substantial buffering overhead), and stability is often not needed.
-     * Using an unordered stream source (such as {@link #generate(Supplier)})
-     * or removing the ordering constraint with {@link #unordered()} may result
-     * in significantly more efficient execution for {@code distinct()} in parallel
-     * pipelines, if the semantics of your situation permit.  If consistency
-     * with encounter order is required, and you are experiencing poor performance
-     * or memory utilization with {@code distinct()} in parallel pipelines,
-     * switching to sequential execution with {@link #sequential()} may improve
-     * performance.
      *
      * @return the new stream
      */
@@ -359,9 +305,6 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * according to natural order.  If the elements of this stream are not
      * {@code Comparable}, a {@code java.lang.ClassCastException} may be thrown
      * when the terminal operation is executed.
-     *
-     * <p>For ordered streams, the sort is stable.  For unordered streams, no
-     * stability guarantees are made.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">stateful
      * intermediate operation</a>.
@@ -374,15 +317,12 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * Returns a stream consisting of the elements of this stream, sorted
      * according to the provided {@code Comparator}.
      *
-     * <p>For ordered streams, the sort is stable.  For unordered streams, no
-     * stability guarantees are made.
-     *
      * <p>This is a <a href="package-summary.html#StreamOps">stateful
      * intermediate operation</a>.
      *
-     * @param comparator a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                   <a href="package-summary.html#Statelessness">stateless</a>
-     *                   {@code Comparator} to be used to compare stream elements
+     * @param comparator a <a href="package-summary.html#NonInterference">
+     *                   non-interfering, stateless</a> {@code Comparator} to
+     *                   be used to compare stream elements
      * @return the new stream
      */
     Stream<T> sorted(Comparator<? super T> comparator);
@@ -425,20 +365,6 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is a <a href="package-summary.html#StreamOps">short-circuiting
      * stateful intermediate operation</a>.
      *
-     * @apiNote
-     * While {@code limit()} is generally a cheap operation on sequential
-     * stream pipelines, it can be quite expensive on ordered parallel pipelines,
-     * especially for large values of {@code maxSize}, since {@code limit(n)}
-     * is constrained to return not just any <em>n</em> elements, but the
-     * <em>first n</em> elements in the encounter order.  Using an unordered
-     * stream source (such as {@link #generate(Supplier)}) or removing the
-     * ordering constraint with {@link #unordered()} may result in significant
-     * speedups of {@code limit()} in parallel pipelines, if the semantics of
-     * your situation permit.  If consistency with encounter order is required,
-     * and you are experiencing poor performance or memory utilization with
-     * {@code limit()} in parallel pipelines, switching to sequential execution
-     * with {@link #sequential()} may improve performance.
-     *
      * @param maxSize the number of elements the stream should be limited to
      * @return the new stream
      * @throws IllegalArgumentException if {@code maxSize} is negative
@@ -447,32 +373,37 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
 
     /**
      * Returns a stream consisting of the remaining elements of this stream
-     * after discarding the first {@code n} elements of the stream.
-     * If this stream contains fewer than {@code n} elements then an
+     * after discarding the first {@code startInclusive} elements of the stream.
+     * If this stream contains fewer than {@code startInclusive} elements then an
      * empty stream will be returned.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">stateful
      * intermediate operation</a>.
      *
-     * @apiNote
-     * While {@code skip()} is generally a cheap operation on sequential
-     * stream pipelines, it can be quite expensive on ordered parallel pipelines,
-     * especially for large values of {@code n}, since {@code skip(n)}
-     * is constrained to skip not just any <em>n</em> elements, but the
-     * <em>first n</em> elements in the encounter order.  Using an unordered
-     * stream source (such as {@link #generate(Supplier)}) or removing the
-     * ordering constraint with {@link #unordered()} may result in significant
-     * speedups of {@code skip()} in parallel pipelines, if the semantics of
-     * your situation permit.  If consistency with encounter order is required,
-     * and you are experiencing poor performance or memory utilization with
-     * {@code skip()} in parallel pipelines, switching to sequential execution
-     * with {@link #sequential()} may improve performance.
-     *
-     * @param n the number of leading elements to skip
+     * @param startInclusive the number of leading elements to skip
      * @return the new stream
-     * @throws IllegalArgumentException if {@code n} is negative
+     * @throws IllegalArgumentException if {@code startInclusive} is negative
      */
-    Stream<T> skip(long n);
+    Stream<T> substream(long startInclusive);
+
+    /**
+     * Returns a stream consisting of the remaining elements of this stream
+     * after discarding the first {@code startInclusive} elements and truncating
+     * the result to be no longer than {@code endExclusive - startInclusive}
+     * elements in length. If this stream contains fewer than
+     * {@code startInclusive} elements then an empty stream will be returned.
+     *
+     * <p>This is a <a href="package-summary.html#StreamOps">short-circuiting
+     * stateful intermediate operation</a>.
+     *
+     * @param startInclusive the starting position of the substream, inclusive
+     * @param endExclusive the ending position of the substream, exclusive
+     * @return the new stream
+     * @throws IllegalArgumentException if {@code startInclusive} or
+     * {@code endExclusive} is negative or {@code startInclusive} is greater
+     * than {@code endExclusive}
+     */
+    Stream<T> substream(long startInclusive, long endExclusive);
 
     /**
      * Performs an action for each element of this stream.
@@ -480,8 +411,7 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is a <a href="package-summary.html#StreamOps">terminal
      * operation</a>.
      *
-     * <p>The behavior of this operation is explicitly nondeterministic.
-     * For parallel stream pipelines, this operation does <em>not</em>
+     * <p>For parallel stream pipelines, this operation does <em>not</em>
      * guarantee to respect the encounter order of the stream, as doing so
      * would sacrifice the benefit of parallelism.  For any given element, the
      * action may be performed at whatever time and in whatever thread the
@@ -494,17 +424,12 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
     void forEach(Consumer<? super T> action);
 
     /**
-     * Performs an action for each element of this stream, in the encounter
-     * order of the stream if the stream has a defined encounter order.
+     * Performs an action for each element of this stream, guaranteeing that
+     * each element is processed in encounter order for streams that have a
+     * defined encounter order.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">terminal
      * operation</a>.
-     *
-     * <p>This operation processes the elements one at a time, in encounter
-     * order if one exists.  Performing the action for one element
-     * <a href="../concurrent/package-summary.html#MemoryVisibility"><i>happens-before</i></a>
-     * performing the action for subsequent elements, but for any given element,
-     * the action may be performed in whatever thread the library chooses.
      *
      * @param action a <a href="package-summary.html#NonInterference">
      *               non-interfering</a> action to perform on the elements
@@ -594,10 +519,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * synchronization and with greatly reduced risk of data races.
      *
      * @param identity the identity value for the accumulating function
-     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>,
-     *                    <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                    <a href="package-summary.html#Statelessness">stateless</a>
-     *                    function for combining two values
+     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>
+     *                    <a href="package-summary.html#NonInterference">non-interfering,
+     *                    stateless</a> function for combining two values
      * @return the result of the reduction
      */
     T reduce(T identity, BinaryOperator<T> accumulator);
@@ -630,15 +554,14 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is a <a href="package-summary.html#StreamOps">terminal
      * operation</a>.
      *
-     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>,
-     *                    <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                    <a href="package-summary.html#Statelessness">stateless</a>
-     *                    function for combining two values
+     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>
+     *                    <a href="package-summary.html#NonInterference">non-interfering,
+     *                    stateless</a> function for combining two values
      * @return an {@link Optional} describing the result of the reduction
      * @throws NullPointerException if the result of the reduction is null
      * @see #reduce(Object, BinaryOperator)
-     * @see #min(Comparator)
-     * @see #max(Comparator)
+     * @see #min(java.util.Comparator)
+     * @see #max(java.util.Comparator)
      */
     Optional<T> reduce(BinaryOperator<T> accumulator);
 
@@ -676,15 +599,14 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      *
      * @param <U> The type of the result
      * @param identity the identity value for the combiner function
-     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>,
-     *                    <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                    <a href="package-summary.html#Statelessness">stateless</a>
-     *                    function for incorporating an additional element into a result
-     * @param combiner an <a href="package-summary.html#Associativity">associative</a>,
-     *                    <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                    <a href="package-summary.html#Statelessness">stateless</a>
-     *                    function for combining two values, which must be
-     *                    compatible with the accumulator function
+     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>
+     *                    <a href="package-summary.html#NonInterference">non-interfering,
+     *                    stateless</a> function for incorporating an additional
+     *                    element into a result
+     * @param combiner an <a href="package-summary.html#Associativity">associative</a>
+     *                 <a href="package-summary.html#NonInterference">non-interfering,
+     *                 stateless</a> function for combining two values, which
+     *                 must be compatible with the accumulator function
      * @return the result of the reduction
      * @see #reduce(BinaryOperator)
      * @see #reduce(Object, BinaryOperator)
@@ -733,15 +655,14 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * @param supplier a function that creates a new result container. For a
      *                 parallel execution, this function may be called
      *                 multiple times and must return a fresh value each time.
-     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>,
-     *                    <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                    <a href="package-summary.html#Statelessness">stateless</a>
-     *                    function for incorporating an additional element into a result
-     * @param combiner an <a href="package-summary.html#Associativity">associative</a>,
-     *                    <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                    <a href="package-summary.html#Statelessness">stateless</a>
-     *                    function for combining two values, which must be
-     *                    compatible with the accumulator function
+     * @param accumulator an <a href="package-summary.html#Associativity">associative</a>
+     *                    <a href="package-summary.html#NonInterference">non-interfering,
+     *                    stateless</a> function for incorporating an additional
+     *                    element into a result
+     * @param combiner an <a href="package-summary.html#Associativity">associative</a>
+     *                 <a href="package-summary.html#NonInterference">non-interfering,
+     *                 stateless</a> function for combining two values, which
+     *                 must be compatible with the accumulator function
      * @return the result of the reduction
      */
     <R> R collect(Supplier<R> supplier,
@@ -756,13 +677,6 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * {@link #collect(Supplier, BiConsumer, BiConsumer)}, allowing for reuse of
      * collection strategies and composition of collect operations such as
      * multiple-level grouping or partitioning.
-     *
-     * <p>If the stream is parallel, and the {@code Collector}
-     * is {@link Collector.Characteristics#CONCURRENT concurrent}, and
-     * either the stream is unordered or the collector is
-     * {@link Collector.Characteristics#UNORDERED unordered},
-     * then a concurrent reduction will be performed (see {@link Collector} for
-     * details on concurrent reduction.)
      *
      * <p>This is a <a href="package-summary.html#StreamOps">terminal
      * operation</a>.
@@ -809,9 +723,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      *
      * <p>This is a <a href="package-summary.html#StreamOps">terminal operation</a>.
      *
-     * @param comparator a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                   <a href="package-summary.html#Statelessness">stateless</a>
-     *                   {@code Comparator} to compare elements of this stream
+     * @param comparator a <a href="package-summary.html#NonInterference">non-interfering,
+     *                   stateless</a> {@code Comparator} to use to compare
+     *                   elements of this stream
      * @return an {@code Optional} describing the minimum element of this stream,
      * or an empty {@code Optional} if the stream is empty
      * @throws NullPointerException if the minimum element is null
@@ -826,9 +740,9 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
      * <p>This is a <a href="package-summary.html#StreamOps">terminal
      * operation</a>.
      *
-     * @param comparator a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                   <a href="package-summary.html#Statelessness">stateless</a>
-     *                   {@code Comparator} to compare elements of this stream
+     * @param comparator a <a href="package-summary.html#NonInterference">non-interfering,
+     *                   stateless</a> {@code Comparator} to use to compare
+     *                   elements of this stream
      * @return an {@code Optional} describing the maximum element of this stream,
      * or an empty {@code Optional} if the stream is empty
      * @throws NullPointerException if the maximum element is null
@@ -852,67 +766,48 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
     /**
      * Returns whether any elements of this stream match the provided
      * predicate.  May not evaluate the predicate on all elements if not
-     * necessary for determining the result.  If the stream is empty then
-     * {@code false} is returned and the predicate is not evaluated.
+     * necessary for determining the result.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">short-circuiting
      * terminal operation</a>.
      *
-     * @apiNote
-     * This method evaluates the <em>existential quantification</em> of the
-     * predicate over the elements of the stream (for some x P(x)).
-     *
-     * @param predicate a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                  <a href="package-summary.html#Statelessness">stateless</a>
-     *                  predicate to apply to elements of this stream
+     * @param predicate a <a href="package-summary.html#NonInterference">non-interfering,
+     *                  stateless</a> predicate to apply to elements of this
+     *                  stream
      * @return {@code true} if any elements of the stream match the provided
-     * predicate, otherwise {@code false}
+     * predicate otherwise {@code false}
      */
     boolean anyMatch(Predicate<? super T> predicate);
 
     /**
      * Returns whether all elements of this stream match the provided predicate.
      * May not evaluate the predicate on all elements if not necessary for
-     * determining the result.  If the stream is empty then {@code true} is
-     * returned and the predicate is not evaluated.
+     * determining the result.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">short-circuiting
      * terminal operation</a>.
      *
-     * @apiNote
-     * This method evaluates the <em>universal quantification</em> of the
-     * predicate over the elements of the stream (for all x P(x)).  If the
-     * stream is empty, the quantification is said to be <em>vacuously
-     * satisfied</em> and is always {@code true} (regardless of P(x)).
-     *
-     * @param predicate a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                  <a href="package-summary.html#Statelessness">stateless</a>
-     *                  predicate to apply to elements of this stream
-     * @return {@code true} if either all elements of the stream match the
-     * provided predicate or the stream is empty, otherwise {@code false}
+     * @param predicate a <a href="package-summary.html#NonInterference">non-interfering,
+     *                  stateless</a> predicate to apply to elements of this
+     *                  stream
+     * @return {@code true} if all elements of the stream match the provided
+     * predicate otherwise {@code false}
      */
     boolean allMatch(Predicate<? super T> predicate);
 
     /**
      * Returns whether no elements of this stream match the provided predicate.
      * May not evaluate the predicate on all elements if not necessary for
-     * determining the result.  If the stream is empty then {@code true} is
-     * returned and the predicate is not evaluated.
+     * determining the result.
      *
      * <p>This is a <a href="package-summary.html#StreamOps">short-circuiting
      * terminal operation</a>.
      *
-     * @apiNote
-     * This method evaluates the <em>universal quantification</em> of the
-     * negated predicate over the elements of the stream (for all x ~P(x)).  If
-     * the stream is empty, the quantification is said to be vacuously satisfied
-     * and is always {@code true}, regardless of P(x).
-     *
-     * @param predicate a <a href="package-summary.html#NonInterference">non-interfering</a>,
-     *                  <a href="package-summary.html#Statelessness">stateless</a>
-     *                  predicate to apply to elements of this stream
-     * @return {@code true} if either no elements of the stream match the
-     * provided predicate or the stream is empty, otherwise {@code false}
+     * @param predicate a <a href="package-summary.html#NonInterference">non-interfering,
+     *                  stateless</a> predicate to apply to elements of this
+     *                  stream
+     * @return {@code true} if no elements of the stream match the provided
+     * predicate otherwise {@code false}
      */
     boolean noneMatch(Predicate<? super T> predicate);
 
@@ -1035,13 +930,13 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
     }
 
     /**
-     * Returns an infinite sequential unordered stream where each element is
-     * generated by the provided {@code Supplier}.  This is suitable for
-     * generating constant streams, streams of random elements, etc.
+     * Returns a sequential stream where each element is generated by
+     * the provided {@code Supplier}.  This is suitable for generating
+     * constant streams, streams of random elements, etc.
      *
      * @param <T> the type of stream elements
      * @param s the {@code Supplier} of generated elements
-     * @return a new infinite sequential unordered {@code Stream}
+     * @return a new sequential {@code Stream}
      */
     public static<T> Stream<T> generate(Supplier<T> s) {
         Objects.requireNonNull(s);
@@ -1052,15 +947,10 @@ public interface Stream<T> extends BaseStream<T, Stream<T>> {
     /**
      * Creates a lazily concatenated stream whose elements are all the
      * elements of the first stream followed by all the elements of the
-     * second stream.  The resulting stream is ordered if both
+     * second stream. The resulting stream is ordered if both
      * of the input streams are ordered, and parallel if either of the input
      * streams is parallel.  When the resulting stream is closed, the close
      * handlers for both input streams are invoked.
-     *
-     * @implNote
-     * Use caution when constructing streams from repeated concatenation.
-     * Accessing an element of a deeply concatenated stream can result in deep
-     * call chains, or even {@code StackOverflowException}.
      *
      * @param <T> The type of stream elements
      * @param a the first stream

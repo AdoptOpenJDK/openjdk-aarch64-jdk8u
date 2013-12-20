@@ -439,13 +439,11 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         final Throwable ex;
         ExceptionNode next;
         final long thrower;  // use id not ref to avoid weak cycles
-        final int hashCode;  // store task hashCode before weak ref disappears
         ExceptionNode(ForkJoinTask<?> task, Throwable ex, ExceptionNode next) {
             super(task, exceptionTableRefQueue);
             this.ex = ex;
             this.next = next;
             this.thrower = Thread.currentThread().getId();
-            this.hashCode = System.identityHashCode(task);
         }
     }
 
@@ -607,9 +605,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private static void expungeStaleExceptions() {
         for (Object x; (x = exceptionTableRefQueue.poll()) != null;) {
             if (x instanceof ExceptionNode) {
-                int hashCode = ((ExceptionNode)x).hashCode;
+                ForkJoinTask<?> key = ((ExceptionNode)x).get();
                 ExceptionNode[] t = exceptionTable;
-                int i = hashCode & (t.length - 1);
+                int i = System.identityHashCode(key) & (t.length - 1);
                 ExceptionNode e = t[i];
                 ExceptionNode pred = null;
                 while (e != null) {

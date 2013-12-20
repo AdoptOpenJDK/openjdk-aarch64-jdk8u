@@ -68,7 +68,6 @@ import java.time.chrono.JapaneseChronology;
 import java.time.chrono.ThaiBuddhistChronology;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.util.Locale;
 
@@ -123,7 +122,7 @@ public class TCKChronoPrinterParser {
         TemporalAccessor parsed = builder.toFormatter().parseUnresolved(text, pos);
         assertEquals(pos.getIndex(), expected.getId().length());
         assertEquals(pos.getErrorIndex(), -1);
-        assertEquals(parsed.query(TemporalQueries.chronology()), expected);
+        assertEquals(parsed.query(TemporalQuery.chronology()), expected);
     }
 
     @Test(dataProvider="parseValid")
@@ -141,7 +140,7 @@ public class TCKChronoPrinterParser {
         TemporalAccessor parsed = builder.toFormatter().parseUnresolved(text.toLowerCase(Locale.ENGLISH), pos);
         assertEquals(pos.getIndex(), expected.getId().length());
         assertEquals(pos.getErrorIndex(), -1);
-        assertEquals(parsed.query(TemporalQueries.chronology()), expected);
+        assertEquals(parsed.query(TemporalQuery.chronology()), expected);
     }
 
     //-----------------------------------------------------------------------

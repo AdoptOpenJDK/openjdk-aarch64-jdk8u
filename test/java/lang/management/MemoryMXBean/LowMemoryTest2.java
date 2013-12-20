@@ -26,7 +26,7 @@
  *
  * The test set a listener to be notified when any of the non-heap pools
  * exceed 80%. It then starts a thread that continuously loads classes.
- * In the HotSpot implementation this causes metaspace to be consumed.
+ * In the HotSpot implementation this causes perm space to be consumed.
  * Test completes when we the notification is received or an OutOfMemory
  * is generated.
  */
@@ -100,14 +100,7 @@ public class LowMemoryTest2 {
 
             // TestNNNNNN
 
-            int load_count = count++;
-            if (load_count > 999999) {
-                // The test will create a corrupt class file if the count
-                // exceeds 999999. Fix the test if this exception is thrown.
-                throw new RuntimeException("Load count exceeded");
-            }
-
-            String name = "Test" + Integer.toString(load_count);
+            String name = "Test" + Integer.toString(count++);
 
             byte value[];
             try {
@@ -140,9 +133,8 @@ public class LowMemoryTest2 {
          * Note: Once the usage threshold has been exceeded the low memory
          * detector thread will attempt to deliver its notification - this can
          * potentially create a race condition with this thread contining to
-         * fill up metaspace. To avoid the low memory detector getting an
-         * OutOfMemory we throttle this thread once the threshold has been
-         * exceeded.
+         * fill up perm space. To avoid the low memory detector getting an OutOfMemory
+         * we throttle this thread once the threshold has been exceeded.
          */
         public void run() {
             List pools = ManagementFactory.getMemoryPoolMXBeans();
@@ -188,7 +180,7 @@ public class LowMemoryTest2 {
 
         // Set threshold of 80% of all NON_HEAP memory pools
         // In the Hotspot implementation this means we should get a notification
-        // if the CodeCache or metaspace fills up.
+        // if the CodeCache or perm generation fills up.
 
         while (iter.hasNext()) {
             MemoryPoolMXBean p = (MemoryPoolMXBean) iter.next();
@@ -196,12 +188,7 @@ public class LowMemoryTest2 {
 
                 // set threshold
                 MemoryUsage mu = p.getUsage();
-                long max = mu.getMax();
-                if (max < 0) {
-                    throw new RuntimeException("There is no maximum set for "
-                            + p.getName() + " memory pool so the test is invalid");
-                }
-                long threshold = (max * 80) / 100;
+                long threshold = (mu.getMax() * 80) / 100;
 
                 p.setUsageThreshold(threshold);
 

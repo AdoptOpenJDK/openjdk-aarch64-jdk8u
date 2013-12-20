@@ -43,7 +43,7 @@ import java.io.*;
  * object passed to the constructor and the {@code verify} method.
  * A typical usage for signing is the following:
  *
- * <pre>{@code
+ * <p> <pre>{@code
  * Signature signingEngine = Signature.getInstance(algorithm,
  *                                                 provider);
  * SignedObject so = new SignedObject(myobject, signingKey,
@@ -53,7 +53,7 @@ import java.io.*;
  * <p> A typical usage for verification is the following (having
  * received SignedObject {@code so}):
  *
- * <pre>{@code
+ * <p> <pre>{@code
  * Signature verificationEngine =
  *     Signature.getInstance(algorithm, provider);
  * if (so.verify(publickey, verificationEngine))

@@ -385,6 +385,11 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     // ---- PEER METHODS ---- //
 
+    @Override
+    public Toolkit getToolkit() {
+        return LWToolkit.getLWToolkit();
+    }
+
     // Just a helper method
     public LWToolkit getLWToolkit() {
         return LWToolkit.getLWToolkit();
@@ -1005,13 +1010,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     @Override
     public boolean prepareImage(Image img, int w, int h, ImageObserver o) {
         // TODO: is it a right/complete implementation?
-        return Toolkit.getDefaultToolkit().prepareImage(img, w, h, o);
+        return getToolkit().prepareImage(img, w, h, o);
     }
 
     @Override
     public int checkImage(Image img, int w, int h, ImageObserver o) {
         // TODO: is it a right/complete implementation?
-        return Toolkit.getDefaultToolkit().checkImage(img, w, h, o);
+        return getToolkit().checkImage(img, w, h, o);
     }
 
     @Override

@@ -106,7 +106,7 @@ class PackageWriter extends BandStructure {
 
     Set<Entry>                       requiredEntries;  // for the CP
     Map<Attribute.Layout, int[]>     backCountTable;   // for layout callables
-    int[][]     attrCounts;       // count attr. occurrences
+    int[][]     attrCounts;       // count attr. occurences
 
     void setup() {
         requiredEntries = new HashSet<>();

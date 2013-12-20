@@ -431,12 +431,11 @@ public class ObjectOutputStream
      *          <code>OutputStream</code>
      */
     public void defaultWriteObject() throws IOException {
-        SerialCallbackContext ctx = curContext;
-        if (ctx == null) {
+        if ( curContext == null ) {
             throw new NotActiveException("not in call to writeObject");
         }
-        Object curObj = ctx.getObj();
-        ObjectStreamClass curDesc = ctx.getDesc();
+        Object curObj = curContext.getObj();
+        ObjectStreamClass curDesc = curContext.getDesc();
         bout.setBlockDataMode(false);
         defaultWriteFields(curObj, curDesc);
         bout.setBlockDataMode(true);
@@ -454,12 +453,11 @@ public class ObjectOutputStream
      */
     public ObjectOutputStream.PutField putFields() throws IOException {
         if (curPut == null) {
-            SerialCallbackContext ctx = curContext;
-            if (ctx == null) {
+            if (curContext == null) {
                 throw new NotActiveException("not in call to writeObject");
             }
-            Object curObj = ctx.getObj();
-            ObjectStreamClass curDesc = ctx.getDesc();
+            Object curObj = curContext.getObj();
+            ObjectStreamClass curDesc = curContext.getDesc();
             curPut = new PutFieldImpl(curDesc);
         }
         return curPut;
@@ -1248,7 +1246,7 @@ public class ObjectOutputStream
         handles.assign(unshared ? null : desc);
 
         Class<?> cl = desc.forClass();
-        Class<?>[] ifaces = cl.getInterfaces();
+        Class[] ifaces = cl.getInterfaces();
         bout.writeInt(ifaces.length);
         for (int i = 0; i < ifaces.length; i++) {
             bout.writeUTF(ifaces[i].getName());
@@ -1519,11 +1517,7 @@ public class ObjectOutputStream
     private void defaultWriteFields(Object obj, ObjectStreamClass desc)
         throws IOException
     {
-        Class<?> cl = desc.forClass();
-        if (cl != null && obj != null && !cl.isInstance(obj)) {
-            throw new ClassCastException();
-        }
-
+        // REMIND: perform conservative isInstance check here?
         desc.checkDefaultSerialize();
 
         int primDataSize = desc.getPrimDataSize();

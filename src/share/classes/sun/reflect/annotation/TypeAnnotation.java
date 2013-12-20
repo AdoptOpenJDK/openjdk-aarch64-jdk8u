@@ -40,7 +40,7 @@ import java.util.List;
  * distinguish between '@A Inner.@B Outer' in for example nested types),
  * target info and the declaration the TypeAnnotaiton was parsed from.
  */
-public final class TypeAnnotation {
+public class TypeAnnotation {
     private final TypeAnnotationTargetInfo targetInfo;
     private final LocationInfo loc;
     private final Annotation annotation;
@@ -92,8 +92,7 @@ public final class TypeAnnotation {
         METHOD_FORMAL_PARAMETER,
         THROWS;
     }
-
-    public static final class TypeAnnotationTargetInfo {
+    public static class TypeAnnotationTargetInfo {
         private final TypeAnnotationTarget target;
         private final int count;
         private final int secondaryIndex;
@@ -132,7 +131,7 @@ public final class TypeAnnotation {
         }
     }
 
-    public static final class LocationInfo {
+    public static class LocationInfo {
         private final int depth;
         private final Location[] locations;
 
@@ -205,7 +204,7 @@ public final class TypeAnnotation {
             return true;
         }
 
-        public static final class Location {
+        public static class Location {
             public final byte tag;
             public final byte index;
 

@@ -243,7 +243,7 @@ public abstract class SSLContextImpl extends SSLContextSpi {
     abstract SSLParameters getDefaultClientSSLParams();
     abstract SSLParameters getSupportedSSLParams();
 
-    // Get supported ProtocolList.
+    // Get suported ProtoclList.
     ProtocolList getSuportedProtocolList() {
         if (supportedProtocolList == null) {
             supportedProtocolList =
@@ -253,7 +253,7 @@ public abstract class SSLContextImpl extends SSLContextSpi {
         return supportedProtocolList;
     }
 
-    // Get default ProtocolList.
+    // Get default ProtoclList.
     ProtocolList getDefaultProtocolList(boolean roleIsServer) {
         if (roleIsServer) {
             if (defaultServerProtocolList == null) {
@@ -272,7 +272,7 @@ public abstract class SSLContextImpl extends SSLContextSpi {
         }
     }
 
-    // Get supported CipherSuiteList.
+    // Get suported CipherSuiteList.
     CipherSuiteList getSupportedCipherSuiteList() {
         // The maintenance of cipher suites needs to be synchronized.
         synchronized (this) {

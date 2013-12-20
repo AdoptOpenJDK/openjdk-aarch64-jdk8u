@@ -23,7 +23,7 @@
 
 /*
  * @test
- * @bug 4940957 8025205
+ * @bug 4940957
  * @summary Tests behaviour when connections break
  * @author Eamonn McManus
  * @run clean BrokenConnectionTest
@@ -485,13 +485,14 @@ public class BrokenConnectionTest {
             }
             if (thisok) {
                 System.out.println("Waiting for failure notif");
-                // pass or test timeout. see 8025205
-                do {
-                    Thread.sleep(100);
-                } while (failureListener.count < 1);
-
-                Thread.sleep(1000); // if more notif coming ...
-                if (failureListener.count > 1) {
+                long deadline = System.currentTimeMillis() + 5000;
+                while (failureListener.count < 1
+                       && System.currentTimeMillis() < deadline)
+                    Thread.sleep(500);
+                if (failureListener.count < 1) {
+                    System.out.println("Did not get failure notif!");
+                    thisok = false;
+                } else if (failureListener.count > 1) {
                     System.out.println("Got too many failure notifs: " +
                                        failureListener.count);
                     thisok = false;

@@ -1115,7 +1115,7 @@ int32_t GetXVisualInfo(display, screen, transparentOverlays,
                                          * to by pImageVisuals. */
     XVisualInfo ***pImageVisuals;       /* The device's image visuals. */
 {
-    XVisualInfo getVisInfo;             /* Parameters of XGetVisualInfo */
+    XVisualInfo getVisInfo;             /* Paramters of XGetVisualInfo */
     int32_t             mask;
     XVisualInfo *pVis, **pIVis;         /* Faster, local copies */
     OverlayInfo *pOVis;

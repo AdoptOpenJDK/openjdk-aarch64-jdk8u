@@ -41,7 +41,7 @@ import sun.security.util.PolicyUtil;
  * This class provides the domain keystore type identified as "DKS".
  * DKS presents a collection of separate keystores as a single logical keystore.
  * The collection of keystores is specified in a domain configuration file which
- * is passed to DKS in a {@link DomainLoadStoreParameter}.
+ * is passed to DKS in a {@link KeyStore.DomainLoadStoreParameter}.
  * <p>
  * The following properties are supported:
  * <dl>
@@ -622,16 +622,17 @@ abstract class DomainKeyStore extends KeyStoreSpi {
         }
 
         throw new UnsupportedOperationException(
-            "This keystore must be stored using a DomainLoadStoreParameter");
+            "This keystore must be stored using a " +
+            "KeyStore.DomainLoadStoreParameter");
     }
 
     @Override
     public void engineStore(KeyStore.LoadStoreParameter param)
         throws IOException, NoSuchAlgorithmException, CertificateException
     {
-        if (param instanceof DomainLoadStoreParameter) {
-            DomainLoadStoreParameter domainParameter =
-                (DomainLoadStoreParameter) param;
+        if (param instanceof KeyStore.DomainLoadStoreParameter) {
+            KeyStore.DomainLoadStoreParameter domainParameter =
+                (KeyStore.DomainLoadStoreParameter) param;
             List<KeyStoreBuilderComponents> builders = getBuilders(
                 domainParameter.getConfiguration(),
                     domainParameter.getProtectionParams());
@@ -644,7 +645,7 @@ abstract class DomainKeyStore extends KeyStoreSpi {
                     if (!(pp instanceof KeyStore.PasswordProtection)) {
                         throw new KeyStoreException(
                             new IllegalArgumentException("ProtectionParameter" +
-                                " must be a KeyStore.PasswordProtection"));
+                                " must be a KeyStore.PasswordPartection"));
                     }
                     char[] password =
                         ((KeyStore.PasswordProtection) builder.protection)
@@ -652,12 +653,9 @@ abstract class DomainKeyStore extends KeyStoreSpi {
 
                     // Store the keystores
                     KeyStore keystore = keystores.get(builder.name);
+                    keystore.store(new FileOutputStream(builder.file),
+                        password);
 
-                    try (FileOutputStream stream =
-                        new FileOutputStream(builder.file)) {
-
-                        keystore.store(stream, password);
-                    }
                 } catch (KeyStoreException e) {
                     throw new IOException(e);
                 }
@@ -665,7 +663,7 @@ abstract class DomainKeyStore extends KeyStoreSpi {
         } else {
             throw new UnsupportedOperationException(
                 "This keystore must be stored using a " +
-                "DomainLoadStoreParameter");
+                "KeyStore.DomainLoadStoreParameter");
         }
     }
 
@@ -712,7 +710,7 @@ abstract class DomainKeyStore extends KeyStoreSpi {
         } catch (Exception e) {
             throw new UnsupportedOperationException(
                 "This keystore must be loaded using a " +
-                "DomainLoadStoreParameter");
+                "KeyStore.DomainLoadStoreParameter");
         }
     }
 
@@ -720,9 +718,9 @@ abstract class DomainKeyStore extends KeyStoreSpi {
     public void engineLoad(KeyStore.LoadStoreParameter param)
         throws IOException, NoSuchAlgorithmException, CertificateException
     {
-        if (param instanceof DomainLoadStoreParameter) {
-            DomainLoadStoreParameter domainParameter =
-                (DomainLoadStoreParameter) param;
+        if (param instanceof KeyStore.DomainLoadStoreParameter) {
+            KeyStore.DomainLoadStoreParameter domainParameter =
+                (KeyStore.DomainLoadStoreParameter) param;
             List<KeyStoreBuilderComponents> builders = getBuilders(
                 domainParameter.getConfiguration(),
                     domainParameter.getProtectionParams());
@@ -750,7 +748,7 @@ abstract class DomainKeyStore extends KeyStoreSpi {
         } else {
             throw new UnsupportedOperationException(
                 "This keystore must be loaded using a " +
-                "DomainLoadStoreParameter");
+                "KeyStore.DomainLoadStoreParameter");
         }
     }
 

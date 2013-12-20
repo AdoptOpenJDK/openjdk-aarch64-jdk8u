@@ -71,7 +71,7 @@ class MethodWriter extends MethodVisitor {
     /**
      * Pseudo access flag used to denote constructors.
      */
-    static final int ACC_CONSTRUCTOR = 0x80000;
+    static final int ACC_CONSTRUCTOR = 262144;
 
     /**
      * Frame has exactly the same locals as the previous stack map frame and
@@ -298,6 +298,11 @@ class MethodWriter extends MethodVisitor {
     private int[] previousFrame;
 
     /**
+     * Index of the next element to be added in {@link #frame}.
+     */
+    private int frameIndex;
+
+    /**
      * The current stack map frame. The first element contains the offset of the
      * instruction to which the frame corresponds, the second element is the
      * number of locals and the third one is the number of stack elements. The
@@ -491,9 +496,6 @@ class MethodWriter extends MethodVisitor {
         cw.lastMethod = this;
         this.cw = cw;
         this.access = access;
-        if ("<init>".equals(name)) {
-            this.access |= ACC_CONSTRUCTOR;
-        }
         this.name = cw.newUTF8(name);
         this.desc = cw.newUTF8(desc);
         this.descriptor = desc;
@@ -509,6 +511,9 @@ class MethodWriter extends MethodVisitor {
         }
         this.compute = computeFrames ? FRAMES : (computeMaxs ? MAXS : NOTHING);
         if (computeMaxs || computeFrames) {
+            if (computeFrames && "<init>".equals(name)) {
+                this.access |= ACC_CONSTRUCTOR;
+            }
             // updates maxLocals
             int size = Type.getArgumentsAndReturnSizes(descriptor) >> 2;
             if ((access & Opcodes.ACC_STATIC) != 0) {
@@ -644,11 +649,8 @@ class MethodWriter extends MethodVisitor {
         }
 
         if (type == Opcodes.F_NEW) {
-            if (previousFrame == null) {
-                visitImplicitFirstFrame();
-            }
             currentLocals = nLocal;
-            int frameIndex = startFrame(code.length, nLocal, nStack);
+            startFrame(code.length, nLocal, nStack);
             for (int i = 0; i < nLocal; ++i) {
                 if (local[i] instanceof String) {
                     frame[frameIndex++] = Frame.OBJECT
@@ -912,8 +914,9 @@ class MethodWriter extends MethodVisitor {
 
     @Override
     public void visitMethodInsn(final int opcode, final String owner,
-            final String name, final String desc, final boolean itf) {
+            final String name, final String desc) {
         lastCodeOffset = code.length;
+        boolean itf = opcode == Opcodes.INVOKEINTERFACE;
         Item i = cw.newMethodItem(owner, name, desc, itf);
         int argSize = i.intVal;
         // Label currentBlock = this.currentBlock;
@@ -951,7 +954,7 @@ class MethodWriter extends MethodVisitor {
             }
         }
         // adds the instruction to the bytecode of the method
-        if (opcode == Opcodes.INVOKEINTERFACE) {
+        if (itf) {
             if (argSize == 0) {
                 argSize = Type.getArgumentsAndReturnSizes(desc);
                 i.intVal = argSize;
@@ -1525,8 +1528,8 @@ class MethodWriter extends MethodVisitor {
                         }
                         code.data[end] = (byte) Opcodes.ATHROW;
                         // emits a frame for this unreachable block
-                        int frameIndex = startFrame(start, 0, 1);
-                        frame[frameIndex] = Frame.OBJECT
+                        startFrame(start, 0, 1);
+                        frame[frameIndex++] = Frame.OBJECT
                                 | cw.addType("java/lang/Throwable");
                         endFrame();
                         // removes the start-end range from the exception
@@ -1753,7 +1756,7 @@ class MethodWriter extends MethodVisitor {
             }
         }
         // visits the frame and its content
-        int frameIndex = startFrame(f.owner.position, nLocal, nStack);
+        startFrame(f.owner.position, nLocal, nStack);
         for (i = 0; nLocal > 0; ++i, --nLocal) {
             t = locals[i];
             frame[frameIndex++] = t;
@@ -1772,67 +1775,6 @@ class MethodWriter extends MethodVisitor {
     }
 
     /**
-     * Visit the implicit first frame of this method.
-     */
-    private void visitImplicitFirstFrame() {
-        // There can be at most descriptor.length() + 1 locals
-        int frameIndex = startFrame(0, descriptor.length() + 1, 0);
-        if ((access & Opcodes.ACC_STATIC) == 0) {
-            if ((access & ACC_CONSTRUCTOR) == 0) {
-                frame[frameIndex++] = Frame.OBJECT | cw.addType(cw.thisName);
-            } else {
-                frame[frameIndex++] = 6; // Opcodes.UNINITIALIZED_THIS;
-            }
-        }
-        int i = 1;
-        loop: while (true) {
-            int j = i;
-            switch (descriptor.charAt(i++)) {
-            case 'Z':
-            case 'C':
-            case 'B':
-            case 'S':
-            case 'I':
-                frame[frameIndex++] = 1; // Opcodes.INTEGER;
-                break;
-            case 'F':
-                frame[frameIndex++] = 2; // Opcodes.FLOAT;
-                break;
-            case 'J':
-                frame[frameIndex++] = 4; // Opcodes.LONG;
-                break;
-            case 'D':
-                frame[frameIndex++] = 3; // Opcodes.DOUBLE;
-                break;
-            case '[':
-                while (descriptor.charAt(i) == '[') {
-                    ++i;
-                }
-                if (descriptor.charAt(i) == 'L') {
-                    ++i;
-                    while (descriptor.charAt(i) != ';') {
-                        ++i;
-                    }
-                }
-                frame[frameIndex++] = Frame.OBJECT
-                        | cw.addType(descriptor.substring(j, ++i));
-                break;
-            case 'L':
-                while (descriptor.charAt(i) != ';') {
-                    ++i;
-                }
-                frame[frameIndex++] = Frame.OBJECT
-                        | cw.addType(descriptor.substring(j + 1, i++));
-                break;
-            default:
-                break loop;
-            }
-        }
-        frame[1] = frameIndex - 3;
-        endFrame();
-    }
-
-    /**
      * Starts the visit of a stack map frame.
      *
      * @param offset
@@ -1841,9 +1783,8 @@ class MethodWriter extends MethodVisitor {
      *            the number of local variables in the frame.
      * @param nStack
      *            the number of stack elements in the frame.
-     * @return the index of the next element to be written in this frame.
      */
-    private int startFrame(final int offset, final int nLocal, final int nStack) {
+    private void startFrame(final int offset, final int nLocal, final int nStack) {
         int n = 3 + nLocal + nStack;
         if (frame == null || frame.length < n) {
             frame = new int[n];
@@ -1851,7 +1792,7 @@ class MethodWriter extends MethodVisitor {
         frame[0] = offset;
         frame[1] = nLocal;
         frame[2] = nStack;
-        return 3;
+        frameIndex = 3;
     }
 
     /**
@@ -2169,8 +2110,7 @@ class MethodWriter extends MethodVisitor {
      */
     final void put(final ByteVector out) {
         final int FACTOR = ClassWriter.TO_ACC_SYNTHETIC;
-        int mask = ACC_CONSTRUCTOR | Opcodes.ACC_DEPRECATED
-                | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE
+        int mask = Opcodes.ACC_DEPRECATED | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE
                 | ((access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) / FACTOR);
         out.putShort(access & ~mask).putShort(name).putShort(desc);
         if (classReaderOffset != 0) {

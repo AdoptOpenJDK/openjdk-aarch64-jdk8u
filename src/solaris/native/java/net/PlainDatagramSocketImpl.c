@@ -2148,7 +2148,8 @@ static void mcast_join_leave(JNIEnv *env, jobject this,
             caddr[14] = ((address >> 8) & 0xff);
             caddr[15] = (address & 0xff);
         } else {
-            getInet6Address_ipaddress(env, iaObj, caddr);
+            ipaddress = (*env)->GetObjectField(env, iaObj, ia6_ipaddressID);
+            (*env)->GetByteArrayRegion(env, ipaddress, 0, 16, caddr);
         }
 
         memcpy((void *)&(mname6.ipv6mr_multiaddr), caddr, sizeof(struct in6_addr));

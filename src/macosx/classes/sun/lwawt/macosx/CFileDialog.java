@@ -327,6 +327,11 @@ class CFileDialog implements FileDialogPeer {
     }
 
     @Override
+    public Toolkit getToolkit() {
+        return Toolkit.getDefaultToolkit();
+    }
+
+    @Override
     public void handleEvent(AWTEvent e) {
     }
 

@@ -88,7 +88,7 @@ import sun.awt.AWTAccessor;
  * ClassLoader.
  * <p>
  * Please see
- * <a href="http://docs.oracle.com/javase/tutorial/uiswing/misc/focus.html">
+ * <a href="http://java.sun.com/docs/books/tutorial/uiswing/misc/focus.html">
  * How to Use the Focus Subsystem</a>,
  * a section in <em>The Java Tutorial</em>, and the
  * <a href="../../java/awt/doc-files/FocusSpec.html">Focus Specification</a>
@@ -590,7 +590,6 @@ public abstract class KeyboardFocusManager
      *
      * @see Component#requestFocus()
      * @see java.awt.event.FocusEvent#FOCUS_LOST
-     * @since 1.8
      */
     public void clearFocusOwner() {
         if (getFocusOwner() != null) {
@@ -2663,7 +2662,7 @@ public abstract class KeyboardFocusManager
                      * only if we have the last request to dispatch. If the last request
                      * fails, focus will be restored to either the component of the last
                      * previously succedded request, or to to the focus owner that was
-                     * before this clearing process.
+                     * before this clearing proccess.
                      */
                     if (!iter.hasNext()) {
                         disableRestoreFocus = false;

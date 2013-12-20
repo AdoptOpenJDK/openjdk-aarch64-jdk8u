@@ -48,7 +48,7 @@ class ShellFolderManager {
      *  "fileChooserDefaultFolder":
      *    Returns a <code>File</code> - the default shellfolder for a new filechooser
      *  "roots":
-     *    Returns a <code>File[]</code> - containing the root(s) of the displayable hierarchy
+     *    Returns a <code>File[]</code> - containing the root(s) of the displayable hieararchy
      *  "fileChooserComboBoxFolders":
      *    Returns a <code>File[]</code> - an array of shellfolders representing the list to
      *    show by default in the file chooser's combobox
@@ -73,7 +73,7 @@ class ShellFolderManager {
                 return homeDir;
             }
         } else if (key.equals("roots")) {
-            // The root(s) of the displayable hierarchy
+            // The root(s) of the displayable hieararchy
             return File.listRoots();
         } else if (key.equals("fileChooserComboBoxFolders")) {
             // Return an array of ShellFolders representing the list to

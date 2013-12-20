@@ -56,6 +56,15 @@ public class LWWindowPeer
 
     private final PlatformWindow platformWindow;
 
+    // Window bounds reported by the native system (as opposed to
+    // regular bounds inherited from LWComponentPeer which are
+    // requested by user and may haven't been applied yet because
+    // of asynchronous requests to the windowing system)
+    private int sysX;
+    private int sysY;
+    private int sysW;
+    private int sysH;
+
     private static final int MINIMUM_WIDTH = 1;
     private static final int MINIMUM_HEIGHT = 1;
 
@@ -308,33 +317,9 @@ public class LWWindowPeer
             op |= SET_SIZE;
         }
 
-        // Don't post ComponentMoved/Resized and Paint events
-        // until we've got a notification from the delegate
-        Rectangle cb = constrainBounds(x, y, w, h);
-
-        Rectangle newBounds = new Rectangle(getBounds());
-        if ((op & (SET_LOCATION | SET_BOUNDS)) != 0) {
-            newBounds.x = cb.x;
-            newBounds.y = cb.y;
-        }
-        if ((op & (SET_SIZE | SET_BOUNDS)) != 0) {
-            newBounds.width = cb.width;
-            newBounds.height = cb.height;
-        }
-        // Native system could constraint bounds, so the peer wold be updated in the callback
-        platformWindow.setBounds(newBounds.x, newBounds.y, newBounds.width, newBounds.height);
-    }
-
-    public Rectangle constrainBounds(Rectangle bounds) {
-        return constrainBounds(bounds.x, bounds.y, bounds.width, bounds.height);
-    }
-
-    public Rectangle constrainBounds(int x, int y, int w, int h) {
-
         if (w < MINIMUM_WIDTH) {
             w = MINIMUM_WIDTH;
         }
-
         if (h < MINIMUM_HEIGHT) {
             h = MINIMUM_HEIGHT;
         }
@@ -349,7 +334,12 @@ public class LWWindowPeer
             h = maxH;
         }
 
-        return new Rectangle(x, y, w, h);
+        // Don't post ComponentMoved/Resized and Paint events
+        // until we've got a notification from the delegate
+        setBounds(x, y, w, h, op, false, false);
+        // Get updated bounds, so we don't have to handle 'op' here manually
+        Rectangle r = getBounds();
+        platformWindow.setBounds(r.x, r.y, r.width, r.height);
     }
 
     @Override
@@ -403,12 +393,8 @@ public class LWWindowPeer
     @Override
     public void setModalBlocked(Dialog blocker, boolean blocked) {
         synchronized (getPeerTreeLock()) {
-            ComponentPeer peer =  AWTAccessor.getComponentAccessor().getPeer(blocker);
-            if (blocked && (peer instanceof LWWindowPeer)) {
-                this.blocker = (LWWindowPeer) peer;
-            } else {
-                this.blocker = null;
-            }
+            this.blocker = !blocked ? null :
+            (LWWindowPeer) AWTAccessor.getComponentAccessor().getPeer(blocker);
         }
 
         platformWindow.setModalBlocked(blocked);
@@ -613,10 +599,17 @@ public class LWWindowPeer
      */
     @Override
     public void notifyReshape(int x, int y, int w, int h) {
-        Rectangle oldBounds = getBounds();
+        final boolean moved;
+        final boolean resized;
         final boolean invalid = updateInsets(platformWindow.getInsets());
-        final boolean moved = (x != oldBounds.x) || (y != oldBounds.y);
-        final boolean resized = (w != oldBounds.width) || (h != oldBounds.height);
+        synchronized (getStateLock()) {
+            moved = (x != sysX) || (y != sysY);
+            resized = (w != sysW) || (h != sysH);
+            sysX = x;
+            sysY = y;
+            sysW = w;
+            sysH = h;
+        }
 
         // Check if anything changed
         if (!moved && !resized && !invalid) {
@@ -1153,11 +1146,8 @@ public class LWWindowPeer
             return false;
         }
 
-        AppContext targetAppContext = AWTAccessor.getComponentAccessor().getAppContext(getTarget());
-        KeyboardFocusManager kfm = AWTAccessor.getKeyboardFocusManagerAccessor()
-                .getCurrentKeyboardFocusManager(targetAppContext);
-        Window currentActive = kfm.getActiveWindow();
-
+        Window currentActive = KeyboardFocusManager.
+            getCurrentKeyboardFocusManager().getActiveWindow();
 
         Window opposite = LWKeyboardFocusManagerPeer.getInstance().
             getCurrentFocusedWindow();

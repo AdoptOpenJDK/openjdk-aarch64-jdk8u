@@ -29,7 +29,7 @@
 #include "sun_management_HotSpotDiagnostic.h"
 
 JNIEXPORT void JNICALL
-Java_sun_management_HotSpotDiagnostic_dumpHeap0
+Java_sun_management_HotSpotDiagnostic_dumpHeap
   (JNIEnv *env, jobject dummy, jstring outputfile, jboolean live)
 {
     jmm_interface->DumpHeap0(env, outputfile, live);

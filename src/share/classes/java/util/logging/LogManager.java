@@ -770,10 +770,9 @@ public class LogManager {
             ref = owner.new LoggerWeakRef(logger);
             namedLoggers.put(name, ref);
 
-            // Apply any initial level defined for the new logger, unless
-            // the logger's level is already initialized
+            // Apply any initial level defined for the new logger.
             Level level = owner.getLevelProperty(name + ".level", null);
-            if (level != null && !logger.isLevelInitialized()) {
+            if (level != null) {
                 doSetLevel(logger, level);
             }
 

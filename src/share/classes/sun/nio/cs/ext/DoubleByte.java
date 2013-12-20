@@ -111,6 +111,7 @@ public class DoubleByte {
     public static class Decoder extends CharsetDecoder
                                 implements DelegatableDecoder, ArrayDecoder
     {
+
         final char[][] b2c;
         final char[] b2cSB;
         final int b2Min;
@@ -121,12 +122,7 @@ public class DoubleByte {
             return CoderResult.UNDERFLOW;
         }
 
-        protected CoderResult crMalformedOrUnmappable(int b1, int b2) {
-            if (b2c[b1] == B2C_UNMAPPABLE ||                // isNotLeadingByte(b1)
-                b2c[b2] != B2C_UNMAPPABLE ||                // isLeadingByte(b2)
-                decodeSingle(b2) != UNMAPPABLE_DECODING) {  // isSingle(b2)
-                return CoderResult.malformedForLength(1);
-            }
+        protected CoderResult crMalformedOrUnmappable(int b) {
             return CoderResult.unmappableForLength(2);
         }
 
@@ -165,7 +161,7 @@ public class DoubleByte {
                         int b2 = sa[sp + 1] & 0xff;
                         if (b2 < b2Min || b2 > b2Max ||
                             (c = b2c[b1][b2 - b2Min]) == UNMAPPABLE_DECODING) {
-                            return crMalformedOrUnmappable(b1, b2);
+                            return crMalformedOrUnmappable(b1);
                         }
                         inSize++;
                     }
@@ -194,7 +190,7 @@ public class DoubleByte {
                         int b2 = src.get() & 0xff;
                         if (b2 < b2Min || b2 > b2Max ||
                             (c = b2c[b1][b2 - b2Min]) == UNMAPPABLE_DECODING)
-                            return crMalformedOrUnmappable(b1, b2);
+                            return crMalformedOrUnmappable(b1);
                         inSize++;
                     }
                     dst.put(c);
@@ -225,13 +221,8 @@ public class DoubleByte {
                 if (c == UNMAPPABLE_DECODING) {
                     if (sp < sl) {
                         int b2 = src[sp++] & 0xff;
-                        if (b2 < b2Min || b2 > b2Max ||
-                            (c = b2c[b1][b2 - b2Min]) == UNMAPPABLE_DECODING) {
-                            if (b2c[b1] == B2C_UNMAPPABLE ||  // isNotLeadingByte
-                                b2c[b2] != B2C_UNMAPPABLE ||  // isLeadingByte
-                                decodeSingle(b2) != UNMAPPABLE_DECODING) {
-                                sp--;
-                            }
+                        if (b2 >= b2Min && b2 <= b2Max) {
+                            c = b2c[b1][b2 - b2Min];
                         }
                     }
                     if (c == UNMAPPABLE_DECODING) {
@@ -475,8 +466,8 @@ public class DoubleByte {
             return CoderResult.UNDERFLOW;
         }
 
-        protected CoderResult crMalformedOrUnmappable(int b1, int b2) {
-            if (b1 == SS2 || b1 == SS3 )
+        protected CoderResult crMalformedOrUnmappable(int b) {
+            if (b == SS2 || b == SS3 )
                 return CoderResult.malformedForLength(1);
             return CoderResult.unmappableForLength(2);
         }

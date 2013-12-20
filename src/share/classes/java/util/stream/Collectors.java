@@ -462,7 +462,7 @@ public final class Collectors {
      */
     public static <T> Collector<T, ?, Integer>
     summingInt(ToIntFunction<? super T> mapper) {
-        return new CollectorImpl<>(
+        return new CollectorImpl<T, int[], Integer>(
                 () -> new int[1],
                 (a, t) -> { a[0] += mapper.applyAsInt(t); },
                 (a, b) -> { a[0] += b[0]; return a; },
@@ -480,7 +480,7 @@ public final class Collectors {
      */
     public static <T> Collector<T, ?, Long>
     summingLong(ToLongFunction<? super T> mapper) {
-        return new CollectorImpl<>(
+        return new CollectorImpl<T, long[], Long>(
                 () -> new long[1],
                 (a, t) -> { a[0] += mapper.applyAsLong(t); },
                 (a, b) -> { a[0] += b[0]; return a; },
@@ -505,7 +505,7 @@ public final class Collectors {
      */
     public static <T> Collector<T, ?, Double>
     summingDouble(ToDoubleFunction<? super T> mapper) {
-        return new CollectorImpl<>(
+        return new CollectorImpl<T, double[], Double>(
                 () -> new double[1],
                 (a, t) -> { a[0] += mapper.applyAsDouble(t); },
                 (a, b) -> { a[0] += b[0]; return a; },
@@ -523,7 +523,7 @@ public final class Collectors {
      */
     public static <T> Collector<T, ?, Double>
     averagingInt(ToIntFunction<? super T> mapper) {
-        return new CollectorImpl<>(
+        return new CollectorImpl<T, long[], Double>(
                 () -> new long[2],
                 (a, t) -> { a[0] += mapper.applyAsInt(t); a[1]++; },
                 (a, b) -> { a[0] += b[0]; a[1] += b[1]; return a; },
@@ -541,7 +541,7 @@ public final class Collectors {
      */
     public static <T> Collector<T, ?, Double>
     averagingLong(ToLongFunction<? super T> mapper) {
-        return new CollectorImpl<>(
+        return new CollectorImpl<T, long[], Double>(
                 () -> new long[2],
                 (a, t) -> { a[0] += mapper.applyAsLong(t); a[1]++; },
                 (a, b) -> { a[0] += b[0]; a[1] += b[1]; return a; },
@@ -566,7 +566,7 @@ public final class Collectors {
      */
     public static <T> Collector<T, ?, Double>
     averagingDouble(ToDoubleFunction<? super T> mapper) {
-        return new CollectorImpl<>(
+        return new CollectorImpl<T, double[], Double>(
                 () -> new double[2],
                 (a, t) -> { a[0] += mapper.applyAsDouble(t); a[1]++; },
                 (a, b) -> { a[0] += b[0]; a[1] += b[1]; return a; },
@@ -723,14 +723,6 @@ public final class Collectors {
      *     groupingBy(classifier, toList());
      * }</pre>
      *
-     * @implNote
-     * The returned {@code Collector} is not concurrent.  For parallel stream
-     * pipelines, the {@code combiner} function operates by merging the keys
-     * from one map into another, which can be an expensive operation.  If
-     * preservation of the order in which elements appear in the resulting {@code Map}
-     * collector is not required, using {@link #groupingByConcurrent(Function)}
-     * may offer better parallel performance.
-     *
      * @param <T> the type of the input elements
      * @param <K> the type of the keys
      * @param classifier the classifier function mapping input elements to keys
@@ -766,14 +758,6 @@ public final class Collectors {
      *         = people.stream().collect(groupingBy(Person::getCity,
      *                                              mapping(Person::getLastName, toSet())));
      * }</pre>
-     *
-     * @implNote
-     * The returned {@code Collector} is not concurrent.  For parallel stream
-     * pipelines, the {@code combiner} function operates by merging the keys
-     * from one map into another, which can be an expensive operation.  If
-     * preservation of the order in which elements are presented to the downstream
-     * collector is not required, using {@link #groupingByConcurrent(Function, Collector)}
-     * may offer better parallel performance.
      *
      * @param <T> the type of the input elements
      * @param <K> the type of the keys
@@ -813,14 +797,6 @@ public final class Collectors {
      *         = people.stream().collect(groupingBy(Person::getCity, TreeMap::new,
      *                                              mapping(Person::getLastName, toSet())));
      * }</pre>
-     *
-     * @implNote
-     * The returned {@code Collector} is not concurrent.  For parallel stream
-     * pipelines, the {@code combiner} function operates by merging the keys
-     * from one map into another, which can be an expensive operation.  If
-     * preservation of the order in which elements are presented to the downstream
-     * collector is not required, using {@link #groupingByConcurrent(Function, Supplier, Collector)}
-     * may offer better parallel performance.
      *
      * @param <T> the type of the input elements
      * @param <K> the type of the keys
@@ -895,7 +871,7 @@ public final class Collectors {
      * @param <T> the type of the input elements
      * @param <K> the type of the keys
      * @param classifier a classifier function mapping input elements to keys
-     * @return a concurrent, unordered {@code Collector} implementing the group-by operation
+     * @return a {@code Collector} implementing the group-by operation
      *
      * @see #groupingBy(Function)
      * @see #groupingByConcurrent(Function, Collector)
@@ -936,7 +912,7 @@ public final class Collectors {
      * @param <D> the result type of the downstream reduction
      * @param classifier a classifier function mapping input elements to keys
      * @param downstream a {@code Collector} implementing the downstream reduction
-     * @return a concurrent, unordered {@code Collector} implementing the cascaded group-by operation
+     * @return a {@code Collector} implementing the cascaded group-by operation
      *
      * @see #groupingBy(Function, Collector)
      * @see #groupingByConcurrent(Function)
@@ -982,7 +958,7 @@ public final class Collectors {
      * @param downstream a {@code Collector} implementing the downstream reduction
      * @param mapFactory a function which, when called, produces a new empty
      *                   {@code ConcurrentMap} of the desired type
-     * @return a concurrent, unordered {@code Collector} implementing the cascaded group-by operation
+     * @return a {@code Collector} implementing the cascaded group-by operation
      *
      * @see #groupingByConcurrent(Function)
      * @see #groupingByConcurrent(Function, Collector)
@@ -1096,7 +1072,7 @@ public final class Collectors {
     }
 
     /**
-     * Returns a {@code Collector} that accumulates elements into a
+     * Returns a {@code Collector} that accumulate elements into a
      * {@code Map} whose keys and values are the result of applying the provided
      * mapping functions to the input elements.
      *
@@ -1125,14 +1101,6 @@ public final class Collectors {
      *                                         Functions.identity());
      * }</pre>
      *
-     * @implNote
-     * The returned {@code Collector} is not concurrent.  For parallel stream
-     * pipelines, the {@code combiner} function operates by merging the keys
-     * from one map into another, which can be an expensive operation.  If it is
-     * not required that results are inserted into the {@code Map} in encounter
-     * order, using {@link #toConcurrentMap(Function, Function)}
-     * may offer better parallel performance.
-     *
      * @param <T> the type of the input elements
      * @param <K> the output type of the key mapping function
      * @param <U> the output type of the value mapping function
@@ -1153,7 +1121,7 @@ public final class Collectors {
     }
 
     /**
-     * Returns a {@code Collector} that accumulates elements into a
+     * Returns a {@code Collector} that accumulate elements into a
      * {@code Map} whose keys and values are the result of applying the provided
      * mapping functions to the input elements.
      *
@@ -1177,14 +1145,6 @@ public final class Collectors {
      *                                       Person::getAddress,
      *                                       (s, a) -> s + ", " + a));
      * }</pre>
-     *
-     * @implNote
-     * The returned {@code Collector} is not concurrent.  For parallel stream
-     * pipelines, the {@code combiner} function operates by merging the keys
-     * from one map into another, which can be an expensive operation.  If it is
-     * not required that results are merged into the {@code Map} in encounter
-     * order, using {@link #toConcurrentMap(Function, Function, BinaryOperator)}
-     * may offer better parallel performance.
      *
      * @param <T> the type of the input elements
      * @param <K> the output type of the key mapping function
@@ -1212,7 +1172,7 @@ public final class Collectors {
     }
 
     /**
-     * Returns a {@code Collector} that accumulates elements into a
+     * Returns a {@code Collector} that accumulate elements into a
      * {@code Map} whose keys and values are the result of applying the provided
      * mapping functions to the input elements.
      *
@@ -1221,14 +1181,6 @@ public final class Collectors {
      * the value mapping function is applied to each equal element, and the
      * results are merged using the provided merging function.  The {@code Map}
      * is created by a provided supplier function.
-     *
-     * @implNote
-     * The returned {@code Collector} is not concurrent.  For parallel stream
-     * pipelines, the {@code combiner} function operates by merging the keys
-     * from one map into another, which can be an expensive operation.  If it is
-     * not required that results are merged into the {@code Map} in encounter
-     * order, using {@link #toConcurrentMap(Function, Function, BinaryOperator, Supplier)}
-     * may offer better parallel performance.
      *
      * @param <T> the type of the input elements
      * @param <K> the output type of the key mapping function
@@ -1263,7 +1215,7 @@ public final class Collectors {
     }
 
     /**
-     * Returns a concurrent {@code Collector} that accumulates elements into a
+     * Returns a {@code Collector} that accumulate elements into a
      * {@code ConcurrentMap} whose keys and values are the result of applying
      * the provided mapping functions to the input elements.
      *
@@ -1300,7 +1252,7 @@ public final class Collectors {
      * @param <U> the output type of the value mapping function
      * @param keyMapper the mapping function to produce keys
      * @param valueMapper the mapping function to produce values
-     * @return a concurrent, unordered {@code Collector} which collects elements into a
+     * @return a concurrent {@code Collector} which collects elements into a
      * {@code ConcurrentMap} whose keys are the result of applying a key mapping
      * function to the input elements, and whose values are the result of
      * applying a value mapping function to the input elements
@@ -1316,7 +1268,7 @@ public final class Collectors {
     }
 
     /**
-     * Returns a concurrent {@code Collector} that accumulates elements into a
+     * Returns a {@code Collector} that accumulate elements into a
      * {@code ConcurrentMap} whose keys and values are the result of applying
      * the provided mapping functions to the input elements.
      *
@@ -1351,7 +1303,7 @@ public final class Collectors {
      * @param mergeFunction a merge function, used to resolve collisions between
      *                      values associated with the same key, as supplied
      *                      to {@link Map#merge(Object, Object, BiFunction)}
-     * @return a concurrent, unordered {@code Collector} which collects elements into a
+     * @return a concurrent {@code Collector} which collects elements into a
      * {@code ConcurrentMap} whose keys are the result of applying a key mapping
      * function to the input elements, and whose values are the result of
      * applying a value mapping function to all input elements equal to the key
@@ -1370,7 +1322,7 @@ public final class Collectors {
     }
 
     /**
-     * Returns a concurrent {@code Collector} that accumulates elements into a
+     * Returns a {@code Collector} that accumulate elements into a
      * {@code ConcurrentMap} whose keys and values are the result of applying
      * the provided mapping functions to the input elements.
      *
@@ -1393,7 +1345,7 @@ public final class Collectors {
      *                      to {@link Map#merge(Object, Object, BiFunction)}
      * @param mapSupplier a function which returns a new, empty {@code Map} into
      *                    which the results will be inserted
-     * @return a concurrent, unordered {@code Collector} which collects elements into a
+     * @return a concurrent {@code Collector} which collects elements into a
      * {@code ConcurrentMap} whose keys are the result of applying a key mapping
      * function to the input elements, and whose values are the result of
      * applying a value mapping function to all input elements equal to the key

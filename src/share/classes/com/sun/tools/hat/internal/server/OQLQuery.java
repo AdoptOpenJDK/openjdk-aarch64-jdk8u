@@ -32,7 +32,10 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.oql.*;
+import com.sun.tools.hat.internal.util.ArraySorter;
+import com.sun.tools.hat.internal.util.Comparer;
 
 /**
  * This handles Object Query Language (OQL) queries.
@@ -65,7 +68,7 @@ class OQLQuery extends QueryHandler {
         out.println("<p align='center'>");
         out.println("<textarea name='query' cols=80 rows=10>");
         if (oql != null) {
-            println(oql);
+            out.println(oql);
         }
         out.println("</textarea>");
         out.println("</p>");
@@ -88,7 +91,10 @@ class OQLQuery extends QueryHandler {
                          try {
                              out.println(engine.toHtml(o));
                          } catch (Exception e) {
-                             printException(e);
+                             out.println(e.getMessage());
+                             out.println("<pre>");
+                             e.printStackTrace(out);
+                             out.println("</pre>");
                          }
                          out.println("</td></tr>");
                          return false;
@@ -96,7 +102,10 @@ class OQLQuery extends QueryHandler {
                  });
             out.println("</table>");
         } catch (OQLException exp) {
-            printException(exp);
+            out.println(exp.getMessage());
+            out.println("<pre>");
+            exp.printStackTrace(out);
+            out.println("</pre>");
         }
     }
 

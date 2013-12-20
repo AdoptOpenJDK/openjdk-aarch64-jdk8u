@@ -48,7 +48,7 @@ package java.awt;
  * <p>
  * <img src="doc-files/CheckboxGroup-1.gif"
  * alt="Shows three checkboxes, arranged vertically, labeled one, two, and three. Checkbox one is in the on state."
- * style="float:center; margin: 7px 10px;">
+ * ALIGN=center HSPACE=10 VSPACE=7>
  * <p>
  * @author      Sami Shaio
  * @see         java.awt.Checkbox

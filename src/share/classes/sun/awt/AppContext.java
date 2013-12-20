@@ -167,9 +167,6 @@ public final class AppContext {
      */
     private static volatile AppContext mainAppContext = null;
 
-    private static class GetAppContextLock {};
-    private final static Object getAppContextLock = new GetAppContextLock();
-
     /*
      * The hash map associated with this AppContext.  A private delegate
      * is used instead of subclassing HashMap so as to avoid all of
@@ -312,16 +309,14 @@ public final class AppContext {
                     // if no contexts have been created yet. This covers standalone apps
                     // and excludes applets because by the time applet starts
                     // a number of contexts have already been created by the plugin.
-                    synchronized (getAppContextLock) {
-                        if (numAppContexts.get() == 0) {
-                            if (System.getProperty("javaplugin.version") == null &&
-                                    System.getProperty("javawebstart.version") == null) {
-                                initMainAppContext();
-                            } else if (System.getProperty("javafx.version") != null &&
-                                    threadGroup.getParent() != null) {
-                                // Swing inside JavaFX case
-                                SunToolkit.createNewAppContext();
-                            }
+                    if (numAppContexts.get() == 0) {
+                        if (System.getProperty("javaplugin.version") == null &&
+                                System.getProperty("javawebstart.version") == null) {
+                            initMainAppContext();
+                        } else if (System.getProperty("javafx.version") != null &&
+                                threadGroup.getParent() != null) {
+                            // Swing inside JavaFX case
+                            SunToolkit.createNewAppContext();
                         }
                     }
 
@@ -430,7 +425,7 @@ public final class AppContext {
                     try {
                         w.dispose();
                     } catch (Throwable t) {
-                        log.finer("exception occurred while disposing app context", t);
+                        log.finer("exception occured while disposing app context", t);
                     }
                 }
                 AccessController.doPrivileged(new PrivilegedAction<Void>() {
@@ -820,13 +815,28 @@ public final class AppContext {
     // Set up JavaAWTAccess in SharedSecrets
     static {
         sun.misc.SharedSecrets.setJavaAWTAccess(new sun.misc.JavaAWTAccess() {
-            private boolean hasRootThreadGroup(final AppContext ecx) {
-                return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-                    @Override
-                    public Boolean run() {
-                        return ecx.threadGroup.getParent() == null;
-                    }
-                });
+            public Object get(Object key) {
+                AppContext ac = getAppContext();
+                return (ac == null) ? null : ac.get(key);
+            }
+            public void put(Object key, Object value) {
+                AppContext ac = getAppContext();
+                if (ac != null) {
+                    ac.put(key, value);
+                }
+            }
+            public void remove(Object key) {
+                AppContext ac = getAppContext();
+                if (ac != null) {
+                    ac.remove(key);
+                }
+            }
+            public boolean isDisposed() {
+                AppContext ac = getAppContext();
+                return (ac == null) ? true : ac.isDisposed();
+            }
+            public boolean isMainAppContext() {
+                return (numAppContexts.get() == 1 && mainAppContext != null);
             }
 
             /**
@@ -876,7 +886,7 @@ public final class AppContext {
                 // See: JDK-8023258
                 final boolean isMainAppContext = ecx == null
                     || mainAppContext == ecx
-                    || mainAppContext == null && hasRootThreadGroup(ecx);
+                    || mainAppContext == null && ecx.threadGroup.getParent() == null;
 
                 return isMainAppContext ? null : ecx;
             }

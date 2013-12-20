@@ -40,17 +40,7 @@ public class HotSpotDiagnostic implements HotSpotDiagnosticMXBean {
     public HotSpotDiagnostic() {
     }
 
-    public void dumpHeap(String outputFile, boolean live) throws IOException {
-        SecurityManager security = System.getSecurityManager();
-        if (security != null) {
-            security.checkWrite(outputFile);
-            Util.checkControlAccess();
-        }
-
-        dumpHeap0(outputFile, live);
-    }
-
-    private native void dumpHeap0(String outputFile, boolean live) throws IOException;
+    public native void dumpHeap(String outputFile, boolean live) throws IOException;
 
     public List<VMOption> getDiagnosticOptions() {
         List<Flag> allFlags = Flag.getAllFlags();

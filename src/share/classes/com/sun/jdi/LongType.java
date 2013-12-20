@@ -35,6 +35,6 @@ package com.sun.jdi;
  * @author James McIlree
  * @since  1.3
  */
-@jdk.Exported
-public interface LongType extends PrimitiveType {
+public interface LongType extends PrimitiveType
+{
 }

@@ -36,7 +36,6 @@ public class jpeg extends ContentHandler {
         return new URLImageSource(urlc);
     }
 
-    @SuppressWarnings("rawtypes")
     public Object getContent(URLConnection urlc, Class[] classes) throws IOException {
         Class<?>[] cls = classes;
         for (int i = 0; i < cls.length; i++) {

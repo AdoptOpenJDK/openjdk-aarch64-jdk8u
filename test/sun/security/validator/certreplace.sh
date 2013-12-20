@@ -48,7 +48,7 @@ case "$OS" in
 esac
 
 KT="$TESTJAVA${FS}bin${FS}keytool -storepass changeit \
-    -keypass changeit -keystore certreplace.jks -keyalg rsa"
+    -keypass changeit -keystore certreplace.jks"
 JAVAC=$COMPILEJAVA${FS}bin${FS}javac
 JAVA=$TESTJAVA${FS}bin${FS}java
 

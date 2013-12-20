@@ -64,4 +64,5 @@ Java_java_net_InetAddress_init(JNIEnv *env, jclass cls) {
     iac_familyID = (*env)->GetFieldID(env, iac_class, "family", "I");
     CHECK_NULL(iac_familyID);
     iac_hostNameID = (*env)->GetFieldID(env, iac_class, "hostName", "Ljava/lang/String;");
+    CHECK_NULL(iac_hostNameID);
 }

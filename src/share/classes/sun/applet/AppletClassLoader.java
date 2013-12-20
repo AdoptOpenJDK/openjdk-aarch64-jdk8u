@@ -239,7 +239,6 @@ public class AppletClassLoader extends URLClassLoader {
      * the "localhost".
      *
      * @param codesource the codesource
-     * @throws NullPointerException if {@code codesource} is {@code null}.
      * @return the permissions granted to the codesource
      */
     protected PermissionCollection getPermissions(CodeSource codesource)

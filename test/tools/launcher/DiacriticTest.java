@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,13 +54,7 @@ public class DiacriticTest extends TestHelper {
                 "}\n";
         ArrayList<String> content = new ArrayList<>();
         content.add(source);
-        try {
-            createFile(sourceFile, content);
-        } catch (java.nio.file.InvalidPathException ipe) {
-            System.out.println("The locale or file system is configured in a way " +
-                               "that prevents file creation. Real testing impossible.");
-            return;
-        }
+        createFile(sourceFile, content);
 
         HashMap<String, String> env = new HashMap<>();
         env.put("LC_CTYPE", "UTF-8");

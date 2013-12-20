@@ -42,7 +42,7 @@ import com.sun.rowset.internal.*;
 
 /**
  * The standard implementation of the <code>WebRowSet</code> interface. See the interface
- * definition for full behavior and implementation requirements.
+ * defintion for full behaviour and implementation requirements.
  *
  * @author Jonathan Bruce, Amit Handa
  */

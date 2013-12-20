@@ -23,11 +23,8 @@
 
 package jdk.testlibrary;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
-/**
- * Super class for tests which need to attach jcmd to the current process.
- */
 public class JcmdBase {
 
     private static ProcessBuilder processBuilder = new ProcessBuilder();
@@ -35,24 +32,46 @@ public class JcmdBase {
     /**
      * Attach jcmd to the current process
      *
-     * @param toolArgs
-     *            jcmd command line parameters, e.g. VM.flags
+     * @param commandArgs
+     *            jcmd command line parameters, e.g. JFR.start
      * @return jcmd output
      * @throws Exception
      */
-    public final static OutputAnalyzer jcmd(String... toolArgs)
+    public final static OutputAnalyzer jcmd(String... commandArgs)
             throws Exception {
-        JDKToolLauncher launcher = JDKToolLauncher.createUsingTestJDK("jcmd");
-        launcher.addToolArg(Integer.toString(ProcessTools.getProcessId()));
-        for (String toolArg : toolArgs) {
-            launcher.addToolArg(toolArg);
+        ArrayList<String> cmd = new ArrayList<String>();
+        String cmdString = "";
+
+        // jcmd from the jdk to be tested
+        String jcmdPath = JdkFinder.getTool("jcmd", false);
+        cmd.add(jcmdPath);
+        cmdString += jcmdPath;
+
+        String pid = Integer.toString(ProcessTools.getProcessId());
+        cmd.add(pid);
+        cmdString += " " + pid;
+
+        for (int i = 0; i < commandArgs.length; i++) {
+            cmd.add(commandArgs[i]);
+            cmdString += " " + commandArgs[i];
         }
-        processBuilder.command(launcher.getCommand());
-        System.out.println(Arrays.toString(processBuilder.command().toArray()).replace(",", ""));
+
+        // Log command line for debugging purpose
+        System.out.println("Command line:");
+        System.out.println(cmdString);
+
+        processBuilder.command(cmd);
         OutputAnalyzer output = new OutputAnalyzer(processBuilder.start());
+
+        // Log output for debugging purpose
+        System.out.println("Command output:");
         System.out.println(output.getOutput());
 
-        output.shouldHaveExitValue(0);
+        if (output.getExitValue() != 0) {
+            throw new Exception(processBuilder.command()
+                    + " resulted in exit value " + output.getExitValue()
+                    + " , expected to get 0");
+        }
 
         return output;
     }

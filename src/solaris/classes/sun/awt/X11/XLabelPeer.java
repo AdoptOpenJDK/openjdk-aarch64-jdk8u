@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2003, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -132,22 +132,20 @@ class XLabelPeer extends XComponentPeer implements LabelPeer {
         }
     }
 
-    @Override
-    public void setText(String label) {
+    public void setText(String text) {
+        label = text;
         if (label == null) {
             label = "";
         }
-        if (!label.equals(this.label)) {
-            this.label = label;
-            repaint();
-        }
+        repaint();
+    }
+    public void setFont(Font f) {
+        super.setFont(f);
+        repaint();
     }
 
-    @Override
-    public void setAlignment(final int alignment) {
-        if (this.alignment != alignment) {
-            this.alignment = alignment;
-            repaint();
-        }
+    public void setAlignment(int align) {
+        alignment = align;
+        repaint();
     }
 }

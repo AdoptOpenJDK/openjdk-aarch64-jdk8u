@@ -244,6 +244,7 @@ class Properties extends Hashtable<Object,Object> {
      * As an example, each of the following three lines specifies the key
      * {@code "Truth"} and the associated element value
      * {@code "Beauty"}:
+     * <p>
      * <pre>
      * Truth = Beauty
      *  Truth:Beauty
@@ -251,12 +252,14 @@ class Properties extends Hashtable<Object,Object> {
      * </pre>
      * As another example, the following three lines specify a single
      * property:
+     * <p>
      * <pre>
      * fruits                           apple, banana, pear, \
      *                                  cantaloupe, watermelon, \
      *                                  kiwi, mango
      * </pre>
      * The key is {@code "fruits"} and the associated element is:
+     * <p>
      * <pre>"apple, banana, pear, cantaloupe, watermelon, kiwi, mango"</pre>
      * Note that a space appears before each {@code \} so that a space
      * will appear after each comma in the final result; the {@code \},
@@ -265,11 +268,13 @@ class Properties extends Hashtable<Object,Object> {
      * characters.
      * <p>
      * As a third example, the line:
+     * <p>
      * <pre>cheeses
      * </pre>
      * specifies that the key is {@code "cheeses"} and the associated
-     * element is the empty string {@code ""}.
+     * element is the empty string {@code ""}.<p>
      * <p>
+     *
      * <a name="unicodeescapes"></a>
      * Characters in keys and elements can be represented in escape
      * sequences similar to those used for character and string literals

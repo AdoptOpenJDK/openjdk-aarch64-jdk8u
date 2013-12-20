@@ -70,9 +70,7 @@ import java.time.chrono.IsoChronology;
 import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.util.HashMap;
 import java.util.Map;
@@ -109,7 +107,7 @@ public class TCKIsoChronology {
             @SuppressWarnings("unchecked")
             @Override
             public <R> R query(TemporalQuery<R> query) {
-                if (query == TemporalQueries.chronology()) {
+                if (query == TemporalQuery.chronology()) {
                     return (R) IsoChronology.INSTANCE;
                 }
                 throw new UnsupportedOperationException();
@@ -132,7 +130,7 @@ public class TCKIsoChronology {
 
             @Override
             public <R> R query(TemporalQuery<R> query) {
-                if (query == TemporalQueries.chronology()) {
+                if (query == TemporalQuery.chronology()) {
                     return null;
                 }
                 throw new UnsupportedOperationException();
@@ -168,7 +166,7 @@ public class TCKIsoChronology {
             @SuppressWarnings("unchecked")
             @Override
             public <R> R query(TemporalQuery<R> query) {
-                if (query == TemporalQueries.localDate()) {
+                if (query == TemporalQuery.localDate()) {
                     return (R) LocalDate.of(2012, 6, 30);
                 }
                 throw new UnsupportedOperationException();
@@ -207,10 +205,10 @@ public class TCKIsoChronology {
             @SuppressWarnings("unchecked")
             @Override
             public <R> R query(TemporalQuery<R> query) {
-                if (query == TemporalQueries.localDate()) {
+                if (query == TemporalQuery.localDate()) {
                     return (R) LocalDate.of(2012, 6, 30);
                 }
-                if (query == TemporalQueries.localTime()) {
+                if (query == TemporalQuery.localTime()) {
                     return (R) LocalTime.of(12, 30, 40);
                 }
                 throw new UnsupportedOperationException();
@@ -256,13 +254,13 @@ public class TCKIsoChronology {
             @SuppressWarnings("unchecked")
             @Override
             public <R> R query(TemporalQuery<R> query) {
-                if (query == TemporalQueries.localDate()) {
+                if (query == TemporalQuery.localDate()) {
                     return (R) LocalDate.of(2012, 6, 30);
                 }
-                if (query == TemporalQueries.localTime()) {
+                if (query == TemporalQuery.localTime()) {
                     return (R) LocalTime.of(12, 30, 40);
                 }
-                if (query == TemporalQueries.zoneId() || query == TemporalQueries.zone()) {
+                if (query == TemporalQuery.zoneId() || query == TemporalQuery.zone()) {
                     return (R) ZoneId.of("Europe/London");
                 }
                 throw new UnsupportedOperationException();

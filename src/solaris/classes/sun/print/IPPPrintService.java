@@ -366,7 +366,6 @@ public class IPPPrintService implements PrintService, SunPrinterJobService {
                                           " IPPPrintService, myURL="+
                                           myURL+" Exception= "+
                                           e);
-            throw new IllegalArgumentException("invalid url");
         }
 
         isCupsPrinter = isCups;
@@ -1146,8 +1145,6 @@ public class IPPPrintService implements PrintService, SunPrinterJobService {
                 // REMIND: check attribute values
                 return (T)PDLOverrideSupported.NOT_ATTEMPTED;
             }
-        } else if (category == PrinterURI.class) {
-            return (T)(new PrinterURI(myURI));
         } else {
             return null;
         }

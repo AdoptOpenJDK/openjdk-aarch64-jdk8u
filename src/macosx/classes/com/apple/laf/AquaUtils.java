@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,6 @@ import java.awt.*;
 import java.awt.image.*;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
 
@@ -42,68 +41,56 @@ import sun.awt.AppContext;
 import sun.lwawt.macosx.CImage;
 import sun.lwawt.macosx.CImage.Creator;
 import sun.lwawt.macosx.CPlatformWindow;
-import sun.misc.Launcher;
-import sun.reflect.misc.ReflectUtil;
-import sun.security.action.GetPropertyAction;
 import sun.swing.SwingUtilities2;
 
 import com.apple.laf.AquaImageFactory.SlicedImageControl;
 
-final class AquaUtils {
+public class AquaUtils {
+    final static String ANIMATIONS_SYSTEM_PROPERTY = "swing.enableAnimations";
 
-    private static final String ANIMATIONS_PROPERTY = "swing.enableAnimations";
-
-    /**
-     * Suppresses default constructor, ensuring non-instantiability.
-     */
-    private AquaUtils() {
-    }
-
-    /**
+    /*
      * Convenience function for determining ComponentOrientation.  Helps us
      * avoid having Munge directives throughout the code.
      */
-    static boolean isLeftToRight(final Component c) {
+    public static boolean isLeftToRight(final Component c) {
         return c.getComponentOrientation().isLeftToRight();
     }
 
-    static void enforceComponentOrientation(final Component c, final ComponentOrientation orientation) {
+    public static void enforceComponentOrientation(Component c, ComponentOrientation orientation) {
         c.setComponentOrientation(orientation);
         if (c instanceof Container) {
-            for (final Component child : ((Container)c).getComponents()) {
+            for (Component child : ((Container)c).getComponents()) {
                 enforceComponentOrientation(child, orientation);
             }
         }
     }
 
-    private static Creator getCImageCreatorInternal() {
-        return AccessController.doPrivileged(new PrivilegedAction<Creator>() {
-            @Override
+    private static CImage.Creator getCImageCreatorInternal() {
+        return java.security.AccessController.doPrivileged(new PrivilegedAction<CImage.Creator>() {
             public Creator run() {
                 try {
                     final Method getCreatorMethod = CImage.class.getDeclaredMethod("getCreator", new Class[] {});
                     getCreatorMethod.setAccessible(true);
-                    return (Creator)getCreatorMethod.invoke(null, new Object[] {});
-                } catch (final Exception ignored) {
+                    return (CImage.Creator)getCreatorMethod.invoke(null, new Object[] {});
+                } catch (final Exception e) {
                     return null;
                 }
             }
         });
     }
 
-    private static final RecyclableSingleton<Creator> cImageCreator = new RecyclableSingleton<Creator>() {
+    private static final RecyclableSingleton<CImage.Creator> cImageCreator = new RecyclableSingleton<CImage.Creator>() {
         @Override
         protected Creator getInstance() {
             return getCImageCreatorInternal();
         }
     };
-    static Creator getCImageCreator() {
+    static CImage.Creator getCImageCreator() {
         return cImageCreator.get();
     }
 
-    static Image generateSelectedDarkImage(final Image image) {
+    protected static Image generateSelectedDarkImage(final Image image) {
         final ImageProducer prod = new FilteredImageSource(image.getSource(), new IconImageFilter() {
-            @Override
             int getGreyFor(final int gray) {
                 return gray * 75 / 100;
             }
@@ -111,9 +98,8 @@ final class AquaUtils {
         return Toolkit.getDefaultToolkit().createImage(prod);
     }
 
-    static Image generateDisabledImage(final Image image) {
+    protected static Image generateDisabledImage(final Image image) {
         final ImageProducer prod = new FilteredImageSource(image.getSource(), new IconImageFilter() {
-            @Override
             int getGreyFor(final int gray) {
                 return 255 - ((255 - gray) * 65 / 100);
             }
@@ -121,20 +107,19 @@ final class AquaUtils {
         return Toolkit.getDefaultToolkit().createImage(prod);
     }
 
-    static Image generateLightenedImage(final Image image, final int percent) {
+    protected static Image generateLightenedImage(final Image image, final int percent) {
         final GrayFilter filter = new GrayFilter(true, percent);
         final ImageProducer prod = new FilteredImageSource(image.getSource(), filter);
         return Toolkit.getDefaultToolkit().createImage(prod);
     }
 
-    private abstract static class IconImageFilter extends RGBImageFilter {
-        IconImageFilter() {
+    static abstract class IconImageFilter extends RGBImageFilter {
+        public IconImageFilter() {
             super();
             canFilterIndexColorModel = true;
         }
 
-        @Override
-        public final int filterRGB(final int x, final int y, final int rgb) {
+        public int filterRGB(final int x, final int y, final int rgb) {
             final int red = (rgb >> 16) & 0xff;
             final int green = (rgb >> 8) & 0xff;
             final int blue = rgb & 0xff;
@@ -150,14 +135,14 @@ final class AquaUtils {
             return result;
         }
 
-        abstract int getGreyFor(int gray);
+        abstract int getGreyFor(final int gray);
     }
 
-    abstract static class RecyclableObject<T> {
-        private SoftReference<T> objectRef;
+    public abstract static class RecyclableObject<T> {
+        protected SoftReference<T> objectRef = null;
 
-        T get() {
-            T referent;
+        public T get() {
+            T referent = null;
             if (objectRef != null && (referent = objectRef.get()) != null) return referent;
             referent = create();
             objectRef = new SoftReference<T>(referent);
@@ -167,8 +152,8 @@ final class AquaUtils {
         protected abstract T create();
     }
 
-    abstract static class RecyclableSingleton<T> {
-        final T get() {
+    public abstract static class RecyclableSingleton<T> {
+        public T get() {
             final AppContext appContext = AppContext.getAppContext();
             SoftReference<T> ref = (SoftReference<T>) appContext.get(this);
             if (ref != null) {
@@ -181,36 +166,38 @@ final class AquaUtils {
             return object;
         }
 
-        void reset() {
-            AppContext.getAppContext().remove(this);
+        public void reset() {
+            AppContext appContext = AppContext.getAppContext();
+            appContext.remove(this);
         }
 
-        abstract T getInstance();
+        protected abstract T getInstance();
     }
 
-    static class RecyclableSingletonFromDefaultConstructor<T> extends RecyclableSingleton<T> {
-        private final Class<T> clazz;
+    public static class RecyclableSingletonFromDefaultConstructor<T> extends RecyclableSingleton<T> {
+        protected final Class<T> clazz;
 
-        RecyclableSingletonFromDefaultConstructor(final Class<T> clazz) {
+        public RecyclableSingletonFromDefaultConstructor(final Class<T> clazz) {
             this.clazz = clazz;
         }
 
-        @Override
-        T getInstance() {
+        protected T getInstance() {
             try {
-                ReflectUtil.checkPackageAccess(clazz);
                 return clazz.newInstance();
-            } catch (InstantiationException | IllegalAccessException ignored) {
+            } catch (final InstantiationException e) {
+                e.printStackTrace();
+            } catch (final IllegalAccessException e) {
+                e.printStackTrace();
             }
             return null;
         }
     }
 
-    abstract static class LazyKeyedSingleton<K, V> {
-        private Map<K, V> refs;
+    public abstract static class LazyKeyedSingleton<K, V> {
+        protected Map<K, V> refs;
 
-        V get(final K key) {
-            if (refs == null) refs = new HashMap<>();
+        public V get(final K key) {
+            if (refs == null) refs = new HashMap<K, V>();
 
             final V cachedValue = refs.get(key);
             if (cachedValue != null) return cachedValue;
@@ -220,45 +207,44 @@ final class AquaUtils {
             return value;
         }
 
-        protected abstract V getInstance(K key);
+        protected abstract V getInstance(final K key);
     }
 
-    private static final RecyclableSingleton<Boolean> enableAnimations = new RecyclableSingleton<Boolean>() {
+    static final RecyclableSingleton<Boolean> enableAnimations = new RecyclableSingleton<Boolean>() {
         @Override
         protected Boolean getInstance() {
-            final String sizeProperty = (String) AccessController.doPrivileged((PrivilegedAction<?>)new GetPropertyAction(
-                    ANIMATIONS_PROPERTY));
-            return !"false".equals(sizeProperty); // should be true by default
+            final String sizeProperty = (String)java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.GetPropertyAction(ANIMATIONS_SYSTEM_PROPERTY));
+            return new Boolean(!"false".equals(sizeProperty)); // should be true by default
         }
     };
-    private static boolean animationsEnabled() {
+    static boolean animationsEnabled() {
         return enableAnimations.get();
     }
 
-    private static final int MENU_BLINK_DELAY = 50; // 50ms == 3/60 sec, according to the spec
-    static void blinkMenu(final Selectable selectable) {
+    static final int MENU_BLINK_DELAY = 50; // 50ms == 3/60 sec, according to the spec
+    protected static void blinkMenu(final Selectable selectable) {
         if (!animationsEnabled()) return;
         try {
             selectable.paintSelected(false);
             Thread.sleep(MENU_BLINK_DELAY);
             selectable.paintSelected(true);
             Thread.sleep(MENU_BLINK_DELAY);
-        } catch (final InterruptedException ignored) { }
+        } catch (final InterruptedException e) { }
     }
 
     interface Selectable {
-        void paintSelected(boolean selected);
+        void paintSelected(final boolean selected);
     }
 
     interface JComponentPainter {
-        void paint(JComponent c, Graphics g, int x, int y, int w, int h);
+        public void paint(JComponent c, Graphics g, int x, int y, int w, int h);
     }
 
     interface Painter {
-        void paint(Graphics g, int x, int y, int w, int h);
+        public void paint(final Graphics g, int x, int y, int w, int h);
     }
 
-    static void paintDropShadowText(final Graphics g, final JComponent c, final Font font, final FontMetrics metrics, final int x, final int y, final int offsetX, final int offsetY, final Color textColor, final Color shadowColor, final String text) {
+    public static void paintDropShadowText(final Graphics g, final JComponent c, final Font font, final FontMetrics metrics, final int x, final int y, final int offsetX, final int offsetY, final Color textColor, final Color shadowColor, final String text) {
         g.setFont(font);
         g.setColor(shadowColor);
         SwingUtilities2.drawString(c, g, text, x + offsetX, y + offsetY + metrics.getAscent());
@@ -266,22 +252,22 @@ final class AquaUtils {
         SwingUtilities2.drawString(c, g, text, x, y + metrics.getAscent());
     }
 
-    static class ShadowBorder implements Border {
-        private final Painter prePainter;
-        private final Painter postPainter;
+    public static class ShadowBorder implements Border {
+        final Painter prePainter;
+        final Painter postPainter;
 
-        private final int offsetX;
-        private final int offsetY;
-        private final float distance;
-        private final int blur;
-        private final Insets insets;
-        private final ConvolveOp blurOp;
+        final int offsetX;
+        final int offsetY;
+        final float distance;
+        final int blur;
+        final Insets insets;
+        final ConvolveOp blurOp;
 
-        ShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final float intensity, final int blur) {
+        public ShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final float intensity, final int blur) {
             this.prePainter = prePainter; this.postPainter = postPainter;
             this.offsetX = offsetX; this.offsetY = offsetY; this.distance = distance; this.blur = blur;
             final int halfBlur = blur / 2;
-            insets = new Insets(halfBlur - offsetY, halfBlur - offsetX, halfBlur + offsetY, halfBlur + offsetX);
+            this.insets = new Insets(halfBlur - offsetY, halfBlur - offsetX, halfBlur + offsetY, halfBlur + offsetX);
 
             final float blurry = intensity / (blur * blur);
             final float[] blurKernel = new float[blur * blur];
@@ -289,17 +275,14 @@ final class AquaUtils {
             blurOp = new ConvolveOp(new Kernel(blur, blur, blurKernel));
         }
 
-        @Override
-        public final boolean isBorderOpaque() {
+        public boolean isBorderOpaque() {
             return false;
         }
 
-        @Override
-        public final Insets getBorderInsets(final Component c) {
+        public Insets getBorderInsets(final Component c) {
             return insets;
         }
 
-        @Override
         public void paintBorder(final Component c, final Graphics g, final int x, final int y, final int width, final int height) {
             final BufferedImage img = new BufferedImage(width + blur * 2, height + blur * 2, BufferedImage.TYPE_INT_ARGB_PRE);
             paintToImage(img, x, y, width, height);
@@ -307,7 +290,7 @@ final class AquaUtils {
             g.drawImage(img, -blur, -blur, null);
         }
 
-        private void paintToImage(final BufferedImage img, final int x, final int y, final int width, final int height) {
+        protected void paintToImage(final BufferedImage img, final int x, final int y, final int width, final int height) {
             // clear the prior image
             Graphics2D imgG = (Graphics2D)img.getGraphics();
             imgG.setComposite(AlphaComposite.Clear);
@@ -336,10 +319,10 @@ final class AquaUtils {
         }
     }
 
-    static class SlicedShadowBorder extends ShadowBorder {
-        private final SlicedImageControl slices;
+    public static class SlicedShadowBorder extends ShadowBorder {
+        final SlicedImageControl slices;
 
-        SlicedShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final float intensity, final int blur, final int templateWidth, final int templateHeight, final int leftCut, final int topCut, final int rightCut, final int bottomCut) {
+        public SlicedShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final float intensity, final int blur, final int templateWidth, final int templateHeight, final int leftCut, final int topCut, final int rightCut, final int bottomCut) {
             super(prePainter, postPainter, offsetX, offsetY, distance, intensity, blur);
 
             final BufferedImage i = new BufferedImage(templateWidth, templateHeight, BufferedImage.TYPE_INT_ARGB_PRE);
@@ -348,10 +331,13 @@ final class AquaUtils {
             slices = new SlicedImageControl(i, leftCut, topCut, rightCut, bottomCut, false);
         }
 
-        @Override
         public void paintBorder(final Component c, final Graphics g, final int x, final int y, final int width, final int height) {
             slices.paint(g, x, y, width, height);
         }
+    }
+
+    public interface NineSliceMetricsProvider {
+
     }
 
 //    static void debugFrame(String name, Image image) {
@@ -364,30 +350,28 @@ final class AquaUtils {
     // special casing naughty applications, like InstallAnywhere
     // <rdar://problem/4851533> REGR: JButton: Myst IV: the buttons of 1.0.3 updater have redraw issue
     static boolean shouldUseOpaqueButtons() {
-        final ClassLoader launcherClassLoader = Launcher.getLauncher().getClassLoader();
+        final ClassLoader launcherClassLoader = sun.misc.Launcher.getLauncher().getClassLoader();
         if (classExists(launcherClassLoader, "com.installshield.wizard.platform.macosx.MacOSXUtils")) return true;
         return false;
     }
 
-    private static boolean classExists(final ClassLoader classLoader, final String clazzName) {
+    static boolean classExists(final ClassLoader classLoader, final String clazzName) {
         try {
             return Class.forName(clazzName, false, classLoader) != null;
-        } catch (final Throwable ignored) { }
+        } catch (final Throwable e) { }
         return false;
     }
 
-    private static final RecyclableSingleton<Method> getJComponentGetFlagMethod = new RecyclableSingleton<Method>() {
-        @Override
+    private static RecyclableSingleton<Method> getJComponentGetFlagMethod = new RecyclableSingleton<Method>() {
         protected Method getInstance() {
-            return AccessController.doPrivileged(
+            return java.security.AccessController.doPrivileged(
                 new PrivilegedAction<Method>() {
-                    @Override
                     public Method run() {
                         try {
                             final Method method = JComponent.class.getDeclaredMethod("getFlag", new Class[] { int.class });
                             method.setAccessible(true);
                             return method;
-                        } catch (final Throwable ignored) {
+                        } catch (final Throwable e) {
                             return null;
                         }
                     }
@@ -396,18 +380,18 @@ final class AquaUtils {
         }
     };
 
-    private static final Integer OPAQUE_SET_FLAG = 24; // private int JComponent.OPAQUE_SET
-    static boolean hasOpaqueBeenExplicitlySet(final JComponent c) {
+    private static final Integer OPAQUE_SET_FLAG = new Integer(24); // private int JComponent.OPAQUE_SET
+    protected static boolean hasOpaqueBeenExplicitlySet(final JComponent c) {
         final Method method = getJComponentGetFlagMethod.get();
         if (method == null) return false;
         try {
             return Boolean.TRUE.equals(method.invoke(c, OPAQUE_SET_FLAG));
-        } catch (final Throwable ignored) {
+        } catch (final Throwable e) {
             return false;
         }
     }
 
-    private static boolean isWindowTextured(final Component c) {
+    protected static boolean isWindowTextured(final Component c) {
         if (!(c instanceof JComponent)) {
             return false;
         }
@@ -428,12 +412,13 @@ final class AquaUtils {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), 0);
     }
 
-    static void fillRect(final Graphics g, final Component c) {
+    protected static void fillRect(final Graphics g, final Component c) {
         fillRect(g, c, c.getBackground(), 0, 0, c.getWidth(), c.getHeight());
     }
 
-    static void fillRect(final Graphics g, final Component c, final Color color,
-                         final int x, final int y, final int w, final int h) {
+    protected static void fillRect(final Graphics g, final Component c,
+                                   final Color color, final int x, final int y,
+                                   final int w, final int h) {
         if (!(g instanceof Graphics2D)) {
             return;
         }

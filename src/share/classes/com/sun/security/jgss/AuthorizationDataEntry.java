@@ -28,8 +28,7 @@ package com.sun.security.jgss;
 /**
  * Kerberos 5 AuthorizationData entry.
  */
-@jdk.Exported
-public final class AuthorizationDataEntry {
+final public class AuthorizationDataEntry {
 
     private final int type;
     private final byte[] data;

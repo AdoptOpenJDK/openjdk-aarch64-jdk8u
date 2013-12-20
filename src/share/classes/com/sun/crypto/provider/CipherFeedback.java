@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2007, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -150,10 +150,9 @@ final class CipherFeedback extends FeedbackCipher {
      * @param plainLen the length of the input data
      * @param cipher the buffer for the result
      * @param cipherOffset the offset in <code>cipher</code>
-     * @return the length of the encrypted data
      */
-    int encrypt(byte[] plain, int plainOffset, int plainLen,
-                byte[] cipher, int cipherOffset)
+    void encrypt(byte[] plain, int plainOffset, int plainLen,
+                        byte[] cipher, int cipherOffset)
     {
         int i, len;
         len = blockSize - numBytes;
@@ -195,7 +194,6 @@ final class CipherFeedback extends FeedbackCipher {
                 }
             }
         }
-        return plainLen;
     }
 
     /**
@@ -220,10 +218,9 @@ final class CipherFeedback extends FeedbackCipher {
      * @param cipherLen the length of the input data
      * @param plain the buffer for the result
      * @param plainOffset the offset in <code>plain</code>
-     * @return the length of the decrypted data
      */
-    int decrypt(byte[] cipher, int cipherOffset, int cipherLen,
-                byte[] plain, int plainOffset)
+    void decrypt(byte[] cipher, int cipherOffset, int cipherLen,
+                        byte[] plain, int plainOffset)
     {
         int i, len;
         len = blockSize - numBytes;
@@ -271,6 +268,5 @@ final class CipherFeedback extends FeedbackCipher {
                 }
             }
         }
-        return cipherLen;
     }
 }

@@ -34,9 +34,8 @@ package com.sun.jdi;
  * @author James McIlree
  * @since  1.3
  */
-@jdk.Exported
-public interface CharValue extends PrimitiveValue, Comparable<CharValue> {
-
+public interface CharValue extends PrimitiveValue, Comparable<CharValue>
+{
     /**
      * Returns this CharValue as a <code>char</code>.
      *

@@ -165,7 +165,7 @@ public class GetInstance {
         } catch (NoSuchAlgorithmException e) {
             failure = e;
         }
-        // if we cannot get the service from the preferred provider,
+        // if we cannot get the service from the prefered provider,
         // fail over to the next
         for (Service s : list.getServices(type, algorithm)) {
             if (s == firstService) {

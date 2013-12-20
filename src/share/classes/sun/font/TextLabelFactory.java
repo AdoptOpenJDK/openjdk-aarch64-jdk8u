@@ -32,6 +32,7 @@ package sun.font;
 import java.awt.Font;
 
 import java.awt.font.FontRenderContext;
+import java.awt.font.LineMetrics;
 import java.text.Bidi;
 
   /**
@@ -69,7 +70,7 @@ public class TextLabelFactory {
                           Bidi bidi,
                           int flags) {
     this.frc = frc;
-    this.text = text.clone();
+    this.text = text;
     this.bidi = bidi;
     this.flags = flags;
     this.lineBidi = bidi;
@@ -81,8 +82,28 @@ public class TextLabelFactory {
     return frc;
   }
 
+  public char[] getText() {
+    return text;
+  }
+
+  public Bidi getParagraphBidi() {
+    return bidi;
+  }
+
   public Bidi getLineBidi() {
     return lineBidi;
+  }
+
+  public int getLayoutFlags() {
+    return flags;
+  }
+
+  public int getLineStart() {
+    return lineStart;
+  }
+
+  public int getLineLimit() {
+    return lineLimit;
   }
 
   /**

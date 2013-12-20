@@ -77,12 +77,12 @@ public class KerberosClientKeyExchange extends HandshakeMessage {
         // please won't check the value of impl variable
     }
 
-    public KerberosClientKeyExchange(String serverName,
+    public KerberosClientKeyExchange(String serverName, boolean isLoopback,
         AccessControlContext acc, ProtocolVersion protocolVersion,
         SecureRandom rand) throws IOException {
 
         if (impl != null) {
-            init(serverName, acc, protocolVersion, rand);
+            init(serverName, isLoopback, acc, protocolVersion, rand);
         } else {
             throw new IllegalStateException("Kerberos is unavailable");
         }
@@ -120,12 +120,12 @@ public class KerberosClientKeyExchange extends HandshakeMessage {
         impl.print(p);
     }
 
-    public void init(String serverName,
+    public void init(String serverName, boolean isLoopback,
         AccessControlContext acc, ProtocolVersion protocolVersion,
         SecureRandom rand) throws IOException {
 
         if (impl != null) {
-            impl.init(serverName, acc, protocolVersion, rand);
+            impl.init(serverName, isLoopback, acc, protocolVersion, rand);
         }
     }
 

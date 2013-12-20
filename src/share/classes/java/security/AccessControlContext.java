@@ -350,10 +350,6 @@ public final class AccessControlContext {
         return combiner;
     }
 
-    boolean isAuthorized() {
-        return isAuthorized;
-    }
-
     /**
      * Determines whether the access request indicated by the
      * specified permission should be allowed or denied, based on

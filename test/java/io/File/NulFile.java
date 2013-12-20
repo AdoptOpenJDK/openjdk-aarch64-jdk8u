@@ -22,7 +22,7 @@
  */
 
 /* @test
- * @bug 8003992 8027155
+ * @bug 8003992
  * @summary Test a file whose path name is embedded with NUL character, and
  *          ensure it is handled correctly.
  * @author Dan Xu
@@ -613,7 +613,7 @@ public class NulFile {
                 File.createTempFile(prefix, suffix, directory);
             } catch (IOException ex) {
                 String err = "Unable to create temporary file";
-                if (ex.getMessage() != null && ex.getMessage().startsWith(err))
+                if (err.equals(ex.getMessage()))
                     exceptionThrown = true;
                 else {
                     throw new RuntimeException("Get IOException with message, "

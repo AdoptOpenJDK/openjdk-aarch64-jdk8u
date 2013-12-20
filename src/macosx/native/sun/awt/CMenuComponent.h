@@ -24,7 +24,7 @@
  */
 
 #import <AppKit/AppKit.h>
-#import <jni.h>
+#import <JavaVM/jni.h>
 
 @interface CMenuComponent : NSObject {
 

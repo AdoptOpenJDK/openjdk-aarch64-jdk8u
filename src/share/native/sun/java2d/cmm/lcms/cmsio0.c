@@ -350,7 +350,7 @@ cmsUInt32Number FileRead(cmsIOHANDLER* iohandler, void *Buffer, cmsUInt32Number 
     return nReaded;
 }
 
-// Position file pointer in the file
+// Postion file pointer in the file
 static
 cmsBool  FileSeek(cmsIOHANDLER* iohandler, cmsUInt32Number offset)
 {
@@ -1074,33 +1074,6 @@ cmsHPROFILE CMSEXPORT cmsOpenProfileFromMem(const void* MemPtr, cmsUInt32Number 
 }
 
 
-static
-cmsBool SanityCheck(_cmsICCPROFILE* profile)
-{
-    cmsIOHANDLER* io;
-
-    if (!profile) {
-        return FALSE;
-    }
-
-    io = profile->IOhandler;
-    if (!io) {
-        return FALSE;
-    }
-
-    if (!io->Seek ||
-        !(io->Seek==NULLSeek || io->Seek==MemorySeek || io->Seek==FileSeek))
-    {
-        return FALSE;
-    }
-    if (!io->Read ||
-        !(io->Read==NULLRead || io->Read==MemoryRead || io->Read==FileRead))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
-}
 
 // Dump tag contents. If the profile is being modified, untouched tags are copied from FileOrig
 static
@@ -1113,6 +1086,7 @@ cmsBool SaveTags(_cmsICCPROFILE* Icc, _cmsICCPROFILE* FileOrig)
     cmsTagDescriptor* TagDescriptor;
     cmsTagTypeSignature TypeBase;
     cmsTagTypeHandler* TypeHandler;
+
 
     for (i=0; i < Icc -> TagCount; i++) {
 
@@ -1130,7 +1104,7 @@ cmsBool SaveTags(_cmsICCPROFILE* Icc, _cmsICCPROFILE* FileOrig)
 
             // Reach here if we are copying a tag from a disk-based ICC profile which has not been modified by user.
             // In this case a blind copy of the block data is performed
-            if (SanityCheck(FileOrig) && Icc -> TagOffsets[i]) {
+            if (FileOrig != NULL && Icc -> TagOffsets[i]) {
 
                 cmsUInt32Number TagSize   = FileOrig -> TagSizes[i];
                 cmsUInt32Number TagOffset = FileOrig -> TagOffsets[i];
@@ -1318,8 +1292,8 @@ cmsBool CMSEXPORT cmsSaveProfileToMem(cmsHPROFILE hProfile, void *MemPtr, cmsUIn
     // Should we just calculate the needed space?
     if (MemPtr == NULL) {
 
-        *BytesNeeded = cmsSaveProfileToIOhandler(hProfile, NULL);
-        return (*BytesNeeded == 0 ? FALSE : TRUE);
+           *BytesNeeded =  cmsSaveProfileToIOhandler(hProfile, NULL);
+            return TRUE;
     }
 
     // That is a real write operation

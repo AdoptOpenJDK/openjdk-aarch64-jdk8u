@@ -109,7 +109,7 @@ public class SpinedBufferTest {
 
         List<Integer> end = Arrays.stream(array)
                 .boxed()
-                .skip(array.length - lastSplitSize)
+                .substream(array.length - lastSplitSize)
                 .collect(Collectors.toList());
         assertEquals(contentOfLastSplit, end);
     }
@@ -184,7 +184,7 @@ public class SpinedBufferTest {
 
         List<Integer> end = Arrays.stream(array)
                 .boxed()
-                .skip(array.length - lastSplitSize)
+                .substream(array.length - lastSplitSize)
                 .collect(Collectors.toList());
         assertEquals(contentOfLastSplit, end);
     }
@@ -259,7 +259,7 @@ public class SpinedBufferTest {
 
         List<Long> end = Arrays.stream(array)
                 .boxed()
-                .skip(array.length - lastSplitSize)
+                .substream(array.length - lastSplitSize)
                 .collect(Collectors.toList());
         assertEquals(contentOfLastSplit, end);
     }
@@ -335,7 +335,7 @@ public class SpinedBufferTest {
 
         List<Double> end = Arrays.stream(array)
                 .boxed()
-                .skip(array.length - lastSplitSize)
+                .substream(array.length - lastSplitSize)
                 .collect(Collectors.toList());
         assertEquals(contentOfLastSplit, end);
     }

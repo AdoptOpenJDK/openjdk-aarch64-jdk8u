@@ -42,7 +42,7 @@ import javax.accessibility.*;
  * The following image shows the appearance of a text area:
  * <p>
  * <img src="doc-files/TextArea-1.gif" alt="A TextArea showing the word 'Hello!'"
- * style="float:center; margin: 7px 10px;">
+ * ALIGN=center HSPACE=10 VSPACE=7>
  * <p>
  * This text area could be created by the following line of code:
  * <p>

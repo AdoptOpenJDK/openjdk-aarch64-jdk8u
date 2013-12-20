@@ -70,19 +70,17 @@ public interface PersistentMBean {
      * <P>
      * Persistence policy from the MBean and attribute descriptor is used to guide execution
      * of this method. The MBean should be stored if 'persistPolicy' field is:
-     * <PRE>{@literal  != "never"
+     * <PRE>  != "never"
      *   = "always"
      *   = "onTimer" and now > 'lastPersistTime' + 'persistPeriod'
      *   = "NoMoreOftenThan" and now > 'lastPersistTime' + 'persistPeriod'
      *   = "onUnregister"
-     * }</PRE>
-     * <p>
+     * <P>
      * Do not store the MBean if 'persistPolicy' field is:
-     * <PRE>{@literal
      *    = "never"
      *    = "onUpdate"
      *    = "onTimer" && now < 'lastPersistTime' + 'persistPeriod'
-     * }</PRE>
+     * <P></PRE>
      *
      * @exception MBeanException Wraps another exception or persistence is not supported
      * @exception RuntimeOperationsException Wraps exceptions from the persistence mechanism

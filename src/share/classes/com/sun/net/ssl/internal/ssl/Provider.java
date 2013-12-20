@@ -41,7 +41,7 @@ public final class Provider extends SunJSSE {
         super();
     }
 
-    // preferred constructor to enable FIPS mode at runtime
+    // prefered constructor to enable FIPS mode at runtime
     public Provider(java.security.Provider cryptoProvider) {
         super(cryptoProvider);
     }

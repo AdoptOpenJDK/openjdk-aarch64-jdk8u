@@ -165,8 +165,7 @@ public class ToArrayOpTest extends OpTestCase {
         };
     }
 
-    @Test(dataProvider = "StreamTestData<Integer>", dataProviderClass = StreamTestDataProvider.class,
-          groups = { "serialization-hostile" })
+    @Test(dataProvider = "StreamTestData<Integer>", dataProviderClass = StreamTestDataProvider.class)
     public void testStatefulOpPermutations(String name, TestData.OfRef<Integer> data) {
         for (Function<Stream<Integer>, Stream<Integer>> f : statefulOpPermutations) {
             withData(data).terminal(f, s -> s.toArray())

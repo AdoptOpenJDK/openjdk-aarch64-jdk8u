@@ -612,7 +612,7 @@ public class DropTarget implements DropTargetListener, Serializable {
             dropTargetContext =
                 (DropTargetContext)f.get("dropTargetContext", null);
         } catch (IllegalArgumentException e) {
-            // Pre-1.4 support. 'dropTargetContext' was previously transient
+            // Pre-1.4 support. 'dropTargetContext' was previoulsy transient
         }
         if (dropTargetContext == null) {
             dropTargetContext = createDropTargetContext();
@@ -789,7 +789,7 @@ public class DropTarget implements DropTargetListener, Serializable {
     }
 
     /**
-     * update autoscrolling with current cursor location
+     * update autoscrolling with current cursor locn
      * <P>
      * @param dragCursorLocn the <code>Point</code>
      */

@@ -35,7 +35,7 @@ import javax.accessibility.*;
  * For information about creating dialogs, see
  * <em>The Java Tutorial</em> section
  * <a
- href="http://docs.oracle.com/javase/tutorial/uiswing/components/dialog.html">How
+ href="http://java.sun.com/docs/books/tutorial/uiswing/components/dialog.html">How
  * to Make Dialogs</a>.
  *
  * <p>
@@ -44,10 +44,9 @@ import javax.accessibility.*;
  * as its only child.
  * The {@code contentPane} should be the parent of any children of the
  * {@code JDialog}.
- * As a convenience, the {@code add}, {@code remove}, and {@code setLayout}
- * methods of this class are overridden, so that they delegate calls
- * to the corresponding methods of the {@code ContentPane}.
- * For example, you can add a child component to a dialog as follows:
+ * As a convenience {@code add} and its variants, {@code remove} and
+ * {@code setLayout} have been overridden to forward to the
+ * {@code contentPane} as necessary. This means you can write:
  * <pre>
  *       dialog.add(child);
  * </pre>
@@ -78,7 +77,7 @@ import javax.accessibility.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans&trade;
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
  * has been added to the {@code java.beans} package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -787,7 +786,7 @@ public class JDialog extends Dialog implements WindowConstants,
      * are currently typed to {@code JComponent}.
      * <p>
      * Please see
-     * <a href="http://docs.oracle.com/javase/tutorial/uiswing/dnd/index.html">
+     * <a href="http://java.sun.com/docs/books/tutorial/uiswing/misc/dnd.html">
      * How to Use Drag and Drop and Data Transfer</a>, a section in
      * <em>The Java Tutorial</em>, for more information.
      *
@@ -863,7 +862,7 @@ public class JDialog extends Dialog implements WindowConstants,
      * {@code setLayout} are forwarded to the {@code contentPane}.
      *
      * @return true if {@code add} and {@code setLayout}
-     *         are forwarded; false otherwise
+     *         are fowarded; false otherwise
      *
      * @see #addImpl
      * @see #setLayout
@@ -1025,7 +1024,7 @@ public class JDialog extends Dialog implements WindowConstants,
      * This method is called by the constructor.
      * <p>
      * Swing's painting architecture requires an opaque {@code JComponent}
-     * in the containment hierarchy. This is typically provided by the
+     * in the containment hiearchy. This is typically provided by the
      * content pane. If you replace the content pane it is recommended you
      * replace it with an opaque {@code JComponent}.
      * @see JRootPane

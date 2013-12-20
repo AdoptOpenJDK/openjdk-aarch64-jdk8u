@@ -195,12 +195,7 @@ event_call(JNIEnv *env, jthread thread, ClassIndex cnum, MethodIndex mnum)
 
     HPROF_ASSERT(env!=NULL);
     HPROF_ASSERT(thread!=NULL);
-    if (cnum == 0 || cnum == gdata->tracker_cnum) {
-        jclass newExcCls = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-        (*env)->ThrowNew(env, newExcCls, "Illegal cnum.");
-
-        return;
-    }
+    HPROF_ASSERT(cnum!=0 && cnum!=gdata->tracker_cnum);
 
     /* Prevent recursion into any BCI function for this thread (pstatus). */
     if ( tls_get_tracker_status(env, thread, JNI_FALSE,
@@ -209,10 +204,8 @@ event_call(JNIEnv *env, jthread thread, ClassIndex cnum, MethodIndex mnum)
 
         (*pstatus) = 1;
         method      = class_get_methodID(env, cnum, mnum);
-        if (method != NULL) {
-            tls_push_method(tls_index, method);
-        }
-
+        HPROF_ASSERT(method!=NULL);
+        tls_push_method(tls_index, method);
         (*pstatus) = 0;
     }
 }
@@ -255,13 +248,7 @@ event_return(JNIEnv *env, jthread thread, ClassIndex cnum, MethodIndex mnum)
 
     HPROF_ASSERT(env!=NULL);
     HPROF_ASSERT(thread!=NULL);
-
-    if (cnum == 0 || cnum == gdata->tracker_cnum) {
-        jclass newExcCls = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-        (*env)->ThrowNew(env, newExcCls, "Illegal cnum.");
-
-        return;
-    }
+    HPROF_ASSERT(cnum!=0 && cnum!=gdata->tracker_cnum);
 
     /* Prevent recursion into any BCI function for this thread (pstatus). */
     if ( tls_get_tracker_status(env, thread, JNI_FALSE,
@@ -270,10 +257,8 @@ event_return(JNIEnv *env, jthread thread, ClassIndex cnum, MethodIndex mnum)
 
         (*pstatus) = 1;
         method      = class_get_methodID(env, cnum, mnum);
-        if (method != NULL) {
-            tls_pop_method(tls_index, thread, method);
-        }
-
+        HPROF_ASSERT(method!=NULL);
+        tls_pop_method(tls_index, thread, method);
         (*pstatus) = 0;
     }
 }

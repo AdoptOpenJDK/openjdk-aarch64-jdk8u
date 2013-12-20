@@ -307,7 +307,7 @@ class RevocationChecker extends PKIXRevocationChecker {
                                               : anchor.getCAPublicKey();
         }
         crlSignFlag = true;
-        if (params != null && params.certPath() != null) {
+        if (params.certPath() != null) {
             certIndex = params.certPath().getCertificates().size() - 1;
         } else {
             certIndex = -1;

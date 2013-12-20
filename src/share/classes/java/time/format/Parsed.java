@@ -83,13 +83,10 @@ import java.time.LocalTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDate;
-import java.time.chrono.ChronoLocalDateTime;
-import java.time.chrono.ChronoZonedDateTime;
 import java.time.chrono.Chronology;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.HashMap;
@@ -208,17 +205,17 @@ final class Parsed implements TemporalAccessor {
     @SuppressWarnings("unchecked")
     @Override
     public <R> R query(TemporalQuery<R> query) {
-        if (query == TemporalQueries.zoneId()) {
+        if (query == TemporalQuery.zoneId()) {
             return (R) zone;
-        } else if (query == TemporalQueries.chronology()) {
+        } else if (query == TemporalQuery.chronology()) {
             return (R) chrono;
-        } else if (query == TemporalQueries.localDate()) {
+        } else if (query == TemporalQuery.localDate()) {
             return (R) (date != null ? LocalDate.from(date) : null);
-        } else if (query == TemporalQueries.localTime()) {
+        } else if (query == TemporalQuery.localTime()) {
             return (R) time;
-        } else if (query == TemporalQueries.zone() || query == TemporalQueries.offset()) {
+        } else if (query == TemporalQuery.zone() || query == TemporalQuery.offset()) {
             return query.queryFrom(this);
-        } else if (query == TemporalQueries.precision()) {
+        } else if (query == TemporalQuery.precision()) {
             return null;  // not a complete date/time
         }
         // inline TemporalAccessor.super.query(query) as an optimization
@@ -263,34 +260,11 @@ final class Parsed implements TemporalAccessor {
             while (changedCount < 50) {
                 for (Map.Entry<TemporalField, Long> entry : fieldValues.entrySet()) {
                     TemporalField targetField = entry.getKey();
-                    TemporalAccessor resolvedObject = targetField.resolve(fieldValues, this, resolverStyle);
-                    if (resolvedObject != null) {
-                        if (resolvedObject instanceof ChronoZonedDateTime) {
-                            ChronoZonedDateTime<?> czdt = (ChronoZonedDateTime) resolvedObject;
-                            if (zone.equals(czdt.getZone()) == false) {
-                                throw new DateTimeException("ChronoZonedDateTime must use the effective parsed zone: " + zone);
-                            }
-                            resolvedObject = czdt.toLocalDateTime();
-                        }
-                        if (resolvedObject instanceof ChronoLocalDateTime) {
-                            ChronoLocalDateTime<?> cldt = (ChronoLocalDateTime) resolvedObject;
-                            updateCheckConflict(cldt.toLocalTime(), Period.ZERO);
-                            updateCheckConflict(cldt.toLocalDate());
-                            changedCount++;
-                            continue outer;  // have to restart to avoid concurrent modification
-                        }
-                        if (resolvedObject instanceof ChronoLocalDate) {
-                            updateCheckConflict((ChronoLocalDate) resolvedObject);
-                            changedCount++;
-                            continue outer;  // have to restart to avoid concurrent modification
-                        }
-                        if (resolvedObject instanceof LocalTime) {
-                            updateCheckConflict((LocalTime) resolvedObject, Period.ZERO);
-                            changedCount++;
-                            continue outer;  // have to restart to avoid concurrent modification
-                        }
-                        throw new DateTimeException("Method resolveFields() can only return ChronoZonedDateTime," +
-                                "ChronoLocalDateTime, ChronoLocalDate or LocalTime");
+                    ChronoLocalDate resolvedDate = targetField.resolve(fieldValues, chrono, zone, resolverStyle);
+                    if (resolvedDate != null) {
+                        updateCheckConflict(resolvedDate);
+                        changedCount++;
+                        continue outer;  // have to restart to avoid concurrent modification
                     } else if (fieldValues.containsKey(targetField) == false) {
                         changedCount++;
                         continue outer;  // have to restart to avoid concurrent modification
@@ -328,10 +302,7 @@ final class Parsed implements TemporalAccessor {
             if (cld != null && date.equals(cld) == false) {
                 throw new DateTimeException("Conflict found: Fields resolved to two different dates: " + date + " " + cld);
             }
-        } else if (cld != null) {
-            if (chrono.equals(cld.getChronology()) == false) {
-                throw new DateTimeException("ChronoLocalDate must use the effective parsed chronology: " + chrono);
-            }
+        } else {
             date = cld;
         }
     }
@@ -589,23 +560,11 @@ final class Parsed implements TemporalAccessor {
     //-----------------------------------------------------------------------
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder(64);
-        buf.append(fieldValues).append(',').append(chrono);
-        if (zone != null) {
-            buf.append(',').append(zone);
-        }
+        String str = fieldValues.toString() + "," + chrono + "," + zone;
         if (date != null || time != null) {
-            buf.append(" resolved to ");
-            if (date != null) {
-                buf.append(date);
-                if (time != null) {
-                    buf.append('T').append(time);
-                }
-            } else {
-                buf.append(time);
-            }
+            str += " resolved to " + date + "," + time;
         }
-        return buf.toString();
+        return str;
     }
 
 }

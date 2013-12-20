@@ -181,9 +181,6 @@ public final class CGraphicsEnvironment extends SunGraphicsEnvironment {
             initDevices();
 
             d = devices.get(mainDisplayID);
-            if (d == null) {
-                throw new AWTError("no screen devices");
-            }
         }
         return d;
     }

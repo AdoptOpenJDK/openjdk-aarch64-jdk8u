@@ -156,9 +156,6 @@ class SpinedBuffer<E>
     public E get(long index) {
         // @@@ can further optimize by caching last seen spineIndex,
         // which is going to be right most of the time
-
-        // Casts to int are safe since the spine array index is the index minus
-        // the prior element count from the current spine
         if (spineIndex == 0) {
             if (index < elementIndex)
                 return curChunk[((int) index)];
@@ -204,11 +201,11 @@ class SpinedBuffer<E>
      * elements into it.
      */
     public E[] asArray(IntFunction<E[]> arrayFactory) {
-        long size = count();
-        if (size >= Nodes.MAX_ARRAY_SIZE)
-            throw new IllegalArgumentException(Nodes.BAD_SIZE);
-        E[] result = arrayFactory.apply((int) size);
+        // @@@ will fail for size == MAX_VALUE
+        E[] result = arrayFactory.apply((int) count());
+
         copyInto(result, 0);
+
         return result;
     }
 
@@ -550,10 +547,8 @@ class SpinedBuffer<E>
         }
 
         public T_ARR asPrimitiveArray() {
-            long size = count();
-            if (size >= Nodes.MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(Nodes.BAD_SIZE);
-            T_ARR result = newArray((int) size);
+            // @@@ will fail for size == MAX_VALUE
+            T_ARR result = newArray((int) count());
             copyInto(result, 0);
             return result;
         }
@@ -579,7 +574,6 @@ class SpinedBuffer<E>
             spineIndex = 0;
         }
 
-        @SuppressWarnings("overloads")
         public void forEach(T_CONS consumer) {
             // completed chunks, if any
             for (int j = 0; j < spineIndex; j++)
@@ -766,13 +760,11 @@ class SpinedBuffer<E>
         }
 
         public int get(long index) {
-            // Casts to int are safe since the spine array index is the index minus
-            // the prior element count from the current spine
             int ch = chunkFor(index);
             if (spineIndex == 0 && ch == 0)
                 return curChunk[(int) index];
             else
-                return spine[ch][(int) (index - priorElementCount[ch])];
+                return spine[ch][(int) (index-priorElementCount[ch])];
         }
 
         @Override
@@ -879,13 +871,11 @@ class SpinedBuffer<E>
         }
 
         public long get(long index) {
-            // Casts to int are safe since the spine array index is the index minus
-            // the prior element count from the current spine
             int ch = chunkFor(index);
             if (spineIndex == 0 && ch == 0)
                 return curChunk[(int) index];
             else
-                return spine[ch][(int) (index - priorElementCount[ch])];
+                return spine[ch][(int) (index-priorElementCount[ch])];
         }
 
         @Override
@@ -994,13 +984,11 @@ class SpinedBuffer<E>
         }
 
         public double get(long index) {
-            // Casts to int are safe since the spine array index is the index minus
-            // the prior element count from the current spine
             int ch = chunkFor(index);
             if (spineIndex == 0 && ch == 0)
                 return curChunk[(int) index];
             else
-                return spine[ch][(int) (index - priorElementCount[ch])];
+                return spine[ch][(int) (index-priorElementCount[ch])];
         }
 
         @Override

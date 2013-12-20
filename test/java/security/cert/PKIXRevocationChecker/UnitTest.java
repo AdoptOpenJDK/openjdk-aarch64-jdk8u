@@ -23,7 +23,7 @@
 
 /**
  * @test
- * @bug 6854712 7171570 8010748 8025287
+ * @bug 6854712 7171570 8010748
  * @summary Basic unit test for PKIXRevocationChecker
  */
 
@@ -43,8 +43,6 @@ public class UnitTest {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
         CertPathChecker cpc = cpv.getRevocationChecker();
         PKIXRevocationChecker prc = (PKIXRevocationChecker)cpc;
-
-        prc.init(false);
 
         System.out.println("Testing that get methods return null or " +
                            "empty lists/sets/maps");

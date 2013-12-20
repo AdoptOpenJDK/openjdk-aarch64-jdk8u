@@ -32,15 +32,16 @@ package com.sun.jdi;
  * @author Gordon Hirsch
  * @since  1.3
  */
-@jdk.Exported
-public class IncompatibleThreadStateException extends Exception {
+public class IncompatibleThreadStateException extends Exception
+{
     private static final long serialVersionUID = 6199174323414551389L;
-
-    public IncompatibleThreadStateException() {
+    public IncompatibleThreadStateException()
+    {
         super();
     }
 
-    public IncompatibleThreadStateException(String s) {
+    public IncompatibleThreadStateException(String s)
+    {
         super(s);
     }
 }

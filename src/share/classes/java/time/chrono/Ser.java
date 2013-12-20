@@ -104,7 +104,6 @@ final class Ser implements Externalizable {
     static final byte HIJRAH_DATE_TYPE = 6;
     static final byte MINGUO_DATE_TYPE = 7;
     static final byte THAIBUDDHIST_DATE_TYPE = 8;
-    static final byte CHRONO_PERIOD_TYPE = 9;
 
     /** The type being serialized. */
     private byte type;
@@ -161,7 +160,7 @@ final class Ser implements Externalizable {
         out.writeByte(type);
         switch (type) {
             case CHRONO_TYPE:
-                ((AbstractChronology) object).writeExternal(out);
+                ((Chronology) object).writeExternal(out);
                 break;
             case CHRONO_LOCAL_DATE_TIME_TYPE:
                 ((ChronoLocalDateTimeImpl<?>) object).writeExternal(out);
@@ -183,9 +182,6 @@ final class Ser implements Externalizable {
                 break;
             case THAIBUDDHIST_DATE_TYPE:
                 ((ThaiBuddhistDate) object).writeExternal(out);
-                break;
-            case CHRONO_PERIOD_TYPE:
-                ((ChronoPeriodImpl) object).writeExternal(out);
                 break;
             default:
                 throw new InvalidClassException("Unknown serialized type");
@@ -231,7 +227,7 @@ final class Ser implements Externalizable {
 
     private static Object readInternal(byte type, ObjectInput in) throws IOException, ClassNotFoundException {
         switch (type) {
-            case CHRONO_TYPE: return AbstractChronology.readExternal(in);
+            case CHRONO_TYPE: return Chronology.readExternal(in);
             case CHRONO_LOCAL_DATE_TIME_TYPE: return ChronoLocalDateTimeImpl.readExternal(in);
             case CHRONO_ZONE_DATE_TIME_TYPE: return ChronoZonedDateTimeImpl.readExternal(in);
             case JAPANESE_DATE_TYPE:  return JapaneseDate.readExternal(in);
@@ -239,7 +235,6 @@ final class Ser implements Externalizable {
             case HIJRAH_DATE_TYPE: return HijrahDate.readExternal(in);
             case MINGUO_DATE_TYPE: return MinguoDate.readExternal(in);
             case THAIBUDDHIST_DATE_TYPE: return ThaiBuddhistDate.readExternal(in);
-            case CHRONO_PERIOD_TYPE: return ChronoPeriodImpl.readExternal(in);
             default: throw new StreamCorruptedException("Unknown serialized type");
         }
     }

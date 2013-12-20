@@ -31,6 +31,10 @@ import java.util.*;
 
 import com.apple.eawt.AppEvent.*;
 
+interface _OpenAppHandler {
+    void handleOpenApp();
+}
+
 @SuppressWarnings("deprecation")
 class _AppEventLegacyHandler implements AboutHandler, PreferencesHandler, _OpenAppHandler, AppReOpenedListener, OpenFilesHandler, PrintFilesHandler, QuitHandler {
     final _AppEventHandler parent;

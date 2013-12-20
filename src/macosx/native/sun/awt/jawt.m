@@ -25,7 +25,8 @@
 
 #import <jawt.h>
 
-#import <jawt_md.h>
+// REMIND: import <jawt_md.h>
+#import <JavaVM/jawt_md.h>
 
 #import "awt_DrawingSurface.h"
 

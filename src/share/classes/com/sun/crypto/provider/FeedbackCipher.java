@@ -133,10 +133,9 @@ abstract class FeedbackCipher {
      * @param plainLen the length of the input data
      * @param cipher the buffer for the encryption result
      * @param cipherOffset the offset in <code>cipher</code>
-     * @return the number of bytes placed into <code>cipher</code>
      */
-    abstract int encrypt(byte[] plain, int plainOffset, int plainLen,
-                         byte[] cipher, int cipherOffset);
+    abstract void encrypt(byte[] plain, int plainOffset, int plainLen,
+                          byte[] cipher, int cipherOffset);
     /**
      * Performs encryption operation for the last time.
      *
@@ -155,9 +154,10 @@ abstract class FeedbackCipher {
      */
      int encryptFinal(byte[] plain, int plainOffset, int plainLen,
                       byte[] cipher, int cipherOffset)
-         throws IllegalBlockSizeException, ShortBufferException {
-         return encrypt(plain, plainOffset, plainLen, cipher, cipherOffset);
-    }
+         throws IllegalBlockSizeException {
+         encrypt(plain, plainOffset, plainLen, cipher, cipherOffset);
+         return plainLen;
+     }
     /**
      * Performs decryption operation.
      *
@@ -174,10 +174,9 @@ abstract class FeedbackCipher {
      * @param cipherLen the length of the input data
      * @param plain the buffer for the decryption result
      * @param plainOffset the offset in <code>plain</code>
-     * @return the number of bytes placed into <code>plain</code>
      */
-    abstract int decrypt(byte[] cipher, int cipherOffset, int cipherLen,
-                         byte[] plain, int plainOffset);
+    abstract void decrypt(byte[] cipher, int cipherOffset, int cipherLen,
+                          byte[] plain, int plainOffset);
 
     /**
      * Performs decryption operation for the last time.
@@ -197,9 +196,9 @@ abstract class FeedbackCipher {
      */
      int decryptFinal(byte[] cipher, int cipherOffset, int cipherLen,
                       byte[] plain, int plainOffset)
-         throws IllegalBlockSizeException, AEADBadTagException,
-         ShortBufferException {
-         return decrypt(cipher, cipherOffset, cipherLen, plain, plainOffset);
+         throws IllegalBlockSizeException, AEADBadTagException {
+         decrypt(cipher, cipherOffset, cipherLen, plain, plainOffset);
+         return cipherLen;
      }
 
     /**
@@ -228,16 +227,5 @@ abstract class FeedbackCipher {
      */
     void updateAAD(byte[] src, int offset, int len) {
         throw new IllegalStateException("No AAD accepted");
-    }
-
-    /**
-     * @return the number of bytes that are buffered internally inside
-     * this FeedbackCipher instance.
-     * @since 1.8
-     */
-    int getBufferedLength() {
-        // Currently only AEAD cipher impl, e.g. GCM, buffers data
-        // internally during decryption mode
-        return 0;
     }
 }

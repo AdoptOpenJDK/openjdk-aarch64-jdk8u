@@ -127,7 +127,7 @@ securerandom.source=file:/dev/random
 # This is a comma-separated list of algorithm and/or algorithm:provider
 # entries.
 #
-securerandom.strongAlgorithms=Windows-PRNG:SunMSCAPI,SHA1PRNG:SUN
+securerandom.strongAlgorithms=Windows-PRNG:SunMSCAPI
 
 #
 # Class to instantiate as the javax.security.auth.login.Configuration
@@ -184,7 +184,6 @@ package.access=sun.,\
                com.sun.jmx.,\
                com.sun.media.sound.,\
                com.sun.proxy.,\
-               com.sun.corba.se.,\
                com.sun.org.apache.bcel.internal.,\
                com.sun.org.apache.regexp.internal.,\
                com.sun.org.apache.xerces.internal.,\
@@ -230,7 +229,6 @@ package.definition=sun.,\
                    com.sun.jmx.,\
                    com.sun.media.sound.,\
                    com.sun.proxy.,\
-                   com.sun.corba.se.,\
                    com.sun.org.apache.bcel.internal.,\
                    com.sun.org.apache.regexp.internal.,\
                    com.sun.org.apache.xerces.internal.,\

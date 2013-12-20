@@ -167,7 +167,6 @@ public class ComponentSampleModel extends SampleModel
         for (int i=0; i<numBands; i++) {
             bankIndices[i] = 0;
         }
-        verify();
     }
 
 
@@ -245,53 +244,24 @@ public class ComponentSampleModel extends SampleModel
             throw new IllegalArgumentException("Length of bandOffsets must "+
                                                "equal length of bankIndices.");
         }
-        verify();
-    }
-
-    private void verify() {
-        int requiredSize = getBufferSize();
     }
 
     /**
      * Returns the size of the data buffer (in data elements) needed
      * for a data buffer that matches this ComponentSampleModel.
      */
-     private int getBufferSize() {
+     private long getBufferSize() {
          int maxBandOff=bandOffsets[0];
-         for (int i=1; i<bandOffsets.length; i++) {
+         for (int i=1; i<bandOffsets.length; i++)
              maxBandOff = Math.max(maxBandOff,bandOffsets[i]);
-         }
 
-         if (maxBandOff < 0 || maxBandOff > (Integer.MAX_VALUE - 1)) {
-             throw new IllegalArgumentException("Invalid band offset");
-         }
-
-         if (pixelStride < 0 || pixelStride > (Integer.MAX_VALUE / width)) {
-             throw new IllegalArgumentException("Invalid pixel stride");
-         }
-
-         if (scanlineStride < 0 || scanlineStride > (Integer.MAX_VALUE / height)) {
-             throw new IllegalArgumentException("Invalid scanline stride");
-         }
-
-         int size = maxBandOff + 1;
-
-         int val = pixelStride * (width - 1);
-
-         if (val > (Integer.MAX_VALUE - size)) {
-             throw new IllegalArgumentException("Invalid pixel stride");
-         }
-
-         size += val;
-
-         val = scanlineStride * (height - 1);
-
-         if (val > (Integer.MAX_VALUE - size)) {
-             throw new IllegalArgumentException("Invalid scan stride");
-         }
-
-         size += val;
-
+         long size = 0;
+         if (maxBandOff >= 0)
+             size += maxBandOff+1;
+         if (pixelStride > 0)
+             size += pixelStride * (width-1);
+         if (scanlineStride > 0)
+             size += scanlineStride*(height-1);
          return size;
      }
 
@@ -439,7 +409,7 @@ public class ComponentSampleModel extends SampleModel
     public DataBuffer createDataBuffer() {
         DataBuffer dataBuffer = null;
 
-        int size = getBufferSize();
+        int size = (int)getBufferSize();
         switch (dataType) {
         case DataBuffer.TYPE_BYTE:
             dataBuffer = new DataBufferByte(size, numBanks);
@@ -614,7 +584,7 @@ public class ComponentSampleModel extends SampleModel
      *
      * @throws NullPointerException if data is null.
      * @throws ArrayIndexOutOfBoundsException if the coordinates are
-     * not in bounds, or if obj is too small to hold the output.
+     * not in bounds, or if obj is too small to hold the ouput.
      */
     public Object getDataElements(int x, int y, Object obj, DataBuffer data) {
         if ((x < 0) || (y < 0) || (x >= width) || (y >= height)) {

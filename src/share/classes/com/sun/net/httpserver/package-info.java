@@ -123,5 +123,4 @@
    <p>
    @since 1.6
  */
-@jdk.Exported
 package com.sun.net.httpserver;

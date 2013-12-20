@@ -49,6 +49,13 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  */
 public final class AuFileReader extends SunFileReader {
 
+    /**
+     * Constructs a new AuFileReader object.
+     */
+    public AuFileReader() {
+    }
+
+
     // METHODS TO IMPLEMENT AudioFileReader
 
     /**
@@ -83,7 +90,7 @@ public final class AuFileReader extends SunFileReader {
         int frameRate      = -1;
         int frameSize      = -1;
         int channels       = -1;
-        final int sampleSizeInBits;
+        int sampleSizeInBits = 0;
         int length = 0;
         int nread = 0;
         AudioFormat.Encoding encoding = null;
@@ -111,10 +118,6 @@ public final class AuFileReader extends SunFileReader {
         encoding_local = (bigendian==true ? dis.readInt() : rllong(dis) );  nread += 4;
         sampleRate     = (bigendian==true ? dis.readInt() : rllong(dis) );  nread += 4;
         channels       = (bigendian==true ? dis.readInt() : rllong(dis) );  nread += 4;
-        if (channels <= 0) {
-            dis.reset();
-            throw new UnsupportedAudioFileException("Invalid number of channels");
-        }
 
         frameRate = sampleRate;
 
@@ -369,4 +372,7 @@ public final class AuFileReader extends SunFileReader {
 
         return result;
     }
+
+
+
 }

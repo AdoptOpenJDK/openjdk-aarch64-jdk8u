@@ -49,7 +49,7 @@ public class StartDateTest {
         new File("jks").delete();
 
         run("-keystore jks -storetype jks -storepass changeit -keypass changeit -alias me " +
-                "-keyalg rsa -genkeypair -dname CN=Haha -startdate +1y");
+                "-genkeypair -dname CN=Haha -startdate +1y");
         cal.setTime(getIssueDate());
         System.out.println(cal);
         if (cal.get(Calendar.YEAR) != year + 1) {

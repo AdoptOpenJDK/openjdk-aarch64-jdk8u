@@ -33,7 +33,6 @@ import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.Permission;
 import java.security.PrivilegedAction;
-import sun.reflect.misc.ReflectUtil;
 
 /** <P> The master factory for all reflective objects, both those in
     java.lang.reflect (Fields, Methods, Constructors) as well as their
@@ -145,7 +144,7 @@ public class ReflectionFactory {
     public MethodAccessor newMethodAccessor(Method method) {
         checkInitted();
 
-        if (noInflation && !ReflectUtil.isVMAnonymousClass(method.getDeclaringClass())) {
+        if (noInflation) {
             return new MethodAccessorGenerator().
                 generateMethod(method.getDeclaringClass(),
                                method.getName(),
@@ -182,7 +181,7 @@ public class ReflectionFactory {
             return new BootstrapConstructorAccessorImpl(c);
         }
 
-        if (noInflation && !ReflectUtil.isVMAnonymousClass(c.getDeclaringClass())) {
+        if (noInflation) {
             return new MethodAccessorGenerator().
                 generateConstructor(c.getDeclaringClass(),
                                     c.getParameterTypes(),

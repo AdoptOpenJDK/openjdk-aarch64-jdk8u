@@ -779,27 +779,27 @@ public final class SocketPermission extends Permission
      * specified permission.
      * <P>
      * More specifically, this method first ensures that all of the following
-     * are true (and returns false if any of them are not):
+     * are true (and returns false if any of them are not):<p>
      * <ul>
-     * <li> <i>p</i> is an instanceof SocketPermission,
+     * <li> <i>p</i> is an instanceof SocketPermission,<p>
      * <li> <i>p</i>'s actions are a proper subset of this
-     * object's actions, and
+     * object's actions, and<p>
      * <li> <i>p</i>'s port range is included in this port range. Note:
-     * port range is ignored when p only contains the action, 'resolve'.
+     * port range is ignored when p only contains the action, 'resolve'.<p>
      * </ul>
      *
      * Then {@code implies} checks each of the following, in order,
-     * and for each returns true if the stated condition is true:
+     * and for each returns true if the stated condition is true:<p>
      * <ul>
      * <li> If this object was initialized with a single IP address and one of <i>p</i>'s
-     * IP addresses is equal to this object's IP address.
+     * IP addresses is equal to this object's IP address.<p>
      * <li>If this object is a wildcard domain (such as *.sun.com), and
      * <i>p</i>'s canonical name (the name without any preceding *)
      * ends with this object's canonical host name. For example, *.sun.com
-     * implies *.eng.sun.com.
+     * implies *.eng.sun.com..<p>
      * <li>If this object was not initialized with a single IP address, and one of this
-     * object's IP addresses equals one of <i>p</i>'s IP addresses.
-     * <li>If this canonical name equals <i>p</i>'s canonical name.
+     * object's IP addresses equals one of <i>p</i>'s IP addresses.<p>
+     * <li>If this canonical name equals <i>p</i>'s canonical name.<p>
      * </ul>
      *
      * If none of the above are true, {@code implies} returns false.

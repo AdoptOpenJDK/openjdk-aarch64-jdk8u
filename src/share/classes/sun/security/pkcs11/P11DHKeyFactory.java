@@ -38,7 +38,7 @@ import sun.security.pkcs11.wrapper.*;
 import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
 
 /**
- * DH KeyFactory implementation.
+ * DH KeyFactory implemenation.
  *
  * @author  Andreas Sterbenz
  * @since   1.5

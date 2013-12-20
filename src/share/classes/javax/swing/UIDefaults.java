@@ -53,7 +53,6 @@ import java.security.PrivilegedAction;
 
 import sun.reflect.misc.MethodUtil;
 import sun.reflect.misc.ReflectUtil;
-import sun.swing.SwingUtilities2;
 import sun.util.CoreResourceBundleControl;
 
 /**
@@ -65,7 +64,7 @@ import sun.util.CoreResourceBundleControl;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans&trade;
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -1102,7 +1101,7 @@ public class UIDefaults extends Hashtable<Object,Object>
                         }
                         ReflectUtil.checkPackageAccess(className);
                         c = Class.forName(className, true, (ClassLoader)cl);
-                        SwingUtilities2.checkAccess(c.getModifiers());
+                        checkAccess(c.getModifiers());
                         if (methodName != null) {
                             Class[] types = getClassArray(args);
                             Method m = c.getMethod(methodName, types);
@@ -1110,7 +1109,7 @@ public class UIDefaults extends Hashtable<Object,Object>
                         } else {
                             Class[] types = getClassArray(args);
                             Constructor constructor = c.getConstructor(types);
-                            SwingUtilities2.checkAccess(constructor.getModifiers());
+                            checkAccess(constructor.getModifiers());
                             return constructor.newInstance(args);
                         }
                     } catch(Exception e) {
@@ -1123,6 +1122,13 @@ public class UIDefaults extends Hashtable<Object,Object>
                     return null;
                 }
             }, acc);
+        }
+
+        private void checkAccess(int modifiers) {
+            if(System.getSecurityManager() != null &&
+                    !Modifier.isPublic(modifiers)) {
+                throw new SecurityException("Resource is not accessible");
+            }
         }
 
         /*

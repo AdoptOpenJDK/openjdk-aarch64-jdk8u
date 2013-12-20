@@ -29,7 +29,6 @@ import java.util.Locale;
 import javax.imageio.ImageWriteParam;
 
 import com.sun.imageio.plugins.bmp.BMPConstants;
-import com.sun.imageio.plugins.bmp.BMPCompressionTypes;
 
 /**
  * A subclass of <code>ImageWriteParam</code> for encoding images in
@@ -79,7 +78,7 @@ public class BMPImageWriteParam extends ImageWriteParam {
         super(locale);
 
         // Set compression types ("BI_RGB" denotes uncompressed).
-        compressionTypes = BMPCompressionTypes.getCompressionTypes();
+        compressionTypes = BMPConstants.compressionTypeNames.clone();
 
         // Set compression flag.
         canWriteCompressed = true;

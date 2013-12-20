@@ -96,14 +96,9 @@ public class AnnotationNode extends AnnotationVisitor {
      *
      * @param desc
      *            the class descriptor of the annotation class.
-     * @throws IllegalStateException
-     *             If a subclass calls this constructor.
      */
     public AnnotationNode(final String desc) {
         this(Opcodes.ASM5, desc);
-        if (getClass() != AnnotationNode.class) {
-            throw new IllegalStateException();
-        }
     }
 
     /**

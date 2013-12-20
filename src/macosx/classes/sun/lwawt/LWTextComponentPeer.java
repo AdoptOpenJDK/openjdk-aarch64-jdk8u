@@ -71,14 +71,13 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
         }
         setEditable(getTarget().isEditable());
         setText(getTarget().getText());
-        setCaretPosition(getTarget().getCaretPosition());
         getTarget().addInputMethodListener(this);
         final int start = getTarget().getSelectionStart();
         final int end = getTarget().getSelectionEnd();
         if (end > start) {
-            // Should be called after setText() and setCaretPosition()
             select(start, end);
         }
+        setCaretPosition(getTarget().getCaretPosition());
         firstChangeSkipped = true;
     }
 
@@ -123,7 +122,7 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
     }
 
     @Override
-    public final void setText(final String text) {
+    public final void setText(final String l) {
         synchronized (getDelegateLock()) {
             // JTextArea.setText() posts two different events (remove & insert).
             // Since we make no differences between text events,
@@ -131,7 +130,7 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
             // JTextArea.setText() is called.
             final Document document = getTextComponent().getDocument();
             document.removeDocumentListener(this);
-            getTextComponent().setText(text);
+            getTextComponent().setText(l);
             revalidate();
             if (firstChangeSkipped) {
                 postEvent(new TextEvent(getTarget(),

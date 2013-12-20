@@ -76,7 +76,7 @@ public class MethodDescriptor extends FeatureDescriptor {
     }
 
     /**
-     * Gets the method that this MethodDescriptor encapsulates.
+     * Gets the method that this MethodDescriptor encapsualtes.
      *
      * @return The low-level description of the method
      */

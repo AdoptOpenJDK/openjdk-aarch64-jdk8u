@@ -195,14 +195,9 @@ public class SerialVersionUIDAdder extends ClassVisitor {
      * @param cv
      *            a {@link ClassVisitor} to which this visitor will delegate
      *            calls.
-     * @throws IllegalStateException
-     *             If a subclass calls this constructor.
      */
     public SerialVersionUIDAdder(final ClassVisitor cv) {
         this(Opcodes.ASM5, cv);
-        if (getClass() != SerialVersionUIDAdder.class) {
-            throw new IllegalStateException();
-        }
     }
 
     /**
@@ -223,7 +218,7 @@ public class SerialVersionUIDAdder extends ClassVisitor {
     }
 
     // ------------------------------------------------------------------------
-    // Overridden methods
+    // Overriden methods
     // ------------------------------------------------------------------------
 
     /*
@@ -239,7 +234,7 @@ public class SerialVersionUIDAdder extends ClassVisitor {
         if (computeSVUID) {
             this.name = name;
             this.access = access;
-            this.interfaces = Arrays.copyOf(interfaces, interfaces.length);
+            this.interfaces = interfaces;
         }
 
         super.visit(version, access, name, signature, superName, interfaces);

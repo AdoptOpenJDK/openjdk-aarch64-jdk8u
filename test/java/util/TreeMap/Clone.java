@@ -27,6 +27,7 @@
  * @summary Verify that cloned TreeMap gets new keyset
  * @author david.buck@oracle.com
  * @run main/othervm Clone
+ * @run main/othervm -XX:+AggressiveOpts Clone
  */
 
 import java.util.TreeMap;

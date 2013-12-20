@@ -45,18 +45,18 @@ import java.awt.Container;
  * dropping a component on a RootPaneContainer would be interpreted
  * as <code>frame.getContentPane().add(child)</code>.
  * <p>
- * As a convenience, the standard classes that implement this interface
- * (such as {@code JFrame}, {@code JDialog}, {@code JWindow}, {@code JApplet},
- * and {@code JInternalFrame}) have their {@code add}, {@code remove},
- * and {@code setLayout} methods overridden, so that they delegate calls
- * to the corresponding methods of the {@code ContentPane}.
- * For example, you can add a child component to a frame as follows:
+ * For conveniance
+ * <code>JFrame</code>, <code>JDialog</code>, <code>JWindow</code>,
+ * <code>JApplet</code> and <code>JInternalFrame</code>, by default,
+ * forward, by default, all calls to the <code>add</code>,
+ * <code>remove</code> and <code>setLayout</code> methods, to the
+ * <code>contentPane</code>. This means you can call:
  * <pre>
- *       frame.add(child);
+ * rootPaneContainer.add(component);
  * </pre>
  * instead of:
  * <pre>
- *       frame.getContentPane().add(child);
+ * rootPaneContainer.getContentPane().add(component);
  * </pre>
  * <p>
  * The behavior of the <code>add</code> and

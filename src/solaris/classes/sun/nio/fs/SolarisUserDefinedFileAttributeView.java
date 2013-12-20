@@ -42,11 +42,9 @@ import static sun.nio.fs.SolarisConstants.*;
 class SolarisUserDefinedFileAttributeView
     extends AbstractUserDefinedFileAttributeView
 {
-    private static final byte[] HERE = { '.' };
-
     private byte[] nameAsBytes(UnixPath file, String name) throws IOException {
-        byte[] bytes = Util.toBytes(name);
-        // "", "." and ".." not allowed
+        byte[] bytes = name.getBytes();
+        //  "", "." and ".." not allowed
         if (bytes.length == 0 || bytes[0] == '.') {
             if (bytes.length <= 1 ||
                 (bytes.length == 2 && bytes[1] == '.'))
@@ -75,7 +73,7 @@ class SolarisUserDefinedFileAttributeView
         try {
             try {
                 // open extended attribute directory
-                int dfd = openat(fd, HERE, (O_RDONLY|O_XATTR), 0);
+                int dfd = openat(fd, ".".getBytes(), (O_RDONLY|O_XATTR), 0);
                 long dp;
                 try {
                     dp = fdopendir(dfd);
@@ -89,7 +87,7 @@ class SolarisUserDefinedFileAttributeView
                 try {
                     byte[] name;
                     while ((name = readdir(dp)) != null) {
-                        String s = Util.toString(name);
+                        String s = new String(name);
                         if (!s.equals(".") && !s.equals(".."))
                             list.add(s);
                     }
@@ -219,7 +217,7 @@ class SolarisUserDefinedFileAttributeView
 
         int fd = file.openForAttributeAccess(followLinks);
         try {
-            int dfd = openat(fd, HERE, (O_RDONLY|O_XATTR), 0);
+            int dfd = openat(fd, ".".getBytes(), (O_RDONLY|O_XATTR), 0);
             try {
                 unlinkat(dfd, nameAsBytes(file,name), 0);
             } finally {
@@ -245,7 +243,7 @@ class SolarisUserDefinedFileAttributeView
     static void copyExtendedAttributes(int ofd, int nfd) {
         try {
             // open extended attribute directory
-            int dfd = openat(ofd, HERE, (O_RDONLY|O_XATTR), 0);
+            int dfd = openat(ofd, ".".getBytes(), (O_RDONLY|O_XATTR), 0);
             long dp = 0L;
             try {
                 dp = fdopendir(dfd);

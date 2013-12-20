@@ -49,7 +49,7 @@ abstract class UnixFileSystem
     // package-private
     UnixFileSystem(UnixFileSystemProvider provider, String dir) {
         this.provider = provider;
-        this.defaultDirectory = Util.toBytes(UnixPath.normalizeAndCheck(dir));
+        this.defaultDirectory = UnixPath.normalizeAndCheck(dir).getBytes();
         if (this.defaultDirectory[0] != '/') {
             throw new RuntimeException("default directory must be absolute");
         }
@@ -204,7 +204,7 @@ abstract class UnixFileSystem
                 SecurityManager sm = System.getSecurityManager();
                 if (sm != null) {
                     try {
-                        sm.checkRead(Util.toString(entry.dir()));
+                        sm.checkRead(new String(entry.dir()));
                     } catch (SecurityException x) {
                         continue;
                     }

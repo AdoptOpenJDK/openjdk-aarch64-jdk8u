@@ -75,7 +75,7 @@ import sun.security.action.GetBooleanAction;
  * (and hence to the bottom of the stacking order).
  * <p>
  * <b>Note</b>: For details on the focus subsystem, see
- * <a href="http://docs.oracle.com/javase/tutorial/uiswing/misc/focus.html">
+ * <a href="http://java.sun.com/docs/books/tutorial/uiswing/misc/focus.html">
  * How to Use the Focus Subsystem</a>,
  * a section in <em>The Java Tutorial</em>, and the
  * <a href="../../java/awt/doc-files/FocusSpec.html">Focus Specification</a>
@@ -959,7 +959,7 @@ public class Container extends Component {
      *
      * @param     comp the component to be added
      * @param     constraints an object expressing
-     *                  layout constraints for this component
+     *                  layout contraints for this component
      * @exception NullPointerException if {@code comp} is {@code null}
      * @see #addImpl
      * @see #invalidate
@@ -986,7 +986,7 @@ public class Container extends Component {
      *
      *
      * @param comp the component to be added
-     * @param constraints an object expressing layout constraints for this
+     * @param constraints an object expressing layout contraints for this
      * @param index the position in the container's list at which to insert
      * the component; <code>-1</code> means insert at the end
      * component

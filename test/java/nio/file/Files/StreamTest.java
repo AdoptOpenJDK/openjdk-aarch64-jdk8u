@@ -22,11 +22,11 @@
  */
 
 /* @test
- * @bug 8006884 8019526
+ * @bug 8006884
+ * @summary Unit test for java.nio.file.Files
  * @library ..
  * @build PassThroughFileSystem FaultyFileSystem
  * @run testng StreamTest
- * @summary Unit test for java.nio.file.Files methods that return a Stream
  */
 
 import java.io.IOException;
@@ -43,13 +43,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.Callable;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
@@ -318,77 +316,53 @@ public class StreamTest {
         try {
             // zero lines
             assertTrue(Files.size(tmpfile) == 0, "File should be empty");
-            try (Stream<String> s = Files.lines(tmpfile)) {
-                checkLines(s, Collections.emptyList());
-            }
             try (Stream<String> s = Files.lines(tmpfile, US_ASCII)) {
-                checkLines(s, Collections.emptyList());
+                assertEquals(s.mapToInt(l -> 1).reduce(0, Integer::sum), 0, "No line expected");
             }
 
             // one line
-            List<String> oneLine = Arrays.asList("hi");
-            Files.write(tmpfile, oneLine, US_ASCII);
-            try (Stream<String> s = Files.lines(tmpfile)) {
-                checkLines(s, oneLine);
-            }
+            byte[] hi = { (byte)'h', (byte)'i' };
+            Files.write(tmpfile, hi);
             try (Stream<String> s = Files.lines(tmpfile, US_ASCII)) {
-                checkLines(s, oneLine);
+                List<String> lines = s.collect(Collectors.toList());
+                assertTrue(lines.size() == 1, "One line expected");
+                assertTrue(lines.get(0).equals("hi"), "'Hi' expected");
             }
 
             // two lines using platform's line separator
-            List<String> twoLines = Arrays.asList("hi", "there");
-            Files.write(tmpfile, twoLines, US_ASCII);
-            try (Stream<String> s = Files.lines(tmpfile)) {
-                checkLines(s, twoLines);
-            }
+            List<String> expected = Arrays.asList("hi", "there");
+            Files.write(tmpfile, expected, US_ASCII);
+            assertTrue(Files.size(tmpfile) > 0, "File is empty");
             try (Stream<String> s = Files.lines(tmpfile, US_ASCII)) {
-                checkLines(s, twoLines);
+                List<String> lines = s.collect(Collectors.toList());
+                assertTrue(lines.equals(expected), "Unexpected lines");
             }
 
             // MalformedInputException
             byte[] bad = { (byte)0xff, (byte)0xff };
             Files.write(tmpfile, bad);
-            try (Stream<String> s = Files.lines(tmpfile)) {
-                checkMalformedInputException(s);
-            }
             try (Stream<String> s = Files.lines(tmpfile, US_ASCII)) {
-                checkMalformedInputException(s);
+                try {
+                    List<String> lines = s.collect(Collectors.toList());
+                    throw new RuntimeException("UncheckedIOException expected");
+                } catch (UncheckedIOException ex) {
+                    assertTrue(ex.getCause() instanceof MalformedInputException,
+                               "MalformedInputException expected");
+                }
             }
 
             // NullPointerException
-            checkNullPointerException(() -> Files.lines(null));
-            checkNullPointerException(() -> Files.lines(null, US_ASCII));
-            checkNullPointerException(() -> Files.lines(tmpfile, null));
+            try {
+                Files.lines(null, US_ASCII);
+                throw new RuntimeException("NullPointerException expected");
+            } catch (NullPointerException ignore) { }
+            try {
+                Files.lines(tmpfile, null);
+                throw new RuntimeException("NullPointerException expected");
+            } catch (NullPointerException ignore) { }
 
         } finally {
             Files.delete(tmpfile);
-        }
-    }
-
-    private void checkLines(Stream<String> s, List<String> expected) {
-        List<String> lines = s.collect(Collectors.toList());
-        assertTrue(lines.size() == expected.size(), "Unexpected number of lines");
-        assertTrue(lines.equals(expected), "Unexpected content");
-    }
-
-    private void checkMalformedInputException(Stream<String> s) {
-        try {
-            List<String> lines = s.collect(Collectors.toList());
-            fail("UncheckedIOException expected");
-        } catch (UncheckedIOException ex) {
-            IOException cause = ex.getCause();
-            assertTrue(cause instanceof MalformedInputException,
-                "MalformedInputException expected");
-        }
-    }
-
-    private void checkNullPointerException(Callable<?> c) {
-        try {
-            c.call();
-            fail("NullPointerException expected");
-        } catch (NullPointerException ignore) {
-        } catch (Exception e) {
-            fail(e + " not expected");
         }
     }
 

@@ -57,7 +57,7 @@ import java.lang.ref.WeakReference;
  * choose a file.
  * For information about using <code>JFileChooser</code>, see
  * <a
- href="http://docs.oracle.com/javase/tutorial/uiswing/components/filechooser.html">How to Use File Choosers</a>,
+ href="http://java.sun.com/docs/books/tutorial/uiswing/components/filechooser.html">How to Use File Choosers</a>,
  * a section in <em>The Java Tutorial</em>.
  *
  * <p>
@@ -67,7 +67,7 @@ import java.lang.ref.WeakReference;
  * <pre>
  *    JFileChooser chooser = new JFileChooser();
  *    FileNameExtensionFilter filter = new FileNameExtensionFilter(
- *        "JPG &amp; GIF Images", "jpg", "gif");
+ *        "JPG & GIF Images", "jpg", "gif");
  *    chooser.setFileFilter(filter);
  *    int returnVal = chooser.showOpenDialog(parent);
  *    if(returnVal == JFileChooser.APPROVE_OPTION) {
@@ -134,7 +134,7 @@ public class JFileChooser extends JComponent implements Accessible {
     public static final int APPROVE_OPTION = 0;
 
     /**
-     * Return value if an error occurred.
+     * Return value if an error occured.
      */
     public static final int ERROR_OPTION = -1;
 
@@ -634,7 +634,7 @@ public class JFileChooser extends JComponent implements Accessible {
     /**
      * Pops up an "Open File" file chooser dialog. Note that the
      * text that appears in the approve button is determined by
-     * the L&amp;F.
+     * the L&F.
      *
      * @param    parent  the parent component of the dialog,
      *                  can be <code>null</code>;
@@ -659,7 +659,7 @@ public class JFileChooser extends JComponent implements Accessible {
     /**
      * Pops up a "Save File" file chooser dialog. Note that the
      * text that appears in the approve button is determined by
-     * the L&amp;F.
+     * the L&F.
      *
      * @param    parent  the parent component of the dialog,
      *                  can be <code>null</code>;
@@ -861,7 +861,7 @@ public class JFileChooser extends JComponent implements Accessible {
      * @beaninfo
      *   preferred: true
      *       bound: true
-     * description: Sets whether the approve &amp; cancel buttons are shown.
+     * description: Sets whether the approve & cancel buttons are shown.
      *
      * @see #getControlButtonsAreShown
      * @see #CONTROL_BUTTONS_ARE_SHOWN_CHANGED_PROPERTY
@@ -1841,7 +1841,7 @@ public class JFileChooser extends JComponent implements Accessible {
     }
 
     /**
-     * Returns a string that specifies the name of the L&amp;F class
+     * Returns a string that specifies the name of the L&F class
      * that renders this component.
      *
      * @return the string "FileChooserUI"
@@ -1849,16 +1849,16 @@ public class JFileChooser extends JComponent implements Accessible {
      * @see UIDefaults#getUI
      * @beaninfo
      *        expert: true
-     *   description: A string that specifies the name of the L&amp;F class.
+     *   description: A string that specifies the name of the L&F class.
      */
     public String getUIClassID() {
         return uiClassID;
     }
 
     /**
-     * Gets the UI object which implements the L&amp;F for this component.
+     * Gets the UI object which implements the L&F for this component.
      *
-     * @return the FileChooserUI object that implements the FileChooserUI L&amp;F
+     * @return the FileChooserUI object that implements the FileChooserUI L&F
      */
     public FileChooserUI getUI() {
         return (FileChooserUI) ui;

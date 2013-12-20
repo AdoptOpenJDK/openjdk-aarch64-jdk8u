@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2004, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,6 +32,7 @@
  */
 
 import java.lang.management.*;
+import java.util.concurrent.locks.LockSupport;
 
 public class ThreadBlockedCount {
     final static long EXPECTED_BLOCKED_COUNT = 3;
@@ -100,7 +101,6 @@ public class ThreadBlockedCount {
                         System.err.println("Unexpected exception.");
                         e.printStackTrace(System.err);
                         testFailed = true;
-                        break;
                     }
                 }
 
@@ -127,7 +127,6 @@ public class ThreadBlockedCount {
                         System.err.println("Unexpected exception.");
                         e.printStackTrace(System.err);
                         testFailed = true;
-                        break;
                     }
                 }
 
@@ -154,7 +153,6 @@ public class ThreadBlockedCount {
                         System.err.println("Unexpected exception.");
                         e.printStackTrace(System.err);
                         testFailed = true;
-                        break;
                     }
                 }
 
@@ -168,25 +166,15 @@ public class ThreadBlockedCount {
                 }
             }
 
-            // wait for the thread stats to be updated for 10 seconds
-            for (int i = 0; i < 100; i++) {
-                if (getBlockedCount() == EXPECTED_BLOCKED_COUNT) {
-                    return;
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    System.err.println("Unexpected exception.");
-                    e.printStackTrace(System.err);
-                    testFailed = true;
-                    return;
-                }
-            }
-            long count = getBlockedCount();
+            // Check the mbean now
+            ThreadInfo ti = mbean.getThreadInfo(Thread.currentThread().
+                                                getId());
+            long count = ti.getBlockedCount();
+
             if (count != EXPECTED_BLOCKED_COUNT) {
                 System.err.println("TEST FAILED: Blocked thread has " + count +
-                                    " blocked counts. Expected " +
-                                    EXPECTED_BLOCKED_COUNT);
+                                   " blocked counts. Expected " +
+                                   EXPECTED_BLOCKED_COUNT);
                 testFailed = true;
             }
         } // run()
@@ -207,7 +195,6 @@ public class ThreadBlockedCount {
                     System.err.println("Unexpected exception.");
                     e.printStackTrace(System.err);
                     testFailed = true;
-                    break;
                 }
                 ThreadInfo info = mbean.getThreadInfo(blocked.getId());
                 threadBlocked = (info.getThreadState() == Thread.State.BLOCKED);
@@ -246,13 +233,4 @@ public class ThreadBlockedCount {
 
         } // run()
     } // BlockedThread
-
-    private static long getBlockedCount() {
-        long count;
-        // Check the mbean now
-        ThreadInfo ti = mbean.getThreadInfo(Thread.currentThread().
-                getId());
-        count = ti.getBlockedCount();
-        return count;
-    }
 }

@@ -49,6 +49,7 @@ import sun.security.action.GetPropertyAction;
  * <p>
  * When encoding a String, the following rules apply:
  *
+ * <p>
  * <ul>
  * <li>The alphanumeric characters &quot;{@code a}&quot; through
  *     &quot;{@code z}&quot;, &quot;{@code A}&quot; through
@@ -185,7 +186,7 @@ public class URLEncoder {
      * "http://www.w3.org/TR/html40/appendix/notes.html#non-ascii-chars">
      * World Wide Web Consortium Recommendation</a> states that
      * UTF-8 should be used. Not doing so may introduce
-     * incompatibilities.</em>
+     * incompatibilites.</em>
      *
      * @param   s   {@code String} to be translated.
      * @param   enc   The name of a supported

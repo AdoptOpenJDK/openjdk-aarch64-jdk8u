@@ -45,11 +45,11 @@ public class Jps {
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
             Arguments.printUsage(System.err);
-            System.exit(1);
+            return;
         }
 
         if (arguments.isHelp()) {
-            Arguments.printUsage(System.err);
+            Arguments.printUsage(System.out);
             System.exit(0);
         }
 
@@ -165,7 +165,6 @@ public class Jps {
                     e.printStackTrace();
                 }
             }
-            System.exit(1);
         }
     }
 }

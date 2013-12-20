@@ -102,7 +102,6 @@ import java.io.IOException;
  * @since 1.6
  */
 
-@jdk.Exported
 public abstract class VirtualMachine {
     private AttachProvider provider;
     private String id;

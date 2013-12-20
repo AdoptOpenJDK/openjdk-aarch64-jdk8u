@@ -128,7 +128,7 @@ public class ExtendedCharsets
                     "gb2312-1980",
                     "euc-cn",
                     "euccn",
-                    "x-EUC-CN", // 1.4 compatibility
+                    "x-EUC-CN", // 1.4 compatability
                     "EUC_CN" //JDK historical
                 });
 

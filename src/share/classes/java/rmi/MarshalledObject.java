@@ -135,7 +135,7 @@ public final class MarshalledObject<T> implements Serializable {
     /**
      * Returns a new copy of the contained marshalledobject.  The internal
      * representation is deserialized with the semantics used for
-     * unmarshaling parameters for RMI calls.
+     * unmarshaling paramters for RMI calls.
      *
      * @return a copy of the contained object
      * @exception IOException if an <code>IOException</code> occurs while
@@ -182,7 +182,7 @@ public final class MarshalledObject<T> implements Serializable {
      * in the serialized representation.
      *
      * @param obj the object to compare with this <code>MarshalledObject</code>
-     * @return <code>true</code> if the argument contains an equivalent
+     * @return <code>true</code> if the argument contains an equaivalent
      * serialized object; <code>false</code> otherwise
      * @since 1.2
      */

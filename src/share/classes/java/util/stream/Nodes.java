@@ -60,9 +60,6 @@ final class Nodes {
      */
     static final long MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
-    // IllegalArgumentException messages
-    static final String BAD_SIZE = "Stream size exceeds max array size";
-
     @SuppressWarnings("raw")
     private static final Node EMPTY_NODE = new EmptyNode.OfRef();
     private static final Node.OfInt EMPTY_INT_NODE = new EmptyNode.OfInt();
@@ -320,7 +317,7 @@ final class Nodes {
         long size = helper.exactOutputSizeIfKnown(spliterator);
         if (size >= 0 && spliterator.hasCharacteristics(Spliterator.SUBSIZED)) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             P_OUT[] array = generator.apply((int) size);
             new SizedCollectorTask.OfRef<>(spliterator, helper, array).invoke();
             return node(array);
@@ -357,7 +354,7 @@ final class Nodes {
         long size = helper.exactOutputSizeIfKnown(spliterator);
         if (size >= 0 && spliterator.hasCharacteristics(Spliterator.SUBSIZED)) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             int[] array = new int[(int) size];
             new SizedCollectorTask.OfInt<>(spliterator, helper, array).invoke();
             return node(array);
@@ -395,7 +392,7 @@ final class Nodes {
         long size = helper.exactOutputSizeIfKnown(spliterator);
         if (size >= 0 && spliterator.hasCharacteristics(Spliterator.SUBSIZED)) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             long[] array = new long[(int) size];
             new SizedCollectorTask.OfLong<>(spliterator, helper, array).invoke();
             return node(array);
@@ -433,7 +430,7 @@ final class Nodes {
         long size = helper.exactOutputSizeIfKnown(spliterator);
         if (size >= 0 && spliterator.hasCharacteristics(Spliterator.SUBSIZED)) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             double[] array = new double[(int) size];
             new SizedCollectorTask.OfDouble<>(spliterator, helper, array).invoke();
             return node(array);
@@ -463,10 +460,7 @@ final class Nodes {
      */
     public static <T> Node<T> flatten(Node<T> node, IntFunction<T[]> generator) {
         if (node.getChildCount() > 0) {
-            long size = node.count();
-            if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
-            T[] array = generator.apply((int) size);
+            T[] array = generator.apply((int) node.count());
             new ToArrayTask.OfRef<>(node, array, 0).invoke();
             return node(array);
         } else {
@@ -489,10 +483,7 @@ final class Nodes {
      */
     public static Node.OfInt flattenInt(Node.OfInt node) {
         if (node.getChildCount() > 0) {
-            long size = node.count();
-            if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
-            int[] array = new int[(int) size];
+            int[] array = new int[(int) node.count()];
             new ToArrayTask.OfInt(node, array, 0).invoke();
             return node(array);
         } else {
@@ -515,10 +506,7 @@ final class Nodes {
      */
     public static Node.OfLong flattenLong(Node.OfLong node) {
         if (node.getChildCount() > 0) {
-            long size = node.count();
-            if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
-            long[] array = new long[(int) size];
+            long[] array = new long[(int) node.count()];
             new ToArrayTask.OfLong(node, array, 0).invoke();
             return node(array);
         } else {
@@ -541,10 +529,7 @@ final class Nodes {
      */
     public static Node.OfDouble flattenDouble(Node.OfDouble node) {
         if (node.getChildCount() > 0) {
-            long size = node.count();
-            if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
-            double[] array = new double[(int) size];
+            double[] array = new double[(int) node.count()];
             new ToArrayTask.OfDouble(node, array, 0).invoke();
             return node(array);
         } else {
@@ -642,7 +627,7 @@ final class Nodes {
         @SuppressWarnings("unchecked")
         ArrayNode(long size, IntFunction<T[]> generator) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             this.array = generator.apply((int) size);
             this.curSize = 0;
         }
@@ -792,17 +777,12 @@ final class Nodes {
         public void copyInto(T[] array, int offset) {
             Objects.requireNonNull(array);
             left.copyInto(array, offset);
-            // Cast to int is safe since it is the callers responsibility to
-            // ensure that there is sufficient room in the array
             right.copyInto(array, offset + (int) left.count());
         }
 
         @Override
         public T[] asArray(IntFunction<T[]> generator) {
-            long size = count();
-            if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
-            T[] array = generator.apply((int) size);
+            T[] array = generator.apply((int) count());
             copyInto(array, 0);
             return array;
         }
@@ -856,17 +836,12 @@ final class Nodes {
             @Override
             public void copyInto(T_ARR array, int offset) {
                 left.copyInto(array, offset);
-                // Cast to int is safe since it is the callers responsibility to
-                // ensure that there is sufficient room in the array
                 right.copyInto(array, offset + (int) left.count());
             }
 
             @Override
             public T_ARR asPrimitiveArray() {
-                long size = count();
-                if (size >= MAX_ARRAY_SIZE)
-                    throw new IllegalArgumentException(BAD_SIZE);
-                T_ARR array = newArray((int) size);
+                T_ARR array = newArray((int) count());
                 copyInto(array, 0);
                 return array;
             }
@@ -1312,7 +1287,7 @@ final class Nodes {
 
         IntArrayNode(long size) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             this.array = new int[(int) size];
             this.curSize = 0;
         }
@@ -1368,7 +1343,7 @@ final class Nodes {
 
         LongArrayNode(long size) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             this.array = new long[(int) size];
             this.curSize = 0;
         }
@@ -1422,7 +1397,7 @@ final class Nodes {
 
         DoubleArrayNode(long size) {
             if (size >= MAX_ARRAY_SIZE)
-                throw new IllegalArgumentException(BAD_SIZE);
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             this.array = new double[(int) size];
             this.curSize = 0;
         }
@@ -1868,8 +1843,8 @@ final class Nodes {
                 task = task.makeChild(rightSplit, task.offset + leftSplitSize,
                                       task.length - leftSplitSize);
             }
-
-            assert task.offset + task.length < MAX_ARRAY_SIZE;
+            if (task.offset + task.length >= MAX_ARRAY_SIZE)
+                throw new IllegalArgumentException("Stream size exceeds max array size");
             T_SINK sink = (T_SINK) task;
             task.helper.wrapAndCopyInto(sink, rightSplit);
             task.propagateCompletion();
@@ -1879,13 +1854,10 @@ final class Nodes {
 
         @Override
         public void begin(long size) {
-            if (size > length)
+            if(size > length)
                 throw new IllegalStateException("size passed to Sink.begin exceeds array length");
-            // Casts to int are safe since absolute size is verified to be within
-            // bounds when the root concrete SizedCollectorTask is constructed
-            // with the shared array
             index = (int) offset;
-            fence = index + (int) length;
+            fence = (int) offset + (int) length;
         }
 
         @SuppressWarnings("serial")

@@ -442,31 +442,10 @@ public abstract class AdviceAdapter extends GeneratorAdapter implements Opcodes 
         }
     }
 
-    @Deprecated
     @Override
     public void visitMethodInsn(final int opcode, final String owner,
             final String name, final String desc) {
-        if (api >= Opcodes.ASM5) {
-            super.visitMethodInsn(opcode, owner, name, desc);
-            return;
-        }
-        doVisitMethodInsn(opcode, owner, name, desc,
-                opcode == Opcodes.INVOKEINTERFACE);
-    }
-
-    @Override
-    public void visitMethodInsn(final int opcode, final String owner,
-            final String name, final String desc, final boolean itf) {
-        if (api < Opcodes.ASM5) {
-            super.visitMethodInsn(opcode, owner, name, desc, itf);
-            return;
-        }
-        doVisitMethodInsn(opcode, owner, name, desc, itf);
-    }
-
-    private void doVisitMethodInsn(int opcode, final String owner,
-            final String name, final String desc, final boolean itf) {
-        mv.visitMethodInsn(opcode, owner, name, desc, itf);
+        mv.visitMethodInsn(opcode, owner, name, desc);
         if (constructor) {
             Type[] types = Type.getArgumentTypes(desc);
             for (int i = 0; i < types.length; i++) {

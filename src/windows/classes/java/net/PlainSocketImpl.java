@@ -191,17 +191,14 @@ class PlainSocketImpl extends AbstractPlainSocketImpl
     }
 
     protected synchronized void accept(SocketImpl s) throws IOException {
-        if (s instanceof PlainSocketImpl) {
-            // pass in the real impl not the wrapper.
-            SocketImpl delegate = ((PlainSocketImpl)s).impl;
-            delegate.address = new InetAddress();
-            delegate.fd = new FileDescriptor();
-            impl.accept(delegate);
-            // set fd to delegate's fd to be compatible with older releases
-            s.fd = delegate.fd;
-        } else {
-            impl.accept(s);
-        }
+        // pass in the real impl not the wrapper.
+        SocketImpl delegate = ((PlainSocketImpl)s).impl;
+        delegate.address = new InetAddress();
+        delegate.fd = new FileDescriptor();
+        impl.accept(delegate);
+
+        // set fd to delegate's fd to be compatible with older releases
+        s.fd = delegate.fd;
     }
 
     void setFileDescriptor(FileDescriptor fd) {

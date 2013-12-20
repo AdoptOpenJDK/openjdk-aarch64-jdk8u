@@ -65,8 +65,10 @@ import static java.time.temporal.ChronoField.YEAR_OF_ERA;
 import static java.time.temporal.ChronoUnit.CENTURIES;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.DECADES;
+import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MILLENNIA;
 import static java.time.temporal.ChronoUnit.MONTHS;
+import static java.time.temporal.ChronoUnit.WEEKS;
 import static java.time.temporal.ChronoUnit.YEARS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -88,8 +90,8 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.chrono.IsoChronology;
 import java.time.chrono.IsoEra;
+import java.time.chrono.IsoChronology;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
@@ -99,7 +101,6 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.TemporalUnit;
 import java.time.temporal.UnsupportedTemporalTypeException;
@@ -148,6 +149,25 @@ public class TCKYear extends AbstractDateTimeTest {
         list.add(JulianFields.MODIFIED_JULIAN_DAY);
         list.add(JulianFields.RATA_DIE);
         return list;
+    }
+
+    //-----------------------------------------------------------------------
+    @Test
+    public void test_serialization() throws Exception {
+        assertSerializable(Year.of(2));
+        assertSerializable(Year.of(0));
+        assertSerializable(Year.of(-2));
+    }
+
+    @Test
+    public void test_serialization_format() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (DataOutputStream dos = new DataOutputStream(baos) ) {
+            dos.writeByte(11);       // java.time.temporal.Ser.YEAR_TYPE
+            dos.writeInt(2012);
+        }
+        byte[] bytes = baos.toByteArray();
+        assertSerializedBySer(Year.of(2012), bytes);
     }
 
     //-----------------------------------------------------------------------
@@ -228,17 +248,17 @@ public class TCKYear extends AbstractDateTimeTest {
 
     //-----------------------------------------------------------------------
     @Test
-    public void test_from_TemporalAccessor() {
+    public void test_factory_CalendricalObject() {
         assertEquals(Year.from(LocalDate.of(2007, 7, 15)), Year.of(2007));
     }
 
     @Test(expectedExceptions=DateTimeException.class)
-    public void test_from_TemporalAccessor_invalid_noDerive() {
+    public void test_factory_CalendricalObject_invalid_noDerive() {
         Year.from(LocalTime.of(12, 30));
     }
 
     @Test(expectedExceptions=NullPointerException.class)
-    public void test_from_TemporalAccessor_null() {
+    public void test_factory_CalendricalObject_null() {
         Year.from((TemporalAccessor) null);
     }
 
@@ -412,13 +432,13 @@ public class TCKYear extends AbstractDateTimeTest {
     @DataProvider(name="query")
     Object[][] data_query() {
         return new Object[][] {
-                {TEST_2008, TemporalQueries.chronology(), IsoChronology.INSTANCE},
-                {TEST_2008, TemporalQueries.zoneId(), null},
-                {TEST_2008, TemporalQueries.precision(), ChronoUnit.YEARS},
-                {TEST_2008, TemporalQueries.zone(), null},
-                {TEST_2008, TemporalQueries.offset(), null},
-                {TEST_2008, TemporalQueries.localDate(), null},
-                {TEST_2008, TemporalQueries.localTime(), null},
+                {TEST_2008, TemporalQuery.chronology(), IsoChronology.INSTANCE},
+                {TEST_2008, TemporalQuery.zoneId(), null},
+                {TEST_2008, TemporalQuery.precision(), ChronoUnit.YEARS},
+                {TEST_2008, TemporalQuery.zone(), null},
+                {TEST_2008, TemporalQuery.offset(), null},
+                {TEST_2008, TemporalQuery.localDate(), null},
+                {TEST_2008, TemporalQuery.localTime(), null},
         };
     }
 
@@ -596,13 +616,13 @@ public class TCKYear extends AbstractDateTimeTest {
         };
     }
 
-    @Test(dataProvider="plus_long_TemporalUnit")
-    public void test_plus_long_TemporalUnit(Year base, long amount, TemporalUnit unit, Year expectedYear, Class<?> expectedEx) {
+    @Test(groups={"tck"}, dataProvider="plus_long_TemporalUnit")
+    public void test_plus_long_TemporalUnit(Year base, long amount, TemporalUnit unit, Year expectedYear, Class expectedEx) {
         if (expectedEx == null) {
             assertEquals(base.plus(amount, unit), expectedYear);
         } else {
             try {
-                base.plus(amount, unit);
+                Year result = base.plus(amount, unit);
                 fail();
             } catch (Exception ex) {
                 assertTrue(expectedEx.isInstance(ex));
@@ -728,8 +748,8 @@ public class TCKYear extends AbstractDateTimeTest {
         };
     }
 
-    @Test(dataProvider="minus_long_TemporalUnit")
-    public void test_minus_long_TemporalUnit(Year base, long amount, TemporalUnit unit, Year expectedYear, Class<?> expectedEx) {
+    @Test(groups={"tck"}, dataProvider="minus_long_TemporalUnit")
+    public void test_minus_long_TemporalUnit(Year base, long amount, TemporalUnit unit, Year expectedYear, Class expectedEx) {
         if (expectedEx == null) {
             assertEquals(base.minus(amount, unit), expectedYear);
         } else {
@@ -787,7 +807,7 @@ public class TCKYear extends AbstractDateTimeTest {
     //-----------------------------------------------------------------------
     // with(TemporalField, long)
     //-----------------------------------------------------------------------
-    @Test
+    @Test(groups={"tck"})
     public void test_with() {
         Year base = Year.of(5);
         Year result = base.with(ChronoField.ERA, 0);
@@ -922,48 +942,29 @@ public class TCKYear extends AbstractDateTimeTest {
     }
 
     @Test(dataProvider="periodUntilUnit")
-    public void test_until_TemporalUnit(Year year1, Year year2, TemporalUnit unit, long expected) {
+    public void test_periodUntil_TemporalUnit(Year year1, Year year2, TemporalUnit unit, long expected) {
         long amount = year1.until(year2, unit);
         assertEquals(amount, expected);
     }
 
     @Test(dataProvider="periodUntilUnit")
-    public void test_until_TemporalUnit_negated(Year year1, Year year2, TemporalUnit unit, long expected) {
+    public void test_periodUntil_TemporalUnit_negated(Year year1, Year year2, TemporalUnit unit, long expected) {
         long amount = year2.until(year1, unit);
         assertEquals(amount, -expected);
     }
 
-    @Test(dataProvider="periodUntilUnit")
-    public void test_until_TemporalUnit_between(Year year1, Year year2, TemporalUnit unit, long expected) {
-        long amount = unit.between(year1, year2);
-        assertEquals(amount, expected);
-    }
-
-    @Test
-    public void test_until_convertedType() {
-        Year start = Year.of(2010);
-        YearMonth end = start.plusYears(2).atMonth(Month.APRIL);
-        assertEquals(start.until(end, YEARS), 2);
-    }
-
-    @Test(expectedExceptions=DateTimeException.class)
-    public void test_until_invalidType() {
-        Year start = Year.of(2010);
-        start.until(LocalTime.of(11, 30), YEARS);
-    }
-
     @Test(expectedExceptions = UnsupportedTemporalTypeException.class)
-    public void test_until_TemporalUnit_unsupportedUnit() {
+    public void test_periodUntil_TemporalUnit_unsupportedUnit() {
         TEST_2008.until(TEST_2008, MONTHS);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
-    public void test_until_TemporalUnit_nullEnd() {
+    public void test_periodUntil_TemporalUnit_nullEnd() {
         TEST_2008.until(null, DAYS);
     }
 
     @Test(expectedExceptions = NullPointerException.class)
-    public void test_until_TemporalUnit_nullUnit() {
+    public void test_periodUntil_TemporalUnit_nullUnit() {
         TEST_2008.until(TEST_2008, null);
     }
 

@@ -76,7 +76,7 @@ import sun.security.util.SecurityConstants;
  * <code>Thread</code>. An instance of the subclass can then be
  * allocated and started. For example, a thread that computes primes
  * larger than a stated value could be written as follows:
- * <hr><blockquote><pre>
+ * <p><hr><blockquote><pre>
  *     class PrimeThread extends Thread {
  *         long minPrime;
  *         PrimeThread(long minPrime) {
@@ -91,7 +91,7 @@ import sun.security.util.SecurityConstants;
  * </pre></blockquote><hr>
  * <p>
  * The following code would then create a thread and start it running:
- * <blockquote><pre>
+ * <p><blockquote><pre>
  *     PrimeThread p = new PrimeThread(143);
  *     p.start();
  * </pre></blockquote>
@@ -102,7 +102,7 @@ import sun.security.util.SecurityConstants;
  * then be allocated, passed as an argument when creating
  * <code>Thread</code>, and started. The same example in this other
  * style looks like the following:
- * <hr><blockquote><pre>
+ * <p><hr><blockquote><pre>
  *     class PrimeRun implements Runnable {
  *         long minPrime;
  *         PrimeRun(long minPrime) {
@@ -117,7 +117,7 @@ import sun.security.util.SecurityConstants;
  * </pre></blockquote><hr>
  * <p>
  * The following code would then create a thread and start it running:
- * <blockquote><pre>
+ * <p><blockquote><pre>
  *     PrimeRun p = new PrimeRun(143);
  *     new Thread(p).start();
  * </pre></blockquote>
@@ -341,15 +341,6 @@ class Thread implements Runnable {
     }
 
     /**
-     * Initializes a Thread with the current AccessControlContext.
-     * @see #init(ThreadGroup,Runnable,String,long,AccessControlContext)
-     */
-    private void init(ThreadGroup g, Runnable target, String name,
-                      long stackSize) {
-        init(g, target, name, stackSize, null);
-    }
-
-    /**
      * Initializes a Thread.
      *
      * @param g the Thread group
@@ -357,11 +348,9 @@ class Thread implements Runnable {
      * @param name the name of the new Thread
      * @param stackSize the desired stack size for the new thread, or
      *        zero to indicate that this parameter is to be ignored.
-     * @param acc the AccessControlContext to inherit, or
-     *            AccessController.getContext() if null
      */
     private void init(ThreadGroup g, Runnable target, String name,
-                      long stackSize, AccessControlContext acc) {
+                      long stackSize) {
         if (name == null) {
             throw new NullPointerException("name cannot be null");
         }
@@ -407,8 +396,7 @@ class Thread implements Runnable {
             this.contextClassLoader = parent.getContextClassLoader();
         else
             this.contextClassLoader = parent.contextClassLoader;
-        this.inheritedAccessControlContext =
-                acc != null ? acc : AccessController.getContext();
+        this.inheritedAccessControlContext = AccessController.getContext();
         this.target = target;
         setPriority(priority);
         if (parent.inheritableThreadLocals != null)
@@ -458,14 +446,6 @@ class Thread implements Runnable {
      */
     public Thread(Runnable target) {
         init(null, target, "Thread-" + nextThreadNum(), 0);
-    }
-
-    /**
-     * Creates a new Thread that inherits the given AccessControlContext.
-     * This is not a public constructor.
-     */
-    Thread(Runnable target, AccessControlContext acc) {
-        init(null, target, "Thread-" + nextThreadNum(), 0, acc);
     }
 
     /**

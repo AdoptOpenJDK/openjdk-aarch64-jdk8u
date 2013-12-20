@@ -30,7 +30,7 @@ import javax.swing.event.*;
  * The model used by <code>JTree</code>.
  * <p>
  * <code>JTree</code> and its related classes make extensive use of
- * <code>TreePath</code>s for identifying nodes in the <code>TreeModel</code>.
+ * <code>TreePath</code>s for indentifying nodes in the <code>TreeModel</code>.
  * If a <code>TreeModel</code> returns the same object, as compared by
  * <code>equals</code>, at two different indices under the same parent
  * than the resulting <code>TreePath</code> objects will be considered equal
@@ -50,7 +50,7 @@ import javax.swing.event.*;
  * For further information on tree models,
  * including an example of a custom implementation,
  * see <a
- href="http://docs.oracle.com/javase/tutorial/uiswing/components/tree.html">How to Use Trees</a>
+ href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Trees</a>
  * in <em>The Java Tutorial.</em>
  *
  * @see TreePath

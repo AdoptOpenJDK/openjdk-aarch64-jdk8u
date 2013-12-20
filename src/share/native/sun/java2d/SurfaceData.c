@@ -237,9 +237,7 @@ SurfaceDataOps *SurfaceData_InitOps(JNIEnv *env, jobject sData, int opsSize)
     SurfaceData_SetOps(env, sData, ops);
     if (ops != NULL) {
         memset(ops, 0, opsSize);
-        if (!(*env)->ExceptionCheck(env)) {
-            ops->sdObject = (*env)->NewWeakGlobalRef(env, sData);
-        }
+        ops->sdObject = (*env)->NewWeakGlobalRef(env, sData);
     }
     return ops;
 }

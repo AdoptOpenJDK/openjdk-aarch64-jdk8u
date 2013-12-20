@@ -26,7 +26,6 @@
 package sun.lwawt.macosx;
 
 import java.awt.*;
-import java.awt.dnd.DropTarget;
 
 import sun.awt.dnd.SunDropTargetContextPeer;
 import sun.awt.dnd.SunDropTargetEvent;
@@ -39,7 +38,7 @@ final class CDropTargetContextPeer extends SunDropTargetContextPeer {
     private long    fNativeDropTransfer = 0;
     private long    fNativeDataAvailable = 0;
     private Object  fNativeData    = null;
-    private DropTarget insideTarget = null;
+    private boolean insideTarget = true;
 
     Object awtLockAccess = new Object();
 
@@ -89,19 +88,26 @@ final class CDropTargetContextPeer extends SunDropTargetContextPeer {
         return fNativeData;
     }
 
-    // We need to take care of dragEnter and dragExit messages because
-    // native system generates them only for heavyweights
+    // We need to take care of dragExit message because for some reason it is not being
+    // generated for lightweight components
     @Override
     protected void processMotionMessage(SunDropTargetEvent event, boolean operationChanged) {
-        boolean eventInsideTarget = isEventInsideTarget(event);
-        if (event.getComponent().getDropTarget() == insideTarget) {
-            if (!eventInsideTarget) {
+        Component eventSource = (Component)event.getComponent();
+        Point screenPoint = event.getPoint();
+        SwingUtilities.convertPointToScreen(screenPoint, eventSource);
+        Rectangle screenBounds = new Rectangle(eventSource.getLocationOnScreen().x,
+                eventSource.getLocationOnScreen().y,
+                eventSource.getWidth(), eventSource.getHeight());
+        if(insideTarget) {
+            if(!screenBounds.contains(screenPoint)) {
                 processExitMessage(event);
+                insideTarget = false;
                 return;
             }
         } else {
-            if (eventInsideTarget) {
+            if(screenBounds.contains(screenPoint)) {
                 processEnterMessage(event);
+                insideTarget = true;
             } else {
                 return;
             }
@@ -109,52 +115,17 @@ final class CDropTargetContextPeer extends SunDropTargetContextPeer {
         super.processMotionMessage(event, operationChanged);
     }
 
-    /**
-     * Could be called when DnD enters a heavyweight or synthesized in processMotionMessage
-     */
-    @Override
-    protected void processEnterMessage(SunDropTargetEvent event) {
-        Component c = event.getComponent();
-        DropTarget dt = event.getComponent().getDropTarget();
-        if (isEventInsideTarget(event)
-                && dt != insideTarget
-                && c.isShowing()
-                && dt != null
-                && dt.isActive()) {
-            insideTarget = dt;
-            super.processEnterMessage(event);
-        }
-    }
-
-    /**
-     * Could be called when DnD exits a heavyweight or synthesized in processMotionMessage
-     */
-    @Override
-    protected void processExitMessage(SunDropTargetEvent event) {
-        if (event.getComponent().getDropTarget() == insideTarget) {
-            insideTarget = null;
-            super.processExitMessage(event);
-        }
-    }
-
     @Override
     protected void processDropMessage(SunDropTargetEvent event) {
-        if (isEventInsideTarget(event)) {
-            super.processDropMessage(event);
-            insideTarget = null;
-        }
-    }
-
-    private boolean isEventInsideTarget(SunDropTargetEvent event) {
-        Component eventSource = event.getComponent();
+        Component eventSource = (Component)event.getComponent();
         Point screenPoint = event.getPoint();
         SwingUtilities.convertPointToScreen(screenPoint, eventSource);
-        Point locationOnScreen = eventSource.getLocationOnScreen();
-        Rectangle screenBounds = new Rectangle(locationOnScreen.x,
-                                               locationOnScreen.y,
-                                               eventSource.getWidth(),
-                                               eventSource.getHeight());
-        return screenBounds.contains(screenPoint);
+        Rectangle screenBounds = new Rectangle(eventSource.getLocationOnScreen().x,
+                eventSource.getLocationOnScreen().y,
+                eventSource.getWidth(), eventSource.getHeight());
+        if(screenBounds.contains(screenPoint)) {
+            super.processDropMessage(event);
+        }
     }
 
     @Override

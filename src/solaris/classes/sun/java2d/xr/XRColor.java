@@ -54,7 +54,6 @@ public class XRColor {
     }
 
     public XRColor(Color color) {
-        setColorValues(color);
     }
 
     public void setColorValues(Color color) {

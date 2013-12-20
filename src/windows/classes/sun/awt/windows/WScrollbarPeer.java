@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2002, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,8 @@ import java.awt.*;
 import java.awt.peer.*;
 import java.awt.event.AdjustmentEvent;
 
-final class WScrollbarPeer extends WComponentPeer implements ScrollbarPeer {
+class WScrollbarPeer extends WComponentPeer implements ScrollbarPeer {
+
 
     // Returns width for vertial scrollbar as SM_CXHSCROLL,
     // height for horizontal scrollbar as SM_CYVSCROLL
@@ -139,4 +140,12 @@ final class WScrollbarPeer extends WComponentPeer implements ScrollbarPeer {
     public boolean shouldClearRectBeforePaint() {
         return false;
     }
+
+    /**
+     * DEPRECATED
+     */
+    public Dimension minimumSize() {
+        return getMinimumSize();
+    }
+
 }

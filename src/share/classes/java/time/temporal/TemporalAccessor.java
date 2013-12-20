@@ -272,8 +272,8 @@ public interface TemporalAccessor {
      * @implSpec
      * The default implementation must behave equivalent to this code:
      * <pre>
-     *  if (query == TemporalQueries.zoneId() ||
-     *        query == TemporalQueries.chronology() || query == TemporalQueries.precision()) {
+     *  if (query == TemporalQuery.zoneId() ||
+     *        query == TemporalQuery.chronology() || query == TemporalQuery.precision()) {
      *    return null;
      *  }
      *  return query.queryFrom(this);
@@ -290,7 +290,7 @@ public interface TemporalAccessor {
      * For example, an application-defined {@code HourMin} class storing the hour
      * and minute must override this method as follows:
      * <pre>
-     *  if (query == TemporalQueries.precision()) {
+     *  if (query == TemporalQuery.precision()) {
      *    return MINUTES;
      *  }
      *  return TemporalAccessor.super.query(query);
@@ -306,9 +306,7 @@ public interface TemporalAccessor {
      * @throws ArithmeticException if numeric overflow occurs
      */
     default <R> R query(TemporalQuery<R> query) {
-        if (query == TemporalQueries.zoneId()
-                || query == TemporalQueries.chronology()
-                || query == TemporalQueries.precision()) {
+        if (query == TemporalQuery.zoneId() || query == TemporalQuery.chronology() || query == TemporalQuery.precision()) {
             return null;
         }
         return query.queryFrom(this);

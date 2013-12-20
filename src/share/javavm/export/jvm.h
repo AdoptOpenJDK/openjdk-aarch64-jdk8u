@@ -351,7 +351,7 @@ JVM_NewMultiArray(JNIEnv *env, jclass eltClass, jintArray dim);
  * java.lang.Class and java.lang.ClassLoader
  */
 
-#define JVM_CALLER_DEPTH -1
+#define JVM_DEPTH -1
 
 /*
  * Returns the immediate caller class of the native method invoking
@@ -472,11 +472,6 @@ JVM_GetClassAnnotations(JNIEnv *env, jclass cls);
 JNIEXPORT jbyteArray JNICALL
 JVM_GetClassTypeAnnotations(JNIEnv *env, jclass cls);
 
-JNIEXPORT jbyteArray JNICALL
-JVM_GetFieldTypeAnnotations(JNIEnv *env, jobject field);
-
-JNIEXPORT jbyteArray JNICALL
-JVM_GetMethodTypeAnnotations(JNIEnv *env, jobject method);
 
 /*
  * New (JDK 1.4) reflection implementation
@@ -856,7 +851,7 @@ JNIEXPORT const char * JNICALL
 JVM_GetMethodIxSignatureUTF(JNIEnv *env, jclass cb, jint index);
 
 /*
- * Returns the name of the field referred to at a given constant pool
+ * Returns the name of the field refered to at a given constant pool
  * index.
  *
  * The result is in UTF format and remains valid until JVM_ReleaseUTF
@@ -869,7 +864,7 @@ JNIEXPORT const char * JNICALL
 JVM_GetCPFieldNameUTF(JNIEnv *env, jclass cb, jint index);
 
 /*
- * Returns the name of the method referred to at a given constant pool
+ * Returns the name of the method refered to at a given constant pool
  * index.
  *
  * The result is in UTF format and remains valid until JVM_ReleaseUTF
@@ -882,7 +877,7 @@ JNIEXPORT const char * JNICALL
 JVM_GetCPMethodNameUTF(JNIEnv *env, jclass cb, jint index);
 
 /*
- * Returns the signature of the method referred to at a given constant pool
+ * Returns the signature of the method refered to at a given constant pool
  * index.
  *
  * The result is in UTF format and remains valid until JVM_ReleaseUTF
@@ -895,7 +890,7 @@ JNIEXPORT const char * JNICALL
 JVM_GetCPMethodSignatureUTF(JNIEnv *env, jclass cb, jint index);
 
 /*
- * Returns the signature of the field referred to at a given constant pool
+ * Returns the signature of the field refered to at a given constant pool
  * index.
  *
  * The result is in UTF format and remains valid until JVM_ReleaseUTF
@@ -908,7 +903,7 @@ JNIEXPORT const char * JNICALL
 JVM_GetCPFieldSignatureUTF(JNIEnv *env, jclass cb, jint index);
 
 /*
- * Returns the class name referred to at a given constant pool index.
+ * Returns the class name refered to at a given constant pool index.
  *
  * The result is in UTF format and remains valid until JVM_ReleaseUTF
  * is called.
@@ -920,7 +915,7 @@ JNIEXPORT const char * JNICALL
 JVM_GetCPClassNameUTF(JNIEnv *env, jclass cb, jint index);
 
 /*
- * Returns the class name referred to at a given constant pool index.
+ * Returns the class name refered to at a given constant pool index.
  *
  * The constant pool entry must refer to a CONSTANT_Fieldref.
  *
@@ -934,7 +929,7 @@ JNIEXPORT const char * JNICALL
 JVM_GetCPFieldClassNameUTF(JNIEnv *env, jclass cb, jint index);
 
 /*
- * Returns the class name referred to at a given constant pool index.
+ * Returns the class name refered to at a given constant pool index.
  *
  * The constant pool entry must refer to CONSTANT_Methodref or
  * CONSTANT_InterfaceMethodref.

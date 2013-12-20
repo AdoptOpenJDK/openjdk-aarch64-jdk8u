@@ -26,7 +26,6 @@
 package javax.security.auth.kerberos;
 
 import java.io.File;
-import java.security.AccessControlException;
 import java.util.Objects;
 import sun.security.krb5.EncryptionKey;
 import sun.security.krb5.KerberosSecrets;
@@ -215,22 +214,9 @@ public final class KeyTab {
         return new KeyTab(princ, null, true);
     }
 
-    // Takes a snapshot of the keytab content. This method is called by
-    // JavaxSecurityAuthKerberosAccessImpl so no more private
+    //Takes a snapshot of the keytab content
     sun.security.krb5.internal.ktab.KeyTab takeSnapshot() {
-        try {
-            return sun.security.krb5.internal.ktab.KeyTab.getInstance(file);
-        } catch (AccessControlException ace) {
-            if (file != null) {
-                // It's OK to show the name if caller specified it
-                throw ace;
-            } else {
-                AccessControlException ace2 = new AccessControlException(
-                        "Access to default keytab denied (modified exception)");
-                ace2.setStackTrace(ace.getStackTrace());
-                throw ace2;
-            }
-        }
+        return sun.security.krb5.internal.ktab.KeyTab.getInstance(file);
     }
 
     /**

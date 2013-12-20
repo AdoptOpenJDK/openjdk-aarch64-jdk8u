@@ -223,24 +223,16 @@ public final class KdcComm {
         if (!tempKdc.hasNext()) {
             throw new KrbException("Cannot get kdc for realm " + realm);
         }
-        byte[] ibuf = null;
         try {
-            ibuf = sendIfPossible(obuf, tempKdc.next(), useTCP);
+            return sendIfPossible(obuf, tempKdc.next(), useTCP);
         } catch(Exception first) {
-            boolean ok = false;
             while(tempKdc.hasNext()) {
                 try {
-                    ibuf = sendIfPossible(obuf, tempKdc.next(), useTCP);
-                    ok = true;
-                    break;
+                    return sendIfPossible(obuf, tempKdc.next(), useTCP);
                 } catch(Exception ignore) {}
             }
-            if (!ok) throw first;
+            throw first;
         }
-        if (ibuf == null) {
-            throw new IOException("Cannot get a KDC reply");
-        }
-        return ibuf;
     }
 
     // send the AS Request to the specified KDC
@@ -426,7 +418,7 @@ public final class KdcComm {
     }
 
     /**
-     * Returns krb5.conf setting of {@code key} for a specific realm,
+     * Returns krb5.conf setting of {@code key} for a specfic realm,
      * which can be:
      * 1. defined in the sub-stanza for the given realm inside [realms], or
      * 2. defined in [libdefaults], or

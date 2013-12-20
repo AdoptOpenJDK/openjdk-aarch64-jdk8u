@@ -127,6 +127,7 @@ public interface ModelMBeanNotificationBroadcaster extends NotificationBroadcast
          * <P>
          * @param oldValue The original value for the Attribute
          * @param newValue The current value for the Attribute
+         *<P>
          * <PRE>
          * The constructed attributeChangeNotification will be:
          *   type        "jmx.attribute.change"

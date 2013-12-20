@@ -107,8 +107,7 @@ public class StaticInitMerger extends ClassVisitor {
             if (clinit == null) {
                 clinit = cv.visitMethod(a, name, desc, null, null);
             }
-            clinit.visitMethodInsn(Opcodes.INVOKESTATIC, this.name, n, desc,
-                    false);
+            clinit.visitMethodInsn(Opcodes.INVOKESTATIC, this.name, n, desc);
         } else {
             mv = cv.visitMethod(access, name, desc, signature, exceptions);
         }

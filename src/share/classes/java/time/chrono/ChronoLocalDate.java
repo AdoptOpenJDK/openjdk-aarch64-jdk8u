@@ -69,6 +69,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
@@ -77,7 +78,6 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.TemporalUnit;
 import java.time.temporal.UnsupportedTemporalTypeException;
@@ -195,13 +195,13 @@ import java.util.Objects;
  *
  * <h3>Using LocalDate instead</h3>
  * The primary alternative to using this interface throughout your application is as follows.
- * <ul>
+ * <p><ul>
  * <li>Declare all method signatures referring to dates in terms of {@code LocalDate}.
  * <li>Either store the chronology (calendar system) in the user profile or lookup
  *  the chronology from the user locale
  * <li>Convert the ISO {@code LocalDate} to and from the user's preferred calendar system during
  *  printing and parsing
- * </ul>
+ * </ul><p>
  * This approach treats the problem of globalized calendar systems as a localization issue
  * and confines it to the UI layer. This approach is in keeping with other localization
  * issues in the java platform.
@@ -222,13 +222,13 @@ import java.util.Objects;
  * For example, an application may need to calculate the next Islamic or Hebrew holiday
  * which may require manipulating the date.
  * This kind of use case can be handled as follows:
- * <ul>
+ * <p><ul>
  * <li>start from the ISO {@code LocalDate} being passed to the method
  * <li>convert the date to the alternate calendar system, which for this use case is known
  *  rather than arbitrary
  * <li>perform the calculation
  * <li>convert back to {@code LocalDate}
- * </ul>
+ * </ul><p>
  * Developers writing low-level frameworks or libraries should also avoid this interface.
  * Instead, one of the two general purpose access interfaces should be used.
  * Use {@link TemporalAccessor} if read-only access is required, or use {@link Temporal}
@@ -263,7 +263,7 @@ public interface ChronoLocalDate
      * @see #isEqual
      */
     static Comparator<ChronoLocalDate> timeLineOrder() {
-        return AbstractChronology.DATE_ORDER;
+        return Chronology.DATE_ORDER;
     }
 
     //-----------------------------------------------------------------------
@@ -292,8 +292,7 @@ public interface ChronoLocalDate
         if (temporal instanceof ChronoLocalDate) {
             return (ChronoLocalDate) temporal;
         }
-        Objects.requireNonNull(temporal, "temporal");
-        Chronology chrono = temporal.query(TemporalQueries.chronology());
+        Chronology chrono = temporal.query(TemporalQuery.chronology());
         if (chrono == null) {
             throw new DateTimeException("Unable to obtain ChronoLocalDate from TemporalAccessor: " + temporal.getClass());
         }
@@ -429,7 +428,7 @@ public interface ChronoLocalDate
      */
     @Override
     default ChronoLocalDate with(TemporalAdjuster adjuster) {
-        return ChronoLocalDateImpl.ensureValid(getChronology(), Temporal.super.with(adjuster));
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.with(adjuster));
     }
 
     /**
@@ -443,7 +442,7 @@ public interface ChronoLocalDate
         if (field instanceof ChronoField) {
             throw new UnsupportedTemporalTypeException("Unsupported field: " + field);
         }
-        return ChronoLocalDateImpl.ensureValid(getChronology(), field.adjustInto(this, newValue));
+        return ChronoDateImpl.ensureValid(getChronology(), field.adjustInto(this, newValue));
     }
 
     /**
@@ -453,7 +452,7 @@ public interface ChronoLocalDate
      */
     @Override
     default ChronoLocalDate plus(TemporalAmount amount) {
-        return ChronoLocalDateImpl.ensureValid(getChronology(), Temporal.super.plus(amount));
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.plus(amount));
     }
 
     /**
@@ -466,7 +465,7 @@ public interface ChronoLocalDate
         if (unit instanceof ChronoUnit) {
             throw new UnsupportedTemporalTypeException("Unsupported unit: " + unit);
         }
-        return ChronoLocalDateImpl.ensureValid(getChronology(), unit.addTo(this, amountToAdd));
+        return ChronoDateImpl.ensureValid(getChronology(), unit.addTo(this, amountToAdd));
     }
 
     /**
@@ -476,7 +475,7 @@ public interface ChronoLocalDate
      */
     @Override
     default ChronoLocalDate minus(TemporalAmount amount) {
-        return ChronoLocalDateImpl.ensureValid(getChronology(), Temporal.super.minus(amount));
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.minus(amount));
     }
 
     /**
@@ -487,7 +486,7 @@ public interface ChronoLocalDate
      */
     @Override
     default ChronoLocalDate minus(long amountToSubtract, TemporalUnit unit) {
-        return ChronoLocalDateImpl.ensureValid(getChronology(), Temporal.super.minus(amountToSubtract, unit));
+        return ChronoDateImpl.ensureValid(getChronology(), Temporal.super.minus(amountToSubtract, unit));
     }
 
     //-----------------------------------------------------------------------
@@ -512,13 +511,13 @@ public interface ChronoLocalDate
     @SuppressWarnings("unchecked")
     @Override
     default <R> R query(TemporalQuery<R> query) {
-        if (query == TemporalQueries.zoneId() || query == TemporalQueries.zone() || query == TemporalQueries.offset()) {
+        if (query == TemporalQuery.zoneId() || query == TemporalQuery.zone() || query == TemporalQuery.offset()) {
             return null;
-        } else if (query == TemporalQueries.localTime()) {
+        } else if (query == TemporalQuery.localTime()) {
             return null;
-        } else if (query == TemporalQueries.chronology()) {
+        } else if (query == TemporalQuery.chronology()) {
             return (R) getChronology();
-        } else if (query == TemporalQueries.precision()) {
+        } else if (query == TemporalQuery.precision()) {
             return (R) DAYS;
         }
         // inline TemporalAccessor.super.query(query) as an optimization
@@ -562,8 +561,8 @@ public interface ChronoLocalDate
      * objects in terms of a single {@code TemporalUnit}.
      * The start and end points are {@code this} and the specified date.
      * The result will be negative if the end is before the start.
-     * The {@code Temporal} passed to this method is converted to a
-     * {@code ChronoLocalDate} using {@link Chronology#date(TemporalAccessor)}.
+     * The {@code Temporal} passed to this method must be a
+     * {@code ChronoLocalDate} in the same chronology.
      * The calculation returns a whole number, representing the number of
      * complete units between the two dates.
      * For example, the amount in days between two dates can be calculated
@@ -587,30 +586,25 @@ public interface ChronoLocalDate
      * <p>
      * If the unit is not a {@code ChronoUnit}, then the result of this method
      * is obtained by invoking {@code TemporalUnit.between(Temporal, Temporal)}
-     * passing {@code this} as the first argument and the converted input temporal as
+     * passing {@code this} as the first argument and the input temporal as
      * the second argument.
      * <p>
      * This instance is immutable and unaffected by this method call.
      *
-     * @param endExclusive  the end date, exclusive, which is converted to a
-     *  {@code ChronoLocalDate} in the same chronology, not null
+     * @param endDate  the end date, which must be a {@code ChronoLocalDate}
+     *  in the same chronology, not null
      * @param unit  the unit to measure the amount in, not null
      * @return the amount of time between this date and the end date
-     * @throws DateTimeException if the amount cannot be calculated, or the end
-     *  temporal cannot be converted to a {@code ChronoLocalDate}
-     * @throws UnsupportedTemporalTypeException if the unit is not supported
+     * @throws DateTimeException if the amount cannot be calculated
      * @throws ArithmeticException if numeric overflow occurs
      */
     @Override  // override for Javadoc
-    long until(Temporal endExclusive, TemporalUnit unit);
+    long until(Temporal endDate, TemporalUnit unit);
 
     /**
-     * Calculates the period between this date and another date as a {@code ChronoPeriod}.
+     * Calculates the period between this date and another date as a {@code Period}.
      * <p>
-     * This calculates the period between two dates. All supplied chronologies
-     * calculate the period using years, months and days, however the
-     * {@code ChronoPeriod} API allows the period to be represented using other units.
-     * <p>
+     * This calculates the period between two dates in terms of years, months and days.
      * The start and end points are {@code this} and the specified date.
      * The result will be negative if the end is before the start.
      * The negative sign will be the same in each of year, month and day.
@@ -620,12 +614,12 @@ public interface ChronoLocalDate
      * <p>
      * This instance is immutable and unaffected by this method call.
      *
-     * @param endDateExclusive  the end date, exclusive, which may be in any chronology, not null
+     * @param endDate  the end date, exclusive, which may be in any chronology, not null
      * @return the period between this date and the end date, not null
      * @throws DateTimeException if the period cannot be calculated
      * @throws ArithmeticException if numeric overflow occurs
      */
-    ChronoPeriod until(ChronoLocalDate endDateExclusive);
+    Period until(ChronoLocalDate endDate);
 
     /**
      * Formats this date using the specified formatter.

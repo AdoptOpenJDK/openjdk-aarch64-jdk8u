@@ -30,7 +30,7 @@ import java.security.spec.*;
 
 /**
  * This class provides a delegate for the identity cipher - one that does not
- * transform the plain text.
+ * tranform the plaintext.
  *
  * @author  Li Gong
  * @see NullCipher

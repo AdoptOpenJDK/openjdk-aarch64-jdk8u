@@ -47,7 +47,7 @@ KS=collator.jks
 JFILE=collator.jar
 
 KT="$TESTJAVA${FS}bin${FS}keytool -storepass changeit -keypass changeit \
-        -keyalg rsa -keystore $KS"
+        -keystore $KS"
 JAR=$TESTJAVA${FS}bin${FS}jar
 JARSIGNER="$TESTJAVA${FS}bin${FS}jarsigner -keystore $KS -storepass changeit"
 

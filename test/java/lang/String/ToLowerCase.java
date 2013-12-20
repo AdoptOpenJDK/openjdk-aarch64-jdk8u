@@ -23,7 +23,7 @@
 
 /*
     @test
-    @bug 4217441 4533872 4900935 8020037
+    @bug 4217441 4533872 4900935
     @summary toLowerCase should lower-case Greek Sigma correctly depending
              on the context (final/non-final).  Also it should handle
              Locale specific (lt, tr, and az) lowercasings and supplementary
@@ -69,11 +69,10 @@ public class ToLowerCase {
         test("\u00CD", Locale.US, "\u00ED");
         test("\u0128", Locale.US, "\u0129");
 
-        // I-dot tests
+        // I-dot tests (Turkish and Azeri)
         test("\u0130", turkish, "i");
         test("\u0130", az, "i");
-        test("\u0130", lt, "i");
-        test("\u0130", Locale.US, "i");
+        test("\u0130", Locale.US, "i\u0307");
 
         // Remove dot_above in the sequence I + dot_above (Turkish and Azeri)
         test("I\u0307", turkish, "i");

@@ -53,10 +53,7 @@ public class Tracker {
 
     public static void ObjectInit(Object obj)
     {
-        if ( engaged != 0) {
-            if (obj == null) {
-                throw new IllegalArgumentException("Null object.");
-            }
+        if ( engaged != 0 ) {
             nativeObjectInit(Thread.currentThread(), obj);
         }
     }
@@ -69,10 +66,7 @@ public class Tracker {
 
     public static void NewArray(Object obj)
     {
-        if ( engaged != 0) {
-            if (obj == null) {
-                throw new IllegalArgumentException("Null object.");
-            }
+        if ( engaged != 0 ) {
             nativeNewArray(Thread.currentThread(), obj);
         }
     }
@@ -88,14 +82,6 @@ public class Tracker {
     public static void CallSite(int cnum, int mnum)
     {
         if ( engaged != 0 ) {
-            if (cnum < 0) {
-                throw new IllegalArgumentException("Negative class index");
-            }
-
-            if (mnum < 0) {
-                throw new IllegalArgumentException("Negative method index");
-            }
-
             nativeCallSite(Thread.currentThread(), cnum, mnum);
         }
     }
@@ -109,14 +95,6 @@ public class Tracker {
     public static void ReturnSite(int cnum, int mnum)
     {
         if ( engaged != 0 ) {
-            if (cnum < 0) {
-                throw new IllegalArgumentException("Negative class index");
-            }
-
-            if (mnum < 0) {
-                throw new IllegalArgumentException("Negative method index");
-            }
-
             nativeReturnSite(Thread.currentThread(), cnum, mnum);
         }
     }

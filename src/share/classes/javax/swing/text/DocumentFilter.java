@@ -131,7 +131,7 @@ public class DocumentFilter {
      */
     public static abstract class FilterBypass {
         /**
-         * Returns the Document the mutation is occurring on.
+         * Returns the Document the mutation is occuring on.
          *
          * @return Document that remove/insertString will operate on
          */

@@ -465,7 +465,9 @@ JNIEXPORT void JNICALL Java_sun_java2d_x11_X11Renderer_XDrawPoly
 
     points = transformPoints(env, xcoordsArray, ycoordsArray, transx, transy,
                              pTmp, (int *)&npoints, isclosed);
-    if (points != 0) {
+    if (points == 0) {
+        JNU_ThrowOutOfMemoryError(env, "translated coordinate array");
+    } else {
         if (npoints == 2) {
             /*
              * Some X11 implementations fail to draw anything for
@@ -586,7 +588,6 @@ Java_sun_java2d_x11_X11Renderer_XDoPath
         NULL
     };
     PHStroke stroke;
-    jboolean ok = JNI_TRUE;
 
     if (xsdo == NULL) {
         return;
@@ -624,6 +625,8 @@ Java_sun_java2d_x11_X11Renderer_XDoPath
         types = (jbyte*)
             (*env)->GetPrimitiveArrayCritical(env, typesArray, NULL);
         if (types != NULL) {
+            jboolean ok;
+
             if (isFill) {
                 drawHandler.pDrawScanline = &drawScanline;
                 ok = doFillPath(&drawHandler,
@@ -640,14 +643,14 @@ Java_sun_java2d_x11_X11Renderer_XDoPath
                                 types, numTypes,
                                 stroke);
             }
+            if (!ok) {
+                JNU_ThrowArrayIndexOutOfBoundsException(env, "coords array");
+            }
             (*env)->ReleasePrimitiveArrayCritical(env, typesArray, types,
                                                   JNI_ABORT);
         }
         (*env)->ReleasePrimitiveArrayCritical(env, coordsArray, coords,
                                               JNI_ABORT);
-        if (!ok) {
-            JNU_ThrowArrayIndexOutOfBoundsException(env, "coords array");
-        }
     }
 
     XDHD_FREE_POINTS(&dHData);
@@ -890,7 +893,9 @@ JNIEXPORT void JNICALL Java_sun_java2d_x11_X11Renderer_XFillPoly
 
     points = transformPoints(env, xcoordsArray, ycoordsArray, transx, transy,
                              pTmp, (int *)&npoints, JNI_FALSE);
-    if (points != 0) {
+    if (points == 0) {
+        JNU_ThrowOutOfMemoryError(env, "translated coordinate array");
+    } else {
         if (npoints > 2) {
             XFillPolygon(awt_display, xsdo->drawable, (GC) xgc,
                          points, npoints, Complex, CoordModeOrigin);

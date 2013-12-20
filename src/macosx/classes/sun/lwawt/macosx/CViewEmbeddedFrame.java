@@ -97,6 +97,6 @@ public class CViewEmbeddedFrame extends EmbeddedFrame {
                     setVisible(true);
                 }
             }, this);
-        } catch (InvocationTargetException ex) {}
+        } catch (InterruptedException | InvocationTargetException ex) {}
     }
 }

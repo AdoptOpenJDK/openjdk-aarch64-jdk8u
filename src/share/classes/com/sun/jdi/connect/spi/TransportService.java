@@ -77,7 +77,6 @@ import com.sun.jdi.connect.TransportTimeoutException;
  * @since 1.5
  */
 
-@jdk.Exported
 public abstract class TransportService {
 
     /**
@@ -97,7 +96,6 @@ public abstract class TransportService {
     /**
      * The transport service capabilities.
      */
-    @jdk.Exported
     public static abstract class Capabilities {
 
         /**
@@ -231,7 +229,6 @@ public abstract class TransportService {
      * #stopListening stopListening} to stop the transport
      * service from listening on an address.
      */
-    @jdk.Exported
     public static abstract class ListenKey {
 
         /**
@@ -250,7 +247,7 @@ public abstract class TransportService {
      *
      * @param   address
      *          The address to start listening for connections,
-     *          or <tt>null</tt> to listen on an address chosen
+     *          or <tt>null</tt> to listen on an address choosen
      *          by the transport service.
      *
      * @return  a listen key to be used in subsequent calls to be
@@ -266,7 +263,7 @@ public abstract class TransportService {
     public abstract ListenKey startListening(String address) throws IOException;
 
     /**
-     * Listens on an address chosen by the transport service.
+     * Listens on an address choosen by the transport service.
      *
      * <p> This convenience method works as if by invoking {@link
      * #startListening(String) startListening(<tt>null</tt>)}. </p>

@@ -64,6 +64,7 @@ package java.time.temporal;
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.DAY_OF_WEEK;
 import static java.time.temporal.ChronoField.DAY_OF_YEAR;
+import static java.time.temporal.ChronoField.EPOCH_DAY;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.YEAR;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -76,9 +77,12 @@ import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
+import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.Chronology;
 import java.time.format.ResolverStyle;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -115,16 +119,16 @@ import sun.util.locale.provider.LocaleResources;
  * For example, the ISO-8601 standard considers Monday to be the first day-of-week.
  * <li>The minimal number of days in the first week.
  * For example, the ISO-8601 standard counts the first week as needing at least 4 days.
- * </ul>
+ * </ul><p>
  * Together these two values allow a year or month to be divided into weeks.
- *
+ * <p>
  * <h3>Week of Month</h3>
  * One field is used: week-of-month.
  * The calculation ensures that weeks never overlap a month boundary.
  * The month is divided into periods where each period starts on the defined first day-of-week.
  * The earliest period is referred to as week 0 if it has less than the minimal number of days
  * and week 1 if it has at least the minimal number of days.
- *
+ * <p>
  * <table cellpadding="0" cellspacing="3" border="0" style="text-align: left; width: 50%;">
  * <caption>Examples of WeekFields</caption>
  * <tr><th>Date</th><td>Day-of-week</td>
@@ -245,15 +249,15 @@ public final class WeekFields implements Serializable {
     /**
      * The field used to access the computed DayOfWeek.
      */
-    private final transient TemporalField dayOfWeek = ComputedDayOfField.ofDayOfWeekField(this);
+    private transient final TemporalField dayOfWeek = ComputedDayOfField.ofDayOfWeekField(this);
     /**
      * The field used to access the computed WeekOfMonth.
      */
-    private final transient TemporalField weekOfMonth = ComputedDayOfField.ofWeekOfMonthField(this);
+    private transient final TemporalField weekOfMonth = ComputedDayOfField.ofWeekOfMonthField(this);
     /**
      * The field used to access the computed WeekOfYear.
      */
-    private final transient TemporalField weekOfYear = ComputedDayOfField.ofWeekOfYearField(this);
+    private transient final TemporalField weekOfYear = ComputedDayOfField.ofWeekOfYearField(this);
     /**
      * The field that represents the week-of-week-based-year.
      * <p>
@@ -261,7 +265,7 @@ public final class WeekFields implements Serializable {
      * <p>
      * This unit is an immutable and thread-safe singleton.
      */
-    private final transient TemporalField weekOfWeekBasedYear = ComputedDayOfField.ofWeekOfWeekBasedYearField(this);
+    private transient final TemporalField weekOfWeekBasedYear = ComputedDayOfField.ofWeekOfWeekBasedYearField(this);
     /**
      * The field that represents the week-based-year.
      * <p>
@@ -269,7 +273,7 @@ public final class WeekFields implements Serializable {
      * <p>
      * This unit is an immutable and thread-safe singleton.
      */
-    private final transient TemporalField weekBasedYear = ComputedDayOfField.ofWeekBasedYearField(this);
+    private transient final TemporalField weekBasedYear = ComputedDayOfField.ofWeekBasedYearField(this);
 
     //-----------------------------------------------------------------------
     /**
@@ -888,7 +892,7 @@ public final class WeekFields implements Serializable {
 
         @Override
         public ChronoLocalDate resolve(
-                Map<TemporalField, Long> fieldValues, TemporalAccessor partialTemporal, ResolverStyle resolverStyle) {
+                Map<TemporalField, Long> fieldValues, Chronology chronology, ZoneId zone, ResolverStyle resolverStyle) {
             final long value = fieldValues.get(this);
             final int newValue = Math.toIntExact(value);  // broad limit makes overflow checking lighter
             // first convert localized day-of-week to ISO day-of-week
@@ -911,20 +915,19 @@ public final class WeekFields implements Serializable {
             int dow = localizedDayOfWeek(isoDow);
 
             // build date
-            Chronology chrono = Chronology.from(partialTemporal);
             if (fieldValues.containsKey(YEAR)) {
                 int year = YEAR.checkValidIntValue(fieldValues.get(YEAR));  // validate
                 if (rangeUnit == MONTHS && fieldValues.containsKey(MONTH_OF_YEAR)) {  // week-of-month
                     long month = fieldValues.get(MONTH_OF_YEAR);  // not validated yet
-                    return resolveWoM(fieldValues, chrono, year, month, newValue, dow, resolverStyle);
+                    return resolveWoM(fieldValues, chronology, year, month, newValue, dow, resolverStyle);
                 }
                 if (rangeUnit == YEARS) {  // week-of-year
-                    return resolveWoY(fieldValues, chrono, year, newValue, dow, resolverStyle);
+                    return resolveWoY(fieldValues, chronology, year, newValue, dow, resolverStyle);
                 }
             } else if ((rangeUnit == WEEK_BASED_YEARS || rangeUnit == FOREVER) &&
                     fieldValues.containsKey(weekDef.weekBasedYear) &&
                     fieldValues.containsKey(weekDef.weekOfWeekBasedYear)) { // week-of-week-based-year and year-of-week-based-year
-                return resolveWBY(fieldValues, chrono, dow, resolverStyle);
+                return resolveWBY(fieldValues, chronology, dow, resolverStyle);
             }
             return null;
         }

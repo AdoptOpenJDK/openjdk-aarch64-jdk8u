@@ -24,8 +24,6 @@
 /**
  * @test
  * @bug 6899919
- * @library /lib/testlibrary
- * @build jdk.testlibrary.FileUtils
  * @run shell build2.sh
  * @run main/othervm GetResourceAsStream
  */

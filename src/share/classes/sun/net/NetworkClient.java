@@ -244,7 +244,7 @@ public class NetworkClient {
      * Sets the read timeout.
      *
      * Note: Public URLConnection (and protocol specific implementations)
-     * protect against negative timeout values being set. This implementation,
+     * protect against negative timeout values being set. This implemenation,
      * and protocol specific implementations, use -1 to represent the default
      * read timeout.
      *

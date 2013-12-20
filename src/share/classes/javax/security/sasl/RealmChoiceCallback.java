@@ -46,7 +46,7 @@ public class RealmChoiceCallback extends ChoiceCallback {
      * @param choices the non-null list of realms to choose from.
      * @param defaultChoice the choice to be used as the default choice
      * when the list of choices is displayed. It is an index into
-     * the {@code choices} array.
+     * the {@code choices} arary.
      * @param multiple true if multiple choices allowed; false otherwise
      * @throws IllegalArgumentException If {@code prompt} is null or the empty string,
      * if {@code choices} has a length of 0, if any element from

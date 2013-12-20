@@ -48,6 +48,7 @@ package java.lang;
  * @author Josh Bloch
  * @since 1.7
  */
+@FunctionalInterface
 public interface AutoCloseable {
     /**
      * Closes this resource, relinquishing any underlying resources.

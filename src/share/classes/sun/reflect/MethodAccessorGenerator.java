@@ -639,14 +639,10 @@ class MethodAccessorGenerator extends AccessorGenerator {
                                     typeSizeInStackSlots(returnType));
             } else {
                 if (isInterface()) {
-                    if (isPrivate()) {
-                        cb.opc_invokespecial(targetMethodRef, count, 0);
-                    } else {
-                        cb.opc_invokeinterface(targetMethodRef,
-                                               count,
-                                               count,
-                                               typeSizeInStackSlots(returnType));
-                    }
+                    cb.opc_invokeinterface(targetMethodRef,
+                                           count,
+                                           count,
+                                           typeSizeInStackSlots(returnType));
                 } else {
                     cb.opc_invokevirtual(targetMethodRef,
                                          count,

@@ -186,14 +186,9 @@ Java_sun_java2d_loops_DrawPolygons_DrawPolygons
         }
 
         xPointsPtr = (*env)->GetPrimitiveArrayCritical(env, xPointsArray, NULL);
-        if (!xPointsPtr) {
+        yPointsPtr = (*env)->GetPrimitiveArrayCritical(env, yPointsArray, NULL);
+        if (!xPointsPtr || !yPointsPtr) {
             ok = JNI_FALSE;
-        }
-        if (ok) {
-            yPointsPtr = (*env)->GetPrimitiveArrayCritical(env, yPointsArray, NULL);
-            if (!yPointsPtr) {
-                ok = JNI_FALSE;
-            }
         }
     }
 

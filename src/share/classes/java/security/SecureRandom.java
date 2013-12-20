@@ -578,30 +578,39 @@ public class SecureRandom extends java.util.Random {
     /**
      * Returns a {@code SecureRandom} object that was selected by using
      * the algorithms/providers specified in the {@code
-     * securerandom.strongAlgorithms} {@link Security} property.
+     * securerandom.strongAlgorithms} Security property.
      * <p>
      * Some situations require strong random values, such as when
      * creating high-value/long-lived secrets like RSA public/private
      * keys.  To help guide applications in selecting a suitable strong
-     * {@code SecureRandom} implementation, Java distributions
+     * {@code SecureRandom} implementation, Java distributions should
      * include a list of known strong {@code SecureRandom}
      * implementations in the {@code securerandom.strongAlgorithms}
      * Security property.
-     * <p>
-     * Every implementation of the Java platform is required to
-     * support at least one strong {@code SecureRandom} implementation.
+     *
+     * <pre>
+     *     SecureRandom sr = SecureRandom.getStrongSecureRandom();
+     *
+     *     if (sr == null) {
+     *         // Decide if this is a problem, and whether to recover.
+     *         sr = new SecureRandom();
+     *         if (!goodEnough(sr)) {
+     *             return;
+     *         }
+     *     }
+     *
+     *     keyPairGenerator.initialize(2048, sr);
+     * </pre>
      *
      * @return a strong {@code SecureRandom} implementation as indicated
-     * by the {@code securerandom.strongAlgorithms} Security property
-     *
-     * @throws NoSuchAlgorithmException if no algorithm is available
+     * by the {@code securerandom.strongAlgorithms} Security property, or
+     * null if none are available.
      *
      * @see Security#getProperty(String)
      *
      * @since 1.8
      */
-    public static SecureRandom getInstanceStrong()
-            throws NoSuchAlgorithmException {
+    public static SecureRandom getStrongSecureRandom() {
 
         String property = AccessController.doPrivileged(
             new PrivilegedAction<String>() {
@@ -613,8 +622,7 @@ public class SecureRandom extends java.util.Random {
             });
 
         if ((property == null) || (property.length() == 0)) {
-            throw new NoSuchAlgorithmException(
-                "Null/empty securerandom.strongAlgorithms Security Property");
+            return null;
         }
 
         String remainder = property;
@@ -641,8 +649,7 @@ public class SecureRandom extends java.util.Random {
             }
         }
 
-        throw new NoSuchAlgorithmException(
-            "No strong SecureRandom impls available: " + property);
+        return null;
     }
 
     // Declare serialVersionUID to be compatible with JDK1.1

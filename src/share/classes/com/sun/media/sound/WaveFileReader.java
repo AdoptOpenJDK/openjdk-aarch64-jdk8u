@@ -53,6 +53,13 @@ public final class WaveFileReader extends SunFileReader {
     private static final int MAX_READ_LENGTH = 12;
 
     /**
+     * Constructs a new WaveFileReader object.
+     */
+    public WaveFileReader() {
+    }
+
+
+    /**
      * Obtains the audio file format of the input stream provided.  The stream must
      * point to valid audio file data.  In general, audio file providers may
      * need to read some data from the stream before determining whether they
@@ -297,9 +304,6 @@ public final class WaveFileReader extends SunFileReader {
         }
         // channels
         channels = rlshort(dis); nread += 2;
-        if (channels <= 0) {
-            throw new UnsupportedAudioFileException("Invalid number of channels");
-        }
 
         // sample rate.
         sampleRate = rllong(dis); nread += 4;
@@ -312,9 +316,6 @@ public final class WaveFileReader extends SunFileReader {
 
         // this is the PCM-specific value bitsPerSample
         sampleSizeInBits = (int)rlshort(dis); nread += 2;
-        if (sampleSizeInBits <= 0) {
-            throw new UnsupportedAudioFileException("Invalid bitsPerSample");
-        }
 
         // if sampleSizeInBits==8, we need to use PCM_UNSIGNED
         if ((sampleSizeInBits==8) && encoding.equals(AudioFormat.Encoding.PCM_SIGNED))
@@ -372,4 +373,5 @@ public final class WaveFileReader extends SunFileReader {
                                   format,
                                   dataLength / format.getFrameSize());
     }
+
 }

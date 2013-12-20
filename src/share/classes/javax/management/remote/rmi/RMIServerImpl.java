@@ -117,7 +117,7 @@ public abstract class RMIServerImpl implements Closeable, RMIServer {
      * server.</p>
      *
      * @return the default <code>ClassLoader</code> used by this
-     * connector server.
+     * connector server.</p>
      *
      * @see #setDefaultClassLoader
      */

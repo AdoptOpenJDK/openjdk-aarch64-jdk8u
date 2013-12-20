@@ -47,7 +47,7 @@
 
 U_NAMESPACE_BEGIN
 
-// Characters that get referred to by name...
+// Characters that get refered to by name...
 enum
 {
     C_DOTTED_CIRCLE = 0x25CC,

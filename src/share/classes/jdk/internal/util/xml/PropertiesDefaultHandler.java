@@ -27,7 +27,6 @@ package jdk.internal.util.xml;
 
 import java.io.*;
 import java.util.InvalidPropertiesFormatException;
-import java.util.Map.Entry;
 import java.util.Properties;
 import jdk.internal.org.xml.sax.Attributes;
 import jdk.internal.org.xml.sax.InputSource;
@@ -108,17 +107,12 @@ public class PropertiesDefaultHandler extends DefaultHandler {
                 writer.writeEndElement();
             }
 
-            synchronized(props) {
-                for (Entry<Object, Object> e : props.entrySet()) {
-                    final Object k = e.getKey();
-                    final Object v = e.getValue();
-                    if (k instanceof String && v instanceof String) {
-                        writer.writeStartElement(ELEMENT_ENTRY);
-                        writer.writeAttribute(ATTR_KEY, (String)k);
-                        writer.writeCharacters((String)v);
-                        writer.writeEndElement();
-                    }
-                }
+            for (String key : props.stringPropertyNames()) {
+                String val = props.getProperty(key);
+                writer.writeStartElement(ELEMENT_ENTRY);
+                writer.writeAttribute(ATTR_KEY, key);
+                writer.writeCharacters(val);
+                writer.writeEndElement();
             }
 
             writer.writeEndElement();

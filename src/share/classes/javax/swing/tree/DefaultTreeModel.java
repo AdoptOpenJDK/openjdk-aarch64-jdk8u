@@ -33,7 +33,7 @@ import javax.swing.event.*;
 /**
  * A simple tree data model that uses TreeNodes.
  * For further information and examples that use DefaultTreeModel,
- * see <a href="http://docs.oracle.com/javase/tutorial/uiswing/components/tree.html">How to Use Trees</a>
+ * see <a href="http://java.sun.com/docs/books/tutorial/uiswing/components/tree.html">How to Use Trees</a>
  * in <em>The Java Tutorial.</em>
  * <p>
  * <strong>Warning:</strong>
@@ -41,7 +41,7 @@ import javax.swing.event.*;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans&trade;
+ * of all JavaBeans<sup><font size="-2">TM</font></sup>
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -357,7 +357,7 @@ public class DefaultTreeModel implements Serializable, TreeModel {
 
     /**
       * Invoke this method if you've totally changed the children of
-      * node and its children's children...  This will post a
+      * node and its childrens children...  This will post a
       * treeStructureChanged event.
       */
     public void nodeStructureChanged(TreeNode node) {

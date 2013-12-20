@@ -205,36 +205,33 @@ Java_sun_java2d_loops_GraphicsPrimitiveMgr_registerNativeLoops
     RegisterFunc RegisterFourByteAbgr;
     RegisterFunc RegisterFourByteAbgrPre;
 
-    if (!RegisterAnyByte(env) ||
-        !RegisterByteBinary1Bit(env) ||
-        !RegisterByteBinary2Bit(env) ||
-        !RegisterByteBinary4Bit(env) ||
-        !RegisterByteIndexed(env) ||
-        !RegisterByteGray(env) ||
-        !RegisterIndex8Gray(env) ||
-        !RegisterIndex12Gray(env) ||
-        !RegisterAnyShort(env) ||
-        !RegisterUshort555Rgb(env) ||
-        !RegisterUshort565Rgb(env) ||
-        !RegisterUshort4444Argb(env) ||
-        !RegisterUshort555Rgbx(env) ||
-        !RegisterUshortGray(env) ||
-        !RegisterUshortIndexed(env) ||
-        !RegisterAny3Byte(env) ||
-        !RegisterThreeByteBgr(env) ||
-        !RegisterAnyInt(env) ||
-        !RegisterIntArgb(env) ||
-        !RegisterIntArgbPre(env) ||
-        !RegisterIntArgbBm(env) ||
-        !RegisterIntRgb(env) ||
-        !RegisterIntBgr(env) ||
-        !RegisterIntRgbx(env) ||
-        !RegisterAny4Byte(env) ||
-        !RegisterFourByteAbgr(env) ||
-        !RegisterFourByteAbgrPre(env))
-    {
-        return;
-    }
+    RegisterAnyByte(env);
+    RegisterByteBinary1Bit(env);
+    RegisterByteBinary2Bit(env);
+    RegisterByteBinary4Bit(env);
+    RegisterByteIndexed(env);
+    RegisterByteGray(env);
+    RegisterIndex8Gray(env);
+    RegisterIndex12Gray(env);
+    RegisterAnyShort(env);
+    RegisterUshort555Rgb(env);
+    RegisterUshort565Rgb(env);
+    RegisterUshort4444Argb(env);
+    RegisterUshort555Rgbx(env);
+    RegisterUshortGray(env);
+    RegisterUshortIndexed(env);
+    RegisterAny3Byte(env);
+    RegisterThreeByteBgr(env);
+    RegisterAnyInt(env);
+    RegisterIntArgb(env);
+    RegisterIntArgbPre(env);
+    RegisterIntArgbBm(env);
+    RegisterIntRgb(env);
+    RegisterIntBgr(env);
+    RegisterIntRgbx(env);
+    RegisterAny4Byte(env);
+    RegisterFourByteAbgr(env);
+    RegisterFourByteAbgrPre(env);
 }
 
 #define _StartOf(T)     ((T *) (&T##s))

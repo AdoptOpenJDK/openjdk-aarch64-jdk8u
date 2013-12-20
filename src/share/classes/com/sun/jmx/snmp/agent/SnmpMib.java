@@ -476,7 +476,8 @@ public abstract class SnmpMib extends SnmpMibAgent implements Serializable {
                 rootOid[i++]= val.longValue();
             }
         }
-        return rootOid.clone();
+        return rootOid;
+
     }
 
     // --------------------------------------------------------------------

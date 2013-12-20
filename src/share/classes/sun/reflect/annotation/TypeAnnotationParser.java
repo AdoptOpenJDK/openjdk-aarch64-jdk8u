@@ -43,7 +43,7 @@ import static sun.reflect.annotation.TypeAnnotation.*;
  * TypeAnnotationParser implements the logic needed to parse
  * TypeAnnotations from an array of bytes.
  */
-public final class TypeAnnotationParser {
+public class TypeAnnotationParser {
     private static final TypeAnnotation[] EMPTY_TYPE_ANNOTATION_ARRAY = new TypeAnnotation[0];
 
     /**
@@ -54,7 +54,7 @@ public final class TypeAnnotationParser {
      *
      * @param rawAnnotations the byte[] encoding of all type annotations on this declaration
      * @param cp the ConstantPool needed to parse the embedded Annotation
-     * @param decl the declaration this type annotation is on
+     * @param decl the dclaration this type annotation is on
      * @param container the Class this type annotation is on (may be the same as decl)
      * @param type the type the AnnotatedType corresponds to
      * @param filter the type annotation targets included in this AnnotatedType
@@ -128,18 +128,14 @@ public final class TypeAnnotationParser {
         for (int i = 0; i < size; i++) {
             @SuppressWarnings("unchecked")
             ArrayList<TypeAnnotation> list = l[i];
-            TypeAnnotation[] typeAnnotations;
             if (list != null) {
-                typeAnnotations = list.toArray(new TypeAnnotation[list.size()]);
-            } else {
-                typeAnnotations = EMPTY_TYPE_ANNOTATION_ARRAY;
+                TypeAnnotation[] typeAnnotations = list.toArray(new TypeAnnotation[0]);
+                result[i] = AnnotatedTypeFactory.buildAnnotatedType(types[i],
+                                                                    LocationInfo.BASE_LOCATION,
+                                                                    typeAnnotations,
+                                                                    typeAnnotations,
+                                                                    decl);
             }
-            result[i] = AnnotatedTypeFactory.buildAnnotatedType(types[i],
-                                                                LocationInfo.BASE_LOCATION,
-                                                                typeAnnotations,
-                                                                typeAnnotations,
-                                                                decl);
-
         }
         return result;
     }
@@ -178,11 +174,6 @@ public final class TypeAnnotationParser {
     public static AnnotatedType[] buildAnnotatedInterfaces(byte[] rawAnnotations,
             ConstantPool cp,
             Class<?> decl) {
-        if (decl == Object.class ||
-                decl.isArray() ||
-                decl.isPrimitive() ||
-                decl == Void.TYPE)
-            return AnnotatedTypeFactory.EMPTY_ANNOTATED_TYPE_ARRAY;
         return buildAnnotatedTypes(rawAnnotations,
                                    cp,
                                    decl,
@@ -237,7 +228,7 @@ public final class TypeAnnotationParser {
         return parseAnnotatedBounds(bounds, decl, typeVarIndex, LocationInfo.BASE_LOCATION);
     }
     //helper for above
-    private static <D extends GenericDeclaration> AnnotatedType[] parseAnnotatedBounds(Type[] bounds,
+    static <D extends GenericDeclaration> AnnotatedType[] parseAnnotatedBounds(Type[] bounds,
             D decl,
             int typeVarIndex,
             LocationInfo loc) {

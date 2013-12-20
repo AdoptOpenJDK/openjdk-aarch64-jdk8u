@@ -29,4 +29,10 @@ char *setupMacOSXLocale(int cat);
 void setOSNameAndVersion(java_props_t *sprops);
 void setUserHome(java_props_t *sprops);
 void setProxyProperties(java_props_t *sProps);
-int isInAquaSession();
+
+enum PreferredToolkit_enum {
+    unset = 0, CToolkit, XToolkit, HToolkit
+};
+typedef enum PreferredToolkit_enum PreferredToolkit;
+
+PreferredToolkit getPreferredToolkit();

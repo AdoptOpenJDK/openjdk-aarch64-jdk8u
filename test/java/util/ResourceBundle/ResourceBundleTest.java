@@ -22,7 +22,7 @@
  */
 /*
     @test
-    @bug 4049325 4073127 4083270 4106034 4108126 8027930
+    @bug 4049325 4073127 4083270 4106034 4108126
     @summary test Resource Bundle
     @build TestResource TestResource_de TestResource_fr TestResource_fr_CH
     @build TestResource_it FakeTestResource
@@ -63,7 +63,6 @@
 
 import java.text.*;
 import java.util.*;
-import java.util.ResourceBundle.Control;
 import java.io.*;
 
 public class ResourceBundleTest extends RBTestFmwk {
@@ -135,8 +134,7 @@ public class ResourceBundleTest extends RBTestFmwk {
         // load up the resource and check to make sure we got the right class
         // (we don't define be_BY or be, so we fall back on the root default)
         ResourceBundle  bundle = ResourceBundle.getBundle("TestResource",
-                            new Locale("be", "BY"),
-                            Control.getNoFallbackControl(Control.FORMAT_DEFAULT));
+                            new Locale("be", "BY"));
         if (!bundle.getClass().getName().equals("TestResource"))
             errln("Expected TestResource, got " + bundle.getClass().getName());
 
@@ -270,8 +268,7 @@ public class ResourceBundleTest extends RBTestFmwk {
         // try to find TestResource_iw_IL, which doesn't exist.  Should get root locale
         // as its locale
         test = ResourceBundle.getBundle("TestResource",
-                        new Locale("iw", "IL", ""),
-                        Control.getNoFallbackControl(Control.FORMAT_DEFAULT));
+                        new Locale("iw", "IL", ""));
         locale = test.getLocale();
         if (!(locale.getLanguage().equals("")) || !(locale.getCountry().equals("")))
             errln("Actual locale for TestResource_iw_IL should have been the root locale, got "

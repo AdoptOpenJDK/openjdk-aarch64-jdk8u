@@ -112,12 +112,12 @@ class ClassQuery extends QueryHandler {
         out.println("<h2>Instances</h2>");
 
         printAnchorStart();
-        print("instances/" + encodeForURL(clazz));
+        out.print("instances/" + encodeForURL(clazz));
         out.print("\">");
         out.println("Exclude subclasses</a><br>");
 
         printAnchorStart();
-        print("allInstances/" + encodeForURL(clazz));
+        out.print("allInstances/" + encodeForURL(clazz));
         out.print("\">");
         out.println("Include subclasses</a><br>");
 
@@ -126,19 +126,19 @@ class ClassQuery extends QueryHandler {
             out.println("<h2>New Instances</h2>");
 
             printAnchorStart();
-            print("newInstances/" + encodeForURL(clazz));
+            out.print("newInstances/" + encodeForURL(clazz));
             out.print("\">");
             out.println("Exclude subclasses</a><br>");
 
             printAnchorStart();
-            print("allNewInstances/" + encodeForURL(clazz));
+            out.print("allNewInstances/" + encodeForURL(clazz));
             out.print("\">");
             out.println("Include subclasses</a><br>");
         }
 
         out.println("<h2>References summary by Type</h2>");
         printAnchorStart();
-        print("refsByType/" + encodeForURL(clazz));
+        out.print("refsByType/" + encodeForURL(clazz));
         out.print("\">");
         out.println("References summary by type</a>");
 

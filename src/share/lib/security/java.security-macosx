@@ -184,7 +184,6 @@ package.access=sun.,\
                com.sun.jmx.,\
                com.sun.media.sound.,\
                com.sun.proxy.,\
-               com.sun.corba.se.,\
                com.sun.org.apache.bcel.internal.,\
                com.sun.org.apache.regexp.internal.,\
                com.sun.org.apache.xerces.internal.,\
@@ -206,12 +205,12 @@ package.access=sun.,\
                com.sun.org.glassfish.,\
                com.oracle.xmlns.internal.,\
                com.oracle.webservices.internal.,\
-               oracle.jrockit.jfr.,\
                org.jcp.xml.dsig.internal.,\
                jdk.internal.,\
                jdk.nashorn.internal.,\
                jdk.nashorn.tools.,\
-               apple.
+               apple.,\
+               oracle.jrockit.jfr.
 
 #
 # List of comma-separated packages that start with or equal this string
@@ -230,7 +229,6 @@ package.definition=sun.,\
                    com.sun.jmx.,\
                    com.sun.media.sound.,\
                    com.sun.proxy.,\
-                   com.sun.corba.se.,\
                    com.sun.org.apache.bcel.internal.,\
                    com.sun.org.apache.regexp.internal.,\
                    com.sun.org.apache.xerces.internal.,\
@@ -252,12 +250,12 @@ package.definition=sun.,\
                    com.sun.org.glassfish.,\
                    com.oracle.xmlns.internal.,\
                    com.oracle.webservices.internal.,\
-                   oracle.jrockit.jfr.,\
                    org.jcp.xml.dsig.internal.,\
                    jdk.internal.,\
                    jdk.nashorn.internal.,\
                    jdk.nashorn.tools.,\
-                   apple.
+                   apple.,\
+                   oracle.jrockit.jfr.
 
 #
 # Determines whether this properties file can be appended to

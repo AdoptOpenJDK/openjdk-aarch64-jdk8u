@@ -68,6 +68,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InvalidObjectException;
+import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.time.chrono.Chronology;
 import java.time.chrono.IsoChronology;
@@ -79,7 +80,6 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalQueries;
 import java.time.temporal.TemporalQuery;
 import java.time.temporal.UnsupportedTemporalTypeException;
 import java.time.temporal.ValueRange;
@@ -246,8 +246,7 @@ public final class MonthDay
      * <p>
      * The conversion extracts the {@link ChronoField#MONTH_OF_YEAR MONTH_OF_YEAR} and
      * {@link ChronoField#DAY_OF_MONTH DAY_OF_MONTH} fields.
-     * The extraction is only permitted if the temporal object has an ISO
-     * chronology, or can be converted to a {@code LocalDate}.
+     * The extraction is only permitted if the date-time has an ISO chronology.
      * <p>
      * This method matches the signature of the functional interface {@link TemporalQuery}
      * allowing it to be used in queries via method reference, {@code MonthDay::from}.
@@ -266,8 +265,7 @@ public final class MonthDay
             }
             return of(temporal.get(MONTH_OF_YEAR), temporal.get(DAY_OF_MONTH));
         } catch (DateTimeException ex) {
-            throw new DateTimeException("Unable to obtain MonthDay from TemporalAccessor: " +
-                    temporal + " of type " + temporal.getClass().getName(), ex);
+            throw new DateTimeException("Unable to obtain MonthDay from TemporalAccessor: " + temporal.getClass(), ex);
         }
     }
 
@@ -582,7 +580,7 @@ public final class MonthDay
     @SuppressWarnings("unchecked")
     @Override
     public <R> R query(TemporalQuery<R> query) {
-        if (query == TemporalQueries.chronology()) {
+        if (query == TemporalQuery.chronology()) {
             return (R) IsoChronology.INSTANCE;
         }
         return TemporalAccessor.super.query(query);

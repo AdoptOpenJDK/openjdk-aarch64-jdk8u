@@ -60,11 +60,11 @@ public interface TextComponentPeer extends ComponentPeer {
     /**
      * Sets the content for the text component.
      *
-     * @param text the content to set
+     * @param l the content to set
      *
      * @see TextComponent#setText(String)
      */
-    void setText(String text);
+    void setText(String l);
 
     /**
      * Returns the start index of the current selection.

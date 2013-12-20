@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -242,6 +242,9 @@ class InvokerBytecodeGenerator {
 
     /**
      * Extract the MemberName of a newly-defined method.
+     *
+     * @param classFile
+     * @return
      */
     private MemberName loadMethod(byte[] classFile) {
         Class<?> invokerClass = loadAndInitializeInvokerClass(classFile, cpPatches(classFile));
@@ -250,6 +253,10 @@ class InvokerBytecodeGenerator {
 
     /**
      * Define a given class as anonymous class in the runtime system.
+     *
+     * @param classBytes
+     * @param patches
+     * @return
      */
     private static Class<?> loadAndInitializeInvokerClass(byte[] classBytes, Object[] patches) {
         Class<?> invokerClass = UNSAFE.defineAnonymousClass(HOST_CLASS, classBytes, patches);
@@ -257,6 +264,14 @@ class InvokerBytecodeGenerator {
         return invokerClass;
     }
 
+    /**
+     * TODO
+     *
+     * @param invokerClass
+     * @param name
+     * @param type
+     * @return
+     */
     private static MemberName resolveInvokerMember(Class<?> invokerClass, String name, MethodType type) {
         MemberName member = new MemberName(invokerClass, name, type, REF_invokeStatic);
         //System.out.println("resolveInvokerMember => "+member);
@@ -275,7 +290,7 @@ class InvokerBytecodeGenerator {
      */
     private void classFilePrologue() {
         cw = new ClassWriter(ClassWriter.COMPUTE_MAXS + ClassWriter.COMPUTE_FRAMES);
-        cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL + Opcodes.ACC_SUPER, className, null, superName, null);
+        cw.visit(Opcodes.V1_6, Opcodes.ACC_PUBLIC + Opcodes.ACC_FINAL + Opcodes.ACC_SUPER, className, null, superName, null);
         cw.visitSource(sourceFile, null);
 
         String invokerDesc = invokerType.toMethodDescriptorString();
@@ -484,6 +499,10 @@ class InvokerBytecodeGenerator {
 
     /**
      * Generate customized bytecode for a given LambdaForm.
+     *
+     * @param form
+     * @param invokerType
+     * @return
      */
     static MemberName generateCustomizedCode(LambdaForm form, MethodType invokerType) {
         InvokerBytecodeGenerator g = new InvokerBytecodeGenerator("MH", form, invokerType);
@@ -546,6 +565,8 @@ class InvokerBytecodeGenerator {
 
     /**
      * Emit an invoke for the given name.
+     *
+     * @param name
      */
     void emitInvoke(Name name) {
         if (true) {
@@ -609,7 +630,6 @@ class InvokerBytecodeGenerator {
             cls = cls.getComponentType();
         if (cls.isPrimitive())
             return true;  // int[].class, for example
-        // could use VerifyAccess.isClassAccessible but the following is a safe approximation
         if (cls.getClassLoader() != Object.class.getClassLoader())
             return false;
         if (VerifyAccess.isSamePackage(MethodHandle.class, cls))
@@ -625,6 +645,8 @@ class InvokerBytecodeGenerator {
 
     /**
      * Emit an invoke for the given name, using the MemberName directly.
+     *
+     * @param name
      */
     void emitStaticInvoke(MemberName member, Name name) {
         assert(member.equals(name.function.member()));
@@ -646,8 +668,7 @@ class InvokerBytecodeGenerator {
         // invocation
         if (member.isMethod()) {
             mtype = member.getMethodType().toMethodDescriptorString();
-            mv.visitMethodInsn(refKindOpcode(refKind), cname, mname, mtype,
-                               member.getDeclaringClass().isInterface());
+            mv.visitMethodInsn(refKindOpcode(refKind), cname, mname, mtype);
         } else {
             mtype = MethodType.toFieldDescriptorString(member.getFieldType());
             mv.visitFieldInsn(refKindOpcode(refKind), cname, mname, mtype);
@@ -669,6 +690,9 @@ class InvokerBytecodeGenerator {
 
     /**
      * Check if MemberName is a call to MethodHandleImpl.selectAlternative.
+     *
+     * @param member
+     * @return true if member is a call to MethodHandleImpl.selectAlternative
      */
     private boolean isSelectAlternative(MemberName member) {
         return member != null &&
@@ -680,12 +704,14 @@ class InvokerBytecodeGenerator {
      * Emit bytecode for the selectAlternative idiom.
      *
      * The pattern looks like (Cf. MethodHandleImpl.makeGuardWithTest):
-     * <blockquote><pre>{@code
+     *
      *   Lambda(a0:L,a1:I)=>{
      *     t2:I=foo.test(a1:I);
      *     t3:L=MethodHandleImpl.selectAlternative(t2:I,(MethodHandle(int)int),(MethodHandle(int)int));
      *     t4:I=MethodHandle.invokeBasic(t3:L,a1:I);t4:I}
-     * }</pre></blockquote>
+     *
+     * @param selectAlternativeName
+     * @param invokeBasicName
      */
     private void emitSelectAlternative(Name selectAlternativeName, Name invokeBasicName) {
         MethodType type = selectAlternativeName.function.methodType();
@@ -724,6 +750,11 @@ class InvokerBytecodeGenerator {
         mv.visitLabel(L_done);
     }
 
+    /**
+     *
+     * @param name
+     * @param paramIndex
+     */
     private void emitPushArgument(Name name, int paramIndex) {
         Object arg = name.arguments[paramIndex];
         char ptype = name.function.parameterType(paramIndex);
@@ -892,6 +923,9 @@ class InvokerBytecodeGenerator {
 
     /**
      * Generate bytecode for a LambdaForm.vmentry which calls interpretWithArguments.
+     *
+     * @param sig
+     * @return
      */
     static MemberName generateLambdaFormInterpreterEntryPoint(String sig) {
         assert(LambdaForm.isValidSignature(sig));
@@ -959,6 +993,10 @@ class InvokerBytecodeGenerator {
 
     /**
      * Generate bytecode for a NamedFunction invoker.
+     *
+     * @param srcType
+     * @param dstType
+     * @return
      */
     static MemberName generateNamedFunctionInvoker(MethodTypeForm typeForm) {
         MethodType invokerType = LambdaForm.NamedFunction.INVOKER_METHOD_TYPE;

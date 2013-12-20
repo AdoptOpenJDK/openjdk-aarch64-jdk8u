@@ -25,8 +25,8 @@
 
 package sun.awt;
 
-import java.awt.AWTError;
 import java.awt.GraphicsDevice;
+
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
@@ -96,7 +96,6 @@ public class X11GraphicsEnvironment
 
                     // Now check for XRender system property
                     boolean xRenderRequested = true;
-                    boolean xRenderIgnoreLinuxVersion = false;
                     String xProp = System.getProperty("sun.java2d.xrender");
                         if (xProp != null) {
                         if (xProp.equals("false") || xProp.equals("f")) {
@@ -104,10 +103,6 @@ public class X11GraphicsEnvironment
                         } else if (xProp.equals("True") || xProp.equals("T")) {
                             xRenderRequested = true;
                             xRenderVerbose = true;
-                        }
-
-                        if(xProp.equalsIgnoreCase("t") || xProp.equalsIgnoreCase("true")) {
-                            xRenderIgnoreLinuxVersion = true;
                         }
                     }
 
@@ -126,7 +121,7 @@ public class X11GraphicsEnvironment
 
                     // only attempt to initialize Xrender if it was requested
                     if (xRenderRequested) {
-                        xRenderAvailable = initXRender(xRenderVerbose, xRenderIgnoreLinuxVersion);
+                        xRenderAvailable = initXRender(xRenderVerbose);
                         if (xRenderVerbose && !xRenderAvailable) {
                             System.out.println(
                                          "Could not enable XRender pipeline");
@@ -164,7 +159,7 @@ public class X11GraphicsEnvironment
     private static boolean xRenderVerbose;
     private static boolean xRenderAvailable;
 
-    private static native boolean initXRender(boolean verbose, boolean ignoreLinuxVersion);
+    private static native boolean initXRender(boolean verbose);
     public static boolean isXRenderAvailable() {
         return xRenderAvailable;
     }
@@ -205,12 +200,7 @@ public class X11GraphicsEnvironment
      * Returns the default screen graphics device.
      */
     public GraphicsDevice getDefaultScreenDevice() {
-        GraphicsDevice[] screens = getScreenDevices();
-        if (screens.length == 0) {
-            throw new AWTError("no screen devices");
-        }
-        int index = getDefaultScreenNum();
-        return screens[0 < index && index < screens.length ? index : 0];
+        return getScreenDevices()[getDefaultScreenNum()];
     }
 
     public boolean isDisplayLocal() {

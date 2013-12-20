@@ -73,6 +73,7 @@ import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Period;
 import java.time.ZoneId;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -108,7 +109,7 @@ import java.time.temporal.ValueRange;
  * @since 1.8
  */
 public final class HijrahDate
-        extends ChronoLocalDateImpl<HijrahDate>
+        extends ChronoDateImpl<HijrahDate>
         implements ChronoLocalDate, Serializable {
 
     /**
@@ -581,7 +582,7 @@ public final class HijrahDate
     }
 
     @Override
-    public ChronoPeriod until(ChronoLocalDate endDate) {
+    public Period until(ChronoLocalDate endDate) {
         // TODO: untested
         HijrahDate end = getChronology().date(endDate);
         long totalMonths = (end.prolepticYear - this.prolepticYear) * 12 + (end.monthOfYear - this.monthOfYear);  // safe
@@ -596,7 +597,7 @@ public final class HijrahDate
         }
         long years = totalMonths / 12;  // safe
         int months = (int) (totalMonths % 12);  // safe
-        return getChronology().period(Math.toIntExact(years), months, days);
+        return Period.of(Math.toIntExact(years), months, days);
     }
 
     //-----------------------------------------------------------------------

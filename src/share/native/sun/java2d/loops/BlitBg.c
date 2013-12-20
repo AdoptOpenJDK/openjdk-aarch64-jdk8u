@@ -60,11 +60,8 @@ JNIEXPORT void JNICALL Java_sun_java2d_loops_BlitBg_BlitBg
     }
 
     srcOps = SurfaceData_GetOps(env, srcData);
-    if (srcOps == 0) {
-        return;
-    }
     dstOps = SurfaceData_GetOps(env, dstData);
-    if (dstOps == 0) {
+    if (srcOps == 0 || dstOps == 0) {
         return;
     }
 

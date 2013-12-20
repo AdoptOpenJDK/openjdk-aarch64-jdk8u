@@ -250,7 +250,7 @@ static void * smallest_addr = NULL;
 static char *debug_check;
 static void *clobbered_ptr;
 
-/* Minimum macro */
+/* Minumum macro */
 #define minimum(a,b) ((a)<(b)?(a):(b))
 
 /* Message routine */

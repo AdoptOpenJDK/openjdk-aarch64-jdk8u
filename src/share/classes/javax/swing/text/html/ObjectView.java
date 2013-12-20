@@ -31,9 +31,6 @@ import javax.swing.text.*;
 import java.beans.*;
 import java.lang.reflect.*;
 
-import sun.reflect.misc.MethodUtil;
-import sun.reflect.misc.ReflectUtil;
-
 /**
  * Component decorator that implements the view interface
  * for &lt;object&gt; elements.
@@ -90,7 +87,6 @@ public class ObjectView extends ComponentView  {
         AttributeSet attr = getElement().getAttributes();
         String classname = (String) attr.getAttribute(HTML.Attribute.CLASSID);
         try {
-            ReflectUtil.checkPackageAccess(classname);
             Class c = Class.forName(classname, true,Thread.currentThread().
                                     getContextClassLoader());
             Object o = c.newInstance();
@@ -117,6 +113,28 @@ public class ObjectView extends ComponentView  {
         Component comp = new JLabel("??");
         comp.setForeground(Color.red);
         return comp;
+    }
+
+    /**
+     * Get a Class object to use for loading the
+     * classid.  If possible, the Classloader
+     * used to load the associated Document is used.
+     * This would typically be the same as the ClassLoader
+     * used to load the EditorKit.  If the documents
+     * ClassLoader is null,
+     * <code>Class.forName</code> is used.
+     */
+    private Class getClass(String classname) throws ClassNotFoundException {
+        Class klass;
+
+        Class docClass = getDocument().getClass();
+        ClassLoader loader = docClass.getClassLoader();
+        if (loader != null) {
+            klass = loader.loadClass(classname);
+        } else {
+            klass = Class.forName(classname);
+        }
+        return klass;
     }
 
     /**
@@ -152,7 +170,7 @@ public class ObjectView extends ComponentView  {
                 }
                 Object [] args = { value };
                 try {
-                    MethodUtil.invoke(writer, comp, args);
+                    writer.invoke(comp, args);
                 } catch (Exception ex) {
                     System.err.println("Invocation failed");
                     // invocation code

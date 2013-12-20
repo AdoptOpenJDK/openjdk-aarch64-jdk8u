@@ -44,86 +44,30 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.fail;
 import org.testng.annotations.Test;
 
 import static helper.Mod.*;
 import static helper.Declared.*;
 import helper.Mod;
 
-
 public class DefaultStaticInvokeTest {
 
-    // getMethods(): Make sure getMethods returns the expected methods.
     @Test(dataProvider = "testCasesAll",
             dataProviderClass = DefaultStaticTestData.class)
     public void testGetMethods(String testTarget, Object param)
             throws Exception {
+        // test the methods retrieved by getMethods()
         testMethods(ALL_METHODS, testTarget, param);
     }
 
-
-    // getDeclaredMethods(): Make sure getDeclaredMethods returns the expected methods.
     @Test(dataProvider = "testCasesAll",
             dataProviderClass = DefaultStaticTestData.class)
     public void testGetDeclaredMethods(String testTarget, Object param)
             throws Exception {
+        // test the methods retrieved by getDeclaredMethods()
         testMethods(DECLARED_ONLY, testTarget, param);
     }
 
-
-    // getMethod(): Make sure that getMethod finds all methods it should find.
-    @Test(dataProvider = "testCasesAll",
-            dataProviderClass = DefaultStaticTestData.class)
-    public void testGetMethod(String testTarget, Object param)
-            throws Exception {
-
-        Class<?> typeUnderTest = Class.forName(testTarget);
-
-        MethodDesc[] descs = typeUnderTest.getAnnotationsByType(MethodDesc.class);
-
-        for (MethodDesc desc : descs) {
-            assertTrue(isFoundByGetMethod(typeUnderTest,
-                                          desc.name(),
-                                          argTypes(param)));
-        }
-    }
-
-
-    // getMethod(): Make sure that getMethod does *not* find certain methods.
-    @Test(dataProvider = "testCasesAll",
-            dataProviderClass = DefaultStaticTestData.class)
-    public void testGetMethodSuperInterfaces(String testTarget, Object param)
-            throws Exception {
-
-        // Make sure static methods in superinterfaces are not found (unless the type under
-        // test declares a static method with the same signature).
-
-        Class<?> typeUnderTest = Class.forName(testTarget);
-
-        for (Class<?> interfaze : typeUnderTest.getInterfaces()) {
-
-            for (MethodDesc desc : interfaze.getAnnotationsByType(MethodDesc.class)) {
-
-                boolean isStatic = desc.mod() == STATIC;
-
-                boolean declaredInThisType = isMethodDeclared(typeUnderTest,
-                                                              desc.name());
-
-                boolean expectedToBeFound = !isStatic || declaredInThisType;
-
-                if (expectedToBeFound)
-                    continue; // already tested in testGetMethod()
-
-                assertFalse(isFoundByGetMethod(typeUnderTest,
-                                               desc.name(),
-                                               argTypes(param)));
-            }
-        }
-    }
-
-
-    // Method.invoke(): Make sure Method.invoke returns the expected value.
     @Test(dataProvider = "testCasesAll",
             dataProviderClass = DefaultStaticTestData.class)
     public void testMethodInvoke(String testTarget, Object param)
@@ -134,13 +78,11 @@ public class DefaultStaticInvokeTest {
         // test the method retrieved by Class.getMethod(String, Object[])
         for (MethodDesc toTest : expectedMethods) {
             String name = toTest.name();
-            Method m = typeUnderTest.getMethod(name, argTypes(param));
+            Method m = getTestMethod(typeUnderTest, name, param);
             testThisMethod(toTest, m, typeUnderTest, param);
         }
     }
 
-
-    // MethodHandle.invoke(): Make sure MethodHandle.invoke returns the expected value.
     @Test(dataProvider = "testCasesAll",
             dataProviderClass = DefaultStaticTestData.class)
     public void testMethodHandleInvoke(String testTarget, Object param)
@@ -174,7 +116,6 @@ public class DefaultStaticInvokeTest {
 
     }
 
-    // Lookup.findStatic / .findVirtual: Make sure IllegalAccessException is thrown as expected.
     @Test(dataProvider = "testClasses",
             dataProviderClass = DefaultStaticTestData.class)
     public void testIAE(String testTarget, Object param)
@@ -187,7 +128,7 @@ public class DefaultStaticInvokeTest {
             String mName = toTest.name();
             Mod mod = toTest.mod();
             if (mod != STATIC && typeUnderTest.isInterface()) {
-                continue;
+                return;
             }
             Exception caught = null;
             try {
@@ -195,12 +136,10 @@ public class DefaultStaticInvokeTest {
             } catch (Exception e) {
                 caught = e;
             }
-            assertNotNull(caught);
+            assertTrue(caught != null);
             assertEquals(caught.getClass(), IllegalAccessException.class);
         }
     }
-
-
     private static final String[] OBJECT_METHOD_NAMES = {
         "equals",
         "hashCode",
@@ -253,15 +192,15 @@ public class DefaultStaticInvokeTest {
                 myMethods.put(mName, m);
             }
         }
-
-        assertEquals(myMethods.size(), expectedMethods.length);
+        assertEquals(expectedMethods.length, myMethods.size());
 
         for (MethodDesc toTest : expectedMethods) {
 
             String name = toTest.name();
-            Method candidate = myMethods.remove(name);
+            Method candidate = myMethods.get(name);
 
             assertNotNull(candidate);
+            myMethods.remove(name);
 
             testThisMethod(toTest, candidate, typeUnderTest, param);
 
@@ -270,7 +209,6 @@ public class DefaultStaticInvokeTest {
         // Should be no methods left since we remove all we expect to see
         assertTrue(myMethods.isEmpty());
     }
-
 
     private void testThisMethod(MethodDesc toTest, Method method,
             Class<?> typeUnderTest, Object param) throws Exception {
@@ -318,51 +256,36 @@ public class DefaultStaticInvokeTest {
                 assertFalse(method.isDefault());
                 break;
             default:
-                fail(); //this should never happen
+                assertFalse(true); //this should never happen
                 break;
         }
 
     }
 
-
-    private boolean isMethodDeclared(Class<?> type, String name) {
-        MethodDesc[] methDescs = type.getAnnotationsByType(MethodDesc.class);
-        for (MethodDesc desc : methDescs) {
-            if (desc.declared() == YES && desc.name().equals(name))
-                return true;
-        }
-        return false;
-    }
-
-
-    private boolean isFoundByGetMethod(Class<?> c, String method, Class<?>... argTypes) {
-        try {
-            c.getMethod(method, argTypes);
-            return true;
-        } catch (NoSuchMethodException notFound) {
-            return false;
-        }
-    }
-
-
-    private Class<?>[] argTypes(Object param) {
-        return param == null ? new Class[0] : new Class[] { Object.class };
-    }
-
-
     private Object tryInvoke(Method m, Class<?> receiverType, Object param)
             throws Exception {
         Object receiver = receiverType == null ? null : receiverType.newInstance();
-        Object[] args = param == null ? new Object[0] : new Object[] { param };
-        return m.invoke(receiver, args);
+        Object result = null;
+        if (param == null) {
+            result = m.invoke(receiver);
+        } else {
+            result = m.invoke(receiver, param);
+        }
+        return result;
     }
 
+    private Method getTestMethod(Class clazz, String methodName, Object param)
+            throws NoSuchMethodException {
+        Class[] paramsType = (param != null)
+                ? new Class[]{Object.class}
+                : new Class[]{};
+        return clazz.getMethod(methodName, paramsType);
+    }
 
     private MethodHandle getTestMH(Class clazz, String methodName, Object param)
             throws Exception {
         return getTestMH(clazz, methodName, param, false);
     }
-
 
     private MethodHandle getTestMH(Class clazz, String methodName,
             Object param, boolean isNegativeTest)

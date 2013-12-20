@@ -867,7 +867,7 @@ class Krb5Context implements GSSContextSpi {
     }
 
     /**
-     * Queries the context for largest data size to accommodate
+     * Queries the context for largest data size to accomodate
      * the specified protection and be <= maxTokSize.
      *
      * @param qop the quality of protection that the context will be

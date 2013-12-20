@@ -71,7 +71,6 @@ do
         -storetype PKCS12 \
         -keystore $TEMPORARY_P12 \
         -storepass $PWD \
-        -keyalg rsa \
         -dname "CN=$i,OU=$i,O=$i,ST=$i,C=US" \
         -alias 7133495-$i
 

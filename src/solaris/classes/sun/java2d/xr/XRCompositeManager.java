@@ -48,12 +48,7 @@ public class XRCompositeManager {
     private static boolean enableGradCache = true;
     private static XRCompositeManager instance;
 
-    private final static int SOLID = 0;
-    private final static int TEXTURE = 1;
-    private final static int GRADIENT = 2;
-
-    int srcType;
-    XRSolidSrcPict solidSrc32;
+    XRSurfaceData src;
     XRSurfaceData texture;
     XRSurfaceData gradient;
     int alphaMask = XRUtils.None;
@@ -89,6 +84,7 @@ public class XRCompositeManager {
 
     private XRCompositeManager(XRSurfaceData surface) {
         con = new XRBackendNative();
+        // con = XRBackendJava.getInstance();
 
         String gradProp =
             AccessController.doPrivileged(new PrivilegedAction<String>() {
@@ -113,7 +109,14 @@ public class XRCompositeManager {
     public void initResources(XRSurfaceData surface) {
         int parentXid = surface.getXid();
 
-        solidSrc32 = new XRSolidSrcPict(con, parentXid);
+        int solidPixmap = con.createPixmap(parentXid, 32, 1, 1);
+        int solidSrcPictXID = con.createPicture(solidPixmap,
+                XRUtils.PictStandardARGB32);
+        con.setPictureRepeat(solidSrcPictXID, XRUtils.RepeatNormal);
+        con.renderRectangle(solidSrcPictXID, XRUtils.PictOpSrc,
+                XRColor.FULL_ALPHA, 0, 0, 1, 1);
+        solidSrcPict = new XRSurfaceData.XRInternalSurfaceData(con,
+                solidSrcPictXID, null);
         setForeground(0);
 
         int extraAlphaMask = con.createPixmap(parentXid, 8, 1, 1);
@@ -132,7 +135,9 @@ public class XRCompositeManager {
     }
 
     public void setForeground(int pixel) {
-        solidColor.setColorValues(pixel, true);
+        solidColor.setColorValues(pixel, false);
+        con.renderRectangle(solidSrcPict.picture, XRUtils.PictOpSrc,
+                solidColor, 0, 0, 1, 1);
     }
 
     public void setGradientPaint(XRSurfaceData gradient) {
@@ -140,16 +145,16 @@ public class XRCompositeManager {
             con.freePicture(this.gradient.picture);
         }
         this.gradient = gradient;
-        srcType = GRADIENT;
+        src = gradient;
     }
 
     public void setTexturePaint(XRSurfaceData texture) {
         this.texture = texture;
-        this.srcType = TEXTURE;
+        src = texture;
     }
 
     public void XRResetPaint() {
-        srcType = SOLID;
+        src = solidSrcPict;
     }
 
     public void validateCompositeState(Composite comp, AffineTransform xform,
@@ -170,7 +175,7 @@ public class XRCompositeManager {
             validatedComp = comp;
         }
 
-        if (sg2d != null && (validatedPixel != sg2d.pixel  || updatePaint)) {
+        if (sg2d != null && validatedPixel != sg2d.pixel) {
             validatedPixel = sg2d.pixel;
             setForeground(validatedPixel);
         }
@@ -186,14 +191,14 @@ public class XRCompositeManager {
             validatedPaint = paint;
         }
 
-        if (srcType != SOLID) {
+        if (src != solidSrcPict) {
             AffineTransform at = (AffineTransform) xform.clone();
             try {
                 at.invert();
             } catch (NoninvertibleTransformException e) {
                 at.setToIdentity();
             }
-            getCurrentSource().validateAsSource(at, -1, XRUtils.ATransOpToXRQuality(sg2d.interpolationType));
+            src.validateAsSource(at, -1, -1);
         }
     }
 
@@ -229,13 +234,13 @@ public class XRCompositeManager {
 
     public boolean maskRequired() {
         return (!xorEnabled)
-                && ((srcType != SOLID)
-                        || (srcType == SOLID && (solidColor.alpha != 0xffff) || (extraAlpha != 1.0f)));
+                && ((src != solidSrcPict)
+                        || (src == solidSrcPict && solidColor.alpha != 0xffff) || (extraAlpha != 1.0f));
     }
 
     public void XRComposite(int src, int mask, int dst, int srcX, int srcY,
             int maskX, int maskY, int dstX, int dstY, int width, int height) {
-        int cachedSrc = (src == XRUtils.None) ? getCurrentSource().picture : src;
+        int cachedSrc = (src == XRUtils.None) ? this.src.picture : src;
         int cachedX = srcX;
         int cachedY = srcY;
 
@@ -271,7 +276,7 @@ public class XRCompositeManager {
         renderReferenceY = (int) Math.floor(XRUtils
                 .XFixedToDouble(renderReferenceY));
 
-        con.renderCompositeTrapezoids(compRule, getCurrentSource().picture,
+        con.renderCompositeTrapezoids(compRule, src.picture,
                 XRUtils.PictStandardA8, dst, renderReferenceX,
                 renderReferenceY, trapList);
     }
@@ -289,46 +294,15 @@ public class XRCompositeManager {
         }
     }
 
-    public void XRCompositeRectangles(XRSurfaceData dst, GrowableRectArray rects) {
-        int srcPict = getCurrentSource().picture;
-
-        for(int i=0; i < rects.getSize(); i++) {
-            int x = rects.getX(i);
-            int y = rects.getY(i);
-            int width = rects.getWidth(i);
-            int height = rects.getHeight(i);
-
-            con.renderComposite(compRule, srcPict, XRUtils.None, dst.picture, x, y, 0, 0, x, y, width, height);
-        }
-    }
-
-    protected XRSurfaceData getCurrentSource() {
-        switch(srcType) {
-        case SOLID:
-            return solidSrc32.prepareSrcPict(validatedPixel);
-        case TEXTURE:
-            return texture;
-        case GRADIENT:
-            return gradient;
-        }
-
-        return null;
-    }
-
     public void compositeBlit(XRSurfaceData src, XRSurfaceData dst, int sx,
             int sy, int dx, int dy, int w, int h) {
         con.renderComposite(compRule, src.picture, alphaMask, dst.picture, sx,
                 sy, 0, 0, dx, dy, w, h);
     }
 
-    public void compositeText(XRSurfaceData dst, int sx, int sy, int glyphSet,
-            int maskFormat, GrowableEltArray elts) {
-        /*
-         * Try to emulate the SRC blend mode with SRC_OVER.
-         * We bail out during pipe validation for cases where this is not possible.
-         */
-        byte textCompRule = (compRule != XRUtils.PictOpSrc) ? compRule : XRUtils.PictOpOver;
-        con.XRenderCompositeText(textCompRule, getCurrentSource().picture, dst.picture,
+    public void compositeText(XRSurfaceData dst, int sx, int sy,
+            int glyphSet, int maskFormat, GrowableEltArray elts) {
+        con.XRenderCompositeText(compRule, src.picture, dst.picture,
                 maskFormat, sx, sy, 0, 0, glyphSet, elts);
     }
 
@@ -341,11 +315,7 @@ public class XRCompositeManager {
     }
 
     public boolean isTexturePaintActive() {
-        return srcType == TEXTURE;
-    }
-
-    public boolean isSolidPaintActive() {
-        return srcType == SOLID;
+        return src == texture;
     }
 
     public XRColor getAlphaColor() {

@@ -58,16 +58,6 @@ extends AlgorithmParameterGeneratorSpi {
     // The source of randomness
     private SecureRandom random = null;
 
-    private static void checkKeySize(int keysize)
-        throws InvalidAlgorithmParameterException {
-        if ((keysize != 2048) &&
-            ((keysize < 512) || (keysize > 1024) || (keysize % 64 != 0))) {
-            throw new InvalidAlgorithmParameterException(
-                "Keysize must be multiple of 64 ranging from "
-                + "512 to 1024 (inclusive), or 2048");
-        }
-    }
-
     /**
      * Initializes this parameter generator for a certain keysize
      * and source of randomness.
@@ -77,11 +67,11 @@ extends AlgorithmParameterGeneratorSpi {
      * @param random the source of randomness
      */
     protected void engineInit(int keysize, SecureRandom random) {
-        // Re-uses DSA parameters and thus have the same range
-        try {
-            checkKeySize(keysize);
-        } catch (InvalidAlgorithmParameterException ex) {
-            throw new InvalidParameterException(ex.getMessage());
+        if ((keysize < 512) || (keysize > 2048) || (keysize % 64 != 0)) {
+            throw new InvalidParameterException("Keysize must be multiple "
+                                                + "of 64, and can only range "
+                                                + "from 512 to 2048 "
+                                                + "(inclusive)");
         }
         this.primeSize = keysize;
         this.random = random;
@@ -101,29 +91,31 @@ extends AlgorithmParameterGeneratorSpi {
     protected void engineInit(AlgorithmParameterSpec genParamSpec,
                               SecureRandom random)
         throws InvalidAlgorithmParameterException {
-        if (!(genParamSpec instanceof DHGenParameterSpec)) {
-            throw new InvalidAlgorithmParameterException
-                ("Inappropriate parameter type");
-        }
+            if (!(genParamSpec instanceof DHGenParameterSpec)) {
+                throw new InvalidAlgorithmParameterException
+                    ("Inappropriate parameter type");
+            }
 
-        DHGenParameterSpec dhParamSpec = (DHGenParameterSpec)genParamSpec;
+            DHGenParameterSpec dhParamSpec = (DHGenParameterSpec)genParamSpec;
 
-        primeSize = dhParamSpec.getPrimeSize();
+            primeSize = dhParamSpec.getPrimeSize();
+            if ((primeSize<512) || (primeSize>2048) || (primeSize%64 != 0)) {
+                throw new InvalidAlgorithmParameterException
+                    ("Modulus size must be multiple of 64, and can only range "
+                     + "from 512 to 2048 (inclusive)");
+            }
 
-        // Re-uses DSA parameters and thus have the same range
-        checkKeySize(primeSize);
+            exponentSize = dhParamSpec.getExponentSize();
+            if (exponentSize <= 0) {
+                throw new InvalidAlgorithmParameterException
+                    ("Exponent size must be greater than zero");
+            }
 
-        exponentSize = dhParamSpec.getExponentSize();
-        if (exponentSize <= 0) {
-            throw new InvalidAlgorithmParameterException
-                ("Exponent size must be greater than zero");
-        }
-
-        // Require exponentSize < primeSize
-        if (exponentSize >= primeSize) {
-            throw new InvalidAlgorithmParameterException
-                ("Exponent size must be less than modulus size");
-        }
+            // Require exponentSize < primeSize
+            if (exponentSize >= primeSize) {
+                throw new InvalidAlgorithmParameterException
+                    ("Exponent size must be less than modulus size");
+            }
     }
 
     /**

@@ -23,6 +23,7 @@
 
 #
 # @test
+# @ignore until 6543856 is fixed
 # @bug 4990825
 # @summary attach to external but local JVM processes
 # @library ../../testlibrary
@@ -38,6 +39,6 @@ setup
 verify_os
 
 JAVA="${TESTJAVA}/bin/java"
-CP=${TESTJAVA}${FS}lib${FS}tools.jar${PS}${TESTCLASSES}${PS}${TESTCLASSES}${FS}..${FS}..${FS}testlibrary
+CP=${TESTJAVA}${FS}lib${FS}tools.jar${PS}${TESTCLASSES}
 
 ${JAVA} ${TESTVMOPTS} -classpath ${CP} MonitorVmStartTerminate

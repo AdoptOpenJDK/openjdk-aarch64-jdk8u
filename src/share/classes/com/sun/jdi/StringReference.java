@@ -35,8 +35,8 @@ package com.sun.jdi;
  * @author James McIlree
  * @since  1.3
  */
-@jdk.Exported
-public interface StringReference extends ObjectReference {
+public interface StringReference extends ObjectReference
+{
     /**
      * Returns the StringReference as a String. The returned string
      * is the equivalent of the mirrored string, but is an entity in the

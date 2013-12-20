@@ -49,10 +49,10 @@ public interface TableCellRenderer {
      * <pre>
      *     JTable.DropLocation dropLocation = table.getDropLocation();
      *     if (dropLocation != null
-     *             &amp;&amp; !dropLocation.isInsertRow()
-     *             &amp;&amp; !dropLocation.isInsertColumn()
-     *             &amp;&amp; dropLocation.getRow() == row
-     *             &amp;&amp; dropLocation.getColumn() == column) {
+     *             && !dropLocation.isInsertRow()
+     *             && !dropLocation.isInsertColumn()
+     *             && dropLocation.getRow() == row
+     *             && dropLocation.getColumn() == column) {
      *
      *         // this cell represents the current drop location
      *         // so render it specially, perhaps with a different color

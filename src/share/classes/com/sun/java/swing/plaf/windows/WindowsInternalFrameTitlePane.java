@@ -326,27 +326,18 @@ public class WindowsInternalFrameTitlePane extends BasicInternalFrameTitlePane {
 
     protected void addSystemMenuItems(JPopupMenu menu) {
         JMenuItem mi = menu.add(restoreAction);
-        mi.setMnemonic(getButtonMnemonic("restore"));
+        mi.setMnemonic('R');
         mi = menu.add(moveAction);
-        mi.setMnemonic(getButtonMnemonic("move"));
+        mi.setMnemonic('M');
         mi = menu.add(sizeAction);
-        mi.setMnemonic(getButtonMnemonic("size"));
+        mi.setMnemonic('S');
         mi = menu.add(iconifyAction);
-        mi.setMnemonic(getButtonMnemonic("minimize"));
+        mi.setMnemonic('n');
         mi = menu.add(maximizeAction);
-        mi.setMnemonic(getButtonMnemonic("maximize"));
-        menu.add(new JSeparator());
+        mi.setMnemonic('x');
+        systemPopupMenu.add(new JSeparator());
         mi = menu.add(closeAction);
-        mi.setMnemonic(getButtonMnemonic("close"));
-    }
-
-    private static int getButtonMnemonic(String button) {
-        try {
-            return Integer.parseInt(UIManager.getString(
-                    "InternalFrameTitlePane." + button + "Button.mnemonic"));
-        } catch (NumberFormatException e) {
-            return -1;
-        }
+        mi.setMnemonic('C');
     }
 
     protected void showSystemMenu(){
