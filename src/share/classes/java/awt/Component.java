@@ -173,10 +173,10 @@ import sun.util.logging.PlatformLogger;
  * <b>Note</b>: For more information on the paint mechanisms utilitized
  * by AWT and Swing, including information on how to write the most
  * efficient painting code, see
- * <a href="http://java.sun.com/products/jfc/tsc/articles/painting/index.html">Painting in AWT and Swing</a>.
+ * <a href="http://www.oracle.com/technetwork/java/painting-140037.html">Painting in AWT and Swing</a>.
  * <p>
  * For details on the focus subsystem, see
- * <a href="http://java.sun.com/docs/books/tutorial/uiswing/misc/focus.html">
+ * <a href="http://docs.oracle.com/javase/tutorial/uiswing/misc/focus.html">
  * How to Use the Focus Subsystem</a>,
  * a section in <em>The Java Tutorial</em>, and the
  * <a href="../../java/awt/doc-files/FocusSpec.html">Focus Specification</a>
@@ -276,7 +276,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * @see #getFont
      * @see #setFont
      */
-    Font        font;
+    volatile Font font;
 
     /**
      * The font which the peer is currently using.
@@ -1223,10 +1223,6 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * be called on the toolkit thread.
      */
     final Toolkit getToolkitImpl() {
-        ComponentPeer peer = this.peer;
-        if ((peer != null) && ! (peer instanceof LightweightPeer)){
-            return peer.getToolkit();
-        }
         Container parent = this.parent;
         if (parent != null) {
             return parent.getToolkitImpl();
@@ -1889,10 +1885,8 @@ public abstract class Component implements ImageObserver, MenuContainer,
     public void setFont(Font f) {
         Font oldFont, newFont;
         synchronized(getTreeLock()) {
-            synchronized (this) {
-                oldFont = font;
-                newFont = font = f;
-            }
+            oldFont = font;
+            newFont = font = f;
             ComponentPeer peer = this.peer;
             if (peer != null) {
                 f = getFont();
@@ -2688,7 +2682,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
     }
 
     /**
-     * Gets the mininimum size of this component.
+     * Gets the minimum size of this component.
      * @return a dimension object indicating this component's minimum size
      * @see #getPreferredSize
      * @see LayoutManager
@@ -3205,7 +3199,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * <b>Note</b>: For more information on the paint mechanisms utilitized
      * by AWT and Swing, including information on how to write the most
      * efficient painting code, see
-     * <a href="http://java.sun.com/products/jfc/tsc/articles/painting/index.html">Painting in AWT and Swing</a>.
+     * <a href="http://www.oracle.com/technetwork/java/painting-140037.html">Painting in AWT and Swing</a>.
      *
      * @param g the graphics context to use for painting
      * @see       #update
@@ -3240,7 +3234,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * <b>Note</b>: For more information on the paint mechanisms utilitized
      * by AWT and Swing, including information on how to write the most
      * efficient painting code, see
-     * <a href="http://java.sun.com/products/jfc/tsc/articles/painting/index.html">Painting in AWT and Swing</a>.
+     * <a href="http://www.oracle.com/technetwork/java/painting-140037.html">Painting in AWT and Swing</a>.
      *
      * @param g the specified context to use for updating
      * @see       #paint
@@ -3301,7 +3295,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * <b>Note</b>: For more information on the paint mechanisms utilitized
      * by AWT and Swing, including information on how to write the most
      * efficient painting code, see
-     * <a href="http://java.sun.com/products/jfc/tsc/articles/painting/index.html">Painting in AWT and Swing</a>.
+     * <a href="http://www.oracle.com/technetwork/java/painting-140037.html">Painting in AWT and Swing</a>.
 
      *
      * @see       #update(Graphics)
@@ -3319,7 +3313,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * <b>Note</b>: For more information on the paint mechanisms utilitized
      * by AWT and Swing, including information on how to write the most
      * efficient painting code, see
-     * <a href="http://java.sun.com/products/jfc/tsc/articles/painting/index.html">Painting in AWT and Swing</a>.
+     * <a href="http://www.oracle.com/technetwork/java/painting-140037.html">Painting in AWT and Swing</a>.
      *
      * @param tm maximum time in milliseconds before update
      * @see #paint
@@ -3341,7 +3335,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * <b>Note</b>: For more information on the paint mechanisms utilitized
      * by AWT and Swing, including information on how to write the most
      * efficient painting code, see
-     * <a href="http://java.sun.com/products/jfc/tsc/articles/painting/index.html">Painting in AWT and Swing</a>.
+     * <a href="http://www.oracle.com/technetwork/java/painting-140037.html">Painting in AWT and Swing</a>.
      *
      * @param     x   the <i>x</i> coordinate
      * @param     y   the <i>y</i> coordinate
@@ -3366,7 +3360,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * <b>Note</b>: For more information on the paint mechanisms utilitized
      * by AWT and Swing, including information on how to write the most
      * efficient painting code, see
-     * <a href="http://java.sun.com/products/jfc/tsc/articles/painting/index.html">Painting in AWT and Swing</a>.
+     * <a href="http://www.oracle.com/technetwork/java/painting-140037.html">Painting in AWT and Swing</a>.
      *
      * @param     tm   maximum time in milliseconds before update
      * @param     x    the <i>x</i> coordinate
@@ -5258,7 +5252,7 @@ public abstract class Component implements ImageObserver, MenuContainer,
      * Returns an array of all the component listeners
      * registered on this component.
      *
-     * @return all of this comonent's <code>ComponentListener</code>s
+     * @return all <code>ComponentListener</code>s of this component
      *         or an empty array if no component
      *         listeners are currently registered
      *

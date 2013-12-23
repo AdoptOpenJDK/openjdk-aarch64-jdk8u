@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -61,6 +61,7 @@ import java.rmi.server.RemoteRef;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedActionException;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;
@@ -128,7 +129,6 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
             Map<String, ?> environment) {
         if (rmiServer == null && address == null) throw new
                 IllegalArgumentException("rmiServer and jmxServiceURL both null");
-
         initTransients();
 
         this.rmiServer = rmiServer;
@@ -1688,17 +1688,17 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
      * this method will attempt to connect the stub to an ORB as
      * follows:
      * <ul>
-     * <p>This method looks in the provided <var>environment</var> for
+     * <li>This method looks in the provided <var>environment</var> for
      * the "java.naming.corba.orb" property. If it is found, the
      * referenced object (an {@link org.omg.CORBA.ORB ORB}) is used to
      * connect the stub. Otherwise, a new org.omg.CORBA.ORB is created
      * by calling {@link
      * org.omg.CORBA.ORB#init(String[], Properties)
-     * org.omg.CORBA.ORB.init((String[])null,(Properties)null)}
-     * <p>The new created ORB is kept in a static
+     * org.omg.CORBA.ORB.init((String[])null,(Properties)null)}</li>
+     * <li>The new created ORB is kept in a static
      * {@link WeakReference} and can be reused for connecting other
      * stubs. However, no reference is ever kept on the ORB provided
-     * in the <var>environment</var> map, if any.
+     * in the <var>environment</var> map, if any.</li>
      * </ul>
      * @param rmiServer A RMI Server Stub.
      * @param environment An environment map, possibly containing an ORB.
@@ -2382,13 +2382,21 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
         }
     }
 
-    private static RMIConnection shadowIiopStub(Object stub)
+  private static RMIConnection shadowIiopStub(Object stub)
     throws InstantiationException, IllegalAccessException {
-        Object proxyStub = proxyStubClass.newInstance();
+        Object proxyStub = null;
+        try {
+            proxyStub = AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
+                public Object run() throws Exception {
+                    return proxyStubClass.newInstance();
+                }
+            });
+        } catch (PrivilegedActionException e) {
+            throw new InternalError();
+        }
         IIOPHelper.setDelegate(proxyStub, IIOPHelper.getDelegate(stub));
         return (RMIConnection) proxyStub;
     }
-
     private static RMIConnection getConnection(RMIServer server,
             Object credentials,
             boolean checkStub)

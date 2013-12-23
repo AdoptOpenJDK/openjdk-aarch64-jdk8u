@@ -450,9 +450,9 @@ public class FileChooserDemo extends JPanel implements ActionListener {
                     "User cancelled operation. No file was chosen.");
         } else if (retval == ERROR_OPTION) {
             JOptionPane.showMessageDialog(frame,
-                    "An error occured. No file was chosen.");
+                    "An error occurred. No file was chosen.");
         } else {
-            JOptionPane.showMessageDialog(frame, "Unknown operation occured.");
+            JOptionPane.showMessageDialog(frame, "Unknown operation occurred.");
         }
     }
 
@@ -800,7 +800,7 @@ public class FileChooserDemo extends JPanel implements ActionListener {
                      * NOTE: By default, the look and feel will be set to the
                      * Cross Platform Look and Feel (which is currently Metal).
                      * The following code tries to set the Look and Feel to Nimbus.
-                     * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/nimbus.html
+                     * http://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/nimbus.html
                      */
                     try {
                         for (LookAndFeelInfo info : UIManager.

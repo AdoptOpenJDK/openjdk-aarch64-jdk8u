@@ -87,7 +87,7 @@ import sun.reflect.misc.ReflectUtil;
  * <p>
  * For more information about introspection and design patterns, please
  * consult the
- *  <a href="http://java.sun.com/products/javabeans/docs/index.html">JavaBeans&trade; specification</a>.
+ *  <a href="http://www.oracle.com/technetwork/java/javase/documentation/spec-136004.html">JavaBeans&trade; specification</a>.
  */
 
 public class Introspector {
@@ -684,8 +684,7 @@ public class Introspector {
                     ipd = (IndexedPropertyDescriptor)pd;
                     if (ipd.getIndexedWriteMethod() != null) {
                         if (igpd != null) {
-                            if (igpd.getIndexedPropertyType()
-                                == ipd.getIndexedPropertyType()) {
+                            if (isAssignable(igpd.getIndexedPropertyType(), ipd.getIndexedPropertyType())) {
                                 if (ispd != null) {
                                     ispd = new IndexedPropertyDescriptor(ispd, ipd);
                                 } else {
@@ -703,7 +702,7 @@ public class Introspector {
                 } else {
                     if (pd.getWriteMethod() != null) {
                         if (gpd != null) {
-                            if (gpd.getPropertyType() == pd.getPropertyType()) {
+                            if (isAssignable(gpd.getPropertyType(), pd.getPropertyType())) {
                                 if (spd != null) {
                                     spd = new PropertyDescriptor(spd, pd);
                                 } else {
@@ -804,6 +803,10 @@ public class Introspector {
                 properties.put(pd.getName(), pd);
             }
         }
+    }
+
+    private static boolean isAssignable(Class<?> current, Class<?> candidate) {
+        return current == null ? candidate == null : current.isAssignableFrom(candidate);
     }
 
     /**

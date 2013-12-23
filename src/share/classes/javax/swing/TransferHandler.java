@@ -75,7 +75,7 @@ import sun.awt.AWTAccessor;
  * of the transfer, and <code>setForeground</code> for the target of a transfer.
  * <p>
  * Please see
- * <a href="http://java.sun.com/docs/books/tutorial/uiswing/misc/dnd.html">
+ * <a href="http://docs.oracle.com/javase/tutorial/uiswing/dnd/index.html">
  * How to Use Drag and Drop and Data Transfer</a>,
  * a section in <em>The Java Tutorial</em>, for more information.
  *
@@ -759,7 +759,7 @@ public class TransferHandler implements Serializable {
      * returns. Should the clipboard be unavailable when attempting to place
      * data on it, the <code>IllegalStateException</code> thrown by
      * {@link Clipboard#setContents(Transferable, ClipboardOwner)} will
-     * be propogated through this method. However,
+     * be propagated through this method. However,
      * <code>exportDone</code> will first be called with an action
      * of <code>NONE</code> for consistency.
      *

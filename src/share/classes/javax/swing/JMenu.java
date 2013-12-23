@@ -76,11 +76,11 @@ import java.lang.ref.WeakReference;
  * configuring a menu.  Refer to <a href="Action.html#buttonActions">
  * Swing Components Supporting <code>Action</code></a> for more
  * details, and you can find more information in <a
- * href="http://java.sun.com/docs/books/tutorial/uiswing/misc/action.html">How
+ * href="http://docs.oracle.com/javase/tutorial/uiswing/misc/action.html">How
  * to Use Actions</a>, a section in <em>The Java Tutorial</em>.
  * <p>
  * For information and examples of using menus see
- * <a href="http://java.sun.com/doc/books/tutorial/uiswing/components/menu.html">How to Use Menus</a>,
+ * <a href="http://docs.oracle.com/javase/tutorial/uiswing/components/menu.html">How to Use Menus</a>,
  * a section in <em>The Java Tutorial.</em>
  * <p>
  * <strong>Warning:</strong> Swing is not thread safe. For more
@@ -93,7 +93,7 @@ import java.lang.ref.WeakReference;
  * future Swing releases. The current serialization support is
  * appropriate for short term storage or RMI between applications running
  * the same version of Swing.  As of 1.4, support for long term storage
- * of all JavaBeans<sup><font size="-2">TM</font></sup>
+ * of all JavaBeans&trade;
  * has been added to the <code>java.beans</code> package.
  * Please see {@link java.beans.XMLEncoder}.
  *
@@ -225,7 +225,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
 
 
     /**
-     * Returns the name of the L&F class that renders this component.
+     * Returns the name of the L&amp;F class that renders this component.
      *
      * @return the string "MenuUI"
      * @see JComponent#getUIClassID
@@ -490,12 +490,12 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
     /**
      * Returns the suggested delay, in milliseconds, before submenus
      * are popped up or down.
-     * Each look and feel (L&F) may determine its own policy for
+     * Each look and feel (L&amp;F) may determine its own policy for
      * observing the <code>delay</code> property.
      * In most cases, the delay is not observed for top level menus
      * or while dragging.  The default for <code>delay</code> is 0.
      * This method is a property of the look and feel code and is used
-     * to manage the idiosyncracies of the various UI implementations.
+     * to manage the idiosyncrasies of the various UI implementations.
      *
      *
      * @return the <code>delay</code> property
@@ -506,11 +506,11 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
 
     /**
      * Sets the suggested delay before the menu's <code>PopupMenu</code>
-     * is popped up or down.  Each look and feel (L&F) may determine
+     * is popped up or down.  Each look and feel (L&amp;F) may determine
      * it's own policy for observing the delay property.  In most cases,
      * the delay is not observed for top level menus or while dragging.
      * This method is a property of the look and feel code and is used
-     * to manage the idiosyncracies of the various UI implementations.
+     * to manage the idiosyncrasies of the various UI implementations.
      *
      * @param       d the number of milliseconds to delay
      * @exception   IllegalArgumentException if <code>d</code>
@@ -676,7 +676,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      * @param pos an integer specifying the position at which to add the
      *               new menu item
      * @exception IllegalArgumentException when the value of
-     *                  <code>pos</code> < 0
+     *                  <code>pos</code> &lt; 0
      */
     public void insert(String s, int pos) {
         if (pos < 0) {
@@ -695,7 +695,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      *               new <code>JMenuitem</code>
      * @return the new menu item
      * @exception IllegalArgumentException if the value of
-     *                  <code>pos</code> < 0
+     *                  <code>pos</code> &lt; 0
      */
     public JMenuItem insert(JMenuItem mi, int pos) {
         if (pos < 0) {
@@ -714,7 +714,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      * @param pos an integer specifying the position at which to add the
      *               new menu item
      * @exception IllegalArgumentException if the value of
-     *                  <code>pos</code> < 0
+     *                  <code>pos</code> &lt; 0
      */
     public JMenuItem insert(Action a, int pos) {
         if (pos < 0) {
@@ -735,7 +735,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      * @param       index an integer specifying the position at which to
      *                    insert the menu separator
      * @exception   IllegalArgumentException if the value of
-     *                       <code>index</code> < 0
+     *                       <code>index</code> &lt; 0
      */
     public void insertSeparator(int index) {
         if (index < 0) {
@@ -754,7 +754,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      *
      * @param pos    an integer specifying the position
      * @exception   IllegalArgumentException if the value of
-     *                       <code>pos</code> < 0
+     *                       <code>pos</code> &lt; 0
      * @return  the menu item at the specified position; or <code>null</code>
      *          if the item as the specified position is not a menu item
      */
@@ -811,7 +811,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      *
      * @param       pos the position of the item to be removed
      * @exception   IllegalArgumentException if the value of
-     *                       <code>pos</code> < 0, or if <code>pos</code>
+     *                       <code>pos</code> &lt; 0, or if <code>pos</code>
      *                       is greater than the number of menu items
      */
     public void remove(int pos) {
@@ -1149,7 +1149,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
@@ -1386,7 +1386,7 @@ public class JMenu extends JMenuItem implements Accessible,MenuElement
      * future Swing releases. The current serialization support is
      * appropriate for short term storage or RMI between applications running
      * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
+     * of all JavaBeans&trade;
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
