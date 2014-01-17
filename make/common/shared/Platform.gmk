@@ -207,6 +207,9 @@ ifeq ($(SYSTEM_UNAME), Linux)
       ifeq ($(ARCH), ia64)
         ARCH_DATA_MODEL=64
       endif
+      ifeq ($(ARCH), aarch64)
+        ARCH_DATA_MODEL=64
+      endif
     endif
   endif
 
