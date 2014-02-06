@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2009, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -648,7 +648,7 @@ public class MenuItem extends MenuComponent implements Accessible {
      * This method is not called unless action events are
      * enabled for this component. Action events are enabled
      * when one of the following occurs:
-     * <p><ul>
+     * <ul>
      * <li>An <code>ActionListener</code> object is registered
      * via <code>addActionListener</code>.
      * <li>Action events are enabled via <code>enableEvents</code>.

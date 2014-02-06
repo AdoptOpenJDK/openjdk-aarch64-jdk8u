@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -104,7 +104,6 @@ import java.beans.ConstructorProperties;
  * The following code demonstrates typical usage of
  * {@code RadialGradientPaint}, where the center and focus points are
  * the same:
- * <p>
  * <pre>
  *     Point2D center = new Point2D.Float(50, 50);
  *     float radius = 25;
@@ -117,7 +116,6 @@ import java.beans.ConstructorProperties;
  * <p>
  * This image demonstrates the example code above, with default
  * (centered) focus for each of the three cycle methods:
- * <p>
  * <center>
  * <img src = "doc-files/RadialGradientPaint-1.png" alt="image showing the
  * output of the sameple code">
@@ -126,7 +124,6 @@ import java.beans.ConstructorProperties;
  * <p>
  * It is also possible to specify a non-centered focus point, as
  * in the following code:
- * <p>
  * <pre>
  *     Point2D center = new Point2D.Float(50, 50);
  *     float radius = 25;
@@ -142,7 +139,6 @@ import java.beans.ConstructorProperties;
  * <p>
  * This image demonstrates the previous example code, with non-centered
  * focus for each of the three cycle methods:
- * <p>
  * <center>
  * <img src = "doc-files/RadialGradientPaint-2.png" alt="image showing the
  * output of the sample code">

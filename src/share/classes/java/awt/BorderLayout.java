@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -99,7 +99,7 @@ import java.util.Hashtable;
  * style="float:center; margin: 7px 10px;">
  * <p>
  * The code for this applet is as follows:
- * <p>
+ *
  * <hr><blockquote><pre>
  * import java.awt.*;
  * import java.applet.Applet;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * <code>RowFilter</code> is used to filter out entries from the
@@ -129,7 +130,7 @@ public abstract class RowFilter<M,I> {
 
     /**
      * Throws an IllegalArgumentException if any of the values in
-     * columns are < 0.
+     * columns are {@literal <} 0.
      */
     private static void checkIndices(int[] columns) {
         for (int i = columns.length - 1; i >= 0; i--) {

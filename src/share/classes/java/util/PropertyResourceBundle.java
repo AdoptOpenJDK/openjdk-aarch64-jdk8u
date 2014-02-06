@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -98,6 +98,11 @@ import sun.util.ResourceBundleEnumeration;
  * s7=3. M&auml;rz 1996
  * </pre>
  * </blockquote>
+ *
+ * <p>
+ * The implementation of a {@code PropertyResourceBundle} subclass must be
+ * thread-safe if it's simultaneously used by multiple threads. The default
+ * implementations of the non-abstract methods in this class are thread-safe.
  *
  * <p>
  * <strong>Note:</strong> PropertyResourceBundle can be constructed either

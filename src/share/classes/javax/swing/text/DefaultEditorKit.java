@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -41,7 +41,7 @@ import javax.swing.UIManager;
  * of text document.  This implementation provides a default
  * implementation which treats text as plain text and
  * provides a minimal set of actions for a simple editor.
- * <p>
+ *
  * <dl>
  * <dt><b><font size=+1>Newlines</font></b>
  * <dd>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -927,7 +927,6 @@ public class BufferedImage extends java.awt.Image
      * each color component in the returned data when
      * using this method.  With a specified coordinate (x,&nbsp;y) in the
      * image, the ARGB pixel can be accessed in this way:
-     * <p>
      *
      * <pre>
      *    pixel   = rgbArray[offset + (y-startY)*scansize + (x-startX)]; </pre>

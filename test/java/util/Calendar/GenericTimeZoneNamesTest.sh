@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -32,10 +32,7 @@
 
 STATUS=0
 echo "Locale providers: default"
-# TODO: The purpose of ja-JP is to make sure the fallback for generic
-# names works. Remove ja-JP when adding generic names to localized
-# resources.
-if ! ${TESTJAVA}/bin/java -esa ${TESTVMOPTS} -cp "${TESTCLASSES}" GenericTimeZoneNamesTest en-US ja-JP; then
+if ! ${TESTJAVA}/bin/java -esa ${TESTVMOPTS} -cp "${TESTCLASSES}" GenericTimeZoneNamesTest en-US; then
     STATUS=1
 fi
 

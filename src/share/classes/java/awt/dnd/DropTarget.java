@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -197,7 +197,7 @@ public class DropTarget implements DropTargetListener, Serializable {
      * <P>
      * The Component will receive drops only if it is enabled.
      * @param c The new <code>Component</code> this <code>DropTarget</code>
-     * is to be associated with.<P>
+     * is to be associated with.
      */
 
     public synchronized void setComponent(Component c) {
@@ -246,7 +246,6 @@ public class DropTarget implements DropTargetListener, Serializable {
      * Sets the default acceptable actions for this <code>DropTarget</code>
      * <P>
      * @param ops the default actions
-     * <P>
      * @see java.awt.dnd.DnDConstants
      */
 

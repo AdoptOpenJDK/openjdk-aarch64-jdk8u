@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -45,7 +45,7 @@ import javax.accessibility.*;
  * style="float:center; margin: 7px 10px;">
  * <p>
  * This text area could be created by the following line of code:
- * <p>
+ *
  * <hr><blockquote><pre>
  * new TextArea("Hello", 5, 40);
  * </pre></blockquote><hr>

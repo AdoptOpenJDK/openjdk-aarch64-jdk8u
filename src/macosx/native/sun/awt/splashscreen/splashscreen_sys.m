@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -290,8 +290,8 @@ SplashEventLoop(Splash * splash) {
         SplashUnlock(splash);
         rc = poll(pfd, 1, timeout);
         SplashLock(splash);
-        if (splash->isVisible>0 && SplashTime() >= splash->time +
-                splash->frames[splash->currentFrame].delay) {
+        if (splash->isVisible > 0 && splash->currentFrame >= 0 &&
+                SplashTime() >= splash->time + splash->frames[splash->currentFrame].delay) {
             SplashNextFrame(splash);
             SplashRedrawWindow(splash);
         }

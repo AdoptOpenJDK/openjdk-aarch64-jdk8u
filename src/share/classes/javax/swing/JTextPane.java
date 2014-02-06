@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -49,7 +49,7 @@ import javax.swing.plaf.*;
  * the default attributes to use if not overridden by attributes set
  * on the paragraph or character run.  Components and images may
  * be embedded in the flow of text.
- * <p>
+ *
  * <dl>
  * <dt><b><font size=+1>Newlines</font></b>
  * <dd>

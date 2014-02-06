@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -605,7 +605,7 @@ public class KDC {
      * @return the response
      * @throws java.lang.Exception for various errors
      */
-    private byte[] processMessage(byte[] in) throws Exception {
+    protected byte[] processMessage(byte[] in) throws Exception {
         if ((in[0] & 0x1f) == Krb5.KRB_AS_REQ)
             return processAsReq(in);
         else
@@ -618,7 +618,7 @@ public class KDC {
      * @return the response
      * @throws java.lang.Exception for various errors
      */
-    private byte[] processTgsReq(byte[] in) throws Exception {
+    protected byte[] processTgsReq(byte[] in) throws Exception {
         TGSReq tgsReq = new TGSReq(in);
         PrincipalName service = tgsReq.reqBody.sname;
         if (options.containsKey(KDC.Option.RESP_NT)) {
@@ -841,7 +841,7 @@ public class KDC {
      * @return the response
      * @throws java.lang.Exception for various errors
      */
-    private byte[] processAsReq(byte[] in) throws Exception {
+    protected byte[] processAsReq(byte[] in) throws Exception {
         ASReq asReq = new ASReq(in);
         int[] eTypes = null;
         List<PAData> outPAs = new ArrayList<>();

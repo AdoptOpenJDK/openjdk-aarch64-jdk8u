@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -361,7 +361,7 @@ public class SystemTray {
     /**
      * Adds a {@code PropertyChangeListener} to the list of listeners for the
      * specific property. The following properties are currently supported:
-     * <p>
+     *
      * <table border=1 summary="SystemTray properties">
      * <tr>
      *    <th>Property</th>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -187,6 +187,10 @@ public class SctpChannelImpl extends SctpChannel
                         SctpNet.throwAlreadyBoundException();
                     InetSocketAddress isa = (local == null) ?
                         new InetSocketAddress(0) : Net.checkAddress(local);
+                    SecurityManager sm = System.getSecurityManager();
+                    if (sm != null) {
+                        sm.checkListen(isa.getPort());
+                    }
                     Net.bind(fd, isa.getAddress(), isa.getPort());
                     InetSocketAddress boundIsa = Net.localAddress(fd);
                     port = boundIsa.getPort();

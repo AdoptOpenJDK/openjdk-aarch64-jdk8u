@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2007, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 # 
 # This code is free software; you can redistribute it and/or modify it
@@ -22,7 +22,7 @@
 #
 
 # @test
-# @bug 6543842 6543440 6939248 8009636
+# @bug 6543842 6543440 6939248 8009636 8024302
 # @summary checking response of timestamp
 #
 # @run shell/timeout=600 ts.sh
@@ -53,7 +53,7 @@ fi
 JAR="${TESTJAVA}${FS}bin${FS}jar"
 JAVA="${TESTJAVA}${FS}bin${FS}java"
 JAVAC="${TESTJAVA}${FS}bin${FS}javac"
-KT="${TESTJAVA}${FS}bin${FS}keytool -keystore tsks -storepass changeit -keypass changeit -keyalg rsa"
+KT="${TESTJAVA}${FS}bin${FS}keytool -keystore tsks -storepass changeit -keypass changeit -keyalg rsa -validity 200"
 
 rm tsks
 echo Nothing > A

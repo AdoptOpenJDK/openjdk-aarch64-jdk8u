@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -324,7 +324,6 @@ public abstract class FileSystem
      *   <td>{@code *.*}</td>
      *   <td>Matches file names containing a dot</td>
      * </tr>
-     * <tr>
      * <tr>
      *   <td>{@code *.{java,class}}</td>
      *   <td>Matches file names ending with {@code .java} or {@code .class}</td>

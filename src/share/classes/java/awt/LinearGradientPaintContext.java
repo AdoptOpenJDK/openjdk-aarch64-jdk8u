@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -66,8 +66,8 @@ final class LinearGradientPaintContext extends MultipleGradientPaintContext {
      *          concatenated with this)
      * @param hints the hints that the context object uses to choose
      *              between rendering alternatives
-     * @param dStart gradient start point, in user space
-     * @param dEnd gradient end point, in user space
+     * @param start gradient start point, in user space
+     * @param end gradient end point, in user space
      * @param fractions the fractions specifying the gradient distribution
      * @param colors the gradient colors
      * @param cycleMethod either NO_CYCLE, REFLECT, or REPEAT

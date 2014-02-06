@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -71,7 +71,7 @@ class DnDEventMulticaster extends AWTEventMulticaster
      * Handles the <code>DragSourceDragEvent</code> by invoking
      * <code>dragOver</code> on listener-a and listener-b.
      *
-     * @param e the <code>DragSourceDragEvent</code>
+     * @param dsde the <code>DragSourceDragEvent</code>
      */
     public void dragOver(DragSourceDragEvent dsde) {
         ((DragSourceListener)a).dragOver(dsde);

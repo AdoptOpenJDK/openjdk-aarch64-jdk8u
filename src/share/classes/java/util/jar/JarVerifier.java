@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -179,7 +179,9 @@ class JarVerifier {
             name = name.substring(1);
 
         // only set the jev object for entries that have a signature
-        if (sigFileSigners.get(name) != null) {
+        // (either verified or not)
+        if (sigFileSigners.get(name) != null ||
+                verifiedSigners.get(name) != null) {
             mev.setEntry(name, je);
             return;
         }

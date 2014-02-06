@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,11 +33,16 @@ import java.util.Enumeration;
 import static java.lang.System.out;
 
 public class IndexTest {
+    static final boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+
     public static void main(String[] args) throws Exception {
         Enumeration<NetworkInterface> netifs = NetworkInterface.getNetworkInterfaces();
-        NetworkInterface nif = null;
+        NetworkInterface nif;
         while (netifs.hasMoreElements()) {
             nif = netifs.nextElement();
+            // JDK-8022212, Skip (Windows) Teredo Tunneling seudo-Interface
+            if (nif.getDisplayName().contains("Teredo") && isWindows)
+                continue;
             int index = nif.getIndex();
             if (index >= 0) {
                 NetworkInterface nif2 = NetworkInterface.getByIndex(index);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -58,7 +58,7 @@ public class XMLFormatter extends Formatter {
     private void appendISO8601(StringBuilder sb, long millis) {
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTimeInMillis(millis);
-        sb.append(cal.get(Calendar.YEAR) + 1900);
+        sb.append(cal.get(Calendar.YEAR));
         sb.append('-');
         a2(sb, cal.get(Calendar.MONTH) + 1);
         sb.append('-');

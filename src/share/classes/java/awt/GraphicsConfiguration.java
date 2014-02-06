@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2009, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -75,7 +75,7 @@ import sun.awt.image.SunVolatileImage;
  * bounds of the virtual device.  The following code sample
  * calculates the bounds of the virtual device.
  *
- * <pre>
+ * <pre>{@code
  *      Rectangle virtualBounds = new Rectangle();
  *      GraphicsEnvironment ge = GraphicsEnvironment.
  *              getLocalGraphicsEnvironment();
@@ -89,7 +89,7 @@ import sun.awt.image.SunVolatileImage;
  *              virtualBounds =
  *                  virtualBounds.union(gc[i].getBounds());
  *          }
- *      } </pre>
+ *      } }</pre>
  *
  * @see Window
  * @see Frame

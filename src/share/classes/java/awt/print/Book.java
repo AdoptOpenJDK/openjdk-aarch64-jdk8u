@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2000, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -129,7 +129,7 @@ public class Book implements Pageable {
      * @param painter   the <code>Printable</code> instance that
      *                  renders the page
      * @param page      the size and orientation of the page
-     * @throws <code>NullPointerException</code>
+     * @throws NullPointerException
      *          If the <code>painter</code> or <code>page</code>
      *          argument is <code>null</code>
      */
@@ -146,7 +146,7 @@ public class Book implements Pageable {
      * @param page      the size and orientation of the page
      * @param numPages  the number of pages to be added to the
      *                  this <code>Book</code>.
-     * @throws <code>NullPointerException</code>
+     * @throws NullPointerException
      *          If the <code>painter</code> or <code>page</code>
      *          argument is <code>null</code>
      */

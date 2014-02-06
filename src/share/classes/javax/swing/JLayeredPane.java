@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,7 +43,7 @@ import javax.accessibility.*;
  * For task-oriented documentation and examples of using layered panes see
  * <a href="http://docs.oracle.com/javase/tutorial/uiswing/components/layeredpane.html">How to Use a Layered Pane</a>,
  * a section in <em>The Java Tutorial</em>.
- * <P>
+ *
  * <TABLE STYLE="FLOAT:RIGHT" BORDER="0" SUMMARY="layout">
  * <TR>
  *   <TD ALIGN="CENTER">

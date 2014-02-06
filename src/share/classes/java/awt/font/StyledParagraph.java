@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2005, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -322,7 +322,7 @@ final class StyledParagraph {
     }
 
     /**
-     * Return i such that starts[i] <= index < starts[i+1].  starts
+     * Return i such that starts[i] &lt;= index &lt; starts[i+1].  starts
      * must be in increasing order, with at least one element greater
      * than index.
      */

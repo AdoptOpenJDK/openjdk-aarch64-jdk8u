@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,7 +54,6 @@ import java.awt.Image;
  * <p>
  * Alternatively, the contents of the back buffer can be copied, or
  * <i>blitted</i> forward in a chain instead of moving the video pointer.
- * <p>
  * <pre>{@code
  * Double buffering:
  *

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2009, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -65,7 +65,6 @@ import java.util.concurrent.TimeUnit;
  *     <th>System property</th>
  *     <th>Description</th>
  *   </tr>
- *   <tr>
  *   <tr>
  *     <td> {@code java.nio.channels.DefaultThreadPool.threadFactory} </td>
  *     <td> The value of this property is taken to be the fully-qualified name

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -130,12 +130,12 @@ public class Bug6317929 {
                                        "(New South Wales)\"");
         tzLocale = locales2Test[1];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
-           ("Eastern Normalzeit (Neus\u00fcdwales)"))
+           ("\u00D6stliche Normalzeit (New South Wales)"))
             throw new RuntimeException("\n" + tzLocale + ": LONG, " +
                                        "non-daylight saving name for " +
                                        "Australia/Currie should be " +
-                                       "\"Eastern Normalzeit " +
-                                       "(Neus\u00fcdwales)\"");
+                                       "\"\u00D6stliche Normalzeit " +
+                                       "(New South Wales)\"");
         tzLocale = locales2Test[2];
         if (!Currie.getDisplayName(false, TimeZone.LONG, tzLocale).equals
            ("Hora est\u00e1ndar Oriental (Nueva Gales del Sur)"))

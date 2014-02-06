@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -105,6 +105,12 @@ import sun.util.ResourceBundleEnumeration;
  * }
  * </pre>
  * </blockquote>
+ *
+ * <p>
+ * The implementation of a {@code ListResourceBundle} subclass must be thread-safe
+ * if it's simultaneously used by multiple threads. The default implementations
+ * of the methods in this class are thread-safe.
+ *
  * @see ResourceBundle
  * @see PropertyResourceBundle
  * @since JDK1.1

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1996, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -183,6 +183,13 @@ import sun.util.locale.LocaleObjectCache;
  * do not suit your needs, you can write your own <code>ResourceBundle</code>
  * subclass.  Your subclasses must override two methods: <code>handleGetObject</code>
  * and <code>getKeys()</code>.
+ *
+ * <p>
+ * The implementation of a {@code ResourceBundle} subclass must be thread-safe
+ * if it's simultaneously used by multiple threads. The default implementations
+ * of the non-abstract methods in this class, and the methods in the direct
+ * known concrete subclasses {@code ListResourceBundle} and
+ * {@code PropertyResourceBundle} are thread-safe.
  *
  * <h3>ResourceBundle.Control</h3>
  *

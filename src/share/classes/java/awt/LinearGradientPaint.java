@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -75,7 +75,6 @@ import java.beans.ConstructorProperties;
  * <p>
  * The following code demonstrates typical usage of
  * {@code LinearGradientPaint}:
- * <p>
  * <pre>
  *     Point2D start = new Point2D.Float(0, 0);
  *     Point2D end = new Point2D.Float(50, 50);
@@ -92,7 +91,6 @@ import java.beans.ConstructorProperties;
  * <p>
  * This image demonstrates the example code above for each
  * of the three cycle methods:
- * <p>
  * <center>
  * <img src = "doc-files/LinearGradientPaint.png"
  * alt="image showing the output of the example code">

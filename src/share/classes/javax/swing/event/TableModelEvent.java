@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2001, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,7 @@ import javax.swing.table.*;
  * and all references to rows and columns are in the co-ordinate
  * system of the model.
  * Depending on the parameters used in the constructors, the TableModelevent
- * can be used to specify the following types of changes: <p>
+ * can be used to specify the following types of changes:
  *
  * <pre>
  * TableModelEvent(source);              //  The data, ie. all rows changed

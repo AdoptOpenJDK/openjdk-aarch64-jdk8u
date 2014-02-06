@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -380,7 +380,7 @@ public final class FilePermission extends Permission implements Serializable {
     /**
      * Checks two FilePermission objects for equality. Checks that <i>obj</i> is
      * a FilePermission, and has the same pathname and actions as this object.
-     * <P>
+     *
      * @param obj the object we are testing for equality with this object.
      * @return <code>true</code> if obj is a FilePermission, and has the same
      *          pathname and actions as this FilePermission object,

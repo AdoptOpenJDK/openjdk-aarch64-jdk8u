@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,6 +31,9 @@ import java.nio.BufferOverflowException;
 import java.net.*;
 import java.util.concurrent.*;
 import java.io.IOException;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import sun.misc.Unsafe;
 
 /**
@@ -300,6 +303,19 @@ class WindowsAsynchronousSocketChannelImpl
         }
     }
 
+    private void doPrivilegedBind(final SocketAddress sa) throws IOException {
+        try {
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
+                public Void run() throws IOException {
+                    bind(sa);
+                    return null;
+                }
+            });
+        } catch (PrivilegedActionException e) {
+            throw (IOException) e.getException();
+        }
+    }
+
     @Override
     <A> Future<Void> implConnect(SocketAddress remote,
                                  A attachment,
@@ -330,7 +346,12 @@ class WindowsAsynchronousSocketChannelImpl
                 throw new ConnectionPendingException();
             if (localAddress == null) {
                 try {
-                    bind(new InetSocketAddress(0));
+                    SocketAddress any = new InetSocketAddress(0);
+                    if (sm == null) {
+                        bind(any);
+                    } else {
+                        doPrivilegedBind(any);
+                    }
                 } catch (IOException x) {
                     bindException = x;
                 }

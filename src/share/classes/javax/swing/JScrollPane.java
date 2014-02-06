@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,7 +53,7 @@ import java.beans.Transient;
  *  <a href="http://docs.oracle.com/javase/tutorial/uiswing/components/scrollpane.html">How to Use Scroll Panes</a>,
  * a section in <em>The Java Tutorial</em>.  Note that
  * <code>JScrollPane</code> does not support heavyweight components.
- * <p>
+ *
  * <TABLE STYLE="FLOAT:RIGHT" BORDER="0" SUMMARY="layout">
  *    <TR>
  *    <TD ALIGN="CENTER">

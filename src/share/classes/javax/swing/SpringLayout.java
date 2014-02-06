@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -297,7 +297,7 @@ public class SpringLayout implements LayoutManager2 {
      * and "a - b" is equal to
      * <code>Spring.sum(a, Spring.minus(b))</code>.
      * See the
-     * {@link Spring <code>Spring</code> API documentation}
+     * {@link Spring Spring API documentation}
      * for further details
      * of spring arithmetic.
      *

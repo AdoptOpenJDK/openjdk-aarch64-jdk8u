@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -76,6 +76,7 @@ import java.rmi.registry.Registry;
 public class CheckLogging {
     private static int REGISTRY_PORT = -1;
     private static String LOCATION;
+    private static Logger logger;
 
     private static final ByteArrayOutputStream clientCallOut =
         new ByteArrayOutputStream();
@@ -89,8 +90,8 @@ public class CheckLogging {
             System.err.println("set default stream");
             LogStream.setDefaultStream(new PrintStream(clientCallOut));
         } else {
-            Logger.getLogger("sun.rmi.client.call").
-                addHandler(new InternalStreamHandler(clientCallOut));
+            logger = Logger.getLogger("sun.rmi.client.call");
+            logger.addHandler(new InternalStreamHandler(clientCallOut));
         }
     }
 

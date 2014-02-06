@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -348,7 +348,7 @@ public class MultiPixelPackedSampleModel extends SampleModel
      *                  data
      * @return the specified band containing the sample of the specified
      * pixel.
-     * @exception ArrayIndexOutOfBoundException if the specified
+     * @exception ArrayIndexOutOfBoundsException if the specified
      *          coordinates are not in bounds.
      * @see #setSample(int, int, int, int, DataBuffer)
      */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,24 +22,38 @@
  */
 
 /*
- *
- *
  * A simple "Application" used by the Attach API unit tests. This application is
  * launched by the test. It binds to a random port and shuts down when somebody
  * connects to that port.
+ * Used port and pid are written both to stdout and to a specified file.
  */
 import java.net.Socket;
 import java.net.ServerSocket;
+import java.io.PrintWriter;
+import jdk.testlibrary.ProcessTools;
 
 public class Application {
     public static void main(String args[]) throws Exception {
         // bind to a random port
+        if (args.length < 1) {
+            System.err.println("First argument should be path to output file.");
+        }
+        String outFileName = args[0];
+
         ServerSocket ss = new ServerSocket(0);
         int port = ss.getLocalPort();
+        int pid = ProcessTools.getProcessId();
 
-        // signal test that we are started - do not remove this line!!
-        System.out.println(port);
+        System.out.println("shutdownPort=" + port);
+        System.out.println("pid=" + pid);
         System.out.flush();
+
+        try (PrintWriter writer = new PrintWriter(outFileName)) {
+            writer.println("shutdownPort=" + port);
+            writer.println("pid=" + pid);
+            writer.println("done");
+            writer.flush();
+        }
 
         // wait for test harness to connect
         Socket s = ss.accept();

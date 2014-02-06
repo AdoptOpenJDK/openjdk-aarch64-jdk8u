@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1146,7 +1146,4 @@ class SnmpRequestHandler extends ClientHandler implements SnmpDefinitions {
 
     static final private String InterruptSysCallMsg =
         "Interrupted system call";
-
-    static final private SnmpStatusException noSuchNameException =
-        new SnmpStatusException(SnmpDefinitions.snmpRspNoSuchName) ;
 }

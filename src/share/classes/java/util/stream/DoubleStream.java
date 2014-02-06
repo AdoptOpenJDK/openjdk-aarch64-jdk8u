@@ -150,10 +150,11 @@ public interface DoubleStream extends BaseStream<Double, DoubleStream> {
 
     /**
      * Returns a stream consisting of the results of replacing each element of
-     * this stream with the contents of the stream produced by applying the
-     * provided mapping function to each element.  (If the result of the mapping
-     * function is {@code null}, this is treated as if the result was an empty
-     * stream.)
+     * this stream with the contents of a mapped stream produced by applying
+     * the provided mapping function to each element.  Each mapped stream is
+     * {@link java.util.stream.BaseStream#close() closed} after its contents
+     * have been placed into this stream.  (If a mapped stream is {@code null}
+     * an empty stream is used, instead.)
      *
      * <p>This is an <a href="package-summary.html#StreamOps">intermediate
      * operation</a>.
@@ -207,12 +208,12 @@ public interface DoubleStream extends BaseStream<Double, DoubleStream> {
      * @apiNote This method exists mainly to support debugging, where you want
      * to see the elements as they flow past a certain point in a pipeline:
      * <pre>{@code
-     *     list.stream()
-     *         .filter(filteringFunction)
-     *         .peek(e -> System.out.println("Filtered value: " + e));
-     *         .map(mappingFunction)
-     *         .peek(e -> System.out.println("Mapped value: " + e));
-     *         .collect(Collectors.toDoubleSummaryStastistics());
+     *     DoubleStream.of(1, 2, 3, 4)
+     *         .filter(e -> e > 2)
+     *         .peek(e -> System.out.println("Filtered value: " + e))
+     *         .map(e -> e * e)
+     *         .peek(e -> System.out.println("Mapped value: " + e))
+     *         .sum();
      * }</pre>
      *
      * @param action a <a href="package-summary.html#NonInterference">
@@ -329,7 +330,7 @@ public interface DoubleStream extends BaseStream<Double, DoubleStream> {
      * <pre>{@code
      *     double result = identity;
      *     for (double element : this stream)
-     *         result = accumulator.apply(result, element)
+     *         result = accumulator.applyAsDouble(result, element)
      *     return result;
      * }</pre>
      *
@@ -390,7 +391,7 @@ public interface DoubleStream extends BaseStream<Double, DoubleStream> {
      *             result = element;
      *         }
      *         else
-     *             result = accumulator.apply(result, element);
+     *             result = accumulator.applyAsDouble(result, element);
      *     }
      *     return foundAny ? OptionalDouble.of(result) : OptionalDouble.empty();
      * }</pre>

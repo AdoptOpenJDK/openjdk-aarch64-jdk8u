@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,7 +32,7 @@ package java.awt;
  * and one component is placed in each rectangle.
  * For example, the following is an applet that lays out six buttons
  * into three rows and two columns:
- * <p>
+ *
  * <hr><blockquote>
  * <pre>
  * import java.awt.*;
@@ -54,7 +54,7 @@ package java.awt;
  * and left-to-right, the above example produces the output shown in Figure 1.
  * If the container's <code>ComponentOrientation</code> property is horizontal
  * and right-to-left, the example produces the output shown in Figure 2.
- * <p>
+ *
  * <table style="float:center" WIDTH=600 summary="layout">
  * <tr ALIGN=CENTER>
  * <td><img SRC="doc-files/GridLayout-1.gif"

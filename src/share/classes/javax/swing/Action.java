@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2009, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -67,7 +67,7 @@ import java.beans.*;
  * functionality and broadcast of property changes.  For this reason,
  * you should take care to only use <code>Action</code>s where their benefits
  * are desired, and use simple <code>ActionListener</code>s elsewhere.
- * <p>
+ * <br>
  *
  * <h3><a name="buttonActions"></a>Swing Components Supporting <code>Action</code></h3>
  * <p>
@@ -93,7 +93,7 @@ import java.beans.*;
  * <code>null</code> property value in an <code>Action</code> (or a
  * <code>Action</code> that is <code>null</code>) results in the
  * button's corresponding property being set to <code>null</code>.
- * <p>
+ *
  * <table border="1" cellpadding="1" cellspacing="0"
  *         summary="Supported Action properties">
  *  <tr valign="top"  align="left">

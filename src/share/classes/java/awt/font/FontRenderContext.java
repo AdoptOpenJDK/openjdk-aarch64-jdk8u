@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -57,7 +57,6 @@ import java.awt.geom.AffineTransform;
 *   <code>FontRenderContext</code> which is directly constructed will
 *   most likely not represent any actual graphics device, and may lead
 *   to unexpected or incorrect results.
-*   <p>
 *   @see java.awt.RenderingHints#KEY_TEXT_ANTIALIASING
 *   @see java.awt.RenderingHints#KEY_FRACTIONALMETRICS
 *   @see java.awt.Graphics2D#getFontRenderContext()

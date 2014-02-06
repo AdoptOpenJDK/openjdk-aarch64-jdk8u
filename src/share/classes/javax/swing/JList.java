@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -950,7 +950,7 @@ public class JList<E> extends JComponent implements Scrollable, Accessible
     /**
      * Defines the way list cells are layed out. Consider a {@code JList}
      * with five cells. Cells can be layed out in one of the following ways:
-     * <p>
+     *
      * <pre>
      * VERTICAL:          0
      *                    1

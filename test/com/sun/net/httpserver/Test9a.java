@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,8 +40,9 @@ import javax.net.ssl.*;
 
 public class Test9a extends Test {
 
-    static SSLContext serverCtx, clientCtx;
-    static boolean error = false;
+    static SSLContext serverCtx;
+    static volatile SSLContext clientCtx = null;
+    static volatile boolean error = false;
 
     public static void main (String[] args) throws Exception {
         HttpsServer server = null;
@@ -176,6 +177,7 @@ public class Test9a extends Test {
                 compare (new File(orig), temp);
                 temp.delete();
             } catch (IOException e) {
+                e.printStackTrace();
                 error = true;
             }
         }

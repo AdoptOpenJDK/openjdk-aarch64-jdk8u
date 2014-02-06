@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2003, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -354,7 +354,7 @@ public interface Document {
      * returns will give better performance for situations where large
      * parts of the document are being scanned.  The following is an example
      * of using the partial return to access the entire document:
-     * <p>
+     *
      * <pre><code>
      *
      * &nbsp; int nleft = doc.getDocumentLength();

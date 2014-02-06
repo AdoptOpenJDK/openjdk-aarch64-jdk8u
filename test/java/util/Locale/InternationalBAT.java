@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,11 +39,13 @@ public class InternationalBAT {
 
     public static void main(String[] args) {
         boolean pass = true;
-        if (!testRequiredLocales()) {
-            pass = false;
-        }
-        if (!testRequiredEncodings()) {
-            pass = false;
+
+        TimeZone tz = TimeZone.getDefault();
+        try {
+            pass &= testRequiredLocales();
+            pass &= testRequiredEncodings();
+        } finally {
+            TimeZone.setDefault(tz);
         }
 
         if (!pass) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -87,7 +87,7 @@ public interface DesktopPeer {
      * filling the message fields including to, cc, etc, with the values
      * specified by the given mailto URL.
      *
-     * @param uri represents a mailto URL with specified values of the message.
+     * @param mailtoURL represents a mailto URL with specified values of the message.
      *        The syntax of mailto URL is defined by
      *        <a href="http://www.ietf.org/rfc/rfc2368.txt">RFC2368: The mailto
      *        URL scheme</a>
@@ -103,5 +103,5 @@ public interface DesktopPeer {
      * @throws IOException If the user default browser is not found,
      *         or it fails to be launched.
      */
-    void browse(URI url) throws IOException;
+    void browse(URI uri) throws IOException;
 }

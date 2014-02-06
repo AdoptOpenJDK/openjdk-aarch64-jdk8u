@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -794,7 +794,7 @@ public abstract class Path2D implements Shape, Cloneable {
          * ({@link #WIND_EVEN_ODD WIND_EVEN_ODD} or
          *  {@link #WIND_NON_ZERO WIND_NON_ZERO})
          * <li>followed by
-         * NP (or unlimited if NP < 0) sets of values consisting of
+         * {@code NP} (or unlimited if {@code NP < 0}) sets of values consisting of
          * a single byte indicating a path segment type
          * followed by one or more pairs of float or double
          * values representing the coordinates of the path segment
@@ -1520,7 +1520,7 @@ public abstract class Path2D implements Shape, Cloneable {
          * ({@link #WIND_EVEN_ODD WIND_EVEN_ODD} or
          *  {@link #WIND_NON_ZERO WIND_NON_ZERO})
          * <li>followed by
-         * NP (or unlimited if NP < 0) sets of values consisting of
+         * {@code NP} (or unlimited if {@code NP < 0}) sets of values consisting of
          * a single byte indicating a path segment type
          * followed by one or more pairs of float or double
          * values representing the coordinates of the path segment

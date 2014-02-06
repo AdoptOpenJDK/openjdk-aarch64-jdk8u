@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -432,10 +432,8 @@ public class Main {
             }
 
             // SAVE THE FILE
-            try {
-                FileOutputStream out = new FileOutputStream(dotAV);
+            try (FileOutputStream out = new FileOutputStream(dotAV)) {
                 avProps.store(out, lookup("main.prop.store"));
-                out.close();
             } catch (IOException e) {
                 System.err.println(lookup("main.err.prop.cantsave",
                                           dotAV.toString()));
@@ -472,13 +470,10 @@ public class Main {
 
         // read the file
         Properties tmpProps = new Properties();
-        try {
-            FileInputStream in = new FileInputStream(inFile);
+        try (FileInputStream in = new FileInputStream(inFile)) {
             tmpProps.load(new BufferedInputStream(in));
-            in.close();
         } catch (IOException e) {
-            System.err.println(lookup("main.err.prop.cantread",
-                                      inFile.toString()));
+            System.err.println(lookup("main.err.prop.cantread", inFile.toString()));
         }
 
         // pick off the properties we care about
