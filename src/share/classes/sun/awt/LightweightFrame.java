@@ -25,13 +25,22 @@
 
 package sun.awt;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.MenuBar;
 import java.awt.MenuComponent;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragGestureRecognizer;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.InvalidDnDOperationException;
+import java.awt.dnd.peer.DragSourceContextPeer;
 import java.awt.peer.FramePeer;
 
 /**
@@ -124,4 +133,71 @@ public abstract class LightweightFrame extends Frame {
      * @see SunToolkit#ungrab(java.awt.Window)
      */
     public abstract void ungrabFocus();
+
+    /**
+     * Returns the scale factor of this frame. The default value is 1.
+     *
+     * @return the scale factor
+     * @see #notifyDisplayChanged(int)
+     */
+    public abstract int getScaleFactor();
+
+    /**
+     * Called when display of the hosted frame is changed.
+     *
+     * @param scaleFactor the scale factor
+     */
+    public abstract void notifyDisplayChanged(int scaleFactor);
+
+    /**
+     * Host window absolute bounds.
+     */
+    private int hostX, hostY, hostW, hostH;
+
+    /**
+     * Returns the absolute bounds of the host (embedding) window.
+     *
+     * @return the host window bounds
+     */
+    public Rectangle getHostBounds() {
+        if (hostX == 0 && hostY == 0 && hostW == 0 && hostH == 0) {
+            // The client app is probably unaware of the setHostBounds.
+            // A safe fall-back:
+            return getBounds();
+        }
+        return new Rectangle(hostX, hostY, hostW, hostH);
+    }
+
+    /**
+     * Sets the absolute bounds of the host (embedding) window.
+     */
+    public void setHostBounds(int x, int y, int w, int h) {
+        hostX = x;
+        hostY = y;
+        hostW = w;
+        hostH = h;
+    }
+
+    /**
+     * Create a drag gesture recognizer for the lightweight frame.
+     */
+    public abstract <T extends DragGestureRecognizer> T createDragGestureRecognizer(
+            Class<T> abstractRecognizerClass,
+            DragSource ds, Component c, int srcActions,
+            DragGestureListener dgl);
+
+    /**
+     * Create a drag source context peer for the lightweight frame.
+     */
+    public abstract DragSourceContextPeer createDragSourceContextPeer(DragGestureEvent dge) throws InvalidDnDOperationException;
+
+    /**
+     * Adds a drop target to the lightweight frame.
+     */
+    public abstract void addDropTarget(DropTarget dt);
+
+    /**
+     * Removes a drop target from the lightweight frame.
+     */
+    public abstract void removeDropTarget(DropTarget dt);
 }

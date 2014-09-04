@@ -318,7 +318,7 @@ ifeq ($(OPENJDK_TARGET_OS), aix)
 endif
 
 ifeq ($(OPENJDK_TARGET_OS), macosx)
-  LIBAWT_FILES += awt_LoadLibrary.c img_colors.c
+  LIBAWT_FILES += awt_LoadLibrary.c
   LIBAWT_CFLAGS += -F/System/Library/Frameworks/JavaVM.framework/Frameworks
 endif
 
@@ -611,7 +611,6 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
         debug_mem.c \
         debug_trace.c \
         debug_util.c \
-        awt_Plugin.c \
         gnome_interface.c \
         gtk2_interface.c \
         swing_GTKEngine.c \
@@ -1242,7 +1241,7 @@ ifndef BUILD_HEADLESS_ONLY
   LIBSPLASHSCREEN_LDFLAGS_SUFFIX :=
 
   ifneq ($(USE_EXTERNAL_LIBZ), true)
-    LIBSPLASHSCREEN_DIRS += $(JDK_TOPDIR)/src/share/native/java/util/zip/zlib-1.2.5
+    LIBSPLASHSCREEN_DIRS += $(JDK_TOPDIR)/src/share/native/java/util/zip/zlib-1.2.8
     LIBSPLASHSCREEN_CFLAGS += $(ZLIB_CPPFLAGS)
   endif
 

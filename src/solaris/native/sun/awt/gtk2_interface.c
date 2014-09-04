@@ -538,9 +538,7 @@ gboolean gtk2_show_uri_load(JNIEnv *env) {
              fprintf(stderr, "dlsym(gtk_show_uri) returned NULL\n");
 #endif /* INTERNAL_BUILD */
         } else {
-#ifdef __solaris__
             update_supported_actions(env);
-#endif
             success = TRUE;
         }
      }
@@ -784,6 +782,8 @@ gboolean gtk2_load(JNIEnv *env)
         fp_g_signal_connect_data = dl_symbol("g_signal_connect_data");
         fp_gtk_widget_show = dl_symbol("gtk_widget_show");
         fp_gtk_main = dl_symbol("gtk_main");
+
+        fp_g_path_get_dirname = dl_symbol("g_path_get_dirname");
 
         /**
          * GLib thread system

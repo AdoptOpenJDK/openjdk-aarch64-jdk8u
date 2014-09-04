@@ -63,6 +63,7 @@ import javax.swing.plaf.*;
 import static javax.swing.ClientPropertyKey.*;
 import javax.accessibility.*;
 
+import sun.awt.SunToolkit;
 import sun.swing.SwingUtilities2;
 import sun.swing.UIClientPropertyKey;
 
@@ -3676,8 +3677,8 @@ public abstract class JComponent extends Container implements Serializable,
         private volatile transient int propertyListenersCount = 0;
 
         /**
-         * This field duplicates the one in java.awt.Component.AccessibleAWTComponent,
-         * so it has been deprecated.
+         * This field duplicates the function of the accessibleAWTFocusHandler field
+         * in java.awt.Component.AccessibleAWTComponent, so it has been deprecated.
          */
         @Deprecated
         protected FocusListener accessibleFocusHandler = null;
@@ -3735,14 +3736,10 @@ public abstract class JComponent extends Container implements Serializable,
          * @param listener  the PropertyChangeListener to be added
          */
         public void addPropertyChangeListener(PropertyChangeListener listener) {
-            if (accessibleFocusHandler == null) {
-                accessibleFocusHandler = new AccessibleFocusHandler();
-            }
             if (accessibleContainerHandler == null) {
                 accessibleContainerHandler = new AccessibleContainerHandler();
             }
             if (propertyListenersCount++ == 0) {
-                JComponent.this.addFocusListener(accessibleFocusHandler);
                 JComponent.this.addContainerListener(accessibleContainerHandler);
             }
             super.addPropertyChangeListener(listener);
@@ -3757,7 +3754,6 @@ public abstract class JComponent extends Container implements Serializable,
          */
         public void removePropertyChangeListener(PropertyChangeListener listener) {
             if (--propertyListenersCount == 0) {
-                JComponent.this.removeFocusListener(accessibleFocusHandler);
                 JComponent.this.removeContainerListener(accessibleContainerHandler);
             }
             super.removePropertyChangeListener(listener);
@@ -4800,7 +4796,8 @@ public abstract class JComponent extends Container implements Serializable,
      * @see RepaintManager#addDirtyRegion
      */
     public void repaint(long tm, int x, int y, int width, int height) {
-        RepaintManager.currentManager(this).addDirtyRegion(this, x, y, width, height);
+        RepaintManager.currentManager(SunToolkit.targetToAppContext(this))
+                      .addDirtyRegion(this, x, y, width, height);
     }
 
 
@@ -4854,7 +4851,7 @@ public abstract class JComponent extends Container implements Serializable,
             // which was causing some people grief.
             return;
         }
-        if (SwingUtilities.isEventDispatchThread()) {
+        if (SunToolkit.isDispatchThreadForAppContext(this)) {
             invalidate();
             RepaintManager.currentManager(this).addInvalidComponent(this);
         }
@@ -4868,15 +4865,12 @@ public abstract class JComponent extends Container implements Serializable,
                 }
                 setFlag(REVALIDATE_RUNNABLE_SCHEDULED, true);
             }
-            Runnable callRevalidate = new Runnable() {
-                public void run() {
-                    synchronized(JComponent.this) {
-                        setFlag(REVALIDATE_RUNNABLE_SCHEDULED, false);
-                    }
-                    revalidate();
+            SunToolkit.executeOnEventHandlerThread(this, () -> {
+                synchronized(JComponent.this) {
+                    setFlag(REVALIDATE_RUNNABLE_SCHEDULED, false);
                 }
-            };
-            SwingUtilities.invokeLater(callRevalidate);
+                revalidate();
+            });
         }
     }
 

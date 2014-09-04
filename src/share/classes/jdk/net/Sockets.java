@@ -51,7 +51,7 @@ import sun.net.ExtendedOptionsImpl;
  * When a security manager is installed, some non-standard socket options
  * may require a security permission before being set or get.
  * The details are specified in {@link ExtendedSocketOptions}. No permission
- * is required for {@link java.net.StandardSocketOption}s.
+ * is required for {@link java.net.StandardSocketOptions}.
  *
  * @see java.nio.channels.NetworkChannel
  */
@@ -119,6 +119,8 @@ public class Sockets {
                 Throwable t = ((InvocationTargetException)e).getTargetException();
                 if (t instanceof IOException) {
                     throw (IOException)t;
+                } else if (t instanceof RuntimeException) {
+                    throw (RuntimeException)t;
                 }
             }
             throw new RuntimeException(e);
@@ -135,6 +137,8 @@ public class Sockets {
                 Throwable t = ((InvocationTargetException)e).getTargetException();
                 if (t instanceof IOException) {
                     throw (IOException)t;
+                } else if (t instanceof RuntimeException) {
+                    throw (RuntimeException)t;
                 }
             }
             throw new RuntimeException(e);

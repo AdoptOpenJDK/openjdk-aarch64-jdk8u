@@ -26,7 +26,15 @@
 package sun.swing;
 
 import javax.swing.JComponent;
+import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragGestureRecognizer;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.InvalidDnDOperationException;
+import java.awt.dnd.peer.DragSourceContextPeer;
 
 /**
  * The interface by means of which the {@link JLightweightFrame} class
@@ -85,31 +93,53 @@ public interface LightweightContent {
      * {@code JLightweightFrame} calls this method to notify the client
      * application that a new data buffer has been set as a content pixel
      * buffer. Typically this occurs when a buffer of a larger size is
-     * created in response to a content resize event. The method reports
-     * a reference to the pixel data buffer, the content image bounds
-     * within the buffer and the line stride of the buffer. These values
-     * have the following correlation.
+     * created in response to a content resize event.
      * <p>
-     * The {@code width} and {@code height} matches the size of the content
+     * The method reports a reference to the pixel data buffer, the content
+     * image bounds within the buffer and the line stride of the buffer.
+     * These values have the following correlation.
+     * The {@code width} and {@code height} matches the layout size of the content
      * (the component returned from the {@link #getComponent} method). The
      * {@code x} and {@code y} is the origin of the content, {@code (0, 0)}
-     * in the coordinate space of the content, appearing at
-     * {@code data[y * linestride + x]} in the buffer. All indices
-     * {@code data[(y + j) * linestride + (x + i)]} where
-     * {@code (0 <= i < width)} and {@code (0 <= j < height)} will represent
-     * valid pixel data, {@code (i, j)} in the coordinate space of the content.
+     * in the layout coordinate space of the content, appearing at
+     * {@code data[y * scale * linestride + x * scale]} in the buffer.
+     * A pixel with indices {@code (i, j)}, where {@code (0 <= i < width)} and
+     * {@code (0 <= j < height)}, in the layout coordinate space of the content
+     * is represented by a {@code scale^2} square of pixels in the physical
+     * coordinate space of the buffer. The top-left corner of the square has the
+     * following physical coordinate in the buffer:
+     * {@code data[(y + j) * scale * linestride + (x + i) * scale]}.
      *
      * @param data the content pixel data buffer of INT_ARGB_PRE type
-     * @param x the x coordinate of the image
-     * @param y the y coordinate of the image
-     * @param width the width of the image
-     * @param height the height of the image
+     * @param x the logical x coordinate of the image
+     * @param y the logical y coordinate of the image
+     * @param width the logical width of the image
+     * @param height the logical height of the image
      * @param linestride the line stride of the pixel buffer
+     * @param scale the scale factor of the pixel buffer
      */
-    public void imageBufferReset(int[] data,
+    default public void imageBufferReset(int[] data,
                                  int x, int y,
                                  int width, int height,
-                                 int linestride);
+                                 int linestride,
+                                 int scale)
+    {
+        imageBufferReset(data, x, y, width, height, linestride);
+    }
+
+    /**
+     * The default implementation for #imageBufferReset uses a hard-coded value
+     * of 1 for the scale factor. Both the old and the new methods provide
+     * default implementations in order to allow a client application to run
+     * with any JDK version without breaking backward compatibility.
+     */
+    default public void imageBufferReset(int[] data,
+                                 int x, int y,
+                                 int width, int height,
+                                 int linestride)
+    {
+        imageBufferReset(data, x, y, width, height, linestride, 1);
+    }
 
     /**
      * {@code JLightweightFrame} calls this method to notify the client
@@ -187,4 +217,33 @@ public interface LightweightContent {
      * @param cursor a cursor to set
      */
     default public void setCursor(Cursor cursor) { }
+
+    /**
+     * Create a drag gesture recognizer for the lightweight frame.
+     */
+    default public <T extends DragGestureRecognizer> T createDragGestureRecognizer(
+            Class<T> abstractRecognizerClass,
+            DragSource ds, Component c, int srcActions,
+            DragGestureListener dgl)
+    {
+        return null;
+    }
+
+    /**
+     * Create a drag source context peer for the lightweight frame.
+     */
+    default public DragSourceContextPeer createDragSourceContextPeer(DragGestureEvent dge) throws InvalidDnDOperationException
+    {
+        return null;
+    }
+
+    /**
+     * Adds a drop target to the lightweight frame.
+     */
+    default public void addDropTarget(DropTarget dt) {}
+
+    /**
+     * Removes a drop target from the lightweight frame.
+     */
+    default public void removeDropTarget(DropTarget dt) {}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,9 +23,12 @@
 
 /**
  * @test
+ * @run main/othervm LdapTimeoutTest
  * @bug 7094377 8000487 6176036 7056489
  * @summary Timeout tests for ldap
  */
+
+import com.sun.jndi.ldap.Connection;
 
 import java.net.Socket;
 import java.net.ServerSocket;
@@ -38,7 +41,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public class LdapTimeoutTest {
     private static final ScheduledExecutorService pool =
@@ -64,11 +69,12 @@ public class LdapTimeoutTest {
         env.put(Context.SECURITY_PRINCIPAL, "user");
         env.put(Context.SECURITY_CREDENTIALS, "password");
 
-        env.put("com.sun.jndi.ldap.connect.timeout", "10");
-        env.put("com.sun.jndi.ldap.read.timeout", "3000");
-
         InitialContext ctx = null;
         try {
+            new LdapTimeoutTest().deadServerNoTimeout(env);
+
+            env.put("com.sun.jndi.ldap.connect.timeout", "10");
+            env.put("com.sun.jndi.ldap.read.timeout", "3000");
             new LdapTimeoutTest().ldapReadTimeoutTest(env, false);
             new LdapTimeoutTest().ldapReadTimeoutTest(env, true);
             new LdapTimeoutTest().simpleAuthConnectTest(env);
@@ -84,7 +90,7 @@ public class LdapTimeoutTest {
     void ldapReadTimeoutTest(Hashtable env, boolean ssl) {
         InitialContext ctx = null;
         if (ssl) env.put(Context.SECURITY_PROTOCOL, "ssl");
-        ScheduledFuture killer = killSwitch();
+        ScheduledFuture killer = killSwitch(5_000);
         long start = System.nanoTime();
         try {
             ctx = new InitialDirContext(env);
@@ -112,7 +118,7 @@ public class LdapTimeoutTest {
 
     void simpleAuthConnectTest(Hashtable env) {
         InitialContext ctx = null;
-        ScheduledFuture killer = killSwitch();
+        ScheduledFuture killer = killSwitch(5_000);
         long start = System.nanoTime();
         try {
             ctx = new InitialDirContext(env);
@@ -122,7 +128,7 @@ public class LdapTimeoutTest {
         } catch (NamingException e) {
             long end = System.nanoTime();
             if (e.getCause() instanceof SocketTimeoutException) {
-                if (TimeUnit.NANOSECONDS.toMillis(end - start) < 2900) {
+                if (NANOSECONDS.toMillis(end - start) < 2_900) {
                     pass();
                 } else {
                     System.err.println("Fail: Waited too long");
@@ -139,6 +145,34 @@ public class LdapTimeoutTest {
         }
     }
 
+    void deadServerNoTimeout(Hashtable env) {
+        InitialContext ctx = null;
+        ScheduledFuture killer = killSwitch(30_000);
+        long start = System.currentTimeMillis();
+        try {
+            ctx = new InitialDirContext(env);
+            SearchControls scl = new SearchControls();
+            scl.setSearchScope(SearchControls.SUBTREE_SCOPE);
+            NamingEnumeration<SearchResult> answer = ((InitialDirContext)ctx)
+                .search("ou=People,o=JNDITutorial", "(objectClass=*)", scl);
+            // shouldn't reach here
+            fail();
+        } catch (NamingException e) {
+            long elapsed = System.currentTimeMillis() - start;
+            if (elapsed < Connection.DEFAULT_READ_TIMEOUT_MILLIS) {
+                System.err.printf("fail: timeout should be at least %s ms, " +
+                                "actual time is %s ms%n",
+                        Connection.DEFAULT_READ_TIMEOUT_MILLIS, elapsed);
+                e.printStackTrace();
+                fail();
+            } else {
+                pass();
+            }
+        } finally {
+            if (!shutItDown(killer, ctx)) fail();
+        }
+    }
+
     boolean shutItDown(ScheduledFuture killer, InitialContext ctx) {
         killer.cancel(true);
         try {
@@ -149,15 +183,15 @@ public class LdapTimeoutTest {
         }
     }
 
-    ScheduledFuture killSwitch() {
+    ScheduledFuture killSwitch(int ms) {
         final Thread current = Thread.currentThread();
         return LdapTimeoutTest.pool.schedule(new Callable<Void>() {
             public Void call() throws Exception {
                 System.err.println("Fail: killSwitch()");
-                current.interrupt();
+                System.exit(0);
                 return null;
             }
-        }, 5000, TimeUnit.MILLISECONDS);
+        }, ms, MILLISECONDS);
     }
 
     static class Server extends Thread {
