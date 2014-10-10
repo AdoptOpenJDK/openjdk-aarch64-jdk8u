@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1995, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1264,11 +1264,13 @@ NewPlatformString(JNIEnv *env, char *s)
         (*env)->SetByteArrayRegion(env, ary, 0, len, (jbyte *)s);
         if (!(*env)->ExceptionOccurred(env)) {
             if (makePlatformStringMID == NULL) {
-                NULL_CHECK0(makePlatformStringMID = (*env)->GetStaticMethodID(env,
+                CHECK_JNI_RETURN_0(
+                    makePlatformStringMID = (*env)->GetStaticMethodID(env,
                         cls, "makePlatformString", "(Z[B)Ljava/lang/String;"));
             }
-            str = (*env)->CallStaticObjectMethod(env, cls,
-                    makePlatformStringMID, USE_STDERR, ary);
+            CHECK_JNI_RETURN_0(
+                str = (*env)->CallStaticObjectMethod(env, cls,
+                    makePlatformStringMID, USE_STDERR, ary));
             (*env)->DeleteLocalRef(env, ary);
             return str;
         }
@@ -1319,7 +1321,9 @@ LoadMainClass(JNIEnv *env, int mode, char *name)
                 "(ZILjava/lang/String;)Ljava/lang/Class;"));
 
     str = NewPlatformString(env, name);
-    result = (*env)->CallStaticObjectMethod(env, cls, mid, USE_STDERR, mode, str);
+    CHECK_JNI_RETURN_0(
+        result = (*env)->CallStaticObjectMethod(
+            env, cls, mid, USE_STDERR, mode, str));
 
     if (JLI_IsTraceLauncher()) {
         end   = CounterGet();
