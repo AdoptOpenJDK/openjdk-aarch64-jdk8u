@@ -26,9 +26,8 @@
 package java.lang.invoke;
 
 import sun.invoke.util.Wrapper;
+import java.lang.ref.SoftReference;
 import static java.lang.invoke.MethodHandleStatics.*;
-import static java.lang.invoke.MethodHandleNatives.Constants.*;
- import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
 
 /**
  * Shared information for a group of method types, which differ
@@ -51,7 +50,7 @@ final class MethodTypeForm {
     final MethodType basicType;         // the canonical erasure, with primitives simplified
 
     // Cached adapter information:
-    @Stable final MethodHandle[] methodHandles;
+    @Stable final SoftReference<MethodHandle>[] methodHandles;
     // Indexes into methodHandles:
     static final int
             MH_BASIC_INV      =  0,  // cached instance of MH.invokeBasic
@@ -60,27 +59,28 @@ final class MethodTypeForm {
             MH_LIMIT          =  3;
 
     // Cached lambda form information, for basic types only:
-    final @Stable LambdaForm[] lambdaForms;
+    final @Stable SoftReference<LambdaForm>[] lambdaForms;
     // Indexes into lambdaForms:
     static final int
-            LF_INVVIRTUAL     =  0,  // DMH invokeVirtual
-            LF_INVSTATIC      =  1,
-            LF_INVSPECIAL     =  2,
-            LF_NEWINVSPECIAL  =  3,
-            LF_INVINTERFACE   =  4,
-            LF_INVSTATIC_INIT =  5,  // DMH invokeStatic with <clinit> barrier
-            LF_INTERPRET      =  6,  // LF interpreter
-            LF_REBIND         =  7,  // BoundMethodHandle
-            LF_DELEGATE       =  8,  // DelegatingMethodHandle
-            LF_EX_LINKER      =  9,  // invokeExact_MT (for invokehandle)
-            LF_EX_INVOKER     = 10,  // MHs.invokeExact
-            LF_GEN_LINKER     = 11,  // generic invoke_MT (for invokehandle)
-            LF_GEN_INVOKER    = 12,  // generic MHs.invoke
-            LF_CS_LINKER      = 13,  // linkToCallSite_CS
-            LF_MH_LINKER      = 14,  // linkToCallSite_MH
-            LF_GWC            = 15,  // guardWithCatch (catchException)
-            LF_GWT            = 16,  // guardWithTest
-            LF_LIMIT          = 17;
+            LF_INVVIRTUAL              =  0,  // DMH invokeVirtual
+            LF_INVSTATIC               =  1,
+            LF_INVSPECIAL              =  2,
+            LF_NEWINVSPECIAL           =  3,
+            LF_INVINTERFACE            =  4,
+            LF_INVSTATIC_INIT          =  5,  // DMH invokeStatic with <clinit> barrier
+            LF_INTERPRET               =  6,  // LF interpreter
+            LF_REBIND                  =  7,  // BoundMethodHandle
+            LF_DELEGATE                =  8,  // DelegatingMethodHandle
+            LF_DELEGATE_BLOCK_INLINING =  9,  // Counting DelegatingMethodHandle w/ @DontInline
+            LF_EX_LINKER               = 10,  // invokeExact_MT (for invokehandle)
+            LF_EX_INVOKER              = 11,  // MHs.invokeExact
+            LF_GEN_LINKER              = 12,  // generic invoke_MT (for invokehandle)
+            LF_GEN_INVOKER             = 13,  // generic MHs.invoke
+            LF_CS_LINKER               = 14,  // linkToCallSite_CS
+            LF_MH_LINKER               = 15,  // linkToCallSite_MH
+            LF_GWC                     = 16,  // guardWithCatch (catchException)
+            LF_GWT                     = 17,  // guardWithTest
+            LF_LIMIT                   = 18;
 
     /** Return the type corresponding uniquely (1-1) to this MT-form.
      *  It might have any primitive returns or arguments, but will have no references except Object.
@@ -107,26 +107,40 @@ final class MethodTypeForm {
 
     public MethodHandle cachedMethodHandle(int which) {
         assert(assertIsBasicType());
-        return methodHandles[which];
+        SoftReference<MethodHandle> entry = methodHandles[which];
+        return (entry != null) ? entry.get() : null;
     }
 
     synchronized public MethodHandle setCachedMethodHandle(int which, MethodHandle mh) {
         // Simulate a CAS, to avoid racy duplication of results.
-        MethodHandle prev = methodHandles[which];
-        if (prev != null)  return prev;
-        return methodHandles[which] = mh;
+        SoftReference<MethodHandle> entry = methodHandles[which];
+        if (entry != null) {
+            MethodHandle prev = entry.get();
+            if (prev != null) {
+                return prev;
+            }
+        }
+        methodHandles[which] = new SoftReference<>(mh);
+        return mh;
     }
 
     public LambdaForm cachedLambdaForm(int which) {
         assert(assertIsBasicType());
-        return lambdaForms[which];
+        SoftReference<LambdaForm> entry = lambdaForms[which];
+        return (entry != null) ? entry.get() : null;
     }
 
     synchronized public LambdaForm setCachedLambdaForm(int which, LambdaForm form) {
         // Simulate a CAS, to avoid racy duplication of results.
-        LambdaForm prev = lambdaForms[which];
-        if (prev != null) return prev;
-        return lambdaForms[which] = form;
+        SoftReference<LambdaForm> entry = lambdaForms[which];
+        if (entry != null) {
+            LambdaForm prev = entry.get();
+            if (prev != null) {
+                return prev;
+            }
+        }
+        lambdaForms[which] = new SoftReference<>(form);
+        return form;
     }
 
     /**
@@ -134,6 +148,7 @@ final class MethodTypeForm {
      * This MTF will stand for that type and all un-erased variations.
      * Eagerly compute some basic properties of the type, common to all variations.
      */
+    @SuppressWarnings({"rawtypes", "unchecked"})
     protected MethodTypeForm(MethodType erasedType) {
         this.erasedType = erasedType;
 
@@ -233,8 +248,8 @@ final class MethodTypeForm {
 
         // Initialize caches, but only for basic types
         assert(basicType == erasedType);
-        this.lambdaForms = new LambdaForm[LF_LIMIT];
-        this.methodHandles = new MethodHandle[MH_LIMIT];
+        this.lambdaForms   = new SoftReference[LF_LIMIT];
+        this.methodHandles = new SoftReference[MH_LIMIT];
     }
 
     private static long pack(int a, int b, int c, int d) {
@@ -408,5 +423,4 @@ final class MethodTypeForm {
     public String toString() {
         return "Form"+erasedType;
     }
-
 }

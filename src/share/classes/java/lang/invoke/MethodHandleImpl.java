@@ -30,6 +30,7 @@ import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.function.Function;
 
 import sun.invoke.empty.Empty;
 import sun.invoke.util.ValueConversions;
@@ -190,11 +191,7 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
         MethodType dstType = target.type();
         if (srcType == dstType)
             return target;
-        if (USE_LAMBDA_FORM_EDITOR) {
-            return makePairwiseConvertByEditor(target, srcType, strict, monobox);
-        } else {
-            return makePairwiseConvertIndirect(target, srcType, strict, monobox);
-        }
+        return makePairwiseConvertByEditor(target, srcType, strict, monobox);
     }
 
     private static int countNonNull(Object[] array) {
@@ -594,6 +591,9 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
     static class Lazy {
         private static final Class<?> MHI = MethodHandleImpl.class;
 
+        private static final MethodHandle[] ARRAYS;
+        private static final MethodHandle[] FILL_ARRAYS;
+
         static final NamedFunction NF_checkSpreadArgument;
         static final NamedFunction NF_guardWithCatch;
         static final NamedFunction NF_throwException;
@@ -606,6 +606,9 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
         static final MethodHandle MH_arrayIdentity;
 
         static {
+            ARRAYS      = makeArrays();
+            FILL_ARRAYS = makeFillArrays();
+
             try {
                 NF_checkSpreadArgument = new NamedFunction(MHI.getDeclaredMethod("checkSpreadArgument", Object.class, int.class));
                 NF_guardWithCatch      = new NamedFunction(MHI.getDeclaredMethod("guardWithCatch", MethodHandle.class, Class.class,
@@ -707,15 +710,139 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
         LambdaForm form = makeGuardWithTestForm(basicType);
         BoundMethodHandle.SpeciesData data = BoundMethodHandle.speciesData_LLL();
         BoundMethodHandle mh;
+
         try {
             mh = (BoundMethodHandle)
                     data.constructor().invokeBasic(type, form,
-                        (Object) test, (Object) target, (Object) fallback);
+                        (Object) test, (Object) profile(target), (Object) profile(fallback));
         } catch (Throwable ex) {
             throw uncaughtException(ex);
         }
         assert(mh.type() == type);
         return mh;
+    }
+
+
+    static
+    MethodHandle profile(MethodHandle target) {
+        if (DONT_INLINE_THRESHOLD >= 0) {
+            return makeBlockInlningWrapper(target);
+        } else {
+            return target;
+        }
+    }
+
+    /**
+     * Block inlining during JIT-compilation of a target method handle if it hasn't been invoked enough times.
+     * Corresponding LambdaForm has @DontInline when compiled into bytecode.
+     */
+    static
+    MethodHandle makeBlockInlningWrapper(MethodHandle target) {
+        LambdaForm lform = PRODUCE_BLOCK_INLINING_FORM.apply(target);
+        return new CountingWrapper(target, lform,
+                PRODUCE_BLOCK_INLINING_FORM, PRODUCE_REINVOKER_FORM,
+                                   DONT_INLINE_THRESHOLD);
+    }
+
+    /** Constructs reinvoker lambda form which block inlining during JIT-compilation for a particular method handle */
+    private static final Function<MethodHandle, LambdaForm> PRODUCE_BLOCK_INLINING_FORM = new Function<MethodHandle, LambdaForm>() {
+        @Override
+        public LambdaForm apply(MethodHandle target) {
+            return DelegatingMethodHandle.makeReinvokerForm(target,
+                               MethodTypeForm.LF_DELEGATE_BLOCK_INLINING, CountingWrapper.class, "reinvoker.dontInline", false,
+                               DelegatingMethodHandle.NF_getTarget, CountingWrapper.NF_maybeStopCounting);
+        }
+    };
+
+    /** Constructs simple reinvoker lambda form for a particular method handle */
+    private static final Function<MethodHandle, LambdaForm> PRODUCE_REINVOKER_FORM = new Function<MethodHandle, LambdaForm>() {
+        @Override
+        public LambdaForm apply(MethodHandle target) {
+            return DelegatingMethodHandle.makeReinvokerForm(target,
+                    MethodTypeForm.LF_DELEGATE, DelegatingMethodHandle.class, DelegatingMethodHandle.NF_getTarget);
+        }
+    };
+
+    /**
+     * Counting method handle. It has 2 states: counting and non-counting.
+     * It is in counting state for the first n invocations and then transitions to non-counting state.
+     * Behavior in counting and non-counting states is determined by lambda forms produced by
+     * countingFormProducer & nonCountingFormProducer respectively.
+     */
+    static class CountingWrapper extends DelegatingMethodHandle {
+        private final MethodHandle target;
+        private int count;
+        private Function<MethodHandle, LambdaForm> countingFormProducer;
+        private Function<MethodHandle, LambdaForm> nonCountingFormProducer;
+        private volatile boolean isCounting;
+
+        private CountingWrapper(MethodHandle target, LambdaForm lform,
+                                Function<MethodHandle, LambdaForm> countingFromProducer,
+                                Function<MethodHandle, LambdaForm> nonCountingFormProducer,
+                                int count) {
+            super(target.type(), lform);
+            this.target = target;
+            this.count = count;
+            this.countingFormProducer = countingFromProducer;
+            this.nonCountingFormProducer = nonCountingFormProducer;
+            this.isCounting = (count > 0);
+        }
+
+        @Hidden
+        @Override
+        protected MethodHandle getTarget() {
+            return target;
+        }
+
+        @Override
+        public MethodHandle asTypeUncached(MethodType newType) {
+            MethodHandle newTarget = target.asType(newType);
+            MethodHandle wrapper;
+            if (isCounting) {
+                LambdaForm lform;
+                lform = countingFormProducer.apply(target);
+                wrapper = new CountingWrapper(newTarget, lform, countingFormProducer, nonCountingFormProducer, DONT_INLINE_THRESHOLD);
+            } else {
+                wrapper = newTarget; // no need for a counting wrapper anymore
+            }
+            return (asTypeCache = wrapper);
+        }
+
+        boolean countDown() {
+            if (count <= 0) {
+                // Try to limit number of updates. MethodHandle.updateForm() doesn't guarantee LF update visibility.
+                if (isCounting) {
+                    isCounting = false;
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                --count;
+                return false;
+            }
+        }
+
+        @Hidden
+        static void maybeStopCounting(Object o1) {
+             CountingWrapper wrapper = (CountingWrapper) o1;
+             if (wrapper.countDown()) {
+                 // Reached invocation threshold. Replace counting behavior with a non-counting one.
+                 LambdaForm lform = wrapper.nonCountingFormProducer.apply(wrapper.target);
+                 lform.compileToBytecode(); // speed up warmup by avoiding LF interpretation again after transition
+                 wrapper.updateForm(lform);
+             }
+        }
+
+        static final NamedFunction NF_maybeStopCounting;
+        static {
+            Class<?> THIS_CLASS = CountingWrapper.class;
+            try {
+                NF_maybeStopCounting = new NamedFunction(THIS_CLASS.getDeclaredMethod("maybeStopCounting", Object.class));
+            } catch (ReflectiveOperationException ex) {
+                throw newInternalError(ex);
+            }
+        }
     }
 
     static
@@ -1268,7 +1395,6 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
         assert(mhs.size() == 11);  // current number of methods
         return mhs.toArray(new MethodHandle[MAX_ARITY+1]);
     }
-    private static final MethodHandle[] ARRAYS = makeArrays();
 
     // filling versions of the above:
     // using Integer len instead of int len and no varargs to avoid bootstrapping problems
@@ -1315,6 +1441,9 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
                                   Object a4, Object a5, Object a6, Object a7,
                                   Object a8, Object a9)
                 { fillWithArguments(a, pos, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9); return a; }
+
+    private static final int FILL_ARRAYS_COUNT = 11; // current number of fillArray methods
+
     private static MethodHandle[] makeFillArrays() {
         ArrayList<MethodHandle> mhs = new ArrayList<>();
         mhs.add(null);  // there is no empty fill; at least a0 is required
@@ -1323,10 +1452,9 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
             if (mh == null)  break;
             mhs.add(mh);
         }
-        assert(mhs.size() == 11);  // current number of methods
+        assert(mhs.size() == FILL_ARRAYS_COUNT);
         return mhs.toArray(new MethodHandle[0]);
     }
-    private static final MethodHandle[] FILL_ARRAYS = makeFillArrays();
 
     private static Object copyAsPrimitiveArray(Wrapper w, Object... boxes) {
         Object a = w.makeArray(boxes.length);
@@ -1338,15 +1466,15 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
      *  arguments and returns an Object array of them, as if for varargs.
      */
     static MethodHandle varargsArray(int nargs) {
-        MethodHandle mh = ARRAYS[nargs];
+        MethodHandle mh = Lazy.ARRAYS[nargs];
         if (mh != null)  return mh;
         mh = findCollector("array", nargs, Object[].class);
         if (mh != null)  mh = makeIntrinsic(mh, Intrinsic.NEW_ARRAY);
-        if (mh != null)  return ARRAYS[nargs] = mh;
+        if (mh != null)  return Lazy.ARRAYS[nargs] = mh;
         mh = buildVarargsArray(Lazy.MH_fillNewArray, Lazy.MH_arrayIdentity, nargs);
         assert(assertCorrectArity(mh, nargs));
         mh = makeIntrinsic(mh, Intrinsic.NEW_ARRAY);
-        return ARRAYS[nargs] = mh;
+        return Lazy.ARRAYS[nargs] = mh;
     }
 
     private static boolean assertCorrectArity(MethodHandle mh, int arity) {
@@ -1382,7 +1510,7 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
         return mh;
     }
 
-    private static final int LEFT_ARGS = (FILL_ARRAYS.length - 1);
+    private static final int LEFT_ARGS = FILL_ARRAYS_COUNT - 1;
     private static final MethodHandle[] FILL_ARRAY_TO_RIGHT = new MethodHandle[MAX_ARITY+1];
     /** fill_array_to_right(N).invoke(a, argL..arg[N-1])
      *  fills a[L]..a[N-1] with corresponding arguments,
@@ -1413,7 +1541,7 @@ import static java.lang.invoke.MethodHandles.Lookup.IMPL_LOOKUP;
         if (midLen < LEFT_ARGS) rightLen = nargs - (midLen = LEFT_ARGS);
         assert(rightLen > 0);
         MethodHandle midFill = fillToRight(midLen);  // recursive fill
-        MethodHandle rightFill = FILL_ARRAYS[rightLen].bindTo(midLen);  // [midLen..nargs-1]
+        MethodHandle rightFill = Lazy.FILL_ARRAYS[rightLen].bindTo(midLen);  // [midLen..nargs-1]
         assert(midFill.type().parameterCount()   == 1 + midLen - LEFT_ARGS);
         assert(rightFill.type().parameterCount() == 1 + rightLen);
 
