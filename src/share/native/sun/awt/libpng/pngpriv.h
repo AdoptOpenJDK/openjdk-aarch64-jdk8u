@@ -151,8 +151,8 @@
     * Note that gcc-4.9 defines __ARM_NEON instead of __ARM_NEON__, so we
     * check both variants.
     */
-#  if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && \
-   defined(PNG_ALIGNED_MEMORY_SUPPORTED)
+#  if ((defined(__ARM_NEON__) || defined(__ARM_NEON)) && \
+   defined(PNG_ALIGNED_MEMORY_SUPPORTED)) && defined(__arm__)
 #     define PNG_ARM_NEON_OPT 2
 #  else
 #     define PNG_ARM_NEON_OPT 0
