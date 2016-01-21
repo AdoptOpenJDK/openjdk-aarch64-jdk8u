@@ -474,17 +474,8 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
         }
 
         if (!GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, arch, 0 )) {
-          char *altjvmtype = GetAltJvmType(jvmtype);
-          jboolean found = JNI_FALSE;
-          if (altjvmtype) {
-            jvmtype = altjvmtype;
-            jvmpath[0] = '\0';
-            found = GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, arch, 0) != NULL;
-          }
-          if (!found) {
-	    JLI_ReportErrorMessage(CFG_ERROR8, jvmtype, jvmpath);
-	    exit(4);
-          }
+          JLI_ReportErrorMessage(CFG_ERROR8, jvmtype, jvmpath);
+          exit(4);
         }
         /*
          * we seem to have everything we need, so without further ado
