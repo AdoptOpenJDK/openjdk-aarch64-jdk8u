@@ -193,7 +193,7 @@ public class VerifyAccess {
             return true;
         }
         ClassLoader typeLoader = type.getClassLoader();
-        final ClassLoader refcLoader = refc.getClassLoader();
+        ClassLoader refcLoader = refc.getClassLoader();
         if (typeLoader == refcLoader) {
             return true;
         }
