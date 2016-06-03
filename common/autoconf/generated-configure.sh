@@ -3672,7 +3672,7 @@ fi
 
 
 #
-# Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -3880,7 +3880,7 @@ fi
 #CUSTOM_AUTOCONF_INCLUDE
 
 # Do not change or remove the following line, it is needed for consistency checks:
-DATE_WHEN_GENERATED=1445418840
+DATE_WHEN_GENERATED=1464146889
 
 ###############################################################################
 #
@@ -6872,7 +6872,7 @@ test -n "$target_alias" &&
       VAR_CPU_BITS=32
       VAR_CPU_ENDIAN=big
       ;;
-    sparcv9)
+    sparcv9|sparc64)
       VAR_CPU=sparcv9
       VAR_CPU_ARCH=sparc
       VAR_CPU_BITS=64
@@ -7009,7 +7009,7 @@ $as_echo "$OPENJDK_BUILD_OS-$OPENJDK_BUILD_CPU" >&6; }
       VAR_CPU_BITS=32
       VAR_CPU_ENDIAN=big
       ;;
-    sparcv9)
+    sparcv9|sparc64)
       VAR_CPU=sparcv9
       VAR_CPU_ARCH=sparc
       VAR_CPU_BITS=64
