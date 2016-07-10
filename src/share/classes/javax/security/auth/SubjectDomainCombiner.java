@@ -246,7 +246,8 @@ public class SubjectDomainCombiner implements java.security.DomainCombiner {
                 if (subjectPd == null) {
                     if (pdAccess.getStaticPermissionsField(pd)) {
                         // Need to keep static ProtectionDomain objects static
-                        subjectPd = pd;
+                        subjectPd = new ProtectionDomain(pd.getCodeSource(),
+                                                pd.getPermissions());
                     } else {
                         subjectPd = new ProtectionDomain(pd.getCodeSource(),
                                                 pd.getPermissions(),
