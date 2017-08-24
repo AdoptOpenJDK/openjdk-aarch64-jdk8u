@@ -174,7 +174,7 @@ static void do_oop_store(InterpreterMacroAssembler* _masm,
           // G1 barrier needs uncompressed oop for region cross check.
           Register new_val = val;
           if (UseCompressedOops) {
-            new_val = rscratch1;
+            new_val = rscratch2;
             __ mov(new_val, val);
           }
           // For Shenandoah, make sure we only store refs into to-space.
