@@ -46,7 +46,6 @@ import static java.io.ObjectStreamClass.processQueue;
 import sun.misc.SharedSecrets;
 import sun.misc.ObjectInputFilter;
 import sun.misc.ObjectStreamClassValidator;
-import sun.misc.SharedSecrets;
 import sun.reflect.misc.ReflectUtil;
 import sun.misc.JavaOISAccess;
 import sun.util.logging.PlatformLogger;
@@ -260,10 +259,6 @@ public class ObjectInputStream
                 throws InvalidClassException
             {
                 stream.checkArray(arrayType, arrayLength);
-            }
-
-            public void setValidator(ObjectInputStream ois, ObjectStreamClassValidator validator) {
-                ois.validator = validator;
             }
         });
     }
@@ -3911,4 +3906,11 @@ public class ObjectInputStream
 
     // controlled access to ObjectStreamClassValidator
     private volatile ObjectStreamClassValidator validator;
+
+    private static void setValidator(ObjectInputStream ois, ObjectStreamClassValidator validator) {
+        ois.validator = validator;
+    }
+    static {
+        SharedSecrets.setJavaObjectInputStreamAccess(ObjectInputStream::setValidator);
+    }
 }

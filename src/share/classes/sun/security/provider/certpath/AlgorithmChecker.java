@@ -214,10 +214,6 @@ public final class AlgorithmChecker extends PKIXCertPathChecker {
         return AnchorCertificates.contains(cert);
     }
 
-    Timestamp getJarTimestamp() {
-        return jarTimestamp;
-    }
-
     @Override
     public void init(boolean forward) throws CertPathValidatorException {
         //  Note that this class does not support forward mode.
