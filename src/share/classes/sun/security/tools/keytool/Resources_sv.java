@@ -442,7 +442,7 @@ public class Resources_sv extends java.util.ListResourceBundle {
         {"key.bit", "%d-bitars %s-nyckel"},
         {"key.bit.weak", "%d-bitars %s-nyckel (svag)"},
         {".PATTERN.printX509Cert.with.weak",
-                "\u00C4gare: {0}\nUtf\u00E4rdare: {1}\nSerienummer: {2}\nGiltigt fr\u00E5n: {3}, till: {4}\nCertifikatfingeravtryck:\n\t MD5:  {5}\n\t SHA1: {6}\n\t SHA256: {7}\nSignaturalgoritmnamn: {8}\nAlgoritm f\u00F6r \u00F6ppen nyckel f\u00F6r \u00E4mne: {9}\nVersion: {10}"},
+                "\u00C4gare: {0}\nUtf\u00E4rdare: {1}\nSerienummer: {2}\nGiltigt fr\u00E5n: {3}, till: {4}\nCertifikatfingeravtryck:\n\t MD5:  {5}\n\t SHA1: {6}\n\t SHA256: {7}\nSignaturalgoritmnamn: {8}\nAlgoritm f\u00F6r \u00E4mne f\u00F6r \u00F6ppen nyckel: {9}\nVersion: {10}"},
         {"PKCS.10.with.weak",
                 "PKCS #10-certifikatbeg\u00E4ran (version 1.0)\n\u00C4mne: %s\nFormat: %s\n\u00D6ppen nyckel: %s\nSignaturalgoritm: %s\n"},
         {"verified.by.s.in.s.weak", "Verifierades av %s i %s med en %s"},
