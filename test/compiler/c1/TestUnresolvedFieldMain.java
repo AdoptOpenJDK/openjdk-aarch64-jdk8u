@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,38 +19,30 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
-#ifndef _ELFMACROS_H_
-#define _ELFMACROS_H_
+/*
+ * @test
+ * @bug 8173373
+ * @compile TestUnresolvedField.jasm
+ * @run main/othervm -XX:TieredStopAtLevel=1 -Xcomp
+ *                   -XX:CompileCommand=compileonly,compiler.c1.TestUnresolvedField::test*
+ *                   compiler.c1.TestUnresolvedFieldMain
+ */
 
-#if defined(_LP64)
-#define ELF_EHDR        Elf64_Ehdr
-#define ELF_SHDR        Elf64_Shdr
-#define ELF_PHDR        Elf64_Phdr
-#define ELF_SYM         Elf64_Sym
-#define ELF_NHDR        Elf64_Nhdr
-#define ELF_DYN         Elf64_Dyn
-#define ELF_ADDR        Elf64_Addr
-#define ELF_AUXV        Elf64_auxv_t
+package compiler.c1;
 
-#define ELF_ST_TYPE     ELF64_ST_TYPE
-
-#else
-
-#define ELF_EHDR        Elf32_Ehdr
-#define ELF_SHDR        Elf32_Shdr
-#define ELF_PHDR        Elf32_Phdr
-#define ELF_SYM         Elf32_Sym
-#define ELF_NHDR        Elf32_Nhdr
-#define ELF_DYN         Elf32_Dyn
-#define ELF_ADDR        Elf32_Addr
-#define ELF_AUXV        Elf32_auxv_t
-
-#define ELF_ST_TYPE     ELF32_ST_TYPE
-
-#endif
-
-
-#endif /* _ELFMACROS_H_ */
+public class TestUnresolvedFieldMain {
+    public static void main(String[] args) {
+        try {
+          TestUnresolvedField.testGetField();
+        } catch (java.lang.NoClassDefFoundError error) {
+          // Expected
+        }
+        try {
+          TestUnresolvedField.testPutField();
+        } catch (java.lang.NoClassDefFoundError error) {
+          // Expected
+        }
+    }
+}
