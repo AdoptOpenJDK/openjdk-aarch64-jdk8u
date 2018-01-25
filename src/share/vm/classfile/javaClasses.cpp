@@ -2857,12 +2857,12 @@ void java_lang_invoke_MemberName::set_vmindex(oop mname, intptr_t index) {
 }
 
 bool java_lang_invoke_MemberName::equals(oop mn1, oop mn2) {
-  if (mn1 == mn2) {
+  if (oopDesc::equals(mn1, mn2)) {
      return true;
   }
   return (vmtarget(mn1) == vmtarget(mn2) && flags(mn1) == flags(mn2) &&
           vmindex(mn1) == vmindex(mn2) &&
-          clazz(mn1) == clazz(mn2));
+          oopDesc::equals(clazz(mn1), clazz(mn2)));
 }
 
 oop java_lang_invoke_LambdaForm::vmentry(oop lform) {
