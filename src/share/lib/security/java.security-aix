@@ -803,7 +803,6 @@ jdk.tls.legacyAlgorithms= \
 #
 #crypto.policy=unlimited
 
-#
 # The policy for the XML Signature secure validation mode. The mode is
 # enabled by setting the property "org.jcp.xml.dsig.secureValidation" to
 # true with the javax.xml.crypto.XMLCryptoContext.setProperty() method,
