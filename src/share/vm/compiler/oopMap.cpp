@@ -396,7 +396,7 @@ void OopMapSet::all_do(const frame *fr, const RegisterMap *reg_map,
           // implicit null check is used in compiled code.
           // The narrow_oop_base could be NULL or be the address
           // of the page below heap depending on compressed oops mode.
-          if (base_loc != NULL && *base_loc != (oop)NULL && !Universe::is_narrow_oop_base(*base_loc)) {
+          if (base_loc != NULL && *base_loc != NULL && !Universe::is_narrow_oop_base(*base_loc)) {
             derived_oop_fn(base_loc, derived_loc);
           }
         }
