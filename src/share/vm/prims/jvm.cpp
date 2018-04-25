@@ -587,7 +587,7 @@ static void fixup_cloned_reference(ReferenceType ref_type, oop src, oop clone) {
   // If G1 is enabled then we need to register a non-null referent
   // with the SATB barrier.
 #if INCLUDE_ALL_GCS
-  if (UseG1GC) {
+  if (UseG1GC || UseShenandoahGC) {
     oop referent = java_lang_ref_Reference::referent(clone);
     if (referent != NULL) {
       G1SATBCardTableModRefBS::enqueue(referent);
@@ -595,7 +595,7 @@ static void fixup_cloned_reference(ReferenceType ref_type, oop src, oop clone) {
   }
 #endif // INCLUDE_ALL_GCS
   if ((java_lang_ref_Reference::next(clone) != NULL) ||
-      (java_lang_ref_Reference::queue(clone) == java_lang_ref_ReferenceQueue::ENQUEUED_queue())) {
+      (oopDesc::equals(java_lang_ref_Reference::queue(clone), java_lang_ref_ReferenceQueue::ENQUEUED_queue()))) {
     // If the source has been enqueued or is being enqueued, don't
     // register the clone with a queue.
     java_lang_ref_Reference::set_queue(clone, java_lang_ref_ReferenceQueue::NULL_queue());
