@@ -1694,15 +1694,6 @@ void PhaseCCP::analyze() {
             }
           }
         }
-        // If n is used in a counted loop exit condition then the type
-        // of the counted loop's Phi depends on the type of n. See
-        // PhiNode::Value().
-        if (m_op == Op_CmpI) {
-          PhiNode* phi = countedloop_phi_from_cmp((CmpINode*)m, n);
-          if (phi != NULL) {
-            worklist.push(phi);
-          }
-        }
         if (m->is_ShenandoahBarrier()) {
           for (DUIterator_Fast i2max, i2 = m->fast_outs(i2max); i2 < i2max; i2++) {
             Node* p = m->fast_out(i2);
@@ -1720,6 +1711,15 @@ void PhaseCCP::analyze() {
                 }
               }
             }
+          }
+        }
+        // If n is used in a counted loop exit condition then the type
+        // of the counted loop's Phi depends on the type of n. See
+        // PhiNode::Value().
+        if (m_op == Op_CmpI) {
+          PhiNode* phi = countedloop_phi_from_cmp((CmpINode*)m, n);
+          if (phi != NULL) {
+            worklist.push(phi);
           }
         }
       }

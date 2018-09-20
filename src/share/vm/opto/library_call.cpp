@@ -1252,7 +1252,6 @@ bool LibraryCallKit::inline_string_compareTo() {
   if (stopped()) {
     return true;
   }
-
   set_result(make_string_method_node(Op_StrComp, receiver, arg));
   return true;
 }
@@ -6603,7 +6602,6 @@ bool LibraryCallKit::inline_cipherBlockChaining_AESCrypt(vmIntrinsics::ID id) {
   Node* len                        = argument(3);
   Node* dest                       = argument(4);
   Node* dest_offset                = argument(5);
-
 
   // inline_cipherBlockChaining_AESCrypt_predicate() has its own
   // barrier. This one should optimize away.
