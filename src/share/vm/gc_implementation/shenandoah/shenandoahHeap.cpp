@@ -1249,6 +1249,48 @@ void ShenandoahHeap::heap_region_iterate(ShenandoahHeapRegionClosure* blk) const
   }
 }
 
+class ShenandoahParallelHeapRegionTask : public AbstractGangTask {
+private:
+  ShenandoahHeap* const _heap;
+  ShenandoahHeapRegionClosure* const _blk;
+
+  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  volatile jint _index;
+  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+
+public:
+  ShenandoahParallelHeapRegionTask(ShenandoahHeapRegionClosure* blk) :
+          AbstractGangTask("Parallel Region Task"),
+          _heap(ShenandoahHeap::heap()), _blk(blk), _index(0) {}
+
+  void work(uint worker_id) {
+    jint stride = (jint)ShenandoahParallelRegionStride;
+
+    jint max = (jint)_heap->num_regions();
+    while (_index < max) {
+      jint cur = Atomic::add(stride, &_index) - stride;
+      jint start = cur;
+      jint end = MIN2(cur + stride, max);
+      if (start >= max) break;
+
+      for (jint i = cur; i < end; i++) {
+        ShenandoahHeapRegion* current = _heap->get_region((size_t)i);
+        _blk->heap_region_do(current);
+      }
+    }
+  }
+};
+
+void ShenandoahHeap::parallel_heap_region_iterate(ShenandoahHeapRegionClosure* blk) const {
+  assert(blk->is_thread_safe(), "Only thread-safe closures here");
+  if (num_regions() > ShenandoahParallelRegionStride) {
+    ShenandoahParallelHeapRegionTask task(blk);
+    workers()->run_task(&task);
+  } else {
+    heap_region_iterate(blk);
+  }
+}
+
 class ShenandoahClearLivenessClosure : public ShenandoahHeapRegionClosure {
 private:
   ShenandoahHeap* sh;
