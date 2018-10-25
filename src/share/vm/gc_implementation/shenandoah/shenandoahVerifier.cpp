@@ -288,11 +288,10 @@ private:
 public:
   ShenandoahCalculateRegionStatsClosure() : _used(0), _committed(0), _garbage(0) {};
 
-  bool heap_region_do(ShenandoahHeapRegion* r) {
+  void heap_region_do(ShenandoahHeapRegion* r) {
     _used += r->used();
     _garbage += r->garbage();
     _committed += r->is_committed() ? ShenandoahHeapRegion::region_size_bytes() : 0;
-    return false;
   }
 
   size_t used() { return _used; }
@@ -329,7 +328,7 @@ public:
     }
   }
 
-  bool heap_region_do(ShenandoahHeapRegion* r) {
+  void heap_region_do(ShenandoahHeapRegion* r) {
     switch (_regions) {
       case ShenandoahVerifier::_verify_regions_disable:
         break;
@@ -389,8 +388,6 @@ public:
 
     verify(r, r->is_cset() == _heap->collection_set()->is_in(r),
            "Transitional: region flags and collection set agree");
-
-    return false;
   }
 };
 
@@ -648,9 +645,7 @@ void ShenandoahVerifier::verify_at_safepoint(const char *label,
   // Internal heap region checks
   if (ShenandoahVerifyLevel >= 1) {
     ShenandoahVerifyHeapRegionClosure cl(label, regions);
-    _heap->heap_region_iterate(&cl,
-            /* skip_cset = */ false,
-            /* skip_humongous_cont = */ false);
+    _heap->heap_region_iterate(&cl);
   }
 
   OrderAccess::fence();
