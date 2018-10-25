@@ -2241,13 +2241,3 @@ const Type *TypeNode::Value( PhaseTransform * ) const { return _type; }
 uint TypeNode::ideal_reg() const {
   return _type->ideal_reg();
 }
-
-bool Node::eqv_uncast(const Node* n) const {
-  if (UseShenandoahGC) {
-    Node* obj1 = ShenandoahBarrierNode::skip_through_barrier(const_cast<Node*>(this));
-    Node* obj2 = ShenandoahBarrierNode::skip_through_barrier(const_cast<Node*>(n));
-    return (obj1->uncast() == obj2->uncast());
-  } else {
-    return (this->uncast() == n->uncast());
-  }
-}
