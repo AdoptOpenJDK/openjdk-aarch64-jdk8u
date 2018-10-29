@@ -45,6 +45,7 @@
 #include "gc_implementation/shenandoah/shenandoahWorkGroup.hpp"
 #include "gc_implementation/shenandoah/shenandoahWorkerPolicy.hpp"
 #include "gc_implementation/shenandoah/vm_operations_shenandoah.hpp"
+#include "memory/metaspace.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/thread.hpp"
 #include "utilities/copy.hpp"
@@ -154,6 +155,9 @@ void ShenandoahMarkCompact::do_it(GCCause::Cause gc_cause) {
 
     phase4_compact_objects(worker_slices);
   }
+
+  // Resize metaspace
+  MetaspaceGC::compute_new_size();
 
   // Free worker slices
   for (uint i = 0; i < heap->max_workers(); i++) {
