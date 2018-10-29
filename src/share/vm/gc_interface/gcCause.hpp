@@ -74,6 +74,7 @@ class GCCause : public AllStatic {
     _g1_humongous_allocation,
 
     _shenandoah_stop_vm,
+    _shenandoah_metadata_gc_clear_softrefs,
     _shenandoah_allocation_failure_evac,
     _shenandoah_concurrent_gc,
     _shenandoah_upgrade_to_full_gc,

@@ -22,10 +22,13 @@
  */
 
 #include "precompiled.hpp"
+#include "gc_interface/gcCause.hpp"
 #include "gc_implementation/shared/gcTimer.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 
 ShenandoahCollectorPolicy::ShenandoahCollectorPolicy() :
@@ -61,6 +64,45 @@ HeapWord* ShenandoahCollectorPolicy::mem_allocate_work(size_t size,
 
 HeapWord* ShenandoahCollectorPolicy::satisfy_failed_allocation(size_t size, bool is_tlab) {
   guarantee(false, "Not using this policy feature yet.");
+  return NULL;
+}
+
+MetaWord* ShenandoahCollectorPolicy::satisfy_failed_metadata_allocation(ClassLoaderData *loader_data,
+                                                                        size_t size,
+                                                                        Metaspace::MetadataType mdtype) {
+  MetaWord* result;
+
+  ShenandoahHeap* sh = ShenandoahHeap::heap();
+
+  // Inform metaspace OOM to GC heuristics if class unloading is possible.
+  if ((ClassUnloadingWithConcurrentMark || FLAG_IS_DEFAULT(ClassUnloadingWithConcurrentMark)) &&
+      ClassUnloading) {
+    ShenandoahHeuristics* h = sh->heuristics();
+    h->record_metaspace_oom();
+  }
+
+  // Expand and retry allocation
+  result = loader_data->metaspace_non_null()->expand_and_allocate(size, mdtype);
+  if (result != NULL) {
+    return result;
+  }
+
+  // Start full GC
+  sh->collect(GCCause::_shenandoah_metadata_gc_clear_softrefs);
+
+  // Retry allocation
+  result = loader_data->metaspace_non_null()->allocate(size, mdtype);
+  if (result != NULL) {
+    return result;
+  }
+
+  // Expand and retry allocation
+  result = loader_data->metaspace_non_null()->expand_and_allocate(size, mdtype);
+  if (result != NULL) {
+    return result;
+  }
+
+  // Out of memory
   return NULL;
 }
 

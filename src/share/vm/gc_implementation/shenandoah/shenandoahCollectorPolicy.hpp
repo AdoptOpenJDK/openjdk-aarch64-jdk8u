@@ -62,6 +62,10 @@ public:
 
   HeapWord* satisfy_failed_allocation(size_t size, bool is_tlab);
 
+  MetaWord* satisfy_failed_metadata_allocation(ClassLoaderData* loader_data,
+                                               size_t size,
+                                               Metaspace::MetadataType mdtype);
+
   void initialize_alignments();
 
   // TODO: This is different from gc_end: that one encompasses one VM operation.

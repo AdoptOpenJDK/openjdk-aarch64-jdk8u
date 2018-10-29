@@ -23,6 +23,7 @@
 
 #include "precompiled.hpp"
 
+#include "gc_interface/gcCause.hpp"
 #include "gc_implementation/shenandoah/brooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
@@ -63,7 +64,8 @@ ShenandoahHeuristics::ShenandoahHeuristics() :
   _last_cycle_end(0),
   _gc_times_learned(0),
   _gc_time_penalties(0),
-  _gc_time_history(new TruncatedSeq(5))
+  _gc_time_history(new TruncatedSeq(5)),
+  _metaspace_oom()
 {
   if (strcmp(ShenandoahUpdateRefsEarly, "on") == 0 ||
       strcmp(ShenandoahUpdateRefsEarly, "true") == 0 ) {
@@ -264,6 +266,7 @@ bool ShenandoahHeuristics::should_process_references() {
 }
 
 bool ShenandoahHeuristics::should_unload_classes() {
+  if (has_metaspace_oom()) return true;
   if (ShenandoahUnloadClassesFrequency == 0) return false;
   size_t cycle = ShenandoahHeap::heap()->shenandoah_policy()->cycle_counter();
   // Unload classes every Nth GC cycle.
@@ -282,6 +285,13 @@ double ShenandoahHeuristics::time_since_last_gc() const {
 }
 
 bool ShenandoahHeuristics::should_start_normal_gc() const {
+  // Perform GC to cleanup metaspace
+  if (has_metaspace_oom()) {
+    // Some of vmTestbase/metaspace tests depend on following line to count GC cycles
+    log_info(gc)("Trigger: %s", GCCause::to_string(GCCause::_metadata_GC_threshold));
+    return true;
+  }
+
   double last_time_ms = (os::elapsedTime() - _last_cycle_end) * 1000;
   bool periodic_gc = (last_time_ms > ShenandoahGuaranteedGCInterval);
   if (periodic_gc) {

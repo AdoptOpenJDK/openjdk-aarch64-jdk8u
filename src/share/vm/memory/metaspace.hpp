@@ -65,6 +65,7 @@ class MetaspaceTracer;
 class MetaWord;
 class Mutex;
 class outputStream;
+class ShenandoahCollectorPolicy;
 class SpaceManager;
 class VirtualSpaceList;
 
@@ -87,6 +88,7 @@ class Metaspace : public CHeapObj<mtClass> {
   friend class VM_CollectForMetadataAllocation;
   friend class MetaspaceGC;
   friend class MetaspaceAux;
+  friend class ShenandoahCollectorPolicy;
 
  public:
   enum MetadataType {

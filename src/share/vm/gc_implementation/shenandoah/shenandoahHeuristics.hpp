@@ -26,6 +26,7 @@
 
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
+#include "gc_implementation/shenandoah/shenandoahSharedVariables.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/globals_extension.hpp"
 
@@ -86,6 +87,9 @@ protected:
   size_t _gc_time_penalties;
   TruncatedSeq* _gc_time_history;
 
+  // There may be many threads that contend to set this flag
+  ShenandoahSharedFlag _metaspace_oom;
+
   static int compare_by_garbage(RegionData a, RegionData b);
   static int compare_by_alloc_seq_ascending(RegionData a, RegionData b);
   static int compare_by_alloc_seq_descending(RegionData a, RegionData b);
@@ -103,6 +107,10 @@ public:
   void record_gc_start();
 
   void record_gc_end();
+
+  void record_metaspace_oom()     { _metaspace_oom.set(); }
+  void clear_metaspace_oom()      { _metaspace_oom.unset(); }
+  bool has_metaspace_oom() const  { return _metaspace_oom.is_set(); }
 
   virtual void record_cycle_start();
 

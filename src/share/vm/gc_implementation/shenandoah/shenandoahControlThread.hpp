@@ -64,10 +64,10 @@ private:
   } GCMode;
 
   // While we could have a single lock for these, it may risk unblocking
-  // explicit GC waiters when alloc failure GC cycle finishes. We want instead
+  // GC waiters when alloc failure GC cycle finishes. We want instead
   // to make complete explicit cycle for for demanding customers.
   Monitor _alloc_failure_waiters_lock;
-  Monitor _explicit_gc_waiters_lock;
+  Monitor _gc_waiters_lock;
   ShenandoahPeriodicTask _periodic_task;
   ShenandoahPeriodicSATBFlushTask _periodic_satb_flush_task;
 
@@ -79,13 +79,13 @@ public:
   void stop();
 
 private:
-  ShenandoahSharedFlag _explicit_gc;
+  ShenandoahSharedFlag _gc_requested;
   ShenandoahSharedFlag _alloc_failure_gc;
   ShenandoahSharedFlag _graceful_shutdown;
   ShenandoahSharedFlag _heap_changed;
   ShenandoahSharedFlag _do_counters_update;
   ShenandoahSharedFlag _force_counters_update;
-  GCCause::Cause _explicit_gc_cause;
+  GCCause::Cause       _requested_gc_cause;
   ShenandoahHeap::ShenandoahDegenPoint _degen_point;
 
   char _pad0[DEFAULT_CACHE_LINE_SIZE];
@@ -102,8 +102,17 @@ private:
   void notify_alloc_failure_waiters();
   bool is_alloc_failure_gc();
 
-  void notify_explicit_gc_waiters();
+  void notify_gc_waiters();
 
+  // Handle explicit GC request.
+  // Blocks until GC is over.
+  void handle_explicit_gc(GCCause::Cause cause);
+
+  // Handle GC request.
+  // Blocks until GC is over.
+  void handle_requested_gc(GCCause::Cause cause);
+
+  bool is_explicit_gc(GCCause::Cause cause) const;
 public:
   // Constructor
   ShenandoahControlThread();
@@ -120,9 +129,7 @@ public:
   // Optionally blocks while collector is handling the failure.
   void handle_alloc_failure_evac(size_t words);
 
-  // Handle explicit GC request.
-  // Blocks until GC is over.
-  void handle_explicit_gc(GCCause::Cause cause);
+  void request_gc(GCCause::Cause cause);
 
   void handle_counters_update();
   void handle_force_counters_update();

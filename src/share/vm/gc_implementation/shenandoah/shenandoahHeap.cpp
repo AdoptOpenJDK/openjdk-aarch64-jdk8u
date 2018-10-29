@@ -1015,7 +1015,7 @@ void ShenandoahHeap::accumulate_statistics_all_gclabs() {
 }
 
 void ShenandoahHeap::collect(GCCause::Cause cause) {
-  _control_thread->handle_explicit_gc(cause);
+  _control_thread->request_gc(cause);
 }
 
 void ShenandoahHeap::do_full_collection(bool clear_all_soft_refs) {
