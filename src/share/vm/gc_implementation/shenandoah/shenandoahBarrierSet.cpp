@@ -301,7 +301,7 @@ oop ShenandoahBarrierSet::write_barrier_mutator(oop obj) {
 }
 
 oop ShenandoahBarrierSet::write_barrier(oop obj) {
-  if (ShenandoahWriteBarrier) {
+  if (ShenandoahWriteBarrier && _heap->has_forwarded_objects()) {
     if (!oopDesc::is_null(obj)) {
       bool evac_in_progress = _heap->is_evacuation_in_progress();
       oop fwd = resolve_forwarded_not_null(obj);
