@@ -104,8 +104,8 @@ void ShenandoahControlThread::run() {
   while (!in_graceful_shutdown() && !_should_terminate) {
     // Figure out if we have pending requests.
     bool alloc_failure_pending = _alloc_failure_gc.is_set();
-    bool has_requested_gc = _gc_requested.is_set();
-    bool explicit_gc_requested = has_requested_gc && is_explicit_gc(_requested_gc_cause);
+    bool explicit_gc_requested = _gc_requested.is_set() &&  is_explicit_gc(_requested_gc_cause);
+    bool implicit_gc_requested = _gc_requested.is_set() && !is_explicit_gc(_requested_gc_cause);
 
     // This control loop iteration have seen this much allocations.
     intptr_t allocs_seen = (intptr_t)(Atomic::xchg_ptr(0, &_allocs_seen));
@@ -136,13 +136,12 @@ void ShenandoahControlThread::run() {
       }
 
     } else if (explicit_gc_requested) {
-      // Honor explicit GC requests
-      log_info(gc)("Trigger: Explicit GC request");
-
       cause = _requested_gc_cause;
+      log_info(gc)("Trigger: Explicit GC request (%s)", GCCause::to_string(cause));
+
+      heuristics->record_requested_gc();
 
       if (ExplicitGCInvokesConcurrent) {
-        heuristics->record_explicit_gc();
         policy->record_explicit_to_concurrent();
         mode = concurrent_normal;
 
@@ -150,13 +149,26 @@ void ShenandoahControlThread::run() {
         heap->set_process_references(heuristics->can_process_references());
         heap->set_unload_classes(heuristics->can_unload_classes());
       } else {
-        heuristics->record_explicit_gc();
         policy->record_explicit_to_full();
         mode = stw_full;
       }
-    } else if (has_requested_gc) {
+    } else if (implicit_gc_requested) {
       cause = _requested_gc_cause;
-      mode = stw_full;
+      log_info(gc)("Trigger: Implicit GC request (%s)", GCCause::to_string(cause));
+
+      heuristics->record_requested_gc();
+
+      if (ExplicitGCInvokesConcurrent) {
+        policy->record_implicit_to_concurrent();
+        mode = concurrent_normal;
+
+        // Unload and clean up everything
+        heap->set_process_references(heuristics->can_process_references());
+        heap->set_unload_classes(heuristics->can_unload_classes());
+      } else {
+        policy->record_implicit_to_full();
+        mode = stw_full;
+      }
     } else {
       // Potential normal cycle: ask heuristics if it wants to act
       if (heuristics->should_start_normal_gc()) {
@@ -210,7 +222,7 @@ void ShenandoahControlThread::run() {
 
     if (gc_requested) {
       // If this was the requested GC cycle, notify waiters about it
-      if (has_requested_gc) {
+      if (explicit_gc_requested || implicit_gc_requested) {
         notify_gc_waiters();
       }
 
@@ -476,14 +488,10 @@ void ShenandoahControlThread::request_gc(GCCause::Cause cause) {
          "only requested GCs here");
 
   if (is_explicit_gc(cause)) {
-    handle_explicit_gc(cause);
+    if (!DisableExplicitGC) {
+      handle_requested_gc(cause);
+    }
   } else {
-    handle_requested_gc(cause);
-  }
-}
-
-void ShenandoahControlThread::handle_explicit_gc(GCCause::Cause cause) {
-  if (!DisableExplicitGC) {
     handle_requested_gc(cause);
   }
 }

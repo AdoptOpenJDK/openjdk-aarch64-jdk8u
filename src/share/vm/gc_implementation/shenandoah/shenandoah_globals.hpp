@@ -113,6 +113,9 @@
   product(bool, ShenandoahLogWarning, false,                                \
           "Turns on logging in Shenandoah at warning level. ")              \
                                                                             \
+  product(bool, ShenandoahImplicitGCInvokesConcurrent, false,               \
+          "Should internally-caused GCs invoke concurrent, or go to full?") \
+                                                                            \
   product_rw(uintx, ShenandoahFullGCThreshold, 3,                           \
           "How many back-to-back Degenerated GCs to do before triggering "  \
           "a Full GC. Defaults to 3.")                                      \

@@ -132,7 +132,7 @@ public:
 
   virtual void record_allocation_failure_gc();
 
-  virtual void record_explicit_gc();
+  virtual void record_requested_gc();
 
   virtual void start_choose_collection_set() {
   }
