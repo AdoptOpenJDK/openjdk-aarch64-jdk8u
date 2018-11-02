@@ -64,10 +64,10 @@ public class TestExplicitGC {
                                     "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             for (String p : full) {
-                output.shouldContain(p);
+                output.shouldNotContain(p);
             }
             for (String p : concurrent) {
-                output.shouldNotContain(p);
+                output.shouldContain(p);
             }
         }
 
