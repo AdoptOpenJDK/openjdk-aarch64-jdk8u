@@ -1526,8 +1526,8 @@ void ShenandoahHeap::op_degenerated(ShenandoahDegenPoint point) {
       //
       // Note that we can only do this for "outside-cycle" degens, otherwise we would risk
       // changing the cycle parameters mid-cycle during concurrent -> degenerated handover.
-      set_process_references(ShenandoahRefProcFrequency != 0);
-      set_unload_classes(ClassUnloading);
+      set_process_references(heuristics()->can_process_references());
+      set_unload_classes(heuristics()->can_unload_classes());
 
       op_reset();
 
@@ -1781,7 +1781,7 @@ void ShenandoahHeap::stop() {
 }
 
 void ShenandoahHeap::unload_classes_and_cleanup_tables(bool full_gc) {
-  assert(ClassUnloading || full_gc, "Class unloading should be enabled");
+  assert(heuristics()->can_unload_classes(), "Class unloading should be enabled");
 
   ShenandoahGCPhase root_phase(full_gc ?
                                ShenandoahPhaseTimings::full_gc_purge :

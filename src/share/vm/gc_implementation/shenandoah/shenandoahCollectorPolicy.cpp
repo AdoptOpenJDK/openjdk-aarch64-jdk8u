@@ -75,9 +75,8 @@ MetaWord* ShenandoahCollectorPolicy::satisfy_failed_metadata_allocation(ClassLoa
   ShenandoahHeap* sh = ShenandoahHeap::heap();
 
   // Inform metaspace OOM to GC heuristics if class unloading is possible.
-  if ((ClassUnloadingWithConcurrentMark || FLAG_IS_DEFAULT(ClassUnloadingWithConcurrentMark)) &&
-      ClassUnloading) {
-    ShenandoahHeuristics* h = sh->heuristics();
+  ShenandoahHeuristics* h = sh->heuristics();
+  if (h->can_unload_classes()) {
     h->record_metaspace_oom();
   }
 

@@ -145,6 +145,10 @@ void ShenandoahControlThread::run() {
         heuristics->record_explicit_gc();
         policy->record_explicit_to_concurrent();
         mode = concurrent_normal;
+
+        // Unload and clean up everything
+        heap->set_process_references(heuristics->can_process_references());
+        heap->set_unload_classes(heuristics->can_unload_classes());
       } else {
         heuristics->record_explicit_gc();
         policy->record_explicit_to_full();
