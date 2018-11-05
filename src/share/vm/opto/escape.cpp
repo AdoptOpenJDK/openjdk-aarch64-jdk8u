@@ -25,7 +25,6 @@
 #include "precompiled.hpp"
 #include "ci/bcEscapeAnalyzer.hpp"
 #include "compiler/compileLog.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
 #include "libadt/vectset.hpp"
 #include "memory/allocation.hpp"
 #include "opto/c2compiler.hpp"
@@ -2043,9 +2042,6 @@ bool ConnectionGraph::is_oop_field(Node* n, int offset, bool* unsafe) {
     } else if (adr_type->isa_aryptr()) {
       if (offset == arrayOopDesc::length_offset_in_bytes()) {
         // Ignore array length load.
-      } else if (UseShenandoahGC && ShenandoahReadBarrier && offset == BrooksPointer::byte_offset()) {
-        // Shenandoah read barrier.
-        bt = T_ARRAY;
       } else if (find_second_addp(n, n->in(AddPNode::Base)) != NULL) {
         // Ignore first AddP.
       } else {
