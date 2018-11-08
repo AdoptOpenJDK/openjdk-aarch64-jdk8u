@@ -27,6 +27,7 @@
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCodeRoots.hpp"
+#include "memory/resourceArea.hpp"
 
 ShenandoahParallelCodeCacheIterator::ShenandoahParallelCodeCacheIterator() :
         _claimed_idx(0), _finished(false) {
@@ -79,6 +80,7 @@ void ShenandoahParallelCodeCacheIterator::parallel_blobs_do(CodeBlobClosure* f) 
 
 class ShenandoahNMethodOopDetector : public OopClosure {
 private:
+  ResourceMark rm; // For growable array allocation below.
   GrowableArray<oop*> _oops;
 
 public:
