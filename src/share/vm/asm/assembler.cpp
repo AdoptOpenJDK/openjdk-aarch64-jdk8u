@@ -316,7 +316,11 @@ bool MacroAssembler::needs_explicit_null_check(intptr_t offset) {
     // the 'offset' is equal to [heap_base + offset] for
     // narrow oop implicit null checks.
     uintptr_t base = (uintptr_t)Universe::narrow_oop_base();
-    int adj = MIN2(0, UseShenandoahGC ? BrooksPointer::byte_offset() : 0);
+    int adj = 0;
+    if (UseShenandoahGC) {
+      adj = BrooksPointer::byte_offset();
+      assert(adj < 0, "no need for positive adjustments");
+    }
     if ((uintptr_t)((offset - adj) & address_bits) >= base) {
       // Normalize offset for the next check.
       offset = (intptr_t)(pointer_delta((void*)offset, (void*)base, 1));
@@ -324,10 +328,8 @@ bool MacroAssembler::needs_explicit_null_check(intptr_t offset) {
   }
 #endif
 
-  if (UseShenandoahGC) {
-    if ((offset & address_bits) == (BrooksPointer::byte_offset() & address_bits)) {
-      return false;
-    }
+  if (UseShenandoahGC && ((offset & address_bits) == (BrooksPointer::byte_offset() & address_bits))) {
+    return false;
   }
 
   return offset < 0 || os::vm_page_size() <= offset;
