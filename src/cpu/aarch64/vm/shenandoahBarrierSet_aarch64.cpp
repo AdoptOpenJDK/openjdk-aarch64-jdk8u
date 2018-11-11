@@ -21,8 +21,8 @@
  *
  */
 
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 
 #include "asm/macroAssembler.hpp"
 #include "interpreter/interpreter.hpp"
@@ -41,7 +41,7 @@ void ShenandoahBarrierSet::interpreter_read_barrier(MacroAssembler* masm, Regist
 
 void ShenandoahBarrierSet::interpreter_read_barrier_not_null(MacroAssembler* masm, Register dst) {
   if (ShenandoahReadBarrier) {
-    __ ldr(dst, Address(dst, BrooksPointer::byte_offset()));
+    __ ldr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
   }
 }
 
@@ -65,7 +65,7 @@ void ShenandoahBarrierSet::interpreter_write_barrier(MacroAssembler* masm, Regis
 
   // Heap is unstable, need to perform the read-barrier even if WB is inactive
   if (ShenandoahWriteBarrierRB) {
-    __ ldr(dst, Address(dst, BrooksPointer::byte_offset()));
+    __ ldr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
   }
 
   // Check for evacuation-in-progress and jump to WB slow-path if needed
@@ -98,7 +98,7 @@ void ShenandoahBarrierSet::interpreter_write_barrier(MacroAssembler* masm, Regis
 }
 
 void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
-  __ add(obj, obj, BrooksPointer::byte_size());
+  __ add(obj, obj, ShenandoahBrooksPointer::byte_size());
   __ str(obj, Address(obj, -1 * HeapWordSize));
 }
 

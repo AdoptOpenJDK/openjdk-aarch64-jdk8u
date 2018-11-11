@@ -22,7 +22,7 @@
  */
 
 #include "precompiled.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
 
 #include "asm/macroAssembler.hpp"
@@ -44,7 +44,7 @@ void ShenandoahBarrierSet::interpreter_read_barrier(MacroAssembler* masm, Regist
 
 void ShenandoahBarrierSet::interpreter_read_barrier_not_null(MacroAssembler* masm, Register dst) {
   if (ShenandoahReadBarrier) {
-    __ movptr(dst, Address(dst, BrooksPointer::byte_offset()));
+    __ movptr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
   }
 }
 
@@ -154,10 +154,10 @@ void ShenandoahBarrierSet::asm_acmp_barrier(MacroAssembler* masm, Register op1, 
 
 void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
 #ifdef _LP64
-  __ incrementq(obj, BrooksPointer::byte_size());
+  __ incrementq(obj, ShenandoahBrooksPointer::byte_size());
 #else
-  __ incrementl(obj, BrooksPointer::byte_size());
+  __ incrementl(obj, ShenandoahBrooksPointer::byte_size());
 #endif
-  __ movptr(Address(obj, BrooksPointer::byte_offset()), obj);
+  __ movptr(Address(obj, ShenandoahBrooksPointer::byte_offset()), obj);
 }
 #endif

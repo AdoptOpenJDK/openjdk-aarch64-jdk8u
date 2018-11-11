@@ -28,7 +28,7 @@
 #include "gc_implementation/shenandoah/shenandoahGCTraceTime.hpp"
 #include "gc_implementation/shared/parallelCleaning.hpp"
 
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahAllocTracker.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"
@@ -113,7 +113,7 @@ public:
 jint ShenandoahHeap::initialize() {
   CollectedHeap::pre_initialize();
 
-  BrooksPointer::initial_checks();
+  ShenandoahBrooksPointer::initial_checks();
 
   initialize_heuristics();
 
@@ -723,11 +723,11 @@ HeapWord* ShenandoahHeap::allocate_memory_under_lock(ShenandoahAllocRequest& req
 
 HeapWord*  ShenandoahHeap::mem_allocate(size_t size,
                                         bool*  gc_overhead_limit_was_exceeded) {
-  ShenandoahAllocRequest req = ShenandoahAllocRequest::for_shared(size + BrooksPointer::word_size());
+  ShenandoahAllocRequest req = ShenandoahAllocRequest::for_shared(size + ShenandoahBrooksPointer::word_size());
   HeapWord* filler = allocate_memory(req);
-  HeapWord* result = filler + BrooksPointer::word_size();
+  HeapWord* result = filler + ShenandoahBrooksPointer::word_size();
   if (filler != NULL) {
-    BrooksPointer::initialize(oop(result));
+    ShenandoahBrooksPointer::initialize(oop(result));
 
     assert(! in_collection_set(result), "never allocate in targetted region");
     return result;
@@ -862,8 +862,8 @@ void ShenandoahHeap::print_heap_regions_on(outputStream* st) const {
 void ShenandoahHeap::trash_humongous_region_at(ShenandoahHeapRegion* start) {
   assert(start->is_humongous_start(), "reclaim regions starting with the first one");
 
-  oop humongous_obj = oop(start->bottom() + BrooksPointer::word_size());
-  size_t size = humongous_obj->size() + BrooksPointer::word_size();
+  oop humongous_obj = oop(start->bottom() + ShenandoahBrooksPointer::word_size());
+  size_t size = humongous_obj->size() + ShenandoahBrooksPointer::word_size();
   size_t required_regions = ShenandoahHeapRegion::required_regions(size * HeapWordSize);
   size_t index = start->region_number() + required_regions - 1;
 
@@ -1683,13 +1683,13 @@ void ShenandoahHeap::set_evacuation_in_progress(bool in_progress) {
 
 HeapWord* ShenandoahHeap::tlab_post_allocation_setup(HeapWord* obj) {
   // Initialize Brooks pointer for the next object
-  HeapWord* result = obj + BrooksPointer::word_size();
-  BrooksPointer::initialize(oop(result));
+  HeapWord* result = obj + ShenandoahBrooksPointer::word_size();
+  ShenandoahBrooksPointer::initialize(oop(result));
   return result;
 }
 
 uint ShenandoahHeap::oop_extra_words() {
-  return BrooksPointer::word_size();
+  return ShenandoahBrooksPointer::word_size();
 }
 
 ShenandoahForwardedIsAliveClosure::ShenandoahForwardedIsAliveClosure() :

@@ -26,7 +26,7 @@
 
 #include "gc_implementation/shared/markBitMap.inline.hpp"
 #include "memory/threadLocalAllocBuffer.inline.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"
@@ -195,7 +195,7 @@ inline oop ShenandoahHeap::evacuate_object(oop p, Thread* thread, bool& evacuate
   assert(thread->is_evac_allowed(), "must be enclosed in in oom-evac scope");
 
   size_t size_no_fwdptr = (size_t) p->size();
-  size_t size_with_fwdptr = size_no_fwdptr + BrooksPointer::word_size();
+  size_t size_with_fwdptr = size_no_fwdptr + ShenandoahBrooksPointer::word_size();
 
   assert(!heap_region_containing(p)->is_humongous(), "never evacuate humongous objects");
 
@@ -229,14 +229,14 @@ inline oop ShenandoahHeap::evacuate_object(oop p, Thread* thread, bool& evacuate
   }
 
   // Copy the object and initialize its forwarding ptr:
-  HeapWord* copy = filler + BrooksPointer::word_size();
+  HeapWord* copy = filler + ShenandoahBrooksPointer::word_size();
   oop copy_val = oop(copy);
 
   Copy::aligned_disjoint_words((HeapWord*) p, copy, size_no_fwdptr);
-  BrooksPointer::initialize(oop(copy));
+  ShenandoahBrooksPointer::initialize(oop(copy));
 
   // Try to install the new forwarding pointer.
-  oop result = BrooksPointer::try_update_forwardee(p, copy_val);
+  oop result = ShenandoahBrooksPointer::try_update_forwardee(p, copy_val);
 
   if (oopDesc::unsafe_equals(result, p)) {
     // Successfully evacuated. Our copy is now the public one!
@@ -322,7 +322,7 @@ inline void ShenandoahHeap::marked_object_iterate(ShenandoahHeapRegion* region, 
 
 template<class T>
 inline void ShenandoahHeap::marked_object_iterate(ShenandoahHeapRegion* region, T* cl, HeapWord* limit) {
-  assert(BrooksPointer::word_offset() < 0, "skip_delta calculation below assumes the forwarding ptr is before obj");
+  assert(ShenandoahBrooksPointer::word_offset() < 0, "skip_delta calculation below assumes the forwarding ptr is before obj");
 
   ShenandoahMarkingContext* const ctx = complete_marking_context();
   assert(ctx->is_complete(), "sanity");
@@ -330,10 +330,10 @@ inline void ShenandoahHeap::marked_object_iterate(ShenandoahHeapRegion* region, 
   MarkBitMap* mark_bit_map = ctx->mark_bit_map();
   HeapWord* tams = ctx->top_at_mark_start(region);
 
-  size_t skip_bitmap_delta = BrooksPointer::word_size() + 1;
-  size_t skip_objsize_delta = BrooksPointer::word_size() /* + actual obj.size() below */;
-  HeapWord* start = region->bottom() + BrooksPointer::word_size();
-  HeapWord* end = MIN2(tams + BrooksPointer::word_size(), region->end());
+  size_t skip_bitmap_delta = ShenandoahBrooksPointer::word_size() + 1;
+  size_t skip_objsize_delta = ShenandoahBrooksPointer::word_size() /* + actual obj.size() below */;
+  HeapWord* start = region->bottom() + ShenandoahBrooksPointer::word_size();
+  HeapWord* end = MIN2(tams + ShenandoahBrooksPointer::word_size(), region->end());
 
   // Step 1. Scan below the TAMS based on bitmap data.
   HeapWord* limit_bitmap = MIN2(limit, tams);
@@ -363,7 +363,7 @@ inline void ShenandoahHeap::marked_object_iterate(ShenandoahHeapRegion* region, 
     do {
       avail = 0;
       for (int c = 0; (c < dist) && (cb < limit_bitmap); c++) {
-        Prefetch::read(cb, BrooksPointer::byte_offset());
+        Prefetch::read(cb, ShenandoahBrooksPointer::byte_offset());
         slots[avail++] = cb;
         cb += skip_bitmap_delta;
         if (cb < limit_bitmap) {
@@ -400,7 +400,7 @@ inline void ShenandoahHeap::marked_object_iterate(ShenandoahHeapRegion* region, 
   // Step 2. Accurate size-based traversal, happens past the TAMS.
   // This restarts the scan at TAMS, which makes sure we traverse all objects,
   // regardless of what happened at Step 1.
-  HeapWord* cs = tams + BrooksPointer::word_size();
+  HeapWord* cs = tams + ShenandoahBrooksPointer::word_size();
   while (cs < limit) {
     assert (cs > tams,  err_msg("only objects past TAMS here: "   PTR_FORMAT " (" PTR_FORMAT ")", p2i(cs), p2i(tams)));
     assert (cs < limit, err_msg("only objects below limit here: " PTR_FORMAT " (" PTR_FORMAT ")", p2i(cs), p2i(limit)));

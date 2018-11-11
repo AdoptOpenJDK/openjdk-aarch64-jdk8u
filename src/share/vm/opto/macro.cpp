@@ -24,7 +24,7 @@
 
 #include "precompiled.hpp"
 #include "compiler/compileLog.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "libadt/vectset.hpp"
 #include "opto/addnode.hpp"
 #include "opto/callnode.hpp"
@@ -1294,7 +1294,7 @@ void PhaseMacroExpand::expand_allocate_common(
     Node* init_size_in_bytes = size_in_bytes;
     if (UseShenandoahGC) {
       // Allocate several words more for the Shenandoah brooks pointer.
-      size_in_bytes = new (C) AddXNode(size_in_bytes, _igvn.MakeConX(BrooksPointer::byte_size()));
+      size_in_bytes = new (C) AddXNode(size_in_bytes, _igvn.MakeConX(ShenandoahBrooksPointer::byte_size()));
       transform_later(size_in_bytes);
     }
 
@@ -1390,7 +1390,7 @@ void PhaseMacroExpand::expand_allocate_common(
 
     if (UseShenandoahGC) {
       // Bump up object for Shenandoah brooks pointer.
-      fast_oop = new (C) AddPNode(top(), fast_oop, _igvn.MakeConX(BrooksPointer::byte_size()));
+      fast_oop = new (C) AddPNode(top(), fast_oop, _igvn.MakeConX(ShenandoahBrooksPointer::byte_size()));
       transform_later(fast_oop);
     }
 
@@ -1679,7 +1679,7 @@ PhaseMacroExpand::initialize_object(AllocateNode* alloc,
 
   if (UseShenandoahGC) {
     // Initialize Shenandoah brooks pointer to point to the object itself.
-    rawmem = make_store(control, rawmem, object, BrooksPointer::byte_offset(), object, T_OBJECT);
+    rawmem = make_store(control, rawmem, object, ShenandoahBrooksPointer::byte_offset(), object, T_OBJECT);
   }
 
   // Clear the object body, if necessary.

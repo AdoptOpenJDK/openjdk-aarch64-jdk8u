@@ -24,7 +24,7 @@
 #include "precompiled.hpp"
 
 #include "memory/allocation.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
@@ -459,11 +459,11 @@ HeapWord* ShenandoahHeapRegion::block_start_const(const void* p) const {
   if (p >= top()) {
     return top();
   } else {
-    HeapWord* last = bottom() + BrooksPointer::word_size();
+    HeapWord* last = bottom() + ShenandoahBrooksPointer::word_size();
     HeapWord* cur = last;
     while (cur <= p) {
       last = cur;
-      cur += oop(cur)->size() + BrooksPointer::word_size();
+      cur += oop(cur)->size() + ShenandoahBrooksPointer::word_size();
     }
     shenandoah_assert_correct(NULL, oop(last));
     return last;

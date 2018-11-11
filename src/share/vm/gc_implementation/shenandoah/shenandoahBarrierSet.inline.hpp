@@ -33,7 +33,7 @@ bool ShenandoahBarrierSet::need_update_refs_barrier() {
 }
 
 inline oop ShenandoahBarrierSet::resolve_forwarded_not_null(oop p) {
-  return BrooksPointer::forwardee(p);
+  return ShenandoahBrooksPointer::forwardee(p);
 }
 
 inline oop ShenandoahBarrierSet::resolve_forwarded(oop p) {

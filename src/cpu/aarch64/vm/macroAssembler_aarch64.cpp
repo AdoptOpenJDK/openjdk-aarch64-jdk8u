@@ -34,7 +34,7 @@
 
 #include "compiler/disassembler.hpp"
 #include "gc_interface/collectedHeap.inline.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
@@ -3812,7 +3812,7 @@ void MacroAssembler::shenandoah_write_barrier(Register dst) {
 
   // Heap is unstable, need to perform the read-barrier even if WB is inactive
   if (ShenandoahWriteBarrierRB) {
-    ldr(dst, Address(dst, BrooksPointer::byte_offset()));
+    ldr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
   }
 
   // Check for evacuation-in-progress and jump to WB slow-path if needed

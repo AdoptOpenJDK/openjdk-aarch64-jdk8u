@@ -33,7 +33,7 @@
 #include "ci/ciArrayKlass.hpp"
 #include "ci/ciInstance.hpp"
 #include "ci/ciObjArray.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "utilities/bitMap.inline.hpp"
@@ -1855,7 +1855,7 @@ LIR_Opr LIRGenerator::shenandoah_read_barrier(LIR_Opr obj, CodeEmitInfo* info, b
       __ cmp(lir_cond_equal, result, LIR_OprFact::oopConst(NULL));
       __ branch(lir_cond_equal, T_LONG, done->label());
     }
-    LIR_Address* brooks_ptr_address = generate_address(result, BrooksPointer::byte_offset(), T_ADDRESS);
+    LIR_Address* brooks_ptr_address = generate_address(result, ShenandoahBrooksPointer::byte_offset(), T_ADDRESS);
     __ load(brooks_ptr_address, result, info ? new CodeEmitInfo(info) : NULL, lir_patch_none);
 
     __ branch_destination(done->label());

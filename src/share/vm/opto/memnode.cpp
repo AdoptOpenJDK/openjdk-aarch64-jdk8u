@@ -25,7 +25,7 @@
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "compiler/compileLog.hpp"
-#include "gc_implementation/shenandoah/brooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "opto/addnode.hpp"
@@ -1505,7 +1505,7 @@ const Type *LoadNode::Value( PhaseTransform *phase ) const {
     // as to alignment, which will therefore produce the smallest
     // possible base offset.
     const int min_base_off = arrayOopDesc::base_offset_in_bytes(T_BYTE);
-    const bool off_beyond_header = (off != BrooksPointer::byte_offset() || !UseShenandoahGC) && ((uint)off >= (uint)min_base_off);
+    const bool off_beyond_header = (off != ShenandoahBrooksPointer::byte_offset() || !UseShenandoahGC) && ((uint)off >= (uint)min_base_off);
 
     // Try to constant-fold a stable array element.
     if (FoldStableValues && ary->is_stable()) {
