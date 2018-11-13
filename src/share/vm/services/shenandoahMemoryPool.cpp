@@ -29,7 +29,7 @@ ShenandoahMemoryPool::ShenandoahMemoryPool(ShenandoahHeap* heap) :
                             MemoryPool::Heap,
                             heap->capacity(),
                             heap->max_capacity(),
-                            false /* support_usage_threshold */),
+                            true /* support_usage_threshold */),
                             _heap(heap) {}
 
 MemoryUsage ShenandoahMemoryPool::get_memory_usage() {
