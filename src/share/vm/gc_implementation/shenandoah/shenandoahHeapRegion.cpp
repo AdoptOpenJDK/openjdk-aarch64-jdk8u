@@ -508,8 +508,8 @@ void ShenandoahHeapRegion::setup_sizes(size_t initial_heap_size, size_t max_heap
     region_size = max_heap_size / ShenandoahTargetNumRegions;
 
     // Now make sure that we don't go over or under our limits.
-    region_size = MAX2(ShenandoahMinRegionSize, region_size);
-    region_size = MIN2(ShenandoahMaxRegionSize, region_size);
+    region_size = MAX2<size_t>(ShenandoahMinRegionSize, region_size);
+    region_size = MIN2<size_t>(ShenandoahMaxRegionSize, region_size);
 
   } else {
     if (ShenandoahHeapRegionSize > initial_heap_size / MIN_NUM_REGIONS) {
