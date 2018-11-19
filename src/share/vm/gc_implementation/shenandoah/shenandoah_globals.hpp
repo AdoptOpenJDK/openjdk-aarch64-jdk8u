@@ -232,9 +232,6 @@
           "Common 2 WriteBarriers or WriteBarrier and a ReadBarrier only "  \
           "if the resulting WriteBarrier isn't executed more frequently")   \
                                                                             \
-  experimental(bool, ShenandoahWriteBarrierCsetTestInIR, true,              \
-          "Perform cset test in IR rather than in the stub")                \
-                                                                            \
   experimental(intx, ShenandoahSATBBufferSize, 1 * K,                       \
           "Number of entries in an SATB log buffer.")                       \
                                                                             \

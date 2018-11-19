@@ -3469,41 +3469,39 @@ void PhaseIdealLoop::shenandoah_evacuation_in_progress_null_check(Node*& c, Node
 
 void PhaseIdealLoop::shenandoah_in_cset_fast_test(Node*& c, Node* rbtrue, Node* raw_mem, Node* wb_mem, Node* region, Node* val_phi, Node* mem_phi,
                                                   Node* raw_mem_phi) {
-  if (ShenandoahWriteBarrierCsetTestInIR) {
-    IdealLoopTree *loop = get_loop(c);
-    Node* raw_rbtrue = new (C) CastP2XNode(c, rbtrue);
-    register_new_node(raw_rbtrue, c);
-    Node* cset_offset = new (C) URShiftXNode(raw_rbtrue, _igvn.intcon(ShenandoahHeapRegion::region_size_bytes_shift_jint()));
-    register_new_node(cset_offset, c);
-    Node* in_cset_fast_test_base_addr = _igvn.makecon(TypeRawPtr::make(ShenandoahHeap::in_cset_fast_test_addr()));
-    set_ctrl(in_cset_fast_test_base_addr, C->root());
-    Node* in_cset_fast_test_adr = new (C) AddPNode(C->top(), in_cset_fast_test_base_addr, cset_offset);
-    register_new_node(in_cset_fast_test_adr, c);
-    uint in_cset_fast_test_idx = Compile::AliasIdxRaw;
-    const TypePtr* in_cset_fast_test_adr_type = NULL; // debug-mode-only argument
-    debug_only(in_cset_fast_test_adr_type = C->get_adr_type(in_cset_fast_test_idx));
-    Node* in_cset_fast_test_load = new (C) LoadBNode(c, raw_mem, in_cset_fast_test_adr, in_cset_fast_test_adr_type, TypeInt::BOOL, MemNode::unordered);
-    register_new_node(in_cset_fast_test_load, c);
-    Node* in_cset_fast_test_cmp = new (C) CmpINode(in_cset_fast_test_load, _igvn.zerocon(T_INT));
-    register_new_node(in_cset_fast_test_cmp, c);
-    Node* in_cset_fast_test_test = new (C) BoolNode(in_cset_fast_test_cmp, BoolTest::ne);
-    register_new_node(in_cset_fast_test_test, c);
-    IfNode* in_cset_fast_test_iff = new (C) IfNode(c, in_cset_fast_test_test, PROB_UNLIKELY(0.999), COUNT_UNKNOWN);
-    register_control(in_cset_fast_test_iff, loop, c);
+  IdealLoopTree *loop = get_loop(c);
+  Node* raw_rbtrue = new (C) CastP2XNode(c, rbtrue);
+  register_new_node(raw_rbtrue, c);
+  Node* cset_offset = new (C) URShiftXNode(raw_rbtrue, _igvn.intcon(ShenandoahHeapRegion::region_size_bytes_shift_jint()));
+  register_new_node(cset_offset, c);
+  Node* in_cset_fast_test_base_addr = _igvn.makecon(TypeRawPtr::make(ShenandoahHeap::in_cset_fast_test_addr()));
+  set_ctrl(in_cset_fast_test_base_addr, C->root());
+  Node* in_cset_fast_test_adr = new (C) AddPNode(C->top(), in_cset_fast_test_base_addr, cset_offset);
+  register_new_node(in_cset_fast_test_adr, c);
+  uint in_cset_fast_test_idx = Compile::AliasIdxRaw;
+  const TypePtr* in_cset_fast_test_adr_type = NULL; // debug-mode-only argument
+  debug_only(in_cset_fast_test_adr_type = C->get_adr_type(in_cset_fast_test_idx));
+  Node* in_cset_fast_test_load = new (C) LoadBNode(c, raw_mem, in_cset_fast_test_adr, in_cset_fast_test_adr_type, TypeInt::BOOL, MemNode::unordered);
+  register_new_node(in_cset_fast_test_load, c);
+  Node* in_cset_fast_test_cmp = new (C) CmpINode(in_cset_fast_test_load, _igvn.zerocon(T_INT));
+  register_new_node(in_cset_fast_test_cmp, c);
+  Node* in_cset_fast_test_test = new (C) BoolNode(in_cset_fast_test_cmp, BoolTest::ne);
+  register_new_node(in_cset_fast_test_test, c);
+  IfNode* in_cset_fast_test_iff = new (C) IfNode(c, in_cset_fast_test_test, PROB_UNLIKELY(0.999), COUNT_UNKNOWN);
+  register_control(in_cset_fast_test_iff, loop, c);
 
-    Node* in_cset_fast_test_success = new (C) IfFalseNode(in_cset_fast_test_iff);
-    register_control(in_cset_fast_test_success, loop, in_cset_fast_test_iff);
+  Node* in_cset_fast_test_success = new (C) IfFalseNode(in_cset_fast_test_iff);
+  register_control(in_cset_fast_test_success, loop, in_cset_fast_test_iff);
 
-    region->init_req(3, in_cset_fast_test_success);
-    val_phi->init_req(3, rbtrue);
-    mem_phi->init_req(3, wb_mem);
-    raw_mem_phi->init_req(3, raw_mem);
+  region->init_req(3, in_cset_fast_test_success);
+  val_phi->init_req(3, rbtrue);
+  mem_phi->init_req(3, wb_mem);
+  raw_mem_phi->init_req(3, raw_mem);
 
-    Node* in_cset_fast_test_failure = new (C) IfTrueNode(in_cset_fast_test_iff);
-    register_control(in_cset_fast_test_failure, loop, in_cset_fast_test_iff);
+  Node* in_cset_fast_test_failure = new (C) IfTrueNode(in_cset_fast_test_iff);
+  register_control(in_cset_fast_test_failure, loop, in_cset_fast_test_iff);
 
-    c = in_cset_fast_test_failure;
-  }
+  c = in_cset_fast_test_failure;
 }
 
 void PhaseIdealLoop::shenandoah_evacuation_in_progress(Node* c, Node* val, Node* evacuation_iff, Node* unc, Node* unc_ctrl,
