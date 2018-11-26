@@ -197,10 +197,6 @@
                " intervals are present, where GC can run without stealing " \
                "time from active application. Time is in milliseconds.")    \
                                                                             \
-  experimental(uintx, ShenandoahHappyCyclesThreshold, 3,                    \
-          "How many successful marking cycles before improving free "       \
-               "threshold for adaptive heuristics")                         \
-                                                                            \
   experimental(uintx, ShenandoahMarkLoopStride, 1000,                       \
           "How many items are processed during one marking step")           \
                                                                             \
@@ -310,10 +306,6 @@
                                                                             \
   develop(bool, ShenandoahVerifyOptoBarriers, false,                        \
           "Verify no missing barriers in c2")                               \
-                                                                            \
-  develop(intx, ShenandoahFailHeapExpansionAfter, -1,                       \
-          "Artificially fails heap expansion after specified times."        \
-          "Used to verify allocation handling. Default -1 to disable it.")  \
                                                                             \
   product(bool, ShenandoahAlwaysPreTouch, false,                            \
           "Pre-touch heap memory, overrides global AlwaysPreTouch")         \
