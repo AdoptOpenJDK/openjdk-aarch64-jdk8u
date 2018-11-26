@@ -3383,13 +3383,9 @@ void PhaseIdealLoop::shenandoah_evacuation_not_in_progress(Node* c, Node* val, N
                                                            Node* val_phi, Node* mem_phi, Node* raw_mem_phi, Node*& unc_region) {
   shenandoah_evacuation_not_in_progress_null_check(c, val, unc_ctrl, unc_region);
   region->init_req(1, c);
-  if (ShenandoahWriteBarrierRB) {
-    Node *rbfalse = new(C) ShenandoahReadBarrierNode(c, wb_mem, val);
-    register_new_node(rbfalse, c);
-    val_phi->init_req(1, rbfalse);
-  } else {
-    val_phi->init_req(1, val);
-  }
+  Node *rbfalse = new(C) ShenandoahReadBarrierNode(c, wb_mem, val);
+  register_new_node(rbfalse, c);
+  val_phi->init_req(1, rbfalse);
   mem_phi->init_req(1, wb_mem);
   raw_mem_phi->init_req(1, raw_mem);
 }
@@ -3511,13 +3507,8 @@ void PhaseIdealLoop::shenandoah_evacuation_in_progress(Node* c, Node* val, Node*
 
   IdealLoopTree *loop = get_loop(c);
 
-  Node* rbtrue;
-  if (ShenandoahWriteBarrierRB) {
-    rbtrue = new (C) ShenandoahReadBarrierNode(c, wb_mem, val);
-    register_new_node(rbtrue, c);
-  } else {
-    rbtrue = val;
-  }
+  Node* rbtrue = new (C) ShenandoahReadBarrierNode(c, wb_mem, val);
+  register_new_node(rbtrue, c);
 
   Node* in_cset_fast_test_failure = NULL;
   shenandoah_in_cset_fast_test(c, rbtrue, raw_mem, wb_mem, region, val_phi, mem_phi, raw_mem_phi);

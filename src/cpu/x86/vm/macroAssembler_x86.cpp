@@ -4455,9 +4455,7 @@ void MacroAssembler::shenandoah_write_barrier(Register dst) {
   jccb(Assembler::zero, done);
 
   // Heap is unstable, need to perform the read-barrier even if WB is inactive
-  if (ShenandoahWriteBarrierRB) {
-    movptr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
-  }
+  movptr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
 
   // Check for evacuation-in-progress and jump to WB slow-path if needed
   testb(gc_state, ShenandoahHeap::EVACUATION);
