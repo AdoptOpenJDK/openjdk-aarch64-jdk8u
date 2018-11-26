@@ -104,7 +104,7 @@ public:
   oopDesc*  operator->() const        { return obj(); }
   bool operator==(const oop o) const  {
 #if INCLUDE_ALL_GCS
-    if (VerifyObjectEquals) {
+    if (ShenandoahVerifyObjectEquals) {
       ShouldNotReachHere();
     }
 #endif
@@ -113,7 +113,7 @@ public:
   bool operator==(void *p) const      { return obj() == p; }
   bool operator!=(const volatile oop o) const  {
 #if INCLUDE_ALL_GCS
-    if (VerifyObjectEquals) {
+    if (ShenandoahVerifyObjectEquals) {
       ShouldNotReachHere();
     }
 #endif

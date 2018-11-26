@@ -298,7 +298,7 @@
           "larger than this threshold would be reported as warnings. "      \
           "Time is in microseconds.")                                       \
                                                                             \
-  develop(bool, VerifyObjectEquals, false,                                  \
+  develop(bool, ShenandoahVerifyObjectEquals, false,                        \
           "Verify that == and != are not used on oops. Only in fastdebug")  \
                                                                             \
   develop(bool, ShenandoahVerifyOptoBarriers, false,                        \
