@@ -526,7 +526,7 @@ public:
   bool card_mark_must_follow_store() const                    { return false;   }
 
   bool is_in_partial_collection(const void* p) shenandoah_not_implemented_return(false);
-  bool supports_heap_inspection() const { return false; }
+  bool supports_heap_inspection() const { return true; }
 
   void gc_prologue(bool b);
   void gc_epilogue(bool b);
