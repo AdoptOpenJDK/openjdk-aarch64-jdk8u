@@ -79,8 +79,8 @@ class GCHeapLog : public EventLogBase<GCMessage> {
 //   SharedHeap
 //     GenCollectedHeap
 //     G1CollectedHeap
-//   ShenandoahHeap
 //   ParallelScavengeHeap
+//   ShenandoahHeap
 //
 class CollectedHeap : public CHeapObj<mtInternal> {
   friend class VMStructs;
