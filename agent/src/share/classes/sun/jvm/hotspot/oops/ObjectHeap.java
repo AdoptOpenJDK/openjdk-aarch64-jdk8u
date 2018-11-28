@@ -316,17 +316,13 @@ public class ObjectHeap {
       }
     }
 
-    // Offset of the first oop from region's bottom
-    int oop_offset = heap.oop_region_offset_words() * VM.getVM().getHeapWordSize();
-    int oop_extra_size = heap.oop_extra_words() * VM.getVM().getHeapWordSize();
-
     for (int i = 0; i < liveRegions.size(); i += 2) {
       Address bottom = (Address) liveRegions.get(i);
       Address top    = (Address) liveRegions.get(i+1);
 
       try {
         // Traverses the space from bottom to top
-        OopHandle handle = bottom.addOffsetToAsOopHandle(oop_offset);
+        OopHandle handle = bottom.addOffsetToAsOopHandle(0);
 
         while (handle.lessThan(top)) {
         Oop obj = null;
@@ -363,7 +359,7 @@ public class ObjectHeap {
           if ( (cmsSpaceOld != null) && cmsSpaceOld.contains(handle)) {
               handle = handle.addOffsetToAsOopHandle(CompactibleFreeListSpace.adjustObjectSizeInBytes(obj.getObjectSize()) );
           } else {
-              handle = handle.addOffsetToAsOopHandle(obj.getObjectSize() + oop_extra_size);
+              handle = handle.addOffsetToAsOopHandle(obj.getObjectSize());
           }
         }
       }
@@ -444,7 +440,9 @@ public class ObjectHeap {
         g1h.heapRegionIterate(lrc);
     } else if (heap instanceof ShenandoahHeap) {
         ShenandoahHeap sh = (ShenandoahHeap) heap;
-        sh.heapRegionIterate(lrc);
+        // Operation (currently) not supported with Shenandoah GC. Print
+        // a warning and leave the list of live regions empty.
+        System.err.println("Warning: Operation not supported with Shenandoah GC");
     } else {
        if (Assert.ASSERTS_ENABLED) {
           Assert.that(false, "Expecting GenCollectedHeap, G1CollectedHeap, " +
