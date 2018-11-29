@@ -28,11 +28,13 @@
  * @library /testlibrary
  *
  * @run main/othervm -XX:-UseOnStackReplacement -XX:-BackgroundCompilation -XX:-TieredCompilation TestMaybeNullUnsafeAccess
- *      
+ *
  */
 
 import sun.misc.Unsafe;
+
 import java.lang.reflect.Field;
+
 import com.oracle.java.testlibrary.*;
 
 public class TestMaybeNullUnsafeAccess {
@@ -54,7 +56,7 @@ public class TestMaybeNullUnsafeAccess {
     }
 
     static A test_helper(Object o) {
-        return (A)o;
+        return (A) o;
     }
 
     static int test(Object o) {

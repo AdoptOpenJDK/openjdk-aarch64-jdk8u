@@ -37,8 +37,8 @@
 
 public class TestObjectAlignment {
 
-  public static void main(String[] args) throws Exception {
-    // Testing the checking code on startup
-  }
+    public static void main(String[] args) throws Exception {
+        // Testing the checking code on startup
+    }
 
 }

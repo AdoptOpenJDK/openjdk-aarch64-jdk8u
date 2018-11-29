@@ -35,8 +35,8 @@
 
 public class AlwaysPreTouch {
 
-  public static void main(String[] args) throws Exception {
-    // checking the initialization before entering main()
-  }
+    public static void main(String[] args) throws Exception {
+        // checking the initialization before entering main()
+    }
 
 }

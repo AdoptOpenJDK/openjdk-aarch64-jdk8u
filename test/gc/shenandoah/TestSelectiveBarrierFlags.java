@@ -40,12 +40,12 @@ public class TestSelectiveBarrierFlags {
 
     public static void main(String[] args) throws Exception {
         String[][] opts = {
-            new String[]{ "ShenandoahSATBBarrier"  },
-            new String[]{ "ShenandoahWriteBarrier" },
-            new String[]{ "ShenandoahReadBarrier" },
-            new String[]{ "ShenandoahCASBarrier" },
-            new String[]{ "ShenandoahAcmpBarrier" },
-            new String[]{ "ShenandoahCloneBarrier" },
+                new String[]{ "ShenandoahSATBBarrier" },
+                new String[]{ "ShenandoahWriteBarrier" },
+                new String[]{ "ShenandoahReadBarrier" },
+                new String[]{ "ShenandoahCASBarrier" },
+                new String[]{ "ShenandoahAcmpBarrier" },
+                new String[]{ "ShenandoahCloneBarrier" },
         };
 
         int size = 1;
@@ -72,7 +72,7 @@ public class TestSelectiveBarrierFlags {
                 // Zero means no flag is selected from the group.
                 int choice = t % (l.length + 1);
                 for (int e = 0; e < l.length; e++) {
-                  conf.add("-XX:" + ((choice == (e + 1)) ? "+" : "-") + l[e]);
+                    conf.add("-XX:" + ((choice == (e + 1)) ? "+" : "-") + l[e]);
                 }
                 t = t / (l.length + 1);
             }

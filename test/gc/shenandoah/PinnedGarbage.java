@@ -64,7 +64,7 @@ public class PinnedGarbage {
     }
 
     public static class MyClass {
-       public Object ref = new Object();
+        public Object ref = new Object();
     }
 
 }

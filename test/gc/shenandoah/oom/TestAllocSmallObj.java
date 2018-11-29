@@ -34,7 +34,7 @@ import com.oracle.java.testlibrary.*;
 
 public class TestAllocSmallObj {
 
-    static final int COUNT = 16*1024*1024;
+    static final int COUNT = 16 * 1024 * 1024;
 
     static volatile Object sink;
 
@@ -54,11 +54,11 @@ public class TestAllocSmallObj {
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-Xmx16m",
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    TestAllocSmallObj.class.getName(),
-                                    "test");
+                    "-Xmx16m",
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    TestAllocSmallObj.class.getName(),
+                    "test");
 
             OutputAnalyzer analyzer = new OutputAnalyzer(pb.start());
             analyzer.shouldHaveExitValue(1);
@@ -67,11 +67,11 @@ public class TestAllocSmallObj {
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-Xmx1g",
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    TestAllocSmallObj.class.getName(),
-                                    "test");
+                    "-Xmx1g",
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    TestAllocSmallObj.class.getName(),
+                    "test");
 
             OutputAnalyzer analyzer = new OutputAnalyzer(pb.start());
             analyzer.shouldHaveExitValue(0);

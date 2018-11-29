@@ -48,21 +48,21 @@ public class TestExplicitGC {
         }
 
         String[] full = new String[] {
-            "Pause Full"
+                "Pause Full"
         };
 
         String[] concurrent = new String[] {
-            "Pause Init Mark",
-            "Pause Final Mark",
+                "Pause Init Mark",
+                "Pause Final Mark",
         };
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    "-verbose:gc",
-                                    TestExplicitGC.class.getName(),
-                                    "test");
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    "-verbose:gc",
+                    TestExplicitGC.class.getName(),
+                    "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             for (String p : full) {
                 output.shouldNotContain(p);
@@ -74,12 +74,12 @@ public class TestExplicitGC {
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    "-verbose:gc",
-                                    "-XX:+DisableExplicitGC",
-                                    TestExplicitGC.class.getName(),
-                                    "test");
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    "-verbose:gc",
+                    "-XX:+DisableExplicitGC",
+                    TestExplicitGC.class.getName(),
+                    "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             for (String p : full) {
                 output.shouldNotContain(p);
@@ -91,12 +91,12 @@ public class TestExplicitGC {
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    "-verbose:gc",
-                                    "-XX:+ExplicitGCInvokesConcurrent",
-                                    TestExplicitGC.class.getName(),
-                                    "test");
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    "-verbose:gc",
+                    "-XX:+ExplicitGCInvokesConcurrent",
+                    TestExplicitGC.class.getName(),
+                    "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             for (String p : full) {
                 output.shouldNotContain(p);
@@ -108,12 +108,12 @@ public class TestExplicitGC {
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    "-verbose:gc",
-                                    "-XX:-ExplicitGCInvokesConcurrent",
-                                    TestExplicitGC.class.getName(),
-                                    "test");
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    "-verbose:gc",
+                    "-XX:-ExplicitGCInvokesConcurrent",
+                    TestExplicitGC.class.getName(),
+                    "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             for (String p : full) {
                 output.shouldContain(p);

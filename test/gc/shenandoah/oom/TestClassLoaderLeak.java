@@ -38,7 +38,7 @@ import com.oracle.java.testlibrary.*;
 
 public class TestClassLoaderLeak {
 
-    static final int SIZE  = 1*1024*1024;
+    static final int SIZE = 1 * 1024 * 1024;
     static final int COUNT = 128;
 
     static volatile Object sink;
@@ -72,7 +72,7 @@ public class TestClassLoaderLeak {
 
     static void load(String path) throws Exception {
         ClassLoader cl = new MyClassLoader(path);
-        Class<Dummy> c = (Class<Dummy>)Class.forName("TestClassLoaderLeak$Dummy", true, cl);
+        Class<Dummy> c = (Class<Dummy>) Class.forName("TestClassLoaderLeak$Dummy", true, cl);
         if (c.getClassLoader() != cl) {
             throw new IllegalStateException("Should have loaded by target loader");
         }
@@ -123,11 +123,11 @@ public class TestClassLoaderLeak {
         }
 
         String[] heuristics = new String[] {
-           "adaptive",
-           "compact",
-           "static",
-           "aggressive",
-           "passive",
+                "adaptive",
+                "compact",
+                "static",
+                "aggressive",
+                "passive",
         };
 
         for (String h : heuristics) {

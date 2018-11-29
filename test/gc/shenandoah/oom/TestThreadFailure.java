@@ -35,7 +35,7 @@ import com.oracle.java.testlibrary.*;
 
 public class TestThreadFailure {
 
-    static final int SIZE  = 1024;
+    static final int SIZE = 1024;
     static final int COUNT = 16;
 
     static class NastyThread extends Thread {
@@ -51,9 +51,9 @@ public class TestThreadFailure {
     public static void main(String[] args) throws Exception {
         if (args.length > 0) {
             for (int t = 0; t < COUNT; t++) {
-               Thread thread = new NastyThread();
-               thread.start();
-               thread.join();
+                Thread thread = new NastyThread();
+                thread.start();
+                thread.join();
             }
             System.out.println("All good");
             return;
@@ -61,11 +61,11 @@ public class TestThreadFailure {
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-Xmx16m",
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    TestThreadFailure.class.getName(),
-                                    "test");
+                    "-Xmx16m",
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    TestThreadFailure.class.getName(),
+                    "test");
 
             OutputAnalyzer analyzer = new OutputAnalyzer(pb.start());
             analyzer.shouldHaveExitValue(0);
@@ -75,11 +75,11 @@ public class TestThreadFailure {
 
         {
             ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-                                    "-Xmx128m",
-                                    "-XX:+UnlockExperimentalVMOptions",
-                                    "-XX:+UseShenandoahGC",
-                                    TestThreadFailure.class.getName(),
-                                    "test");
+                    "-Xmx128m",
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    TestThreadFailure.class.getName(),
+                    "test");
 
             OutputAnalyzer analyzer = new OutputAnalyzer(pb.start());
             analyzer.shouldHaveExitValue(0);
