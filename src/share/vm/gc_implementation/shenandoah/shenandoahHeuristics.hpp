@@ -29,6 +29,7 @@
 #include "gc_implementation/shenandoah/shenandoahSharedVariables.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/globals_extension.hpp"
+#include "runtime/java.hpp"
 
 #define SHENANDOAH_ERGO_DISABLE_FLAG(name)                                  \
   do {                                                                      \
@@ -51,6 +52,14 @@
     if (FLAG_IS_DEFAULT(name)) {                                            \
       log_info(gc)("Heuristics ergonomically sets -XX:" #name "=" #value);  \
       FLAG_SET_DEFAULT(name, value);                                        \
+    }                                                                       \
+  } while (0)
+
+#define SHENANDOAH_CHECK_FLAG_SET(name)                                     \
+  do {                                                                      \
+    if (!name) {                                                            \
+      err_msg message("Heuristics needs -XX:+" #name " to work correctly"); \
+      vm_exit_during_initialization("Error", message);                      \
     }                                                                       \
   } while (0)
 
