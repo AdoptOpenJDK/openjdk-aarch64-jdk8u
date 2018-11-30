@@ -27,16 +27,12 @@ import sun.jvm.hotspot.gc_interface.CollectedHeap;
 import sun.jvm.hotspot.gc_interface.CollectedHeapName;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.runtime.VM;
-import sun.jvm.hotspot.runtime.VMObjectFactory;
 import sun.jvm.hotspot.types.Type;
 import sun.jvm.hotspot.types.TypeDataBase;
 import sun.jvm.hotspot.memory.MemRegion;
 import sun.jvm.hotspot.types.CIntegerField;
 import sun.jvm.hotspot.types.JLongField;
-import sun.jvm.hotspot.types.AddressField;
-import sun.jvm.hotspot.memory.SpaceClosure;
 import java.io.PrintStream;
-import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -44,7 +40,6 @@ public class ShenandoahHeap extends CollectedHeap {
     static private CIntegerField numRegions;
     static private JLongField    used;
     static private CIntegerField committed;
-    static private AddressField  regions;
     static {
         VM.registerVMInitializedObserver(new Observer() {
             public void update(Observable o, Object data) {
@@ -58,8 +53,6 @@ public class ShenandoahHeap extends CollectedHeap {
         numRegions = type.getCIntegerField("_num_regions");
         used = type.getJLongField("_used");
         committed = type.getCIntegerField("_committed");
-
-        regions = type.getAddressField("_regions");
     }
 
     @Override
@@ -71,23 +64,13 @@ public class ShenandoahHeap extends CollectedHeap {
         return numRegions.getValue(addr);
     }
 
+    @Override
     public long used() {
         return used.getValue(addr);
     }
 
     public long committed() {
         return committed.getValue(addr);
-    }
-    public void heapRegionIterate(SpaceClosure scl) {
-        int numRgns = (int)numRegions.getValue(addr);
-        for (int index = 0; index < numRgns; index ++) {
-            ShenandoahHeapRegion r = getRegion(index);
-
-            // Walk live regions
-            if (!r.isTrash() && !r.isUncommitted() && !r.isEmpty()) {
-                scl.doSpace(r);
-            }
-        }
     }
 
     @Override
@@ -96,12 +79,6 @@ public class ShenandoahHeap extends CollectedHeap {
         tty.print("Shenandoah heap");
         tty.print(" [" + mr.start() + ", " + mr.end() + "]");
         tty.println(" region size " + ShenandoahHeapRegion.regionSizeBytes() / 1024 + " K");
-    }
-
-    private ShenandoahHeapRegion getRegion(int index) {
-        Address regsAddr = regions.getValue(addr);
-        return (ShenandoahHeapRegion) VMObjectFactory.newObject(ShenandoahHeapRegion.class,
-                regsAddr.getAddressAt(index * VM.getVM().getAddressSize()));
     }
 
     public ShenandoahHeap(Address addr) {
