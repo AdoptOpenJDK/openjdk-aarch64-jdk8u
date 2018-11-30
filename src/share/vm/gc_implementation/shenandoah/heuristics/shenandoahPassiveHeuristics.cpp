@@ -24,9 +24,11 @@
 #include "precompiled.hpp"
 
 #include "gc_implementation/shenandoah/heuristics/shenandoahPassiveHeuristics.hpp"
+#include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 
-ShenandoahPassiveHeuristics::ShenandoahPassiveHeuristics() : ShenandoahAdaptiveHeuristics() {
+ShenandoahPassiveHeuristics::ShenandoahPassiveHeuristics() : ShenandoahHeuristics() {
   // Do not allow concurrent cycles.
   FLAG_SET_DEFAULT(ExplicitGCInvokesConcurrent, false);
   FLAG_SET_DEFAULT(ShenandoahImplicitGCInvokesConcurrent, false);
@@ -66,6 +68,33 @@ bool ShenandoahPassiveHeuristics::should_unload_classes() {
 bool ShenandoahPassiveHeuristics::should_degenerate_cycle() {
   // Always fail to Degenerated GC, if enabled
   return ShenandoahDegeneratedGC;
+}
+
+void ShenandoahPassiveHeuristics::choose_collection_set_from_regiondata(ShenandoahCollectionSet* cset,
+                                                                        RegionData* data, size_t size,
+                                                                        size_t actual_free) {
+  assert(ShenandoahDegeneratedGC, "This path is only taken for Degenerated GC");
+
+  // Do not select too large CSet that would overflow the available free space.
+  // Take at least the entire evacuation reserve, and be free to overflow to free space.
+  size_t capacity  = ShenandoahHeap::heap()->capacity();
+  size_t available = MAX2(ShenandoahEvacReserve * capacity / 100, actual_free);
+  size_t max_cset  = (size_t)(available / ShenandoahEvacWaste);
+
+  log_info(gc, ergo)("CSet Selection. Actual Free: " SIZE_FORMAT "M, Max CSet: " SIZE_FORMAT "M",
+                     actual_free / M, max_cset / M);
+
+  size_t threshold = ShenandoahHeapRegion::region_size_bytes() * ShenandoahGarbageThreshold / 100;
+
+  size_t live_cset = 0;
+  for (size_t idx = 0; idx < size; idx++) {
+    ShenandoahHeapRegion* r = data[idx]._region;
+    size_t new_cset = live_cset + r->get_live_data_bytes();
+    if (new_cset < max_cset && r->garbage() > threshold) {
+      live_cset = new_cset;
+      cset->add_region(r);
+    }
+  }
 }
 
 const char* ShenandoahPassiveHeuristics::name() {
