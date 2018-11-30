@@ -42,9 +42,9 @@ import java.util.Observer;
 
 public class ShenandoahHeap extends CollectedHeap {
     static private CIntegerField numRegions;
-    static private JLongField    usedRegions;
-    static private CIntegerField committedRegions;
-    static private AddressField  regionsField;
+    static private JLongField    used;
+    static private CIntegerField committed;
+    static private AddressField  regions;
     static {
         VM.registerVMInitializedObserver(new Observer() {
             public void update(Observable o, Object data) {
@@ -56,10 +56,10 @@ public class ShenandoahHeap extends CollectedHeap {
     static private synchronized void initialize(TypeDataBase db) {
         Type type = db.lookupType("ShenandoahHeap");
         numRegions = type.getCIntegerField("_num_regions");
-        usedRegions = type.getJLongField("_used");
-        committedRegions = type.getCIntegerField("_committed");
+        used = type.getJLongField("_used");
+        committed = type.getCIntegerField("_committed");
 
-        regionsField = type.getAddressField("_regions");
+        regions = type.getAddressField("_regions");
     }
 
     @Override
@@ -72,11 +72,11 @@ public class ShenandoahHeap extends CollectedHeap {
     }
 
     public long used() {
-        return usedRegions.getValue(addr);
+        return used.getValue(addr);
     }
 
     public long committed() {
-        return committedRegions.getValue(addr);
+        return committed.getValue(addr);
     }
     public void heapRegionIterate(SpaceClosure scl) {
         int numRgns = (int)numRegions.getValue(addr);
@@ -99,7 +99,7 @@ public class ShenandoahHeap extends CollectedHeap {
     }
 
     private ShenandoahHeapRegion getRegion(int index) {
-        Address regsAddr = regionsField.getValue(addr);
+        Address regsAddr = regions.getValue(addr);
         return (ShenandoahHeapRegion) VMObjectFactory.newObject(ShenandoahHeapRegion.class,
                 regsAddr.getAddressAt(index * VM.getVM().getAddressSize()));
     }
