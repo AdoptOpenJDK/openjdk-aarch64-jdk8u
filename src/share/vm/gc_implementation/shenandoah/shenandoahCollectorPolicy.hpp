@@ -26,6 +26,7 @@
 
 #include "memory/collectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
+#include "gc_implementation/shenandoah/shenandoahTracer.hpp"
 #include "utilities/ostream.hpp"
 
 class STWGCTimer;
