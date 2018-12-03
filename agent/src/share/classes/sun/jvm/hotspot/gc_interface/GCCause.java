@@ -55,6 +55,11 @@ public enum GCCause {
   _g1_inc_collection_pause ("G1 Evacuation Pause"),
   _g1_humongous_allocation ("G1 Humongous Allocation"),
 
+  _shenandoah_stop_vm ("Stop VM"),
+  _shenandoah_allocation_failure_evac ("Allocation Failure During Evacuation"),
+  _shenandoah_concurrent_gc ("Concurrent GC"),
+  _shenandoah_upgrade_to_full_gc ("Upgrade to Full GC"),
+
   _last_ditch_collection ("Last ditch collection"),
   _last_gc_cause ("ILLEGAL VALUE - last gc cause - ILLEGAL VALUE");
 

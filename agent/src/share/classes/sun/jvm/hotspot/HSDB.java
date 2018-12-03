@@ -36,6 +36,7 @@ import sun.jvm.hotspot.code.*;
 import sun.jvm.hotspot.compiler.*;
 import sun.jvm.hotspot.debugger.*;
 import sun.jvm.hotspot.gc_implementation.parallelScavenge.*;
+import sun.jvm.hotspot.gc_implementation.shenandoah.*;
 import sun.jvm.hotspot.gc_interface.*;
 import sun.jvm.hotspot.interpreter.*;
 import sun.jvm.hotspot.memory.*;
@@ -1079,6 +1080,10 @@ public class HSDB implements ObjectHistogramPanel.Listener, SAListener {
                             anno = "PSOldGen ";
                             bad = false;
                           }
+                        } else if (collHeap instanceof ShenandoahHeap) {
+                          ShenandoahHeap heap = (ShenandoahHeap) collHeap;
+                          anno = "ShenandoahHeap ";
+                          bad = false;
                         } else {
                           // Optimistically assume the oop isn't bad
                           anno = "[Unknown generation] ";
