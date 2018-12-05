@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,17 +21,22 @@
  *
  */
 
-#include <jni.h>
-#include <string.h>
+public class TestCriticalNativeArgs {
+    static {
+        System.loadLibrary("TestCriticalNative");
+    }
 
-static jint* pinned;
+    static native boolean isNull(int[] a);
 
-JNIEXPORT void JNICALL
-Java_PinnedGarbage_pin(JNIEnv *env, jclass unused, jintArray a) {
-  pinned = (*env)->GetPrimitiveArrayCritical(env, a, 0);
-}
+    public static void main(String[] args) {
+        int[] arr = new int[2];
 
-JNIEXPORT void JNICALL
-Java_PinnedGarbage_unpin(JNIEnv *env, jclass unused, jintArray a) {
-  (*env)->ReleasePrimitiveArrayCritical(env, a, pinned, 0);
+        if (isNull(arr)) {
+            throw new RuntimeException("Should not be null");
+        }
+
+        if (!isNull(null)) {
+            throw new RuntimeException("Should be null");
+        }
+    }
 }

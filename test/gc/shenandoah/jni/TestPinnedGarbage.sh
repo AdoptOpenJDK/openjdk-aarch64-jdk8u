@@ -26,7 +26,7 @@
 ##
 ## @test
 ## @summary test Test that garbage in the pinned region does not crash VM
-## @run shell/timeout=480 PinnedGarbage.sh
+## @run shell/timeout=480 TestPinnedGarbage.sh
 ##
 
 if [ "${TESTSRC}" = "" ]
@@ -54,17 +54,17 @@ fi
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
-${TESTJAVA}${FS}bin${FS}javac PinnedGarbage.java
+${TESTJAVA}${FS}bin${FS}javac TestPinnedGarbage.java
 
 $gcc_cmd -O1 -DLINUX -fPIC -shared \
-    -o ${THIS_DIR}${FS}libPinnedGarbage.so \
+    -o ${THIS_DIR}${FS}libTestPinnedGarbage.so \
     -I${TESTJAVA}${FS}include \
     -I${TESTJAVA}${FS}include${FS}linux \
-    ${TESTSRC}${FS}libPinnedGarbage.c
+    ${TESTSRC}${FS}libTestPinnedGarbage.c
 
 # run the java test in the background
 cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:+ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
-    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
+    -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"
 eval $cmd
@@ -76,7 +76,7 @@ then
 fi
 
 cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:-ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
-    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
+    -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"
 eval $cmd
@@ -88,7 +88,7 @@ then
 fi
 
 cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify \
-    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
+    -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"
 eval $cmd
@@ -100,7 +100,7 @@ then
 fi
 
 cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
-    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
+    -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"
 eval $cmd

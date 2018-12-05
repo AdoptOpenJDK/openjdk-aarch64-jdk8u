@@ -23,11 +23,11 @@
 
 import java.util.Random;
 
-public class CriticalNativeStress {
+public class TestCriticalNativeStress {
     private static Random rand = new Random();
 
     static {
-        System.loadLibrary("CriticalNative");
+        System.loadLibrary("TestCriticalNative");
     }
 
     static final int CYCLES = 50;

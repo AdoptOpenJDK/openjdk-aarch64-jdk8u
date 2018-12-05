@@ -22,13 +22,13 @@
  */
 
 /*
- * @test WrongArrayMember
+ * @test TestWrongArrayMember
  * @key gc
  *
- * @run main/othervm -Xmx128m -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                      WrongArrayMember
+ * @run main/othervm -Xmx128m -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                      TestWrongArrayMember
  */
 
-public class WrongArrayMember {
+public class TestWrongArrayMember {
     public static void main(String... args) throws Exception {
         Object[] src = new Object[3];
         src[0] = new Integer(0);

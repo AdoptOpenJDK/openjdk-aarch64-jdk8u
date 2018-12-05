@@ -22,18 +22,18 @@
  */
 
 /*
- * @test RefprocSanity
+ * @test TestRefprocSanity
  * @summary Test that null references/referents work fine
  * @key gc
  *
- * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                                             RefprocSanity
- * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify                                       RefprocSanity
- * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                       -XX:ShenandoahGCHeuristics=aggressive RefprocSanity
+ * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                                             TestRefprocSanity
+ * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify                                       TestRefprocSanity
+ * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                       -XX:ShenandoahGCHeuristics=aggressive TestRefprocSanity
  */
 
 import java.lang.ref.*;
 
-public class RefprocSanity {
+public class TestRefprocSanity {
 
     static final long TARGET_MB = Long.getLong("target", 10_000); // 10 Gb allocation
     static final int WINDOW = 10_000;

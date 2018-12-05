@@ -27,7 +27,7 @@
 ## @test
 ## @requires (os.arch == "x86_64" | os.arch == "amd64")
 ## @summary test JNI critical arrays support in Shenandoah
-## @run shell/timeout=480 CriticalNativeStress.sh
+## @run shell/timeout=480 TestCriticalNativeArgs.sh
 ##
 
 if [ "${TESTSRC}" = "" ]
@@ -55,18 +55,29 @@ fi
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
-${TESTJAVA}${FS}bin${FS}javac CriticalNativeStress.java
+${TESTJAVA}${FS}bin${FS}javac TestCriticalNativeArgs.java
 
 $gcc_cmd -O1 -DLINUX -fPIC -shared \
-    -o ${THIS_DIR}${FS}libCriticalNative.so \
+    -o ${THIS_DIR}${FS}libTestCriticalNative.so \
     -I${TESTJAVA}${FS}include \
     -I${TESTJAVA}${FS}include${FS}linux \
-    ${TESTSRC}${FS}libCriticalNative.c
+    ${TESTSRC}${FS}libTestCriticalNative.c
 
 # run the java test in the background
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:-ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
+
+echo "$cmd"
+eval $cmd
+
+if [ $? -ne 0 ]
+then
+    echo "Test Failed"
+    exit 1
+fi
 
 cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:+ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
-    -Djava.library.path=${THIS_DIR}${FS} CriticalNativeStress"
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"
 eval $cmd
@@ -77,20 +88,8 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:-ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
-    -Djava.library.path=${THIS_DIR}${FS} CriticalNativeStress"
-
-echo "$cmd"
-eval $cmd
-
-if [ $? -ne 0 ]
-then
-    echo "Test Failed"
-    exit 1
-fi
-
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xcomp -Xmx256M -XX:+CriticalJNINatives \
-    -Djava.library.path=${THIS_DIR}${FS} CriticalNativeStress"
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xcomp -Xmx256M -XX:+CriticalJNINatives \
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"
 eval $cmd
@@ -102,7 +101,7 @@ then
 fi
 
 cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive -Xcomp -Xmx512M -XX:+CriticalJNINatives \
-    -Djava.library.path=${THIS_DIR}${FS} CriticalNativeStress"
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"
 eval $cmd

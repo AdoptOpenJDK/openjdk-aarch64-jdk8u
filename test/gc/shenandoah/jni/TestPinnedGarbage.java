@@ -24,9 +24,9 @@
 import java.util.Arrays;
 import java.util.concurrent.*;
 
-public class PinnedGarbage {
+public class TestPinnedGarbage {
     static {
-        System.loadLibrary("PinnedGarbage");
+        System.loadLibrary("TestPinnedGarbage");
     }
 
     private static final int NUM_RUNS      = 1_000;
