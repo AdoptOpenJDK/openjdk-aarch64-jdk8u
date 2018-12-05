@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright (c) 2017 Red Hat, Inc. and/or its affiliates.
+# Copyright (c) 2017, 2018, Red Hat, Inc. All rights reserved.
 #
 #  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
