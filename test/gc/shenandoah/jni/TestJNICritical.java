@@ -23,9 +23,9 @@
 
 import java.util.Arrays;
 
-public class ShenandoahJNICritical {
+public class TestJNICritical {
     static {
-        System.loadLibrary("ShenandoahJNICritical");
+        System.loadLibrary("TestJNICritical");
     }
 
     private static final int NUM_RUNS   = 10000;

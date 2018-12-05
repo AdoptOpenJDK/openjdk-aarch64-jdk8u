@@ -22,17 +22,17 @@
  */
 
 /*
- * @test TestShenandoahArgumentRanges
+ * @test TestArgumentRanges
  * @summary Test that Shenandoah arguments are checked for ranges where applicable
  * @key gc
  * @library /testlibrary
  *
- * @run driver TestShenandoahArgumentRanges
+ * @run driver TestArgumentRanges
  */
 
 import com.oracle.java.testlibrary.*;
 
-public class TestShenandoahArgumentRanges {
+public class TestArgumentRanges {
     public static void main(String[] args) throws Exception {
         testRange("ShenandoahGarbageThreshold", 0, 100);
         testRange("ShenandoahFreeThreshold", 0, 100);

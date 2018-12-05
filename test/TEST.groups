@@ -150,12 +150,12 @@ hotspot_tier2_gc_shenandoah = \
   gc/metaspace/TestMetaspacePerfCounters.java \
   gc/startup_warnings/TestShenandoah.java \
   gc/shenandoah/
-  -gc/shenandoah/ShenandoahStrDedupStress.java \
+  -gc/shenandoah/StringDedupStress.java \
   -gc/shenandoah/jni/CriticalNativeStress.sh \
   -:hotspot_tier1_gc_shenandoah
 
 hotspot_tier3_gc_shenandoah = \
-  gc/shenandoah/ShenandoahStrDedupStress.java \
+  gc/shenandoah/StringDedupStress.java \
   gc/shenandoah/jni/CriticalNativeStress.sh \
   -:hotspot_tier2_gc_shenandoah
 

@@ -26,7 +26,7 @@
 ##
 ## @test
 ## @summary test JNI critical arrays support in Shenandoah
-## @run shell/timeout=120 ShenandoahJNICritical.sh
+## @run shell/timeout=120 TestJNICritical.sh
 ##
 
 if [ "${TESTSRC}" = "" ]
@@ -54,17 +54,17 @@ fi
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
-${TESTJAVA}${FS}bin${FS}javac ShenandoahJNICritical.java
+${TESTJAVA}${FS}bin${FS}javac TestJNICritical.java
 
 $gcc_cmd -O1 -DLINUX -fPIC -shared \
-    -o ${THIS_DIR}${FS}libShenandoahJNICritical.so \
+    -o ${THIS_DIR}${FS}libTestJNICritical.so \
     -I${TESTJAVA}${FS}include \
     -I${TESTJAVA}${FS}include${FS}linux \
-    ${TESTSRC}${FS}libShenandoahJNICritical.c
+    ${TESTSRC}${FS}libTestJNICritical.c
 
 # run the java test in the background
 cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:ShenandoahGCHeuristics=aggressive \
-    -Djava.library.path=${THIS_DIR}${FS} ShenandoahJNICritical"
+    -Djava.library.path=${THIS_DIR}${FS} TestJNICritical"
 
 echo "$cmd"
 eval $cmd
@@ -76,7 +76,7 @@ then
 fi
 
 cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
-    -Djava.library.path=${THIS_DIR}${FS} ShenandoahJNICritical"
+    -Djava.library.path=${THIS_DIR}${FS} TestJNICritical"
 
 echo "$cmd"
 eval $cmd
