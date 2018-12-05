@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
 #  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 #  This code is free software; you can redistribute it and/or modify it
@@ -25,8 +25,8 @@
 
 ##
 ## @test
-## @summary test JNI critical arrays support in Shenandoah
-## @run shell/timeout=120 ShenandoahJNICritical.sh
+## @summary test Test that garbage in the pinned region does not crash VM
+## @run shell/timeout=480 PinnedGarbage.sh
 ##
 
 if [ "${TESTSRC}" = "" ]
@@ -36,7 +36,7 @@ then
 fi
 echo "TESTSRC=${TESTSRC}"
 ## Adding common setup Variables for running shell tests.
-. ${TESTSRC}/../../test_env.sh
+. ${TESTSRC}/../../../test_env.sh
 
 # set platform-dependent variables
 if [ "$VM_OS" = "linux" ]; then
@@ -54,17 +54,17 @@ fi
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
-${TESTJAVA}${FS}bin${FS}javac ShenandoahJNICritical.java
+${TESTJAVA}${FS}bin${FS}javac PinnedGarbage.java
 
 $gcc_cmd -O1 -DLINUX -fPIC -shared \
-    -o ${THIS_DIR}${FS}libShenandoahJNICritical.so \
+    -o ${THIS_DIR}${FS}libPinnedGarbage.so \
     -I${TESTJAVA}${FS}include \
     -I${TESTJAVA}${FS}include${FS}linux \
-    ${TESTSRC}${FS}libShenandoahJNICritical.c
+    ${TESTSRC}${FS}libPinnedGarbage.c
 
 # run the java test in the background
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:ShenandoahGCHeuristics=aggressive \
-    -Djava.library.path=${THIS_DIR}${FS} ShenandoahJNICritical"
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:+ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
+    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
 
 echo "$cmd"
 eval $cmd
@@ -75,8 +75,32 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
-    -Djava.library.path=${THIS_DIR}${FS} ShenandoahJNICritical"
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:-ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
+    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
+
+echo "$cmd"
+eval $cmd
+
+if [ $? -ne 0 ]
+then
+    echo "Test Failed"
+    exit 1
+fi
+
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify \
+    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
+
+echo "$cmd"
+eval $cmd
+
+if [ $? -ne 0 ]
+then
+    echo "Test Failed"
+    exit 1
+fi
+
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
+    -Djava.library.path=${THIS_DIR}${FS} PinnedGarbage"
 
 echo "$cmd"
 eval $cmd
