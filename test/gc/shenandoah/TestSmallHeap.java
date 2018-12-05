@@ -23,6 +23,7 @@
 
 /*
  * @test TestSmallHeap
+ * @key gc
  *
  * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC         TestSmallHeap
  * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx64m TestSmallHeap

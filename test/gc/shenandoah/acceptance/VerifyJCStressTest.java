@@ -25,8 +25,7 @@
  * @test VerifyJCStressTest
  * @summary Tests that we pass at least one jcstress-like test with all verification turned on
  * @key gc
- * @modules java.base/jdk.internal.misc
- *          java.management
+ *
  * @run main/othervm  -Xmx1g -Xms1g -XX:+IgnoreUnrecognizedVMOptions
  *                    -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+UseShenandoahGC
  *                    -XX:+ShenandoahStoreCheck -XX:+ShenandoahVerify -XX:+VerifyObjectEquals

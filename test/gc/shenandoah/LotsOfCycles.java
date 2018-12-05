@@ -23,6 +23,7 @@
 
 /*
  * @test LotsOfCycles
+ * @key gc
  *
  * @run main/othervm/timeout=480 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=passive      -Dtarget=10000 -XX:+ShenandoahDegeneratedGC     LotsOfCycles
  * @run main/othervm/timeout=480 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=passive      -Dtarget=10000 -XX:-ShenandoahDegeneratedGC     LotsOfCycles

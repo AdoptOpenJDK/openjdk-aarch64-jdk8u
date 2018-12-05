@@ -24,6 +24,7 @@
 /*
  * @test HeapUncommit
  * @summary Acceptance tests: collector can withstand allocation
+ * @key gc
  *
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCHeuristics=passive      -XX:ShenandoahUncommitDelay=0 -XX:+ShenandoahDegeneratedGC -XX:+ShenandoahVerify HeapUncommit
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCHeuristics=passive      -XX:ShenandoahUncommitDelay=0 -XX:-ShenandoahDegeneratedGC -XX:+ShenandoahVerify HeapUncommit

@@ -23,6 +23,7 @@
 
 /*
  * @test HumongousThreshold
+ * @key gc
  *
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g                                      -XX:+ShenandoahVerify HumongousThreshold
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:ShenandoahHumongousThreshold=50  -XX:+ShenandoahVerify HumongousThreshold

@@ -26,8 +26,7 @@
  * @summary Test that Shenandoah reacts properly on -verbose:gc
  * @key gc
  * @library /testlibrary
- * @modules java.base/jdk.internal.misc
- *          java.management
+ *
  * @run driver TestVerboseGC
  */
 

@@ -24,7 +24,9 @@
 /**
  * @test TestAllocSmallObj
  * @summary Test allocation of small object to result OOM, but not to crash JVM
+ * @key gc
  * @library /testlibrary
+ *
  * @run main TestAllocSmallObj
  */
 

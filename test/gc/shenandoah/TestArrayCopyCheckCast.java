@@ -23,6 +23,7 @@
 
 /*
  * @test TestArrayCopyCheckCast
+ * @key gc
  *
  * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:TieredStopAtLevel=0 -Xmx16m TestArrayCopyCheckCast
  */

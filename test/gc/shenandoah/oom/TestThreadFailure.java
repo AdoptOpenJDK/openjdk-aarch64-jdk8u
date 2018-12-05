@@ -24,7 +24,9 @@
 /**
  * @test TestThreadFailure
  * @summary Test OOME in separate thread is recoverable
+ * @key gc
  * @library /testlibrary
+ *
  * @run main/timeout=480 TestThreadFailure
  */
 

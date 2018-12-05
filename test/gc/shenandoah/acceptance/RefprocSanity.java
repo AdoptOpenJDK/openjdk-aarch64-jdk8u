@@ -24,6 +24,7 @@
 /*
  * @test RefprocSanity
  * @summary Test that null references/referents work fine
+ * @key gc
  *
  * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                                             RefprocSanity
  * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify                                       RefprocSanity

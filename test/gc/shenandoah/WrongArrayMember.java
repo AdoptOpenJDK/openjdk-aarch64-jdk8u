@@ -23,6 +23,7 @@
 
 /*
  * @test WrongArrayMember
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                      WrongArrayMember
  */

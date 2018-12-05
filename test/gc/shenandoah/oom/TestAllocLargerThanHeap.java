@@ -24,7 +24,9 @@
 /**
  * @test TestAllocLargerThanHeap
  * @summary Test that allocation of the object larger than heap fails predictably
+ * @key gc
  * @library /testlibrary
+ *
  * @run main TestAllocLargerThanHeap
  */
 

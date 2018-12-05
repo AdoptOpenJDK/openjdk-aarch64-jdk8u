@@ -22,8 +22,10 @@
  */
 
 /**
- * @test
+ * @test TestNullCheck
  * @summary implicit null check on brooks pointer must not cause crash
+ * @key gc
+ *
  * @run main/othervm -XX:-BackgroundCompilation -XX:-UseOnStackReplacement -XX:-TieredCompilation
  *                   -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC
  *                   -Xmx4G -XX:HeapBaseMinAddress=32G TestNullCheck

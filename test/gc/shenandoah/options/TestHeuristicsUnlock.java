@@ -26,8 +26,7 @@
  * @summary Test that Shenandoah heuristics are unlocked properly
  * @key gc
  * @library /testlibrary
- * @modules java.base/jdk.internal.misc
- *          java.management
+ *
  * @run driver TestHeuristicsUnlock
  */
 

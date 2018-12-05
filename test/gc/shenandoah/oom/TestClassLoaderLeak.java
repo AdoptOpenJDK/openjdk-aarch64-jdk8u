@@ -24,7 +24,9 @@
 /**
  * @test TestClassLoaderLeak
  * @summary Test OOME in due to classloader leak
+ * @key gc
  * @library /testlibrary
+ *
  * @run main/timeout=480 TestClassLoaderLeak
  */
 

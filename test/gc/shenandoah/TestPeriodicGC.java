@@ -26,6 +26,7 @@
  * @summary Test that periodic GC is working
  * @key gc
  * @library /testlibrary
+ *
  * @run driver TestPeriodicGC
  */
 

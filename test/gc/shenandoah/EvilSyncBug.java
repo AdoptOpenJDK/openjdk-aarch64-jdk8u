@@ -26,8 +26,7 @@
  * @summary Tests for crash/assert when attaching init thread during shutdown
  * @key gc
  * @library /testlibrary
- * @modules java.base/jdk.internal.misc
- *          java.management
+ *
  * @run driver/timeout=480 EvilSyncBug
  */
 

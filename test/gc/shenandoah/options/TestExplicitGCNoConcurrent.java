@@ -26,6 +26,7 @@
  * @summary Test that Shenandoah reacts to explicit GC flags appropriately
  * @key gc
  * @library /testlibrary
+ *
  * @run driver TestExplicitGCNoConcurrent
  */
 

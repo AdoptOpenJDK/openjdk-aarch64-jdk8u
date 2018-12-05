@@ -26,6 +26,7 @@
  * @summary Test that loop mining arguments are sane
  * @key gc
  * @library /testlibrary
+ *
  * @run driver TestClassUnloadingArguments
  */
 

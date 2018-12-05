@@ -21,10 +21,12 @@
  *
  */
 
-/* @test
+/*
+ * @test TestSelectiveBarrierFlags
  * @summary Test selective barrier enabling works, by aggressively compiling HelloWorld with combinations
  *          of barrier flags
  * @library /testlibrary
+ *
  * @run main/othervm TestSelectiveBarrierFlags -Xint
  * @run main/othervm TestSelectiveBarrierFlags -Xbatch -XX:CompileThreshold=100 -XX:TieredStopAtLevel=1
  * @run main/othervm TestSelectiveBarrierFlags -Xbatch -XX:CompileThreshold=100 -XX:-TieredCompilation -XX:+IgnoreUnrecognizedVMOptions -XX:+ShenandoahVerifyOptoBarriers

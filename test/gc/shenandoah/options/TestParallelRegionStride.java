@@ -23,6 +23,8 @@
 
 /*
  * @test TestParallelRegionStride
+ * @key gc
+ *
  * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahParallelRegionStride=1    -Xmx128m TestParallelRegionStride
  * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahParallelRegionStride=10   -Xmx128m TestParallelRegionStride
  * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahParallelRegionStride=100  -Xmx128m TestParallelRegionStride

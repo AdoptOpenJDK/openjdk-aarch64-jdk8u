@@ -22,10 +22,11 @@
  */
 
 /**
- * @test
+ * @test TestMaybeNullUnsafeAccess
  * @summary cast on before unsafe access moved in dominating null check null path causes crash
- *
+ * @key gc
  * @library /testlibrary
+ *
  * @run main/othervm -XX:-UseOnStackReplacement -XX:-BackgroundCompilation -XX:-TieredCompilation TestMaybeNullUnsafeAccess
  *      
  */

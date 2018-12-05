@@ -26,8 +26,7 @@
  * @summary Test that Shenandoah arguments are checked for ranges where applicable
  * @key gc
  * @library /testlibrary
- * @modules java.base/jdk.internal.misc
- *          java.management
+ *
  * @run driver TestShenandoahArgumentRanges
  */
 
