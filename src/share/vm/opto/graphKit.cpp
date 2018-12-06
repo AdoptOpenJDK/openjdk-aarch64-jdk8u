@@ -4255,10 +4255,6 @@ Node* GraphKit::shenandoah_read_barrier_storeval(Node* obj) {
   return shenandoah_read_barrier_impl(obj, true, false, false);
 }
 
-Node* GraphKit::shenandoah_read_barrier_acmp(Node* obj) {
-  return shenandoah_read_barrier_impl(obj, true, true, false);
-}
-
 Node* GraphKit::shenandoah_read_barrier_impl(Node* obj, bool use_ctrl, bool use_mem, bool allow_fromspace) {
 
   if (UseShenandoahGC && ShenandoahReadBarrier) {
