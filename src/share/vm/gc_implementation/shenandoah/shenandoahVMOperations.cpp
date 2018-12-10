@@ -24,8 +24,8 @@
 #include "precompiled.hpp"
 
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahVMOperations.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
-#include "gc_implementation/shenandoah/vm_operations_shenandoah.hpp"
 
 bool VM_ShenandoahReferenceOperation::doit_prologue() {
   if (Thread::current()->is_Java_thread()) {
