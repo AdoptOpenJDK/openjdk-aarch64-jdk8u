@@ -864,7 +864,7 @@ static inline Node* isa_java_mirror_load(PhaseGVN* phase, Node* n) {
   //   LoadP(AddP(foo:Klass, #java_mirror))
   //   or NULL if not matching.
 
-#if INCLUDE_SHENANDOAHGC
+#if INCLUDE_ALL_GCS
   n = ShenandoahBarrierNode::skip_through_barrier(n);
 #endif
 
