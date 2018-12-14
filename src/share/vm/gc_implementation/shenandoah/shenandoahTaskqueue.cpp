@@ -23,7 +23,7 @@
 
 #include "precompiled.hpp"
 
-#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 #include "gc_implementation/shenandoah/shenandoahTaskqueue.hpp"
 
@@ -88,9 +88,7 @@ bool ShenandoahTaskTerminator::offer_termination(ShenandoahTerminatorTerminator*
       }
     }
 
-    bool force = (terminator != NULL) && terminator->should_force_termination();
-    bool exit  = (terminator != NULL) && terminator->should_exit_termination();
-    if ((!force && peek_in_queue_set()) || exit) {
+    if (peek_in_queue_set() || (terminator != NULL && terminator->should_exit_termination())) {
       _offered_termination --;
       _blocker->unlock();
       return false;
@@ -205,7 +203,7 @@ bool ShenandoahTaskTerminator::do_spin_master_work(ShenandoahTerminatorTerminato
       _total_peeks++;
 #endif
     size_t tasks = tasks_in_queue_set();
-    if (tasks > 0 && (terminator == NULL || ! terminator->should_force_termination())) {
+    if (tasks > 0 || (terminator != NULL && terminator->should_exit_termination())) {
       MonitorLockerEx locker(_blocker, Mutex::_no_safepoint_check_flag);   // no safepoint check
 
       if ((int) tasks >= _offered_termination - 1) {
@@ -222,3 +220,8 @@ bool ShenandoahTaskTerminator::do_spin_master_work(ShenandoahTerminatorTerminato
     }
   }
 }
+
+bool ShenandoahTerminatorTerminator::should_exit_termination() {
+  return _heap->cancelled_gc();
+}
+

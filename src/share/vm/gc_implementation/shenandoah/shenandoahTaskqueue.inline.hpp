@@ -24,6 +24,8 @@
 #ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHTASKQUEUE_INLINE_HPP
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHTASKQUEUE_INLINE_HPP
 
+#include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
+
 template <class E, MEMFLAGS F, unsigned int N>
 bool BufferedOverflowTaskQueue<E, F, N>::pop(E &t)
 {

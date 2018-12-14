@@ -935,8 +935,6 @@ void ShenandoahConcurrentMark::mark_loop_work(T* cl, jushort* live_data, uint wo
   q = queues->claim_next();
   while (q != NULL) {
     if (CANCELLABLE && heap->cancelled_gc()) {
-      ShenandoahCancelledTerminatorTerminator tt;
-      while (!terminator->offer_termination(&tt));
       return;
     }
 
@@ -966,8 +964,6 @@ void ShenandoahConcurrentMark::mark_loop_work(T* cl, jushort* live_data, uint wo
    */
   while (true) {
     if (CANCELLABLE && heap->cancelled_gc()) {
-      ShenandoahCancelledTerminatorTerminator tt;
-      while (!terminator->offer_termination(&tt));
       return;
     }
 
@@ -989,7 +985,8 @@ void ShenandoahConcurrentMark::mark_loop_work(T* cl, jushort* live_data, uint wo
     if (work == 0) {
       // No work encountered in current stride, try to terminate.
       ShenandoahTerminationTimingsTracker term_tracker(worker_id);
-      if (terminator->offer_termination()) return;
+      ShenandoahTerminatorTerminator tt(heap);
+      if (terminator->offer_termination(&tt)) return;
     }
   }
 }
