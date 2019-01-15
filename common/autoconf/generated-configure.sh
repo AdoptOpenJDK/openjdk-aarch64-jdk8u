@@ -4336,7 +4336,7 @@ VS_SDK_PLATFORM_NAME_2017=
 #CUSTOM_AUTOCONF_INCLUDE
 
 # Do not change or remove the following line, it is needed for consistency checks:
-DATE_WHEN_GENERATED=1547488681
+DATE_WHEN_GENERATED=1547532465
 
 ###############################################################################
 #
@@ -41411,7 +41411,7 @@ fi
   if test "x$TOOLCHAIN_TYPE" = xgcc; then
     # these options are used for both C and C++ compiles
     CCXXFLAGS_JDK="$CCXXFLAGS $CCXXFLAGS_JDK -Wall -Wno-parentheses -Wextra -Wno-unused -Wno-unused-parameter -Wformat=2 \
-        -pipe -D_GNU_SOURCE -D_REENTRANT -D_LARGEFILE64_SOURCE"
+        -pipe -fstack-protector -D_GNU_SOURCE -D_REENTRANT -D_LARGEFILE64_SOURCE"
     case $OPENJDK_TARGET_CPU_ARCH in
       arm )
         # on arm we don't prevent gcc to omit frame pointer but do prevent strict aliasing
