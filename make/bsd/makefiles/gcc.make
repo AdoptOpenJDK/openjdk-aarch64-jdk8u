@@ -190,7 +190,7 @@ CFLAGS += -fno-rtti
 CFLAGS += -fno-exceptions
 ifeq ($(USE_CLANG),)
   CFLAGS += -pthread
-  CFLAGS += -fcheck-new
+  CFLAGS += -fcheck-new -fstack-protector
   # version 4 and above support fvisibility=hidden (matches jni_x86.h file)
   # except 4.1.2 gives pointless warnings that can't be disabled (afaik)
   ifneq "$(shell expr \( $(CC_VER_MAJOR) \> 4 \) \| \( \( $(CC_VER_MAJOR) = 4 \) \& \( $(CC_VER_MINOR) \>= 3 \) \))" "0"
