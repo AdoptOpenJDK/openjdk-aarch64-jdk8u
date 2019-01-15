@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -2462,8 +2462,8 @@ void Compile::Code_Gen() {
   print_method(PHASE_FINAL_CODE);
 
   // He's dead, Jim.
-  _cfg     = (PhaseCFG*)0xdeadbeef;
-  _regalloc = (PhaseChaitin*)0xdeadbeef;
+  _cfg     = (PhaseCFG*)((intptr_t)0xdeadbeef);
+  _regalloc = (PhaseChaitin*)((intptr_t)0xdeadbeef);
 }
 
 
@@ -3599,7 +3599,7 @@ void Compile::verify_graph_edges(bool no_dead_code) {
     _root->verify_edges(visited);
     if (no_dead_code) {
       // Now make sure that no visited node is used by an unvisited node.
-      bool dead_nodes = 0;
+      bool dead_nodes = false;
       Unique_Node_List checked(area);
       while (visited.size() > 0) {
         Node* n = visited.pop();
@@ -3610,14 +3610,16 @@ void Compile::verify_graph_edges(bool no_dead_code) {
           if (visited.member(use))  continue;  // already in the graph
           if (use->is_Con())        continue;  // a dead ConNode is OK
           // At this point, we have found a dead node which is DU-reachable.
-          if (dead_nodes++ == 0)
+          if (!dead_nodes) {
             tty->print_cr("*** Dead nodes reachable via DU edges:");
+            dead_nodes = true;
+          }
           use->dump(2);
           tty->print_cr("---");
           checked.push(use);  // No repeats; pretend it is now checked.
         }
       }
-      assert(dead_nodes == 0, "using nodes must be reachable from root");
+      assert(!dead_nodes, "using nodes must be reachable from root");
     }
   }
 }
