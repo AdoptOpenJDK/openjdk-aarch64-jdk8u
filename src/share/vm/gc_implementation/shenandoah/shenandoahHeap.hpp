@@ -158,9 +158,9 @@ public:
     return &_lock;
   }
 
-  void assert_heaplock_owned_by_current_thread()     PRODUCT_RETURN;
-  void assert_heaplock_not_owned_by_current_thread() PRODUCT_RETURN;
-  void assert_heaplock_or_safepoint()                PRODUCT_RETURN;
+  void assert_heaplock_owned_by_current_thread()     NOT_DEBUG_RETURN;
+  void assert_heaplock_not_owned_by_current_thread() NOT_DEBUG_RETURN;
+  void assert_heaplock_or_safepoint()                NOT_DEBUG_RETURN;
 
 // ---------- Initialization, termination, identification, printing routines
 //
@@ -224,7 +224,7 @@ private:
 
 public:
   uint max_workers();
-  void assert_gc_workers(uint nworker) PRODUCT_RETURN;
+  void assert_gc_workers(uint nworker) NOT_DEBUG_RETURN;
 
   ShenandoahWorkGang* workers() const;
 
