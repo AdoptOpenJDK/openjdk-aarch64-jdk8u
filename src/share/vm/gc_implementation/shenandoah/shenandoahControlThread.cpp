@@ -54,7 +54,19 @@ ShenandoahControlThread::ShenandoahControlThread() :
   _degen_point(ShenandoahHeap::_degenerated_outside_cycle),
   _allocs_seen(0) {
 
-  create_and_start();
+  if (os::create_thread(this, os::cgc_thread)) {
+    int native_prio;
+    if (ShenandoahCriticalControlThreadPriority) {
+      native_prio = os::java_to_os_priority[CriticalPriority];
+    } else {
+      native_prio = os::java_to_os_priority[NearMaxPriority];
+    }
+    os::set_native_priority(this, native_prio);
+    if (!_should_terminate && !DisableStartThread) {
+      os::start_thread(this);
+    }
+  }
+
   _periodic_task.enroll();
   _periodic_satb_flush_task.enroll();
 }
