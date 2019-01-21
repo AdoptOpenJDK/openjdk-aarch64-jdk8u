@@ -202,7 +202,7 @@ class typeArrayOopDesc : public arrayOopDesc {
   }
   void metadata_at_put(int which, Metadata* contents) {
     typeArrayOop p = typeArrayOop(oopDesc::bs()->write_barrier(this));
-    *p->long_at_addr(which) = (long)contents;
+    *p->long_at_addr(which) = (jlong)contents;
   }
 #else
   Metadata* metadata_at(int which) const {
