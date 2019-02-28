@@ -443,7 +443,8 @@ void ShenandoahHeap::print_on(outputStream* st) const {
 class ShenandoahInitGCLABClosure : public ThreadClosure {
 public:
   void do_thread(Thread* thread) {
-    if (thread != NULL && (thread->is_Java_thread() || thread->is_Worker_thread())) {
+    assert(thread == NULL || !thread->is_Java_thread(), "Don't expect JavaThread this early");
+    if (thread != NULL && thread->is_Worker_thread()) {
       thread->gclab().initialize(true);
     }
   }
@@ -454,8 +455,7 @@ void ShenandoahHeap::post_initialize() {
     MutexLocker ml(Threads_lock);
 
     ShenandoahInitGCLABClosure init_gclabs;
-    Threads::java_threads_do(&init_gclabs);
-    _workers->threads_do(&init_gclabs);
+    Threads::threads_do(&init_gclabs);
   }
 
   _scm->initialize(_max_workers);
