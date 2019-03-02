@@ -45,13 +45,14 @@ ShenandoahGCSession::ShenandoahGCSession(GCCause::Cause cause) :
   assert(!ShenandoahGCPhase::is_valid_phase(ShenandoahGCPhase::current_phase()),
         "No current GC phase");
 
+  _heap->set_gc_cause(cause);
   _timer->register_gc_start();
   _tracer->report_gc_start(cause, _timer->gc_start());
   _heap->trace_heap(GCWhen::BeforeGC, _tracer);
 
   _heap->shenandoah_policy()->record_cycle_start();
   _heap->heuristics()->record_cycle_start();
-  _trace_cycle.initialize(false, _heap->gc_cause(),
+  _trace_cycle.initialize(false, cause,
           /* allMemoryPoolsAffected */    true,
           /* recordGCBeginTime = */       true,
           /* recordPreGCUsage = */        true,
@@ -70,6 +71,7 @@ ShenandoahGCSession::~ShenandoahGCSession() {
 
   assert(!ShenandoahGCPhase::is_valid_phase(ShenandoahGCPhase::current_phase()),
          "No current GC phase");
+  _heap->set_gc_cause(GCCause::_no_gc);
 }
 
 ShenandoahGCPauseMark::ShenandoahGCPauseMark(SvcGCMarker::reason_type type) :
