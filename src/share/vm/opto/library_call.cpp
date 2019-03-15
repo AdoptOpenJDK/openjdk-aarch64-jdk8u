@@ -42,6 +42,7 @@
 #include "prims/nativeLookup.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "trace/traceMacros.hpp"
+#include "utilities/macros.hpp"
 
 
 class LibraryIntrinsic : public InlineCallGenerator {
@@ -2737,6 +2738,14 @@ bool LibraryCallKit::inline_unsafe_access(bool is_native_ptr, bool is_store, Bas
   // the alias analysis of the rest of the graph, either Compile::can_alias
   // or Compile::must_alias will throw a diagnostic assert.)
   bool need_mem_bar = (alias_type->adr_type() == TypeOopPtr::BOTTOM);
+
+#if INCLUDE_ALL_GCS
+  // Work around JDK-8220714 bug. This is done for Shenandoah only, until
+  // the shared code fix is upstreamed and properly tested there.
+  if (UseShenandoahGC) {
+    need_mem_bar |= is_native_ptr;
+  }
+#endif
 
   // If we are reading the value of the referent field of a Reference
   // object (either by using Unsafe directly or through reflection)
