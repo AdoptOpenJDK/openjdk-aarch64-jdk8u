@@ -62,15 +62,15 @@ class ShenandoahRootProcessor : public StackObj {
   ShenandoahSynchronizerIterator _om_iterator;
 
   void process_java_roots(OopClosure* scan_non_heap_roots,
-                          CLDClosure* thread_clds,
                           CLDClosure* scan_strong_clds,
                           CLDClosure* scan_weak_clds,
                           CodeBlobClosure* scan_strong_code,
+                          ThreadClosure* thread_cl,
                           uint worker_i);
 
   void process_vm_roots(OopClosure* scan_non_heap_roots,
-                        OopClosure* scan_non_heap_weak_roots,
                         OopClosure* weak_jni_roots,
+                        BoolObjectClosure* is_alive,
                         uint worker_i);
 
 public:
@@ -78,20 +78,39 @@ public:
                           ShenandoahPhaseTimings::Phase phase);
   ~ShenandoahRootProcessor();
 
-  // Apply oops, clds and blobs to all strongly reachable roots in the system
+  // Apply oops, clds and blobs to all strongly reachable roots in the system.
+  // Optionally, apply class loader closure to weak clds, depending on class unloading
+  // for the particular GC cycles.
   void process_strong_roots(OopClosure* oops,
                             CLDClosure* clds,
-                            CLDClosure* weak_clds,
                             CodeBlobClosure* blobs,
                             ThreadClosure* thread_cl,
                             uint worker_id);
 
-  // Apply oops, clds and blobs to strongly and weakly reachable roots in the system
+  // Apply oops, clds and blobs to strongly reachable roots in the system
   void process_all_roots(OopClosure* oops,
                          CLDClosure* clds,
                          CodeBlobClosure* blobs,
                          ThreadClosure* thread_cl,
                          uint worker_id);
+
+  // Apply oops, clds and blobs to strongly and weakly reachable roots in the system
+  void update_all_roots(OopClosure* oops,
+                        CLDClosure* clds,
+                        CodeBlobClosure* blobs,
+                        ThreadClosure* thread_cl,
+                        uint worker_id);
+
+
+  // Apply oops, clds and blobs to strongly and weakly reachable roots in the system
+  // during traversal GC.
+  // It cleans up and updates weak roots in one iteration.
+  void traversal_update_all_roots(OopClosure* oops,
+                                  CLDClosure* clds,
+                                  CodeBlobClosure* blobs,
+                                  ThreadClosure* thread_cl,
+                                  uint worker_id);
+
 
   // For slow debug/verification code
   void process_all_roots_slow(OopClosure* oops);

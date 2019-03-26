@@ -129,7 +129,7 @@ private:
 
     ResourceMark m;
     if (heap->unload_classes()) {
-      _rp->process_strong_roots(oops, &clds_cl, NULL, &blobs_cl, NULL, worker_id);
+      _rp->process_strong_roots(oops, &clds_cl, &blobs_cl, NULL, worker_id);
     } else {
       if (ShenandoahConcurrentScanCodeRoots) {
         CodeBlobClosure* code_blobs = NULL;
@@ -182,7 +182,7 @@ public:
         DEBUG_ONLY(&assert_to_space)
         NOT_DEBUG(NULL);
     }
-    _rp->process_all_roots(&cl, &cldCl, code_blobs, NULL, worker_id);
+    _rp->update_all_roots(&cl, &cldCl, code_blobs, NULL, worker_id);
   }
 };
 
