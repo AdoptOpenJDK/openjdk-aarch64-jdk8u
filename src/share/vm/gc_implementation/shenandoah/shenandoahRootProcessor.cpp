@@ -27,7 +27,7 @@
 #include "classfile/systemDictionary.hpp"
 #include "code/codeCache.hpp"
 #include "gc_implementation/shenandoah/shenandoahClosures.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
+#include "gc_implementation/shenandoah/shenandoahRootProcessor.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahFreeSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
@@ -35,8 +35,9 @@
 #include "gc_implementation/shenandoah/shenandoahStringDedup.hpp"
 #include "gc_implementation/shenandoah/shenandoahSynchronizerIterator.hpp"
 #include "memory/allocation.inline.hpp"
-#include "runtime/fprofiler.hpp"
+#include "memory/iterator.hpp"
 #include "memory/resourceArea.hpp"
+#include "runtime/fprofiler.hpp"
 #include "runtime/thread.hpp"
 #include "services/management.hpp"
 
@@ -106,18 +107,7 @@ void ShenandoahRootProcessor::process_all_roots(OopClosure* oops,
                                                 CodeBlobClosure* blobs,
                                                 ThreadClosure* thread_cl,
                                                 uint worker_id) {
-
-  assert(thread_cl == NULL, "not implemented yet");
-  AlwaysTrueClosure always_true;
-  process_java_roots(oops, clds, clds, blobs, thread_cl, worker_id);
-  process_vm_roots(oops, oops, &always_true, worker_id);
-
-  if (blobs != NULL) {
-    ShenandoahWorkerTimingsTracker timer(ShenandoahPhaseTimings::CodeCacheRoots, worker_id);
-    _coderoots_all_iterator.possibly_parallel_blobs_do(blobs);
-  }
-
-  _process_strong_tasks->all_tasks_completed();
+  update_all_roots<AlwaysTrueClosure>(oops, clds, blobs, thread_cl, worker_id);
 }
 
 void ShenandoahRootProcessor::process_java_roots(OopClosure* strong_roots,
@@ -198,14 +188,6 @@ void ShenandoahRootProcessor::process_vm_roots(OopClosure* strong_roots,
     int removed = 0;
     StringTable::possibly_parallel_unlink_or_oops_do(is_alive, weak_roots, &processed, &removed);
   }
-}
-
-void ShenandoahRootProcessor::update_all_roots(OopClosure* oops,
-                                               CLDClosure* clds,
-                                               CodeBlobClosure* blobs,
-                                               ThreadClosure* thread_cl,
-                                               uint worker_id) {
-  process_all_roots(oops, clds, blobs, thread_cl, worker_id);
 }
 
 ShenandoahRootEvacuator::ShenandoahRootEvacuator(ShenandoahHeap* heap, uint n_workers, ShenandoahPhaseTimings::Phase phase) :
