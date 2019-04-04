@@ -1780,13 +1780,13 @@ void ShenandoahHeap::op_degenerated_futile() {
 
 void ShenandoahHeap::stop_concurrent_marking() {
   assert(is_concurrent_mark_in_progress(), "How else could we get here?");
+  set_concurrent_mark_in_progress(false);
   if (!cancelled_gc()) {
     // If we needed to update refs, and concurrent marking has been cancelled,
     // we need to finish updating references.
     set_has_forwarded_objects(false);
     mark_complete_marking_context();
   }
-  set_concurrent_mark_in_progress(false);
 }
 
 void ShenandoahHeap::force_satb_flush_all_threads() {
@@ -1820,7 +1820,11 @@ void ShenandoahHeap::set_gc_state_mask(uint mask, bool value) {
 }
 
 void ShenandoahHeap::set_concurrent_mark_in_progress(bool in_progress) {
-  set_gc_state_mask(MARKING, in_progress);
+  if (has_forwarded_objects()) {
+    set_gc_state_mask(MARKING | UPDATEREFS, in_progress);
+  } else {
+    set_gc_state_mask(MARKING, in_progress);
+  }
   JavaThread::satb_mark_queue_set().set_active_all_threads(in_progress, !in_progress);
 }
 
