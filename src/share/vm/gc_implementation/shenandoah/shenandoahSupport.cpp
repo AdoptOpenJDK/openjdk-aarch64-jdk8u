@@ -2895,6 +2895,8 @@ ShenandoahLoadReferenceBarrierNode::Strength ShenandoahLoadReferenceBarrierNode:
       case Op_CallLeafNoFP:
       case Op_CompareAndSwapL:
       case Op_CompareAndSwapI:
+      case Op_CompareAndSwapN:
+      case Op_CompareAndSwapP:
       case Op_ShenandoahCompareAndSwapN:
       case Op_ShenandoahCompareAndSwapP:
       case Op_GetAndSetL:
