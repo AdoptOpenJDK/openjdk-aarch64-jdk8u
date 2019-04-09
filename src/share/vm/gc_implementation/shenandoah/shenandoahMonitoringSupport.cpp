@@ -44,12 +44,12 @@ private:
   ShenandoahHeap* _heap;
 public:
   ShenandoahGenerationCounters(ShenandoahHeap* heap) :
-          GenerationCounters("Heap", 1, 1, heap->initial_capacity(), heap->max_capacity(), heap->committed()),
+          GenerationCounters("Heap", 1, 1, heap->initial_capacity(), heap->max_capacity(), heap->capacity()),
           _heap(heap)
   {};
 
   virtual void update_all() {
-    _current_size->set_value(_heap->committed());
+    _current_size->set_value(_heap->capacity());
   }
 };
 
@@ -86,7 +86,7 @@ void ShenandoahMonitoringSupport::update_counters() {
   if (UsePerfData) {
     ShenandoahHeap* heap = ShenandoahHeap::heap();
     size_t used = heap->used();
-    size_t capacity = heap->capacity();
+    size_t capacity = heap->max_capacity();
     _heap_counters->update_all();
     _space_counters->update_all(capacity, used);
     _heap_region_counters->update();
