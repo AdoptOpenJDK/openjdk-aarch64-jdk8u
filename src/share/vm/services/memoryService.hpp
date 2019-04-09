@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -78,25 +78,26 @@ private:
   static MemoryPool*                    _compressed_class_pool;
 
   static void add_generation_memory_pool(Generation* gen,
-                                         MemoryManager* major_mgr,
-                                         MemoryManager* minor_mgr);
+                                         GCMemoryManager* major_mgr,
+                                         GCMemoryManager* minor_mgr);
   static void add_generation_memory_pool(Generation* gen,
-                                         MemoryManager* major_mgr) {
+                                         GCMemoryManager* major_mgr) {
     add_generation_memory_pool(gen, major_mgr, NULL);
   }
 
 
   static void add_psYoung_memory_pool(PSYoungGen* gen,
-                                      MemoryManager* major_mgr,
-                                      MemoryManager* minor_mgr);
+                                      GCMemoryManager* major_mgr,
+                                      GCMemoryManager* minor_mgr);
   static void add_psOld_memory_pool(PSOldGen* gen,
-                                    MemoryManager* mgr);
+                                    GCMemoryManager* mgr);
 
   static void add_g1YoungGen_memory_pool(G1CollectedHeap* g1h,
-                                         MemoryManager* major_mgr,
-                                         MemoryManager* minor_mgr);
+                                         GCMemoryManager* major_mgr,
+                                         GCMemoryManager* minor_mgr);
   static void add_g1OldGen_memory_pool(G1CollectedHeap* g1h,
-                                       MemoryManager* mgr);
+                                       GCMemoryManager* major_mgr,
+                                       GCMemoryManager* minor_mgr);
 
   static MemoryPool* add_space(ContiguousSpace* space,
                                const char* name,
@@ -164,7 +165,8 @@ public:
   static void gc_end(bool fullGC, bool recordPostGCUsage,
                      bool recordAccumulatedGCTime,
                      bool recordGCEndTime, bool countCollection,
-                     GCCause::Cause cause);
+                     GCCause::Cause cause,
+                     bool allMemoryPoolsAffected);
 
 
   static void oops_do(OopClosure* f);
@@ -187,6 +189,7 @@ public:
 class TraceMemoryManagerStats : public StackObj {
 private:
   bool         _fullGC;
+  bool         _allMemoryPoolsAffected;
   bool         _recordGCBeginTime;
   bool         _recordPreGCUsage;
   bool         _recordPeakUsage;
@@ -199,6 +202,7 @@ public:
   TraceMemoryManagerStats() {}
   TraceMemoryManagerStats(bool fullGC,
                           GCCause::Cause cause,
+                          bool allMemoryPoolsAffected = true,
                           bool recordGCBeginTime = true,
                           bool recordPreGCUsage = true,
                           bool recordPeakUsage = true,
@@ -209,6 +213,7 @@ public:
 
   void initialize(bool fullGC,
                   GCCause::Cause cause,
+                  bool allMemoryPoolsAffected,
                   bool recordGCBeginTime,
                   bool recordPreGCUsage,
                   bool recordPeakUsage,
