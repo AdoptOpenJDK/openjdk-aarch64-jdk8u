@@ -1851,6 +1851,13 @@ void Arguments::set_shenandoah_gc_flags() {
     FLAG_SET_DEFAULT(ShenandoahUncommit, false);
   }
 
+  if ((InitialHeapSize == MaxHeapSize) && ShenandoahUncommit) {
+    if (PrintGC) {
+      tty->print_cr("Min heap equals to max heap, disabling ShenandoahUncommit");
+    }
+    FLAG_SET_DEFAULT(ShenandoahUncommit, false);
+  }
+
   // If class unloading is disabled, no unloading for concurrent cycles as well.
   // If class unloading is enabled, users should opt-in for unloading during
   // concurrent cycles.

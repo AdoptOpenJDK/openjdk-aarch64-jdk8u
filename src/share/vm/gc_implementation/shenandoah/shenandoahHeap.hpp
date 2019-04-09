@@ -192,6 +192,7 @@ public:
 //
 private:
            size_t _initial_size;
+           size_t _minimum_size;
   char _pad0[DEFAULT_CACHE_LINE_SIZE];
   volatile jlong  _used;
   volatile size_t _committed;
@@ -210,6 +211,7 @@ public:
   size_t bytes_allocated_since_gc_start();
   void reset_bytes_allocated_since_gc_start();
 
+  size_t min_capacity()     const;
   size_t max_capacity()     const;
   size_t initial_capacity() const;
   size_t capacity()         const;
