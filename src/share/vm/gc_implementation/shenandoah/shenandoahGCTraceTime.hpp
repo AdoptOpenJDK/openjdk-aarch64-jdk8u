@@ -39,6 +39,7 @@ class ShenandoahGCTraceTime {
   GCTimer* _timer;
   Ticks _start_counter;
   size_t _bytes_before;
+  GCId _gc_id;
 
  public:
   ShenandoahGCTraceTime(const char* title, bool doit, GCTimer* timer, GCId gc_id, bool print_heap = false);
