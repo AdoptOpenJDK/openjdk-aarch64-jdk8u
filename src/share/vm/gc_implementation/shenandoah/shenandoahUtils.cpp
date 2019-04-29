@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2017, 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -52,6 +52,7 @@ ShenandoahGCSession::ShenandoahGCSession(GCCause::Cause cause) :
   _heap->shenandoah_policy()->record_cycle_start();
   _heap->heuristics()->record_cycle_start();
   _trace_cycle.initialize(false, _heap->gc_cause(),
+          /* allMemoryPoolsAffected */    true,
           /* recordGCBeginTime = */       true,
           /* recordPreGCUsage = */        true,
           /* recordPeakUsage = */         true,
@@ -77,6 +78,7 @@ ShenandoahGCPauseMark::ShenandoahGCPauseMark(SvcGCMarker::reason_type type) :
   // pause events. Create this pseudo level 0 event to push real events to level 1.
   _heap->gc_timer()->register_gc_phase_start("Shenandoah", Ticks::now());
   _trace_pause.initialize(true, _heap->gc_cause(),
+          /* allMemoryPoolsAffected */    true,
           /* recordGCBeginTime = */       true,
           /* recordPreGCUsage = */        false,
           /* recordPeakUsage = */         false,

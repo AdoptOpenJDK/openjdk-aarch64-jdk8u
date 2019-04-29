@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1757,7 +1757,13 @@ void os::win32::print_windows_version(outputStream* st) {
     if (is_workstation) {
       st->print("10");
     } else {
-      st->print("Server 2016");
+      // distinguish Windows Server 2016 and 2019 by build number
+      // Windows server 2019 GA 10/2018 build number is 17763
+      if (build_number > 17762) {
+        st->print("Server 2019");
+      } else {
+        st->print("Server 2016");
+      }
     }
     break;
 
@@ -1835,6 +1841,42 @@ void os::print_siginfo(outputStream *st, void *siginfo) {
     }
   }
   st->cr();
+}
+
+
+int os::vsnprintf(char* buf, size_t len, const char* fmt, va_list args) {
+#if _MSC_VER >= 1900
+  // Starting with Visual Studio 2015, vsnprint is C99 compliant.
+  int result = ::vsnprintf(buf, len, fmt, args);
+  // If an encoding error occurred (result < 0) then it's not clear
+  // whether the buffer is NUL terminated, so ensure it is.
+  if ((result < 0) && (len > 0)) {
+    buf[len - 1] = '\0';
+  }
+  return result;
+#else
+  // Before Visual Studio 2015, vsnprintf is not C99 compliant, so use
+  // _vsnprintf, whose behavior seems to be *mostly* consistent across
+  // versions.  However, when len == 0, avoid _vsnprintf too, and just
+  // go straight to _vscprintf.  The output is going to be truncated in
+  // that case, except in the unusual case of empty output.  More
+  // importantly, the documentation for various versions of Visual Studio
+  // are inconsistent about the behavior of _vsnprintf when len == 0,
+  // including it possibly being an error.
+  int result = -1;
+  if (len > 0) {
+    result = _vsnprintf(buf, len, fmt, args);
+    // If output (including NUL terminator) is truncated, the buffer
+    // won't be NUL terminated.  Add the trailing NUL specified by C99.
+    if ((result < 0) || (result >= (int) len)) {
+      buf[len - 1] = '\0';
+    }
+  }
+  if (result < 0) {
+    result = _vscprintf(fmt, args);
+  }
+  return result;
+#endif // _MSC_VER dispatch
 }
 
 void os::print_signal_handlers(outputStream* st, char* buf, size_t buflen) {
@@ -4998,7 +5040,7 @@ void Parker::unpark() {
 
 // Run the specified command in a separate process. Return its exit value,
 // or -1 on failure (e.g. can't create a new process).
-int os::fork_and_exec(char* cmd) {
+int os::fork_and_exec(char* cmd, bool use_vfork_if_available) {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
 

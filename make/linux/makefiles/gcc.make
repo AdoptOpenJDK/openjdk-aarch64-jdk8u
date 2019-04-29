@@ -150,7 +150,7 @@ CFLAGS += -fno-rtti
 CFLAGS += -fno-exceptions
 CFLAGS += -D_REENTRANT
 ifeq ($(USE_CLANG),)
-  CFLAGS += -fcheck-new
+  CFLAGS += -fcheck-new -fstack-protector
   # version 4 and above support fvisibility=hidden (matches jni_x86.h file)
   # except 4.1.2 gives pointless warnings that can't be disabled (afaik)
   ifneq "$(shell expr \( $(CC_VER_MAJOR) \> 4 \) \| \( \( $(CC_VER_MAJOR) = 4 \) \& \( $(CC_VER_MINOR) \>= 3 \) \))" "0"
@@ -184,6 +184,10 @@ CFLAGS     += $(ARCHFLAG)
 AOUT_FLAGS += $(ARCHFLAG)
 LFLAGS     += $(ARCHFLAG)
 ASFLAGS    += $(ARCHFLAG)
+
+ifeq ($(DEBUG_BINARIES), true)
+  ASFLAGS    += $(ASFLAGS_DEBUG_SYMBOLS)
+endif
 
 # Use C++ Interpreter
 ifdef CC_INTERP
@@ -277,6 +281,8 @@ endif
 
 # statically link libstdc++.so, work with gcc but ignored by g++
 STATIC_STDCXX = -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+# While the VM needs the above line, adlc needs a separate setting:
+ADLC_STATIC_STDCXX = -static-libstdc++
 
 ifeq ($(USE_CLANG),)
   # statically link libgcc and/or libgcc_s, libgcc does not exist before gcc-3.x.

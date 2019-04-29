@@ -108,6 +108,14 @@ static time_t get_timezone(const struct tm* time_struct) {
 #endif
 }
 
+int os::snprintf(char* buf, size_t len, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  int result = os::vsnprintf(buf, len, fmt, args);
+  va_end(args);
+  return result;
+}
+
 // Fill in buffer with current local time as an ISO-8601 string.
 // E.g., yyyy-mm-ddThh:mm:ss-zzzz.
 // Returns buffer, or NULL if it failed.
@@ -1276,7 +1284,7 @@ char** os::split_path(const char* path, int* n) {
 }
 
 void os::set_memory_serialize_page(address page) {
-  int count = log2_intptr(sizeof(class JavaThread)) - log2_intptr(64);
+  int count = log2_intptr(sizeof(class JavaThread)) - log2_int(64);
   _mem_serialize_page = (volatile int32_t *)page;
   // We initialize the serialization page shift count here
   // We assume a cache line size of 64 bytes

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -70,7 +70,11 @@
 #endif // INCLUDE_ALL_GCS
 
 // Note: This is a special bug reporting site for the JVM
-#define DEFAULT_VENDOR_URL_BUG "http://bugreport.java.com/bugreport/crash.jsp"
+#ifdef VENDOR_URL_VM_BUG
+# define DEFAULT_VENDOR_URL_BUG VENDOR_URL_VM_BUG
+#else
+# define DEFAULT_VENDOR_URL_BUG "http://bugreport.java.com/bugreport/crash.jsp"
+#endif
 #define DEFAULT_JAVA_LAUNCHER  "generic"
 
 // Disable options not supported in this release, with a warning if they
@@ -1891,7 +1895,7 @@ void Arguments::set_shenandoah_gc_flags() {
 #ifdef ASSERT
   FLAG_SET_DEFAULT(SafepointTimeout, true);
   FLAG_SET_DEFAULT(SafepointTimeoutDelay, 10000);
-  FLAG_SET_DEFAULT(DieOnSafepointTimeout, true);
+  FLAG_SET_DEFAULT(AbortVMOnSafepointTimeout, true);
 #endif
 }
 

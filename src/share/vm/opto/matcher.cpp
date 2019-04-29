@@ -98,6 +98,7 @@ Matcher::Matcher()
   idealreg2spillmask  [Op_VecD] = NULL;
   idealreg2spillmask  [Op_VecX] = NULL;
   idealreg2spillmask  [Op_VecY] = NULL;
+  idealreg2spillmask  [Op_RegFlags] = NULL;
 
   idealreg2debugmask  [Op_RegI] = NULL;
   idealreg2debugmask  [Op_RegN] = NULL;
@@ -109,6 +110,7 @@ Matcher::Matcher()
   idealreg2debugmask  [Op_VecD] = NULL;
   idealreg2debugmask  [Op_VecX] = NULL;
   idealreg2debugmask  [Op_VecY] = NULL;
+  idealreg2debugmask  [Op_RegFlags] = NULL;
 
   idealreg2mhdebugmask[Op_RegI] = NULL;
   idealreg2mhdebugmask[Op_RegN] = NULL;
@@ -120,6 +122,7 @@ Matcher::Matcher()
   idealreg2mhdebugmask[Op_VecD] = NULL;
   idealreg2mhdebugmask[Op_VecX] = NULL;
   idealreg2mhdebugmask[Op_VecY] = NULL;
+  idealreg2mhdebugmask[Op_RegFlags] = NULL;
 
   debug_only(_mem_node = NULL;)   // Ideal memory node consumed by mach node
 }

@@ -143,7 +143,7 @@ const char* Abstract_VM_Version::vm_name() {
 
 const char* Abstract_VM_Version::vm_vendor() {
 #ifdef VENDOR
-  return XSTR(VENDOR);
+  return VENDOR;
 #else
   return JDK_Version::is_gte_jdk17x_version() ?
     "Oracle Corporation" : "Sun Microsystems Inc.";
@@ -187,11 +187,16 @@ const char* Abstract_VM_Version::jre_release_version() {
 #ifndef CPU
 #ifdef ZERO
 #define CPU      ZERO_LIBARCH
+#elif defined(PPC64)
+#if defined(VM_LITTLE_ENDIAN)
+#define CPU      "ppc64le"
+#else
+#define CPU      "ppc64"
+#endif
 #else
 #define CPU      IA32_ONLY("x86")                \
                  IA64_ONLY("ia64")               \
                  AMD64_ONLY("amd64")             \
-                 PPC64_ONLY("ppc64")             \
                  AARCH64_ONLY("aarch64")	 \
                  SPARC_ONLY("sparc")
 #endif // ZERO
@@ -228,6 +233,8 @@ const char* Abstract_VM_Version::internal_vm_info_string() {
         #define HOTSPOT_BUILD_COMPILER "MS VC++ 14.0 (VS2015)"
       #elif _MSC_VER == 1912
         #define HOTSPOT_BUILD_COMPILER "MS VC++ 15.5 (VS2017)"
+      #elif _MSC_VER == 1913
+        #define HOTSPOT_BUILD_COMPILER "MS VC++ 15.6 (VS2017)"
       #else
         #define HOTSPOT_BUILD_COMPILER "unknown MS VC++:" XSTR(_MSC_VER)
       #endif

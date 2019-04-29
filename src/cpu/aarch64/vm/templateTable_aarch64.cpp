@@ -1461,7 +1461,7 @@ void TemplateTable::ineg()
 {
   transition(itos, itos);
   __ negw(r0, r0);
- 
+
 }
 
 void TemplateTable::lneg()
@@ -1685,7 +1685,7 @@ void TemplateTable::float_cmp(bool is_float, int unordered_result)
     __ br(Assembler::HI, done);
     // install 0 for EQ otherwise ~0
     __ csinv(r0, zr, zr, Assembler::EQ);
-    
+
   }
   __ bind(done);
 }
@@ -1737,7 +1737,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
   }
 
   // Normal (non-jsr) branch handling
-  
+
   // Adjust the bcp by the displacement in r2
   __ add(rbcp, rbcp, r2);
 
@@ -2655,7 +2655,7 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static) {
   {
     Label notVolatile;
     __ tbz(r5, ConstantPoolCacheEntry::is_volatile_shift, notVolatile);
-    __ membar(MacroAssembler::StoreStore);
+    __ membar(MacroAssembler::StoreStore | MacroAssembler::LoadStore);
     __ bind(notVolatile);
   }
 
@@ -2827,7 +2827,7 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static) {
   {
     Label notVolatile;
     __ tbz(r5, ConstantPoolCacheEntry::is_volatile_shift, notVolatile);
-    __ membar(MacroAssembler::StoreLoad);
+    __ membar(MacroAssembler::StoreLoad | MacroAssembler::StoreStore);
     __ bind(notVolatile);
   }
 }
@@ -2918,7 +2918,7 @@ void TemplateTable::fast_storefield(TosState state)
   {
     Label notVolatile;
     __ tbz(r3, ConstantPoolCacheEntry::is_volatile_shift, notVolatile);
-    __ membar(MacroAssembler::StoreStore);
+    __ membar(MacroAssembler::StoreStore | MacroAssembler::LoadStore);
     __ bind(notVolatile);
   }
 
@@ -2966,7 +2966,7 @@ void TemplateTable::fast_storefield(TosState state)
   {
     Label notVolatile;
     __ tbz(r3, ConstantPoolCacheEntry::is_volatile_shift, notVolatile);
-    __ membar(MacroAssembler::StoreLoad);
+    __ membar(MacroAssembler::StoreLoad | MacroAssembler::StoreStore);
     __ bind(notVolatile);
   }
 }
