@@ -1448,6 +1448,16 @@ void ShenandoahHeap::op_final_mark() {
     concurrent_mark()->finish_mark_from_roots(/* full_gc = */ false);
 
     TASKQUEUE_STATS_ONLY(concurrent_mark()->task_queues()->reset_taskqueue_stats());
+
+    // Degen may be caused by failed evacuation of roots
+    if (is_degenerated_gc_in_progress() && has_forwarded_objects()) {
+      concurrent_mark()->update_roots(ShenandoahPhaseTimings::degen_gc_update_roots);
+    }
+
+    if (ShenandoahVerify) {
+      verifier()->verify_roots_no_forwarded();
+    }
+
     TASKQUEUE_STATS_ONLY(concurrent_mark()->task_queues()->print_taskqueue_stats());
 
     stop_concurrent_marking();
@@ -1501,6 +1511,7 @@ void ShenandoahHeap::op_final_mark() {
       }
 
       if (ShenandoahVerify) {
+        verifier()->verify_roots_no_forwarded();
         verifier()->verify_during_evacuation();
       }
     } else {
@@ -2201,6 +2212,7 @@ void ShenandoahHeap::op_final_updaterefs() {
   set_update_refs_in_progress(false);
 
   if (ShenandoahVerify) {
+    verifier()->verify_roots_no_forwarded();
     verifier()->verify_after_updaterefs();
   }
 

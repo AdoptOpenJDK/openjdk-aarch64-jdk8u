@@ -180,6 +180,9 @@ public:
   void verify_after_fullgc();
   void verify_after_degenerated();
   void verify_generic(VerifyOption option);
+
+  // Roots should only contain to-space oops
+  void verify_roots_no_forwarded();
 };
 
 #endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHVERIFIER_HPP
