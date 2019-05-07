@@ -570,6 +570,7 @@ void ShenandoahHeapRegion::setup_sizes(size_t initial_heap_size, size_t max_heap
 
   guarantee(HumongousThresholdWords == 0, "we should only set it once");
   HumongousThresholdWords = RegionSizeWords * ShenandoahHumongousThreshold / 100;
+  HumongousThresholdWords = (size_t)align_size_down(HumongousThresholdWords, MinObjAlignment);
   assert (HumongousThresholdWords <= RegionSizeWords, "sanity");
 
   guarantee(HumongousThresholdBytes == 0, "we should only set it once");
@@ -595,12 +596,13 @@ void ShenandoahHeapRegion::setup_sizes(size_t initial_heap_size, size_t max_heap
   // The whole thing would be mitigated if Elastic TLABs were enabled, but there
   // is no support in this JDK.
   //
-  guarantee(MaxTLABSizeBytes == 0, "we should only set it once");
-  MaxTLABSizeBytes = MIN2(RegionSizeBytes / 8, HumongousThresholdBytes);
-  assert (MaxTLABSizeBytes > MinTLABSize, "should be larger");
-
   guarantee(MaxTLABSizeWords == 0, "we should only set it once");
-  MaxTLABSizeWords = MaxTLABSizeBytes / HeapWordSize;
+  MaxTLABSizeWords = MIN2(RegionSizeWords / 8, HumongousThresholdWords);
+  MaxTLABSizeWords = (size_t)align_size_down(MaxTLABSizeWords, MinObjAlignment);
+
+  guarantee(MaxTLABSizeBytes == 0, "we should only set it once");
+  MaxTLABSizeBytes = MaxTLABSizeWords * HeapWordSize;
+  assert (MaxTLABSizeBytes > MinTLABSize, "should be larger");
 
   log_info(gc, init)("Regions: " SIZE_FORMAT " x " SIZE_FORMAT "%s",
                      RegionCount, byte_size_in_proper_unit(RegionSizeBytes), proper_unit_for_byte_size(RegionSizeBytes));
