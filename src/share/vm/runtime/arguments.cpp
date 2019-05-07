@@ -1734,6 +1734,8 @@ void Arguments::set_shenandoah_gc_flags() {
   FLAG_SET_DEFAULT(ShenandoahLoadRefBarrier,         false);
   FLAG_SET_DEFAULT(ShenandoahCASBarrier,             false);
   FLAG_SET_DEFAULT(ShenandoahCloneBarrier,           false);
+
+  FLAG_SET_DEFAULT(ShenandoahVerifyOptoBarriers,     false);
 #endif
 #endif
 
