@@ -1731,6 +1731,7 @@ void Arguments::set_shenandoah_gc_flags() {
   FLAG_SET_DEFAULT(ShenandoahGCHeuristics,           "passive");
 
   FLAG_SET_DEFAULT(ShenandoahSATBBarrier,            false);
+  FLAG_SET_DEFAULT(ShenandoahLoadRefBarrier,         false);
   FLAG_SET_DEFAULT(ShenandoahCASBarrier,             false);
   FLAG_SET_DEFAULT(ShenandoahCloneBarrier,           false);
 #endif
@@ -1803,6 +1804,7 @@ void Arguments::set_shenandoah_gc_flags() {
   // C2 barrier verification is only reliable when all default barriers are enabled
   if (ShenandoahVerifyOptoBarriers &&
           (!FLAG_IS_DEFAULT(ShenandoahSATBBarrier)    ||
+           !FLAG_IS_DEFAULT(ShenandoahLoadRefBarrier) ||
            !FLAG_IS_DEFAULT(ShenandoahCASBarrier)     ||
            !FLAG_IS_DEFAULT(ShenandoahCloneBarrier)
           )) {
