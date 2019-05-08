@@ -84,7 +84,7 @@
 #endif
 
 #if INCLUDE_ALL_GCS
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahSupport.hpp"
 #endif
 

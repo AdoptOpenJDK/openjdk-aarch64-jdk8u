@@ -27,7 +27,6 @@
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "gc_implementation/g1/heapRegion.hpp"
 #include "gc_interface/collectedHeap.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "memory/barrierSet.hpp"
 #include "memory/cardTableModRefBS.hpp"

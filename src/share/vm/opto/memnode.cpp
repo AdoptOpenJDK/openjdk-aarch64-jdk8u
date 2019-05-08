@@ -40,7 +40,7 @@
 #include "opto/regmask.hpp"
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahSupport.hpp"
 #endif
 
@@ -1525,7 +1525,7 @@ const Type *LoadNode::Value( PhaseTransform *phase ) const {
     // as to alignment, which will therefore produce the smallest
     // possible base offset.
     const int min_base_off = arrayOopDesc::base_offset_in_bytes(T_BYTE);
-    const bool off_beyond_header = (off != ShenandoahBrooksPointer::byte_offset() || !UseShenandoahGC) && ((uint)off >= (uint)min_base_off);
+    const bool off_beyond_header = (off != ShenandoahForwarding::byte_offset() || !UseShenandoahGC) && ((uint)off >= (uint)min_base_off);
 
     // Try to constant-fold a stable array element.
     if (FoldStableValues && ary->is_stable()) {

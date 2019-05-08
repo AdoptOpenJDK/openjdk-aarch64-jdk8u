@@ -33,7 +33,6 @@
 #include "ci/ciArrayKlass.hpp"
 #include "ci/ciInstance.hpp"
 #include "ci/ciObjArray.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "runtime/sharedRuntime.hpp"

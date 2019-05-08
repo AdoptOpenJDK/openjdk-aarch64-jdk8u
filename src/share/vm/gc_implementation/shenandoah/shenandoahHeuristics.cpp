@@ -24,7 +24,7 @@
 #include "precompiled.hpp"
 
 #include "gc_interface/gcCause.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
@@ -155,7 +155,7 @@ void ShenandoahHeuristics::choose_collection_set(ShenandoahCollectionSet* collec
       // Reclaim humongous regions here, and count them as the immediate garbage
 #ifdef ASSERT
       bool reg_live = region->has_live();
-      bool bm_live = ctx->is_marked(oop(region->bottom() + ShenandoahBrooksPointer::word_size()));
+      bool bm_live = ctx->is_marked(oop(region->bottom() + ShenandoahForwarding::word_size()));
       assert(reg_live == bm_live,
              err_msg("Humongous liveness and marks should agree. Region live: %s; Bitmap live: %s; Region Live Words: " SIZE_FORMAT,
                      BOOL_TO_STR(reg_live), BOOL_TO_STR(bm_live), region->get_live_data_words()));

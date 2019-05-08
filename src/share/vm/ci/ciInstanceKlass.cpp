@@ -28,7 +28,7 @@
 #include "ci/ciInstanceKlass.hpp"
 #include "ci/ciUtilities.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/oop.inline.hpp"
@@ -179,7 +179,7 @@ ciConstantPoolCache* ciInstanceKlass::field_cache() {
 //
 ciInstanceKlass* ciInstanceKlass::get_canonical_holder(int offset) {
   #ifdef ASSERT
-  if (!((offset >= 0 && offset < layout_helper()) || (UseShenandoahGC && offset == ShenandoahBrooksPointer::byte_offset()))) {
+  if (!((offset >= 0 && offset < layout_helper()) || (UseShenandoahGC && offset == ShenandoahForwarding::byte_offset()))) {
     tty->print("*** get_canonical_holder(%d) on ", offset);
     this->print();
     tty->print_cr(" ***");

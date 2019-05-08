@@ -24,7 +24,7 @@
 #ifndef SHARE_GC_SHENANDOAH_C2_SHENANDOAHSUPPORT_HPP
 #define SHARE_GC_SHENANDOAH_C2_SHENANDOAHSUPPORT_HPP
 
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "memory/allocation.hpp"
 #include "opto/addnode.hpp"
 #include "opto/graphKit.hpp"

@@ -28,7 +28,7 @@
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "compiler/compileLog.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "libadt/dict.hpp"
 #include "memory/gcLocker.hpp"
 #include "memory/oopFactory.hpp"
@@ -2502,7 +2502,7 @@ TypeOopPtr::TypeOopPtr(TYPES t, PTR ptr, ciKlass* k, bool xk, ciObject* o, int o
   if (_offset != 0) {
     if (_offset == oopDesc::klass_offset_in_bytes()) {
       _is_ptr_to_narrowklass = UseCompressedClassPointers;
-    } else if (UseShenandoahGC && _offset == ShenandoahBrooksPointer::byte_offset()) {
+    } else if (UseShenandoahGC && _offset == ShenandoahForwarding::byte_offset()) {
       // Shenandoah doesn't support compressed forwarding pointers
     } else if (klass() == NULL) {
       // Array with unknown body type

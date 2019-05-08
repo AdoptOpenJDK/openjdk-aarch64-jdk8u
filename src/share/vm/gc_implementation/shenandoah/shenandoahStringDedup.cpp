@@ -24,7 +24,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/altHashing.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"

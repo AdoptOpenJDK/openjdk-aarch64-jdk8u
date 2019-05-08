@@ -28,7 +28,7 @@
 #include "shenandoahBarrierSetAssembler_x86.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
@@ -51,7 +51,7 @@ void ShenandoahBarrierSetAssembler::resolve_forward_pointer(MacroAssembler* masm
 
 void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssembler* masm, Register dst) {
   assert(ShenandoahCASBarrier || ShenandoahLoadRefBarrier, "should be enabled");
-  __ movptr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
+  __ movptr(dst, Address(dst, ShenandoahForwarding::byte_offset()));
 }
 
 void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembler* masm, Register dst) {
@@ -259,11 +259,11 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 
 void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
 #ifdef _LP64
-  __ incrementq(obj, ShenandoahBrooksPointer::byte_size());
+  __ incrementq(obj, ShenandoahForwarding::byte_size());
 #else
-  __ incrementl(obj, ShenandoahBrooksPointer::byte_size());
+  __ incrementl(obj, ShenandoahForwarding::byte_size());
 #endif
-  __ movptr(Address(obj, ShenandoahBrooksPointer::byte_offset()), obj);
+  __ movptr(Address(obj, ShenandoahForwarding::byte_offset()), obj);
 }
 
 #undef __

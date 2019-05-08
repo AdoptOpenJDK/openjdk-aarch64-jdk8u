@@ -25,7 +25,7 @@
 #include "c1/c1_LIRGenerator.hpp"
 #include "c1/c1_IR.hpp"
 #include "gc_implementation/g1/satbQueue.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"

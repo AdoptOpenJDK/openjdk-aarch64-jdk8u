@@ -25,7 +25,7 @@
 
 #include "gc_implementation/shenandoah/shenandoahSupport.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
@@ -1432,7 +1432,7 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
       IfNode* iff = unc_ctrl->in(0)->as_If();
       phase->igvn().replace_input_of(iff, 1, phase->igvn().intcon(1));
     }
-    Node* addr = new (phase->C) AddPNode(new_val, uncasted_val, phase->igvn().MakeConX(ShenandoahBrooksPointer::byte_offset()));
+    Node* addr = new (phase->C) AddPNode(new_val, uncasted_val, phase->igvn().MakeConX(ShenandoahForwarding::byte_offset()));
     phase->register_new_node(addr, ctrl);
     assert(val->bottom_type()->isa_oopptr(), "what else?");
     const TypePtr* obj_type =  val->bottom_type()->is_oopptr();

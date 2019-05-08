@@ -21,48 +21,48 @@
  *
  */
 
-#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHBROOKSPOINTER_INLINE_HPP
-#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHBROOKSPOINTER_INLINE_HPP
+#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHFORWARDING_INLINE_HPP
+#define SHARE_GC_SHENANDOAH_SHENANDOAHFORWARDING_INLINE_HPP
 
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 #include "runtime/atomic.hpp"
 
-inline HeapWord** ShenandoahBrooksPointer::brooks_ptr_addr(oop obj) {
+inline HeapWord** ShenandoahForwarding::forward_ptr_addr(oop obj) {
   return (HeapWord**)((HeapWord*) obj + word_offset());
 }
 
-inline void ShenandoahBrooksPointer::initialize(oop obj) {
+inline void ShenandoahForwarding::initialize(oop obj) {
   shenandoah_assert_in_heap(NULL, obj);
-  *brooks_ptr_addr(obj) = (HeapWord*) obj;
+  *forward_ptr_addr(obj) = (HeapWord*) obj;
 }
 
-inline void ShenandoahBrooksPointer::set_raw(oop obj, HeapWord* update) {
+inline void ShenandoahForwarding::set_forwardee_raw(oop obj, HeapWord* update) {
   shenandoah_assert_in_heap(NULL, obj);
-  *brooks_ptr_addr(obj) = update;
+  *forward_ptr_addr(obj) = update;
 }
 
-inline HeapWord* ShenandoahBrooksPointer::get_raw(oop obj) {
+inline HeapWord* ShenandoahForwarding::get_forwardee_raw(oop obj) {
   shenandoah_assert_in_heap(NULL, obj);
-  return *brooks_ptr_addr(obj);
+  return *forward_ptr_addr(obj);
 }
 
-inline HeapWord* ShenandoahBrooksPointer::get_raw_unchecked(oop obj) {
-  return *brooks_ptr_addr(obj);
+inline HeapWord* ShenandoahForwarding::get_forwardee_raw_unchecked(oop obj) {
+  return *forward_ptr_addr(obj);
 }
 
-inline oop ShenandoahBrooksPointer::forwardee(oop obj) {
+inline oop ShenandoahForwarding::get_forwardee(oop obj) {
   shenandoah_assert_correct(NULL, obj);
-  return oop(*brooks_ptr_addr(obj));
+  return oop(*forward_ptr_addr(obj));
 }
 
-inline oop ShenandoahBrooksPointer::try_update_forwardee(oop obj, oop update) {
-  oop result = (oop) Atomic::cmpxchg_ptr(update, brooks_ptr_addr(obj), obj);
+inline oop ShenandoahForwarding::try_update_forwardee(oop obj, oop update) {
+  oop result = (oop) Atomic::cmpxchg_ptr(update, forward_ptr_addr(obj), obj);
   shenandoah_assert_correct_except(NULL, obj, result != obj);
   return result;
 }
 
-#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHBROOKSPOINTER_INLINE_HPP
+#endif // SHARE_GC_SHENANDOAH_SHENANDOAHFORWARDING_INLINE_HPP

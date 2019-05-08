@@ -26,7 +26,7 @@
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "asm/codeBuffer.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/atomic.inline.hpp"
 #include "runtime/icache.hpp"
@@ -318,7 +318,7 @@ bool MacroAssembler::needs_explicit_null_check(intptr_t offset) {
     uintptr_t base = (uintptr_t)Universe::narrow_oop_base();
     int adj = 0;
     if (UseShenandoahGC) {
-      adj = ShenandoahBrooksPointer::byte_offset();
+      adj = ShenandoahForwarding::byte_offset();
       assert(adj < 0, "no need for positive adjustments");
     }
     if ((uintptr_t)((offset - adj) & address_bits) >= base) {
@@ -328,7 +328,7 @@ bool MacroAssembler::needs_explicit_null_check(intptr_t offset) {
   }
 #endif
 
-  if (UseShenandoahGC && ((offset & address_bits) == (ShenandoahBrooksPointer::byte_offset() & address_bits))) {
+  if (UseShenandoahGC && ((offset & address_bits) == (ShenandoahForwarding::byte_offset() & address_bits))) {
     return false;
   }
 
