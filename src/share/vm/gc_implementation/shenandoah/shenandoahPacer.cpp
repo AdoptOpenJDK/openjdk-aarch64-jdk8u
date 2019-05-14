@@ -129,7 +129,7 @@ void ShenandoahPacer::setup_for_updaterefs() {
 void ShenandoahPacer::setup_for_idle() {
   assert(ShenandoahPacing, "Only be here when pacing is enabled");
 
-  size_t initial = _heap->max_capacity() * ShenandoahPacingIdleSlack / 100;
+  size_t initial = _heap->max_capacity() / 100 * ShenandoahPacingIdleSlack;
   double tax = 1;
 
   restart_with(initial, tax);
