@@ -1662,8 +1662,7 @@ void LIR_Assembler::emit_compare_and_swap(LIR_OpCompareAndSwap* op) {
         Register t2 = op->tmp2()->as_register();
         __ encode_heap_oop(t2, newval);
         newval = t2;
-        __ cmpxchg_oop_shenandoah(addr, cmpval, newval, Assembler::word, /*acquire*/ false, /*release*/ true, /*weak*/ false);
-        __ csetw(res, Assembler::EQ);
+        __ cmpxchg_oop_shenandoah(addr, cmpval, newval, /*acquire*/ false, /*release*/ true, /*weak*/ false, /*is_cae*/ false, res);
       } else
 #endif
       {
@@ -1677,8 +1676,7 @@ void LIR_Assembler::emit_compare_and_swap(LIR_OpCompareAndSwap* op) {
     } else {
 #if INCLUDE_ALL_GCS
       if (UseShenandoahGC && ShenandoahCASBarrier) {
-        __ cmpxchg_oop_shenandoah(addr, cmpval, newval, Assembler::xword, /*acquire*/ false, /*release*/ true, /*weak*/ false);
-        __ csetw(res, Assembler::EQ);
+        __ cmpxchg_oop_shenandoah(addr, cmpval, newval, /*acquire*/ false, /*release*/ true, /*weak*/ false, /*is_cae*/ false, res);
       } else
 #endif
       {

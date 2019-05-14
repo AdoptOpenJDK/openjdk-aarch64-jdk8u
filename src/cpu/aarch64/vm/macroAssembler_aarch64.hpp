@@ -1008,9 +1008,7 @@ public:
                Register tmp = rscratch1);
 
   void cmpxchg_oop_shenandoah(Register addr, Register expected, Register new_val,
-                              enum operand_size size,
-                              bool acquire, bool release, bool weak,
-                              Register result = noreg, Register tmp2 = rscratch2);
+                              bool acquire, bool release, bool weak, bool is_cae, Register result);
   // Calls
 
   address trampoline_call(Address entry, CodeBuffer *cbuf = NULL);

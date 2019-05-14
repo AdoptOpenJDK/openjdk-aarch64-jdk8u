@@ -2226,19 +2226,15 @@ void MacroAssembler::cmpxchg(Register addr, Register expected,
   }
 }
 
-void MacroAssembler::cmpxchg_oop_shenandoah(Register addr, Register expected,
-                                            Register new_val,
-                                            enum operand_size size,
-                                            bool acquire, bool release,
-                                            bool weak,
-                                            Register result, Register tmp2) {
-  assert(UseShenandoahGC, "only for shenandoah");
-  bool is_cae = (result != noreg);
-  bool is_narrow = (size == word);
+void MacroAssembler::cmpxchg_oop_shenandoah(Register addr, Register expected, Register new_val,
+                                            bool acquire, bool release, bool weak, bool is_cae,
+                                            Register result) {
 
-  if (! is_cae) result = rscratch1;
+  Register tmp = rscratch2;
+  bool is_narrow = UseCompressedOops;
+  Assembler::operand_size size = is_narrow ? Assembler::word : Assembler::xword;
 
-  assert_different_registers(addr, expected, new_val, result, tmp2);
+  assert_different_registers(addr, expected, new_val, result, tmp);
 
   Label retry, done, fail;
 
@@ -2251,34 +2247,38 @@ void MacroAssembler::cmpxchg_oop_shenandoah(Register addr, Register expected,
     cmp(result, expected);
   }
   br(Assembler::NE, fail);
-  store_exclusive(tmp2, new_val, addr, size, release);
+  store_exclusive(tmp, new_val, addr, size, release);
   if (weak) {
-    cmpw(tmp2, 0u); // If the store fails, return NE to our caller
+    cmpw(tmp, 0u); // If the store fails, return NE to our caller
   } else {
-    cbnzw(tmp2, retry);
+    cbnzw(tmp, retry);
   }
   b(done);
 
-  bind(fail);
+   bind(fail);
   // Check if rb(expected)==rb(result)
   // Shuffle registers so that we have memory value ready for next expected.
-  mov(tmp2, expected);
+  mov(tmp, expected);
   mov(expected, result);
   if (is_narrow) {
     decode_heap_oop(result, result);
-    decode_heap_oop(tmp2, tmp2);
+    decode_heap_oop(tmp, tmp);
   }
   oopDesc::bs()->interpreter_read_barrier(this, result);
-  oopDesc::bs()->interpreter_read_barrier(this, tmp2);
-  cmp(result, tmp2);
+  oopDesc::bs()->interpreter_read_barrier(this, tmp);
+  cmp(result, tmp);
   // Retry with expected now being the value we just loaded from addr.
   br(Assembler::EQ, retry);
-  if (is_narrow && is_cae) {
+  if (is_cae && is_narrow) {
     // For cmp-and-exchange and narrow oops, we need to restore
     // the compressed old-value. We moved it to 'expected' a few lines up.
     mov(result, expected);
   }
   bind(done);
+
+  if (!is_cae) {
+    cset(result, Assembler::EQ);
+  }
 }
 
 static bool different(Register a, RegisterOrConstant b, Register c) {
