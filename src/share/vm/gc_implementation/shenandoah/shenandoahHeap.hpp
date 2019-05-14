@@ -86,19 +86,6 @@ public:
   virtual bool is_thread_safe() { return false; }
 };
 
-class ShenandoahUpdateRefsClosure: public OopClosure {
-private:
-  ShenandoahHeap* _heap;
-
-  template <class T>
-  inline void do_oop_work(T* p);
-
-public:
-  ShenandoahUpdateRefsClosure();
-  inline void do_oop(oop* p);
-  inline void do_oop(narrowOop* p);
-};
-
 #ifdef ASSERT
 class ShenandoahAssertToSpaceClosure : public OopClosure {
 private:
@@ -113,30 +100,6 @@ public:
 class ShenandoahAlwaysTrueClosure : public BoolObjectClosure {
 public:
   bool do_object_b(oop p) { return true; }
-};
-
-class ShenandoahForwardedIsAliveClosure: public BoolObjectClosure {
-private:
-  ShenandoahMarkingContext* const _mark_context;
-public:
-  ShenandoahForwardedIsAliveClosure();
-  bool do_object_b(oop obj);
-};
-
-class ShenandoahIsAliveClosure: public BoolObjectClosure {
-private:
-  ShenandoahMarkingContext* const _mark_context;
-public:
-  ShenandoahIsAliveClosure();
-  bool do_object_b(oop obj);
-};
-
-class ShenandoahIsAliveSelector : public StackObj {
-private:
-  ShenandoahIsAliveClosure _alive_cl;
-  ShenandoahForwardedIsAliveClosure _fwd_alive_cl;
-public:
-  BoolObjectClosure* is_alive_closure();
 };
 
 // Shenandoah GC is low-pause concurrent GC that uses Brooks forwarding pointers

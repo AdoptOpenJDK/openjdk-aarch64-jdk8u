@@ -30,6 +30,7 @@
 #include "gc_implementation/shared/parallelCleaning.hpp"
 #include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahConcurrentMark.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahOopClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
