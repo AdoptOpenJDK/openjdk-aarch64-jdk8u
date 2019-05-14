@@ -2230,43 +2230,44 @@ void MacroAssembler::cmpxchg_oop_shenandoah(Register addr, Register expected, Re
                                             bool acquire, bool release, bool weak, bool is_cae,
                                             Register result) {
 
-  Register tmp = rscratch2;
+  Register tmp1 = rscratch1;
+  Register tmp2 = rscratch2;
   bool is_narrow = UseCompressedOops;
   Assembler::operand_size size = is_narrow ? Assembler::word : Assembler::xword;
 
-  assert_different_registers(addr, expected, new_val, result, tmp);
+  assert_different_registers(addr, expected, new_val, tmp1, tmp2);
 
   Label retry, done, fail;
 
   // CAS, using LL/SC pair.
   bind(retry);
-  load_exclusive(result, addr, size, acquire);
+  load_exclusive(tmp1, addr, size, acquire);
   if (is_narrow) {
-    cmpw(result, expected);
+    cmpw(tmp1, expected);
   } else {
-    cmp(result, expected);
+    cmp(tmp1, expected);
   }
   br(Assembler::NE, fail);
-  store_exclusive(tmp, new_val, addr, size, release);
+  store_exclusive(tmp2, new_val, addr, size, release);
   if (weak) {
-    cmpw(tmp, 0u); // If the store fails, return NE to our caller
+    cmpw(tmp2, 0u); // If the store fails, return NE to our caller
   } else {
-    cbnzw(tmp, retry);
+    cbnzw(tmp2, retry);
   }
   b(done);
 
    bind(fail);
-  // Check if rb(expected)==rb(result)
+  // Check if rb(expected)==rb(tmp1)
   // Shuffle registers so that we have memory value ready for next expected.
-  mov(tmp, expected);
-  mov(expected, result);
+  mov(tmp2, expected);
+  mov(expected, tmp1);
   if (is_narrow) {
-    decode_heap_oop(result, result);
-    decode_heap_oop(tmp, tmp);
+    decode_heap_oop(tmp1, tmp1);
+    decode_heap_oop(tmp2, tmp2);
   }
-  oopDesc::bs()->interpreter_read_barrier(this, result);
-  oopDesc::bs()->interpreter_read_barrier(this, tmp);
-  cmp(result, tmp);
+  oopDesc::bs()->interpreter_read_barrier(this, tmp1);
+  oopDesc::bs()->interpreter_read_barrier(this, tmp2);
+  cmp(tmp1, tmp2);
   // Retry with expected now being the value we just loaded from addr.
   br(Assembler::EQ, retry);
   if (is_cae && is_narrow) {
@@ -2276,7 +2277,9 @@ void MacroAssembler::cmpxchg_oop_shenandoah(Register addr, Register expected, Re
   }
   bind(done);
 
-  if (!is_cae) {
+  if (is_cae) {
+    mov(result, tmp1);
+  } else {
     cset(result, Assembler::EQ);
   }
 }
