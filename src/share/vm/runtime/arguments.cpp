@@ -66,7 +66,6 @@
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
-#include "gc_implementation/shenandoah/shenandoahTaskqueue.hpp"
 #endif // INCLUDE_ALL_GCS
 
 // Note: This is a special bug reporting site for the JVM
@@ -1759,17 +1758,6 @@ void Arguments::set_shenandoah_gc_flags() {
     if (0 > ShenandoahFreeThreshold || ShenandoahFreeThreshold > 100) {
       vm_exit_during_initialization("The flag -XX:ShenandoahFreeThreshold is out of range", NULL);
     }
-  }
-#endif
-
-#ifdef _LP64
-  // The optimized ObjArrayChunkedTask takes some bits away from the full 64 addressable
-  // bits, fail if we ever attempt to address more than we can. Only valid on 64bit.
-  if (MaxHeapSize >= ObjArrayChunkedTask::max_addressable()) {
-    jio_fprintf(defaultStream::error_stream(),
-                "Shenandoah GC cannot address more than " SIZE_FORMAT " bytes, and " SIZE_FORMAT " bytes heap requested.",
-                ObjArrayChunkedTask::max_addressable(), MaxHeapSize);
-    vm_exit(1);
   }
 #endif
 

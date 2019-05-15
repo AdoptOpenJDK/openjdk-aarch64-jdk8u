@@ -48,6 +48,7 @@
 #include "gc_implementation/shenandoah/shenandoahOopClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahPacer.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
+#include "gc_implementation/shenandoah/shenandoahTaskqueue.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "gc_implementation/shenandoah/shenandoahVerifier.hpp"
 #include "gc_implementation/shenandoah/shenandoahCodeRoots.hpp"
@@ -179,6 +180,18 @@ jint ShenandoahHeap::initialize() {
 
   assert((((size_t) base()) & ShenandoahHeapRegion::region_size_bytes_mask()) == 0,
          err_msg("Misaligned heap: " PTR_FORMAT, p2i(base())));
+
+#if SHENANDOAH_OPTIMIZED_OBJTASK
+  // The optimized ObjArrayChunkedTask takes some bits away from the full object bits.
+  // Fail if we ever attempt to address more than we can.
+  if ((uintptr_t)(heap_rs.base() + heap_rs.size()) >= ObjArrayChunkedTask::max_addressable()) {
+    FormatBuffer<512> buf("Shenandoah reserved [" PTR_FORMAT ", " PTR_FORMAT") for the heap, \n"
+                          "but max object address is " PTR_FORMAT ". Try to reduce heap size, or try other \n"
+                          "VM options that allocate heap at lower addresses (HeapBaseMinAddress, AllocateHeapAt, etc).",
+                p2i(heap_rs.base()), p2i(heap_rs.base() + heap_rs.size()), ObjArrayChunkedTask::max_addressable());
+    vm_exit_during_initialization("Fatal Error", buf);
+  }
+#endif
 
   ReservedSpace sh_rs = heap_rs.first_part(max_byte_size);
   if (!_heap_region_special) {
