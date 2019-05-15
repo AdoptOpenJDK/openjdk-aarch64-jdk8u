@@ -62,34 +62,6 @@ ShenandoahRootProcessor::~ShenandoahRootProcessor() {
   delete _process_strong_tasks;
 }
 
-void ShenandoahRootProcessor::process_all_roots_slow(OopClosure* oops) {
-  AlwaysTrueClosure always_true;
-
-  CLDToOopClosure clds(oops);
-  CodeBlobToOopClosure blobs(oops, !CodeBlobToOopClosure::FixRelocations);
-
-  CodeCache::blobs_do(&blobs);
-  ClassLoaderDataGraph::cld_do(&clds);
-  Universe::oops_do(oops);
-  FlatProfiler::oops_do(oops);
-  Management::oops_do(oops);
-  JvmtiExport::oops_do(oops);
-  JNIHandles::oops_do(oops);
-  JNIHandles::weak_oops_do(&always_true, oops);
-  ObjectSynchronizer::oops_do(oops);
-  SystemDictionary::roots_oops_do(oops, oops);
-  StringTable::oops_do(oops);
-
-  if (ShenandoahStringDedup::is_enabled()) {
-    ShenandoahStringDedup::oops_do_slow(oops);
-  }
-
-  // Do thread roots the last. This allows verification code to find
-  // any broken objects from those special roots first, not the accidental
-  // dangling reference from the thread root.
-  Threads::possibly_parallel_oops_do(oops, &clds, &blobs);
-}
-
 void ShenandoahRootProcessor::process_strong_roots(OopClosure* oops,
                                                    CLDClosure* clds,
                                                    CodeBlobClosure* blobs,

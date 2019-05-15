@@ -2130,6 +2130,9 @@ void ShenandoahHeap::op_init_updaterefs() {
   set_evacuation_in_progress(false);
 
   if (ShenandoahVerify) {
+    if (!is_degenerated_gc_in_progress()) {
+      verifier()->verify_roots_no_forwarded_except(ShenandoahRootVerifier::ThreadRoots);
+    }
     verifier()->verify_before_updaterefs();
   }
 
@@ -2196,6 +2199,10 @@ void ShenandoahHeap::op_final_updaterefs() {
     clear_cancelled_gc();
   }
   assert(!cancelled_gc(), "Should have been done right before");
+
+  if (ShenandoahVerify && !is_degenerated_gc_in_progress()) {
+    verifier()->verify_roots_no_forwarded_except(ShenandoahRootVerifier::ThreadRoots);
+  }
 
   if (is_degenerated_gc_in_progress()) {
     concurrent_mark()->update_roots(ShenandoahPhaseTimings::degen_gc_update_roots);
