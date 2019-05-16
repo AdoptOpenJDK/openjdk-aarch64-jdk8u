@@ -133,12 +133,12 @@ public:
   enum {
     chunk_bits   = 10,
     pow_bits     = 5,
-    oop_bits     = sizeof(uintptr_t)*8 - chunk_bits - pow_bits,
+    oop_bits     = sizeof(uintptr_t)*8 - chunk_bits - pow_bits
   };
   enum {
     oop_shift    = 0,
     pow_shift    = oop_shift + oop_bits,
-    chunk_shift  = pow_shift + pow_bits,
+    chunk_shift  = pow_shift + pow_bits
   };
 
 public:
@@ -191,7 +191,7 @@ class ObjArrayChunkedTask
 public:
   enum {
     chunk_bits  = 10,
-    pow_bits    = 5,
+    pow_bits    = 5
   };
 public:
   ObjArrayChunkedTask(oop o = NULL, int chunk = 0, int pow = 0): _obj(o) {

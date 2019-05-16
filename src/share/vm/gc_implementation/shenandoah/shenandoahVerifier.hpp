@@ -69,7 +69,7 @@ public:
     _verify_marked_incomplete,
 
     // Objects should be marked in "complete" bitmap.
-    _verify_marked_complete,
+    _verify_marked_complete
   } VerifyMarked;
 
   typedef enum {
@@ -80,7 +80,7 @@ public:
     _verify_forwarded_none,
 
     // Objects may have forwardees.
-    _verify_forwarded_allow,
+    _verify_forwarded_allow
   } VerifyForwarded;
 
   typedef enum {
@@ -93,7 +93,7 @@ public:
     // May have references to cset, all should be forwarded.
     // Note: Allowing non-forwarded references to cset is equivalent
     // to _verify_cset_disable.
-    _verify_cset_forwarded,
+    _verify_cset_forwarded
   } VerifyCollectionSet;
 
   typedef enum {
@@ -105,7 +105,7 @@ public:
 
     // All objects should belong to live regions,
     // and liveness data should be accurate
-    _verify_liveness_complete,
+    _verify_liveness_complete
   } VerifyLiveness;
 
   typedef enum {
@@ -119,7 +119,7 @@ public:
     _verify_regions_nocset,
 
     // No trash and no cset regions allowed
-    _verify_regions_notrash_nocset,
+    _verify_regions_notrash_nocset
   } VerifyRegions;
 
   typedef enum {
@@ -133,7 +133,7 @@ public:
     _verify_gcstate_forwarded,
 
     // Evacuation is in progress, some objects are forwarded
-    _verify_gcstate_evacuation,
+    _verify_gcstate_evacuation
   } VerifyGCState;
 
   struct VerifyOptions {
