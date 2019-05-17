@@ -743,23 +743,17 @@ public:
 
 class ShenandoahAdjustRootPointersTask : public AbstractGangTask {
 private:
-  ShenandoahRootProcessor* _rp;
+  ShenandoahRootAdjuster* _rp;
   PreservedMarksSet* _preserved_marks;
 public:
-  ShenandoahAdjustRootPointersTask(ShenandoahRootProcessor* rp, PreservedMarksSet* preserved_marks) :
+  ShenandoahAdjustRootPointersTask(ShenandoahRootAdjuster* rp, PreservedMarksSet* preserved_marks) :
     AbstractGangTask("Shenandoah Adjust Root Pointers Task"),
     _rp(rp),
     _preserved_marks(preserved_marks) {}
 
   void work(uint worker_id) {
     ShenandoahAdjustPointersClosure cl;
-    CLDToOopClosure adjust_cld_closure(&cl, true);
-    MarkingCodeBlobClosure adjust_code_closure(&cl,
-                                             CodeBlobToOopClosure::FixRelocations);
-
-    _rp->update_all_roots<AlwaysTrueClosure>(&cl,
-                                             &adjust_cld_closure,
-                                             &adjust_code_closure, NULL, worker_id);
+    _rp->roots_do(worker_id, &cl);
     _preserved_marks->get(worker_id)->adjust_during_full_gc();
   }
 };
@@ -773,7 +767,7 @@ void ShenandoahMarkCompact::phase3_update_references() {
   uint nworkers = workers->active_workers();
   {
     COMPILER2_PRESENT(DerivedPointerTable::clear());
-    ShenandoahRootProcessor rp(heap, nworkers, ShenandoahPhaseTimings::full_gc_roots);
+    ShenandoahRootAdjuster rp(ShenandoahPhaseTimings::full_gc_roots);
     ShenandoahAdjustRootPointersTask task(&rp, _preserved_marks);
     workers->run_task(&task);
     COMPILER2_PRESENT(DerivedPointerTable::update_pointers());

@@ -26,23 +26,12 @@
 
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
+#include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 
-template <typename IsAlive>
-void ShenandoahRootProcessor::update_all_roots(OopClosure* oops,
-                                               CLDClosure* clds,
-                                               CodeBlobClosure* blobs,
-                                               ThreadClosure* thread_cl,
-                                               uint worker_id) {
-  assert(thread_cl == NULL, "not implemented yet");
-  IsAlive is_alive;
-  process_java_roots(oops, clds, clds, blobs, thread_cl, worker_id);
-  process_vm_roots(oops, oops, &is_alive, worker_id);
-
-  if (blobs != NULL) {
-    _coderoots_all_iterator.possibly_parallel_blobs_do(blobs);
-  }
-
-  _process_strong_tasks->all_tasks_completed();
+template <typename ITR>
+void ShenandoahCodeCacheRoots<ITR>::code_blobs_do(CodeBlobClosure* blob_cl, uint worker_id) {
+  ShenandoahWorkerTimingsTracker timer(ShenandoahPhaseTimings::CodeCacheRoots, worker_id);
+  _coderoots_iterator.possibly_parallel_blobs_do(blob_cl);
 }
 
 #endif // SHARE_GC_SHENANDOAH_SHENANDOAHROOTPROCESSOR_INLINE_HPP

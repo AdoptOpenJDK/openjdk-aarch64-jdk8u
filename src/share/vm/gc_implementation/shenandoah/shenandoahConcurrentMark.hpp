@@ -86,10 +86,8 @@ private:
   void weak_refs_work(bool full_gc);
   void weak_refs_work_doit(bool full_gc);
 
-  void weak_roots_work();
-
 public:
-  static void cleanup_jni_refs();
+  void weak_roots_work();
   void preclean_weak_refs();
 
 // ---------- Concurrent code cache

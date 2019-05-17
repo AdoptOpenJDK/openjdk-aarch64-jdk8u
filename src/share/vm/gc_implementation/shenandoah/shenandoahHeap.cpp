@@ -50,7 +50,7 @@
 #include "gc_implementation/shenandoah/shenandoahPacer.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "gc_implementation/shenandoah/shenandoahPassiveMode.hpp"
-#include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
+#include "gc_implementation/shenandoah/shenandoahRootProcessor.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahTaskqueue.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "gc_implementation/shenandoah/shenandoahVerifier.hpp"
@@ -985,7 +985,7 @@ public:
     ShenandoahEvacuateUpdateRootsClosure cl;
 
     MarkingCodeBlobClosure blobsCl(&cl, CodeBlobToOopClosure::FixRelocations);
-    _rp->process_evacuate_roots(&cl, &blobsCl, worker_id);
+    _rp->roots_do(worker_id, &cl);
   }
 };
 
@@ -995,7 +995,7 @@ void ShenandoahHeap::evacuate_and_update_roots() {
   assert(ShenandoahSafepoint::is_at_shenandoah_safepoint(), "Only iterate roots while world is stopped");
 
   {
-    ShenandoahRootEvacuator rp(this, workers()->active_workers(), ShenandoahPhaseTimings::init_evac);
+    ShenandoahRootEvacuator rp(ShenandoahPhaseTimings::init_evac);
     ShenandoahEvacuateUpdateRootsTask roots_task(&rp);
     workers()->run_task(&roots_task);
   }
@@ -1223,11 +1223,9 @@ void ShenandoahHeap::object_iterate(ObjectClosure* cl) {
   Stack<oop,mtGC> oop_stack;
 
   // First, we process all GC roots. This populates the work stack with initial objects.
-  ShenandoahRootProcessor rp(this, 1, ShenandoahPhaseTimings::heap_iteration_roots);
+  ShenandoahRootScanner rp(ShenandoahPhaseTimings::heap_iteration_roots);
   ObjectIterateScanRootClosure oops(&_aux_bit_map, &oop_stack);
-  CLDToOopClosure clds(&oops, false);
-  CodeBlobToOopClosure blobs(&oops, false);
-  rp.process_all_roots(&oops, &clds, &blobs, NULL, 0);
+  rp.roots_do(0, &oops);
 
   // Work through the oop stack to traverse heap.
   while (! oop_stack.is_empty()) {
@@ -1906,7 +1904,6 @@ void ShenandoahHeap::unload_classes_and_cleanup_tables(bool full_gc) {
     purged_class = SystemDictionary::do_unloading(is_alive,
                                                   full_gc /* do_cleaning*/ );
   }
-
   {
     ShenandoahGCPhase phase(full_gc ?
                             ShenandoahPhaseTimings::full_gc_purge_par :

@@ -114,6 +114,7 @@ public:
   oop oop_atomic_cmpxchg_in_heap(oop new_value, volatile HeapWord* dest, oop compare_value);
 
   void enqueue(oop obj);
+  void keep_alive_barrier(oop obj);
 
 private:
   template <class T>
