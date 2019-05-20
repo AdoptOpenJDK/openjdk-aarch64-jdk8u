@@ -172,53 +172,6 @@ ShenandoahRootProcessor::~ShenandoahRootProcessor() {
   _heap->phase_timings()->record_workers_end(_phase);
 }
 
-ShenandoahRootScanner::ShenandoahRootScanner(ShenandoahPhaseTimings::Phase phase) :
-  ShenandoahRootProcessor(phase) {
-}
-
-void ShenandoahRootScanner::roots_do(uint worker_id, OopClosure* oops) {
-  CLDToOopClosure clds_cl(oops);
-  MarkingCodeBlobClosure blobs_cl(oops, !CodeBlobToOopClosure::FixRelocations);
-  roots_do(worker_id, oops, &clds_cl, &blobs_cl);
-}
-
-void ShenandoahRootScanner::strong_roots_do(uint worker_id, OopClosure* oops) {
-  CLDToOopClosure clds_cl(oops);
-  MarkingCodeBlobClosure blobs_cl(oops, !CodeBlobToOopClosure::FixRelocations);
-  strong_roots_do(worker_id, oops, &clds_cl, &blobs_cl);
-}
-
-void ShenandoahRootScanner::roots_do(uint worker_id, OopClosure* oops, CLDClosure* clds, CodeBlobClosure* code) {
-  assert(!ShenandoahHeap::heap()->unload_classes(),
-         "No class unloading");
-  ResourceMark rm;
-
-  _serial_roots.oops_do(oops, worker_id);
-  _dict_roots.oops_do(oops, worker_id);
-  _cld_roots.clds_do(clds, clds, worker_id);
-  _thread_roots.oops_do(oops, clds, code, worker_id);
-
-  // With ShenandoahConcurrentScanCodeRoots, we avoid scanning the entire code cache here,
-  // and instead do that in concurrent phase under the relevant lock. This saves init mark
-  // pause time.
-  if (code != NULL && !ShenandoahConcurrentScanCodeRoots) {
-    _code_roots.code_blobs_do(code, worker_id);
-  }
-
-  _weak_roots.oops_do(oops, worker_id);
-  _string_table_roots.oops_do(oops, worker_id);
-  _dedup_roots.oops_do(oops, worker_id);
-}
-
-void ShenandoahRootScanner::strong_roots_do(uint worker_id, OopClosure* oops, CLDClosure* clds, CodeBlobClosure* code) {
-  assert(ShenandoahHeap::heap()->unload_classes(), "Should be used during class unloading");
-  ResourceMark rm;
-  _serial_roots.oops_do(oops, worker_id);
-  _dict_roots.strong_oops_do(oops, worker_id);
-  _cld_roots.clds_do(clds, NULL, worker_id);
-  _thread_roots.oops_do(oops, clds, code, worker_id);
-}
-
 ShenandoahRootEvacuator::ShenandoahRootEvacuator(ShenandoahPhaseTimings::Phase phase) :
   ShenandoahRootProcessor(phase) {
 }

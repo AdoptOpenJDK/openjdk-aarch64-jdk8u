@@ -90,9 +90,9 @@ ShenandoahMarkRefsSuperClosure::ShenandoahMarkRefsSuperClosure(ShenandoahObjToSc
 template<UpdateRefsMode UPDATE_REFS>
 class ShenandoahInitMarkRootsTask : public AbstractGangTask {
 private:
-  ShenandoahRootScanner* _rp;
+  ShenandoahAllRootScanner* _rp;
 public:
-  ShenandoahInitMarkRootsTask(ShenandoahRootScanner* rp) :
+  ShenandoahInitMarkRootsTask(ShenandoahAllRootScanner* rp) :
     AbstractGangTask("Shenandoah init mark roots task"),
     _rp(rp) {
   }
@@ -299,7 +299,7 @@ void ShenandoahConcurrentMark::mark_roots(ShenandoahPhaseTimings::Phase root_pha
 
   assert(nworkers <= task_queues()->size(), "Just check");
 
-  ShenandoahRootScanner root_proc(root_phase);
+  ShenandoahAllRootScanner root_proc(root_phase);
   TASKQUEUE_STATS_ONLY(task_queues()->reset_taskqueue_stats());
   task_queues()->reserve(nworkers);
 
