@@ -58,6 +58,9 @@
 #include "gc_implementation/shenandoah/mode/shenandoahIUMode.hpp"
 #include "gc_implementation/shenandoah/mode/shenandoahPassiveMode.hpp"
 #include "gc_implementation/shenandoah/mode/shenandoahSATBMode.hpp"
+#if INCLUDE_JFR
+#include "gc_implementation/shenandoah/shenandoahJfrSupport.hpp"
+#endif
 
 #include "memory/metaspace.hpp"
 #include "runtime/vmThread.hpp"
@@ -588,6 +591,8 @@ void ShenandoahHeap::post_initialize() {
   ref_processing_init();
 
   _heuristics->initialize();
+
+  JFR_ONLY(ShenandoahJFRSupport::register_jfr_type_serializers());
 }
 
 size_t ShenandoahHeap::used() const {
