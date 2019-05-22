@@ -27,6 +27,7 @@
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
+#include "memory/resourceArea.hpp"
 
 template <typename ITR>
 void ShenandoahCodeCacheRoots<ITR>::code_blobs_do(CodeBlobClosure* blob_cl, uint worker_id) {
