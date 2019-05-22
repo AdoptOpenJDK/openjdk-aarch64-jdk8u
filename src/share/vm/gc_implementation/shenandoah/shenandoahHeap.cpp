@@ -1447,11 +1447,6 @@ void ShenandoahHeap::op_final_mark() {
 
     TASKQUEUE_STATS_ONLY(concurrent_mark()->task_queues()->reset_taskqueue_stats());
 
-    // Degen may be caused by failed evacuation of roots
-    if (is_degenerated_gc_in_progress() && has_forwarded_objects()) {
-      concurrent_mark()->update_roots(ShenandoahPhaseTimings::degen_gc_update_roots);
-    }
-
     if (ShenandoahVerify) {
       verifier()->verify_roots_no_forwarded();
     }
