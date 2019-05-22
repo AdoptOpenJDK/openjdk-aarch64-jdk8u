@@ -641,7 +641,7 @@ size_t ShenandoahHeapRegion::pin_count() const {
 void ShenandoahHeapRegion::set_state(RegionState to) {
   EventShenandoahHeapRegionStateChange evt;
   if (evt.should_commit()){
-    evt.set_index(index());
+    evt.set_index((unsigned)index());
     evt.set_start((uintptr_t)bottom());
     evt.set_used(used());
     evt.set_from(_state);
