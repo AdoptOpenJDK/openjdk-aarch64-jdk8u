@@ -1138,12 +1138,6 @@ static Node* create_phis_on_call_return(Node* ctrl, Node* c, Node* n, Node* n_cl
 
 void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
 
-  // Collect raw memory state at CFG points in the entire graph and
-  // record it in memory_nodes. Optimize the raw memory graph in the
-  // process. Optimizing the memory graph also makes the memory graph
-  // simpler.
-  GrowableArray<MemoryGraphFixer*> memory_graph_fixers;
-
   Unique_Node_List uses;
   Node_Stack stack(0);
   Node_List clones;
@@ -1365,7 +1359,6 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
     Node* raw_mem = fixer.find_mem(ctrl, lrb);
     Node* init_raw_mem = raw_mem;
     Node* raw_mem_for_ctrl = fixer.find_mem(ctrl, NULL);
-    // int alias = phase->C->get_alias_index(lrb->adr_type());
 
     IdealLoopTree *loop = phase->get_loop(ctrl);
     CallStaticJavaNode* unc = lrb->pin_and_expand_null_check(phase->igvn());
@@ -2346,7 +2339,11 @@ void MemoryGraphFixer::fix_mem(Node* ctrl, Node* new_ctrl, Node* mem, Node* mem_
                 IdealLoopTree* l = loop;
                 create_phi = false;
                 while (l != _phase->ltree_root()) {
-                  if (_phase->is_dominator(l->_head, u) && _phase->is_dominator(_phase->idom(u), l->_head)) {
+                  Node* head = l->_head;
+                  if (head->in(0) == NULL) {
+                    head = _phase->get_ctrl(head);
+                  }
+                  if (_phase->is_dominator(head, u) && _phase->is_dominator(_phase->idom(u), head)) {
                     create_phi = true;
                     do_check = false;
                     break;
