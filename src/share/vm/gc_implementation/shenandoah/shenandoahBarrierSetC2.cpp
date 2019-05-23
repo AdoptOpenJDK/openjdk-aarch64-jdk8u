@@ -33,7 +33,7 @@ ShenandoahBarrierSetC2* ShenandoahBarrierSetC2::bsc2() {
   return ShenandoahBarrierSet::barrier_set()->bsc2();
 }
 
-bool ShenandoahBarrierSetC2::is_shenandoah_wb_call(Node* call) {
+bool ShenandoahBarrierSetC2::is_shenandoah_lrb_call(Node* call) {
   return call->is_CallLeaf() &&
          call->as_CallLeaf()->entry_point() == CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_JRT);
 }
@@ -46,7 +46,7 @@ bool ShenandoahBarrierSetC2::is_shenandoah_state_load(Node* n) {
          && n->in(2)->in(3)->bottom_type()->is_intptr_t()->get_con() == state_offset;
 }
 
-const TypeFunc* ShenandoahBarrierSetC2::shenandoah_write_barrier_Type() {
+const TypeFunc* ShenandoahBarrierSetC2::shenandoah_load_reference_barrier_Type() {
   const Type **fields = TypeTuple::fields(1);
   fields[TypeFunc::Parms+0] = TypeInstPtr::NOTNULL; // original field value
   const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+1, fields);

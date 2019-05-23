@@ -34,10 +34,10 @@ class ShenandoahBarrierSetC2 : public CHeapObj<mtGC> {
 public:
   static ShenandoahBarrierSetC2* bsc2();
 
-  static bool is_shenandoah_wb_call(Node* call);
+  static bool is_shenandoah_lrb_call(Node* call);
   static bool is_shenandoah_state_load(Node* n);
 
-  static const TypeFunc* shenandoah_write_barrier_Type();
+  static const TypeFunc* shenandoah_load_reference_barrier_Type();
 
   Node* step_over_gc_barrier(Node* c);
 
