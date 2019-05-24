@@ -41,6 +41,10 @@ private:
   volatile int  _claimed_idx;
   volatile bool _finished;
   shenandoah_padding(1);
+
+  // Noncopyable.
+  ShenandoahParallelCodeCacheIterator(const ShenandoahParallelCodeCacheIterator& o);
+  ShenandoahParallelCodeCacheIterator& operator=(const ShenandoahParallelCodeCacheIterator& o);
 public:
   ShenandoahParallelCodeCacheIterator();
   void parallel_blobs_do(CodeBlobClosure* f);
@@ -115,18 +119,6 @@ public:
   static void initialize();
   static void add_nmethod(nmethod* nm);
   static void remove_nmethod(nmethod* nm);
-
-  /**
-   * Provides the iterator over all nmethods in the code cache that have oops.
-   * @return
-   */
-  static ShenandoahAllCodeRootsIterator iterator();
-
-  /**
-   * Provides the iterator over nmethods that have at least one oop in collection set.
-   * @return
-   */
-  static ShenandoahCsetCodeRootsIterator cset_iterator();
 
 private:
   struct PaddedLock {
