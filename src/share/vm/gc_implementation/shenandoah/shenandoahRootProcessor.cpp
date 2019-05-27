@@ -64,7 +64,7 @@ ShenandoahRootProcessor::~ShenandoahRootProcessor() {
 }
 
 void ShenandoahRootProcessor::process_all_roots_slow(OopClosure* oops) {
-  ShenandoahAlwaysTrueClosure always_true;
+  AlwaysTrueClosure always_true;
 
   CLDToOopClosure clds(oops);
   CodeBlobToOopClosure blobs(oops, !CodeBlobToOopClosure::FixRelocations);
@@ -194,7 +194,7 @@ void ShenandoahRootProcessor::process_vm_roots(OopClosure* strong_roots,
 
   if (jni_weak_roots != NULL) {
     if (!_process_strong_tasks->is_task_claimed(SHENANDOAH_RP_PS_JNIHandles_weak_oops_do)) {
-      ShenandoahAlwaysTrueClosure always_true;
+      AlwaysTrueClosure always_true;
       ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::JNIWeakRoots, worker_id);
       JNIHandles::weak_oops_do(&always_true, jni_weak_roots);
     }
