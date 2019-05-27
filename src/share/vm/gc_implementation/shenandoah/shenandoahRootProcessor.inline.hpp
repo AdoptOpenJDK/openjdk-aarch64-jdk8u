@@ -80,6 +80,7 @@ template <typename ITR>
 void ShenandoahRootScanner<ITR>::strong_roots_do(uint worker_id, OopClosure* oops, CLDClosure* clds, CodeBlobClosure* code) {
   assert(ShenandoahHeap::heap()->unload_classes(), "Should be used during class unloading");
   ResourceMark rm;
+  AlwaysTrueClosure always_true;
 
   _serial_roots.oops_do(oops, worker_id);
   _dict_roots.strong_oops_do(oops, worker_id);

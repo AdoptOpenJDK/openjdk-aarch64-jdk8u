@@ -433,7 +433,11 @@ public:
         ShenandoahVerifyOopClosure cl(&stack, _bitmap, _ld,
                                       ShenandoahMessageBuffer("Shenandoah verification failed; %s, Roots", _label),
                                       _options);
-        _verifier->oops_do(&cl);
+        if (_heap->unload_classes()) {
+          _verifier->strong_roots_do(&cl);
+        } else {
+          _verifier->roots_do(&cl);
+        }
     }
 
     jlong processed = 0;

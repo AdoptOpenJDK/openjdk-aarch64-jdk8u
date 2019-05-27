@@ -88,3 +88,52 @@ void ShenandoahRootVerifier::oops_do(OopClosure* oops) {
     Threads::possibly_parallel_oops_do(oops, &clds, &blobs);
   }
 }
+
+void ShenandoahRootVerifier::roots_do(OopClosure* oops) {
+  CodeBlobToOopClosure blobs(oops, !CodeBlobToOopClosure::FixRelocations);
+  CodeCache::blobs_do(&blobs);
+
+  CLDToOopClosure clds(oops, false /* must_claim */);
+  ClassLoaderDataGraph::cld_do(&clds);
+
+  Universe::oops_do(oops);
+  Management::oops_do(oops);
+  JvmtiExport::oops_do(oops);
+  JNIHandles::oops_do(oops);
+  ObjectSynchronizer::oops_do(oops);
+  SystemDictionary::oops_do(oops);
+  FlatProfiler::oops_do(oops);
+  StringTable::oops_do(oops);
+
+  JNIHandles::weak_oops_do(oops);
+  StringTable::oops_do(oops);
+
+  if (ShenandoahStringDedup::is_enabled()) {
+    ShenandoahStringDedup::oops_do_slow(oops);
+  }
+
+  // Do thread roots the last. This allows verification code to find
+  // any broken objects from those special roots first, not the accidental
+  // dangling reference from the thread root.
+  Threads::possibly_parallel_oops_do(oops, &clds, &blobs);
+}
+
+void ShenandoahRootVerifier::strong_roots_do(OopClosure* oops) {
+  CodeBlobToOopClosure blobs(oops, !CodeBlobToOopClosure::FixRelocations);
+
+  CLDToOopClosure clds(oops, false /* must_claim */);
+  ClassLoaderDataGraph::roots_cld_do(&clds, NULL);
+
+  Universe::oops_do(oops);
+  Management::oops_do(oops);
+  JvmtiExport::oops_do(oops);
+  JNIHandles::oops_do(oops);
+  ObjectSynchronizer::oops_do(oops);
+  SystemDictionary::oops_do(oops);
+  FlatProfiler::oops_do(oops);
+
+  // Do thread roots the last. This allows verification code to find
+  // any broken objects from those special roots first, not the accidental
+  // dangling reference from the thread root.
+  Threads::possibly_parallel_oops_do(oops, &clds, &blobs);
+}
