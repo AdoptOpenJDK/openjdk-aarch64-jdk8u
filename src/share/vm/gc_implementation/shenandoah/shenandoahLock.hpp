@@ -27,7 +27,7 @@
 #include "memory/allocation.hpp"
 #include "runtime/thread.hpp"
 
-class ShenandoahHeapLock  {
+class ShenandoahLock  {
 private:
   enum LockState { unlocked = 0, locked = 1 };
 
@@ -38,7 +38,7 @@ private:
   char _pad2[DEFAULT_CACHE_LINE_SIZE];
 
 public:
-  ShenandoahHeapLock() : _state(unlocked), _owner(NULL) {};
+  ShenandoahLock() : _state(unlocked), _owner(NULL) {};
 
   void lock() {
     Thread::SpinAcquire(&_state, "Shenandoah Heap Lock");
@@ -76,16 +76,16 @@ public:
 #endif
 };
 
-class ShenandoahHeapLocker : public StackObj {
+class ShenandoahLocker : public StackObj {
 private:
-  ShenandoahHeapLock* _lock;
+  ShenandoahLock* _lock;
 public:
-  ShenandoahHeapLocker(ShenandoahHeapLock* lock) {
+  ShenandoahLocker(ShenandoahLock* lock) {
     _lock = lock;
     _lock->lock();
   }
 
-  ~ShenandoahHeapLocker() {
+  ~ShenandoahLocker() {
     _lock->unlock();
   }
 };

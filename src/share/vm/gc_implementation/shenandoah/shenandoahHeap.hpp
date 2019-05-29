@@ -27,7 +27,7 @@
 #include "gc_implementation/shared/markBitMap.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahAllocRequest.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapLock.hpp"
+#include "gc_implementation/shenandoah/shenandoahLock.hpp"
 #include "gc_implementation/shenandoah/shenandoahEvacOOMHandler.hpp"
 #include "gc_implementation/shenandoah/shenandoahSharedVariables.hpp"
 
@@ -96,6 +96,9 @@ public:
   void do_oop(oop* p);
 };
 #endif
+
+typedef ShenandoahLock    ShenandoahHeapLock;
+typedef ShenandoahLocker  ShenandoahHeapLocker;
 
 // Shenandoah GC is low-pause concurrent GC that uses Brooks forwarding pointers
 // to encode forwarding data. See BrooksPointer for details on forwarding data encoding.
