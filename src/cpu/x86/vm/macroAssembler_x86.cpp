@@ -4473,15 +4473,10 @@ void MacroAssembler::tlab_allocate(Register obj,
 
   NOT_LP64(get_thread(thread));
 
-  uint oop_extra_words = Universe::heap()->oop_extra_words();
-
   movptr(obj, Address(thread, JavaThread::tlab_top_offset()));
   if (var_size_in_bytes == noreg) {
-    lea(end, Address(obj, con_size_in_bytes + oop_extra_words * HeapWordSize));
+    lea(end, Address(obj, con_size_in_bytes));
   } else {
-    if (oop_extra_words > 0) {
-      addptr(var_size_in_bytes, oop_extra_words * HeapWordSize);
-    }
     lea(end, Address(obj, var_size_in_bytes, Address::times_1));
   }
   cmpptr(end, Address(thread, JavaThread::tlab_end_offset()));
@@ -4489,8 +4484,6 @@ void MacroAssembler::tlab_allocate(Register obj,
 
   // update the tlab top pointer
   movptr(Address(thread, JavaThread::tlab_top_offset()), end);
-
-  Universe::heap()->compile_prepare_oop(this, obj);
 
   // recover var_size_in_bytes if necessary
   if (var_size_in_bytes == end) {

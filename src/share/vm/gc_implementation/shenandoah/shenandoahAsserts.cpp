@@ -58,12 +58,16 @@ void ShenandoahAsserts::print_obj(ShenandoahMessageBuffer& msg, oop obj) {
   stringStream ss;
   r->print_on(&ss);
 
+  stringStream mw_ss;
+  obj->mark()->print_on(&mw_ss);
+
   ShenandoahMarkingContext* const ctx = heap->marking_context();
 
   msg.append("  " PTR_FORMAT " - klass " PTR_FORMAT " %s\n", p2i(obj), p2i(obj->klass()), obj->klass()->external_name());
   msg.append("    %3s allocated after mark start\n", ctx->allocated_after_mark_start((HeapWord *) obj)     ? "" : "not");
   msg.append("    %3s marked \n",                    ctx->is_marked(obj) ? "" : "not");
   msg.append("    %3s in collection set\n",          heap->in_collection_set(obj) ? "" : "not");
+  msg.append("  mark:%s\n", mw_ss.as_string());
   msg.append("  region: %s", ss.as_string());
 }
 
@@ -245,7 +249,7 @@ void ShenandoahAsserts::assert_in_correct_region(void* interior_loc, oop obj, co
                   file, line);
   }
 
-  size_t alloc_size = obj->size() + ShenandoahForwarding::word_size();
+  size_t alloc_size = obj->size();
   if (alloc_size > ShenandoahHeapRegion::humongous_threshold_words()) {
     size_t idx = r->region_number();
     size_t num_regions = ShenandoahHeapRegion::required_regions(alloc_size * HeapWordSize);

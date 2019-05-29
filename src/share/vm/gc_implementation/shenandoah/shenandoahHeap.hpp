@@ -519,14 +519,8 @@ private:
   HeapWord* allocate_new_gclab(size_t min_size, size_t word_size, size_t* actual_size);
 
 public:
-#ifndef CC_INTERP
-  void compile_prepare_oop(MacroAssembler* masm, Register obj);
-#endif
-
   HeapWord* allocate_memory(ShenandoahAllocRequest& request);
   HeapWord* mem_allocate(size_t size, bool* what);
-
-  uint oop_extra_words();
 
   void notify_mutator_alloc_words(size_t words, bool waste);
 
@@ -538,8 +532,6 @@ public:
   size_t unsafe_max_tlab_alloc(Thread *thread) const;
   size_t max_tlab_size() const;
   size_t tlab_used(Thread* ignored) const;
-
-  HeapWord* tlab_post_allocation_setup(HeapWord* obj);
 
   void resize_tlabs();
   void resize_all_tlabs();

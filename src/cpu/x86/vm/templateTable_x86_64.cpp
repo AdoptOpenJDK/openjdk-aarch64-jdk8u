@@ -3366,17 +3366,11 @@ void TemplateTable::_new() {
     Universe::heap()->supports_inline_contig_alloc() && !CMSIncrementalMode;
 
   if (UseTLAB) {
-    uint oop_extra_words = Universe::heap()->oop_extra_words();
-    if (oop_extra_words > 0) {
-      __ addq(rdx, oop_extra_words * HeapWordSize);
-    }
-
     __ movptr(rax, Address(r15_thread, in_bytes(JavaThread::tlab_top_offset())));
     __ lea(rbx, Address(rax, rdx, Address::times_1));
     __ cmpptr(rbx, Address(r15_thread, in_bytes(JavaThread::tlab_end_offset())));
     __ jcc(Assembler::above, allow_shared_alloc ? allocate_shared : slow_case);
     __ movptr(Address(r15_thread, in_bytes(JavaThread::tlab_top_offset())), rbx);
-    Universe::heap()->compile_prepare_oop(_masm, rax);
     if (ZeroTLAB) {
       // the fields have been already cleared
       __ jmp(initialize_header);

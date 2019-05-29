@@ -25,7 +25,6 @@
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHCONCURRENTMARK_INLINE_HPP
 
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
-#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahConcurrentMark.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
@@ -71,7 +70,7 @@ void ShenandoahConcurrentMark::do_task(ShenandoahObjToScanQueue* q, T* cl, jusho
 inline void ShenandoahConcurrentMark::count_liveness(jushort* live_data, oop obj) {
   size_t region_idx = _heap->heap_region_index_containing(obj);
   ShenandoahHeapRegion* region = _heap->get_region(region_idx);
-  size_t size = obj->size() + ShenandoahForwarding::word_size();
+  size_t size = obj->size();
 
   if (!region->is_humongous_start()) {
     assert(!region->is_humongous(), "Cannot have continuations here");

@@ -3765,15 +3765,10 @@ void MacroAssembler::tlab_allocate(Register obj,
 
   // verify_tlab();
 
-  int oop_extra_words = Universe::heap()->oop_extra_words();
-
   ldr(obj, Address(rthread, JavaThread::tlab_top_offset()));
   if (var_size_in_bytes == noreg) {
-    lea(end, Address(obj, con_size_in_bytes + oop_extra_words * HeapWordSize));
+    lea(end, Address(obj, con_size_in_bytes));
   } else {
-    if (oop_extra_words > 0) {
-      add(var_size_in_bytes, var_size_in_bytes, oop_extra_words * HeapWordSize);
-    }
     lea(end, Address(obj, var_size_in_bytes));
   }
   ldr(rscratch1, Address(rthread, JavaThread::tlab_end_offset()));
@@ -3782,8 +3777,6 @@ void MacroAssembler::tlab_allocate(Register obj,
 
   // update the tlab top pointer
   str(end, Address(rthread, JavaThread::tlab_top_offset()));
-
-  Universe::heap()->compile_prepare_oop(this, obj);
 
   // recover var_size_in_bytes if necessary
   if (var_size_in_bytes == end) {

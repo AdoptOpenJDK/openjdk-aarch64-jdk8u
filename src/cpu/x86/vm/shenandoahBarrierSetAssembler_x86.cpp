@@ -40,18 +40,46 @@ ShenandoahBarrierSetAssembler* ShenandoahBarrierSetAssembler::bsasm() {
 
 #define __ masm->
 
-void ShenandoahBarrierSetAssembler::resolve_forward_pointer(MacroAssembler* masm, Register dst) {
+void ShenandoahBarrierSetAssembler::resolve_forward_pointer(MacroAssembler* masm, Register dst, Register tmp) {
   assert(ShenandoahCASBarrier, "should be enabled");
   Label is_null;
   __ testptr(dst, dst);
   __ jcc(Assembler::zero, is_null);
-  resolve_forward_pointer_not_null(masm, dst);
+  resolve_forward_pointer_not_null(masm, dst, tmp);
   __ bind(is_null);
 }
 
-void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssembler* masm, Register dst) {
+void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssembler* masm, Register dst, Register tmp) {
   assert(ShenandoahCASBarrier || ShenandoahLoadRefBarrier, "should be enabled");
-  __ movptr(dst, Address(dst, ShenandoahForwarding::byte_offset()));
+  // The below loads the mark word, checks if the lowest two bits are
+  // set, and if so, clear the lowest two bits and copy the result
+  // to dst. Otherwise it leaves dst alone.
+  // Implementing this is surprisingly awkward. I do it here by:
+  // - Inverting the mark word
+  // - Test lowest two bits == 0
+  // - If so, set the lowest two bits
+  // - Invert the result back, and copy to dst
+
+  bool borrow_reg = (tmp == noreg);
+  if (borrow_reg) {
+    // No free registers available. Make one useful.
+    tmp = rscratch1;
+    __ push(tmp);
+  }
+
+  Label done;
+  __ movptr(tmp, Address(dst, oopDesc::mark_offset_in_bytes()));
+  __ notptr(tmp);
+  __ testb(tmp, markOopDesc::marked_value);
+  __ jccb(Assembler::notZero, done);
+  __ orptr(tmp, markOopDesc::marked_value);
+  __ notptr(tmp);
+  __ mov(dst, tmp);
+  __ bind(done);
+
+  if (borrow_reg) {
+    __ pop(tmp);
+  }
 }
 
 void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembler* masm, Register dst) {
@@ -60,7 +88,7 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembl
   Label done;
 
   Address gc_state(r15_thread, in_bytes(JavaThread::gc_state_offset()));
-  __ testb(gc_state, ShenandoahHeap::HAS_FORWARDED | ShenandoahHeap::EVACUATION);
+  __ testb(gc_state, ShenandoahHeap::HAS_FORWARDED);
   __ jcc(Assembler::zero, done);
 
   {
@@ -254,16 +282,3 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 #undef __
 
 #endif // COMPILER1
-
-#define __ masm->
-
-void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
-#ifdef _LP64
-  __ incrementq(obj, ShenandoahForwarding::byte_size());
-#else
-  __ incrementl(obj, ShenandoahForwarding::byte_size());
-#endif
-  __ movptr(Address(obj, ShenandoahForwarding::byte_offset()), obj);
-}
-
-#undef __

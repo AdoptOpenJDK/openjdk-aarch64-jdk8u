@@ -30,7 +30,6 @@
 
 #include "gc_implementation/shenandoah/shenandoahAllocTracker.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
-#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
@@ -126,8 +125,6 @@ public:
 
 jint ShenandoahHeap::initialize() {
   CollectedHeap::pre_initialize();
-
-  ShenandoahForwarding::initial_checks();
 
   initialize_heuristics();
 
@@ -829,12 +826,9 @@ HeapWord* ShenandoahHeap::allocate_memory_under_lock(ShenandoahAllocRequest& req
 
 HeapWord*  ShenandoahHeap::mem_allocate(size_t size,
                                         bool*  gc_overhead_limit_was_exceeded) {
-  ShenandoahAllocRequest req = ShenandoahAllocRequest::for_shared(size + ShenandoahForwarding::word_size());
-  HeapWord* filler = allocate_memory(req);
-  HeapWord* result = filler + ShenandoahForwarding::word_size();
-  if (filler != NULL) {
-    ShenandoahForwarding::initialize(oop(result));
-
+  ShenandoahAllocRequest req = ShenandoahAllocRequest::for_shared(size);
+  HeapWord* result = allocate_memory(req);
+  if (result != NULL) {
     assert(! in_collection_set(result), "never allocate in targetted region");
     return result;
   } else {
@@ -852,7 +846,7 @@ public:
 
   void do_object(oop p) {
     shenandoah_assert_marked(NULL, p);
-    if (p == ShenandoahBarrierSet::resolve_forwarded_not_null(p)) {
+    if (!p->is_forwarded()) {
       _heap->evacuate_object(p, _thread);
     }
   }
@@ -929,8 +923,8 @@ void ShenandoahHeap::print_heap_regions_on(outputStream* st) const {
 void ShenandoahHeap::trash_humongous_region_at(ShenandoahHeapRegion* start) {
   assert(start->is_humongous_start(), "reclaim regions starting with the first one");
 
-  oop humongous_obj = oop(start->bottom() + ShenandoahForwarding::word_size());
-  size_t size = humongous_obj->size() + ShenandoahForwarding::word_size();
+  oop humongous_obj = oop(start->bottom());
+  size_t size = humongous_obj->size();
   size_t required_regions = ShenandoahHeapRegion::required_regions(size * HeapWordSize);
   size_t index = start->region_number() + required_regions - 1;
 
@@ -1750,17 +1744,6 @@ void ShenandoahHeap::set_concurrent_mark_in_progress(bool in_progress) {
 void ShenandoahHeap::set_evacuation_in_progress(bool in_progress) {
   assert(ShenandoahSafepoint::is_at_shenandoah_safepoint(), "Only call this at safepoint");
   set_gc_state_mask(EVACUATION, in_progress);
-}
-
-HeapWord* ShenandoahHeap::tlab_post_allocation_setup(HeapWord* obj) {
-  // Initialize forwarding pointer for the next object
-  HeapWord* result = obj + ShenandoahForwarding::word_size();
-  ShenandoahForwarding::initialize(oop(result));
-  return result;
-}
-
-uint ShenandoahHeap::oop_extra_words() {
-  return ShenandoahForwarding::word_size();
 }
 
 void ShenandoahHeap::ref_processing_init() {

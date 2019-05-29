@@ -2502,8 +2502,6 @@ TypeOopPtr::TypeOopPtr(TYPES t, PTR ptr, ciKlass* k, bool xk, ciObject* o, int o
   if (_offset != 0) {
     if (_offset == oopDesc::klass_offset_in_bytes()) {
       _is_ptr_to_narrowklass = UseCompressedClassPointers;
-    } else if (UseShenandoahGC && _offset == ShenandoahForwarding::byte_offset()) {
-      // Shenandoah doesn't support compressed forwarding pointers
     } else if (klass() == NULL) {
       // Array with unknown body type
       assert(this->isa_aryptr(), "only arrays without klass");
@@ -2529,8 +2527,7 @@ TypeOopPtr::TypeOopPtr(TYPES t, PTR ptr, ciKlass* k, bool xk, ciObject* o, int o
           assert(this->isa_instptr(), "must be an instance ptr.");
           _is_ptr_to_narrowoop = false;
         } else if (klass() == ciEnv::current()->Class_klass() &&
-                   _offset >= InstanceMirrorKlass::offset_of_static_fields() &&
-                   !UseShenandoahGC) {
+                   _offset >= InstanceMirrorKlass::offset_of_static_fields()) {
           // Static fields
           assert(o != NULL, "must be constant");
           ciInstanceKlass* k = o->as_instance()->java_lang_Class_klass()->as_instance_klass();

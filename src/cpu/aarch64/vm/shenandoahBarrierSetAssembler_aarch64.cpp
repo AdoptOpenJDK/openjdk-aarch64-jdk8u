@@ -40,17 +40,46 @@ ShenandoahBarrierSetAssembler* ShenandoahBarrierSetAssembler::bsasm() {
 
 #define __ masm->
 
-void ShenandoahBarrierSetAssembler::resolve_forward_pointer(MacroAssembler* masm, Register dst) {
+void ShenandoahBarrierSetAssembler::resolve_forward_pointer(MacroAssembler* masm, Register dst, Register tmp) {
   assert(ShenandoahCASBarrier, "should be enabled");
   Label is_null;
   __ cbz(dst, is_null);
-  resolve_forward_pointer_not_null(masm, dst);
+  resolve_forward_pointer_not_null(masm, dst, tmp);
   __ bind(is_null);
 }
 
-void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssembler* masm, Register dst) {
+// IMPORTANT: This must preserve all registers, even rscratch1 and rscratch2, except those explicitely
+// passed in.
+void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssembler* masm, Register dst, Register tmp) {
   assert(ShenandoahCASBarrier || ShenandoahLoadRefBarrier, "should be enabled");
-  __ ldr(dst, Address(dst, ShenandoahForwarding::byte_offset()));
+  // The below loads the mark word, checks if the lowest two bits are
+  // set, and if so, clear the lowest two bits and copy the result
+  // to dst. Otherwise it leaves dst alone.
+  // Implementing this is surprisingly awkward. I do it here by:
+  // - Inverting the mark word
+  // - Test lowest two bits == 0
+  // - If so, set the lowest two bits
+  // - Invert the result back, and copy to dst
+
+  bool borrow_reg = (tmp == noreg);
+  if (borrow_reg) {
+    // No free registers available. Make one useful.
+    tmp = rscratch1;
+    __ push(RegSet::of(tmp), sp);
+  }
+
+  Label done;
+  __ ldr(tmp, Address(dst, oopDesc::mark_offset_in_bytes()));
+  __ eon(tmp, tmp, zr);
+  __ ands(zr, tmp, markOopDesc::lock_mask_in_place);
+  __ br(Assembler::NE, done);
+  __ orr(tmp, tmp, markOopDesc::marked_value);
+  __ eon(dst, tmp, zr);
+  __ bind(done);
+
+  if (borrow_reg) {
+    __ pop(RegSet::of(tmp), sp);
+  }
 }
 
 void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembler* masm, Register dst) {
@@ -185,12 +214,3 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 #undef __
 
 #endif // COMPILER1
-
-#define __ masm->
-
-void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
-  __ add(obj, obj, ShenandoahForwarding::byte_size());
-  __ str(obj, Address(obj, -1 * HeapWordSize));
-}
-
-#undef __

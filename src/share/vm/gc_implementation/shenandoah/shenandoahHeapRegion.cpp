@@ -24,7 +24,6 @@
 #include "precompiled.hpp"
 
 #include "memory/allocation.hpp"
-#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
@@ -457,11 +456,11 @@ HeapWord* ShenandoahHeapRegion::block_start_const(const void* p) const {
   if (p >= top()) {
     return top();
   } else {
-    HeapWord* last = bottom() + ShenandoahForwarding::word_size();
+    HeapWord* last = bottom();
     HeapWord* cur = last;
     while (cur <= p) {
       last = cur;
-      cur += oop(cur)->size() + ShenandoahForwarding::word_size();
+      cur += oop(cur)->size();
     }
     shenandoah_assert_correct(NULL, oop(last));
     return last;

@@ -36,8 +36,8 @@ class StubCodeGenerator;
 class ShenandoahBarrierSetAssembler : public CHeapObj<mtGC> {
 private:
 
-  void resolve_forward_pointer(MacroAssembler* masm, Register dst);
-  void resolve_forward_pointer_not_null(MacroAssembler* masm, Register dst);
+  void resolve_forward_pointer(MacroAssembler* masm, Register dst, Register tmp = noreg);
+  void resolve_forward_pointer_not_null(MacroAssembler* masm, Register dst, Register tmp = noreg);
 
   void load_reference_barrier_not_null(MacroAssembler* masm, Register dst);
 
