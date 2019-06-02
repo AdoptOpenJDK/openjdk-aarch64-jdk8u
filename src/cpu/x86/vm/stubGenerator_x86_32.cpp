@@ -708,6 +708,7 @@ class StubGenerator: public StubCodeGenerator {
     switch (bs->kind()) {
       case BarrierSet::G1SATBCT:
       case BarrierSet::G1SATBCTLogging:
+      case BarrierSet::ShenandoahBarrierSet:
         // With G1, don't generate the call if we statically know that the target in uninitialized
         if (!uninitialized_target) {
            __ pusha();                      // push registers
@@ -741,6 +742,7 @@ class StubGenerator: public StubCodeGenerator {
     switch (bs->kind()) {
       case BarrierSet::G1SATBCT:
       case BarrierSet::G1SATBCTLogging:
+      case BarrierSet::ShenandoahBarrierSet:
         {
           __ pusha();                      // push registers
           __ call_VM_leaf(CAST_FROM_FN_PTR(address, BarrierSet::static_write_ref_array_post),
@@ -1484,12 +1486,30 @@ class StubGenerator: public StubCodeGenerator {
     __ BIND(L_store_element);
     __ movptr(to_element_addr, elem);     // store the oop
     __ increment(count);                // increment the count toward zero
+#ifdef INCLUDE_ALL_GCS
+    if (UseShenandoahGC) {
+      // Shenandoah barrier is too big for 8-bit offsets to work
+      __ jcc(Assembler::zero, L_do_card_marks);
+    } else
+#endif
     __ jccb(Assembler::zero, L_do_card_marks);
 
     // ======== loop entry is here ========
     __ BIND(L_load_element);
+#ifdef INCLUDE_ALL_GCS
+    if (UseShenandoahGC) {
+      // Needs GC barriers
+      __ load_heap_oop(elem, from_element_addr);
+    } else
+#endif
     __ movptr(elem, from_element_addr);   // load the oop
     __ testptr(elem, elem);
+#ifdef INCLUDE_ALL_GCS
+    if (UseShenandoahGC) {
+      // Shenandoah barrier is too big for 8-bit offsets to work
+      __ jcc(Assembler::zero, L_store_element);
+    } else
+#endif
     __ jccb(Assembler::zero, L_store_element);
 
     // (Could do a trick here:  Remember last successful non-null

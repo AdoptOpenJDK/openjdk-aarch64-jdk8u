@@ -129,6 +129,7 @@ static void do_oop_store(InterpreterMacroAssembler* _masm,
 #if INCLUDE_ALL_GCS
     case BarrierSet::G1SATBCT:
     case BarrierSet::G1SATBCTLogging:
+    case BarrierSet::ShenandoahBarrierSet:
       {
         // flatten object address if needed
         // We do it regardless of precise because we need the registers
@@ -668,7 +669,14 @@ void TemplateTable::aaload() {
   // rdx: array
   index_check(rdx, rax);  // kills rbx,
   // rax,: index
+#ifdef INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    // Needs GC barriers
+    __ load_heap_oop(rax, Address(rdx, rax, Address::times_ptr, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
+  } else
+#endif
   __ movptr(rax, Address(rdx, rax, Address::times_ptr, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
+
 }
 
 
@@ -2303,6 +2311,12 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static) {
   __ cmpl(flags, atos );
   __ jcc(Assembler::notEqual, notObj);
 
+#ifdef INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    // Needs GC barriers
+    __ load_heap_oop(rax, lo);
+  } else
+#endif
   __ movl(rax, lo );
   __ push(atos);
   if (!is_static) {
@@ -2871,7 +2885,16 @@ void TemplateTable::fast_accessfield(TosState state) {
     case Bytecodes::_fast_lgetfield: __ stop("should not be rewritten");  break;
     case Bytecodes::_fast_fgetfield: __ fld_s(lo);                        break;
     case Bytecodes::_fast_dgetfield: __ fld_d(lo);                        break;
-    case Bytecodes::_fast_agetfield: __ movptr(rax, lo); __ verify_oop(rax); break;
+    case Bytecodes::_fast_agetfield:
+#ifdef INCLUDE_ALL_GCS
+      if (UseShenandoahGC) {
+        // Needs GC barriers
+        __ load_heap_oop(rax, lo);
+      } else
+#endif
+      __ movptr(rax, lo);
+      __ verify_oop(rax);
+      break;
     default:
       ShouldNotReachHere();
   }
@@ -2897,6 +2920,12 @@ void TemplateTable::fast_xaccess(TosState state) {
   if (state == itos) {
     __ movl(rax, lo);
   } else if (state == atos) {
+#ifdef INCLUDE_ALL_GCS
+    if (UseShenandoahGC) {
+      // Needs GC barriers
+      __ load_heap_oop(rax, lo);
+    } else
+#endif
     __ movptr(rax, lo);
     __ verify_oop(rax);
   } else if (state == ftos) {
@@ -2952,6 +2981,12 @@ void TemplateTable::prepare_invoke(int byte_no,
   if (is_invokedynamic || is_invokehandle) {
     Label L_no_push;
     __ testl(flags, (1 << ConstantPoolCacheEntry::has_appendix_shift));
+#if INCLUDE_ALL_GCS
+    if (UseShenandoahGC) {
+      // Shenandoah barrier is too large to make short jump.
+      __ jcc(Assembler::zero, L_no_push);
+    } else
+#endif
     __ jccb(Assembler::zero, L_no_push);
     // Push the appendix as a trailing parameter.
     // This must be done before we get the receiver,

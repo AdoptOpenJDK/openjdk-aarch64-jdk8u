@@ -89,63 +89,80 @@ void ShenandoahBarrierSetAssembler::resolve_forward_pointer_not_null(MacroAssemb
 
 void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembler* masm, Register dst) {
   assert(ShenandoahLoadRefBarrier, "Should be enabled");
-#ifdef _LP64
+
   Label done;
 
-  Address gc_state(r15_thread, in_bytes(JavaThread::gc_state_offset()));
+#ifdef _LP64
+  Register thread = r15_thread;
+#else
+  Register thread = rcx;
+  if (thread == dst) {
+    thread = rbx;
+  }
+  __ push(thread);
+  __ get_thread(thread);
+#endif
+  assert_different_registers(dst, thread);
+
+  Address gc_state(thread, in_bytes(JavaThread::gc_state_offset()));
   __ testb(gc_state, ShenandoahHeap::HAS_FORWARDED);
   __ jcc(Assembler::zero, done);
 
   {
     __ save_vector_registers();
 
-    __ subq(rsp, 16 * wordSize);
+    __ subptr(rsp, LP64_ONLY(16) NOT_LP64(8) * wordSize);
 
-    __ movq(Address(rsp, 15 * wordSize), rax);
-    __ movq(Address(rsp, 14 * wordSize), rcx);
-    __ movq(Address(rsp, 13 * wordSize), rdx);
-    __ movq(Address(rsp, 12 * wordSize), rbx);
+    __ movptr(Address(rsp,  0 * wordSize), rax);
+    __ movptr(Address(rsp,  1 * wordSize), rcx);
+    __ movptr(Address(rsp,  2 * wordSize), rdx);
+    __ movptr(Address(rsp,  3 * wordSize), rbx);
     // skip rsp
-    __ movq(Address(rsp, 10 * wordSize), rbp);
-    __ movq(Address(rsp, 9 * wordSize), rsi);
-    __ movq(Address(rsp, 8 * wordSize), rdi);
-    __ movq(Address(rsp, 7 * wordSize), r8);
-    __ movq(Address(rsp, 6 * wordSize), r9);
-    __ movq(Address(rsp, 5 * wordSize), r10);
-    __ movq(Address(rsp, 4 * wordSize), r11);
-    __ movq(Address(rsp, 3 * wordSize), r12);
-    __ movq(Address(rsp, 2 * wordSize), r13);
-    __ movq(Address(rsp, wordSize), r14);
-    __ movq(Address(rsp, 0), r15);
+    __ movptr(Address(rsp,  5 * wordSize), rbp);
+    __ movptr(Address(rsp,  6 * wordSize), rsi);
+    __ movptr(Address(rsp,  7 * wordSize), rdi);
+#ifdef _LP64
+    __ movptr(Address(rsp,  8 * wordSize),  r8);
+    __ movptr(Address(rsp,  9 * wordSize),  r9);
+    __ movptr(Address(rsp, 10 * wordSize), r10);
+    __ movptr(Address(rsp, 11 * wordSize), r11);
+    __ movptr(Address(rsp, 12 * wordSize), r12);
+    __ movptr(Address(rsp, 13 * wordSize), r13);
+    __ movptr(Address(rsp, 14 * wordSize), r14);
+    __ movptr(Address(rsp, 15 * wordSize), r15);
+#endif
   }
   __ super_call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_interpreter), dst);
   {
-    __ movq(r15, Address(rsp, 0));
-    __ movq(r14, Address(rsp, wordSize));
-    __ movq(r13, Address(rsp, 2 * wordSize));
-    __ movq(r12, Address(rsp, 3 * wordSize));
-    __ movq(r11, Address(rsp, 4 * wordSize));
-    __ movq(r10, Address(rsp, 5 * wordSize));
-    __ movq(r9,  Address(rsp, 6 * wordSize));
-    __ movq(r8,  Address(rsp, 7 * wordSize));
-    __ movq(rdi, Address(rsp, 8 * wordSize));
-    __ movq(rsi, Address(rsp, 9 * wordSize));
-    __ movq(rbp, Address(rsp, 10 * wordSize));
+#ifdef _LP64
+    __ movptr(r15, Address(rsp, 15 * wordSize));
+    __ movptr(r14, Address(rsp, 14 * wordSize));
+    __ movptr(r13, Address(rsp, 13 * wordSize));
+    __ movptr(r12, Address(rsp, 12 * wordSize));
+    __ movptr(r11, Address(rsp, 11 * wordSize));
+    __ movptr(r10, Address(rsp, 10 * wordSize));
+    __ movptr(r9,  Address(rsp,  9 * wordSize));
+    __ movptr(r8,  Address(rsp,  8 * wordSize));
+#endif
+    __ movptr(rdi, Address(rsp,  7 * wordSize));
+    __ movptr(rsi, Address(rsp,  6 * wordSize));
+    __ movptr(rbp, Address(rsp,  5 * wordSize));
     // skip rsp
-    __ movq(rbx, Address(rsp, 12 * wordSize));
-    __ movq(rdx, Address(rsp, 13 * wordSize));
-    __ movq(rcx, Address(rsp, 14 * wordSize));
+    __ movptr(rbx, Address(rsp,  3 * wordSize));
+    __ movptr(rdx, Address(rsp,  2 * wordSize));
+    __ movptr(rcx, Address(rsp,  1 * wordSize));
     if (dst != rax) {
-      __ movq(dst, rax);
-      __ movq(rax, Address(rsp, 15 * wordSize));
+      __ movptr(dst, rax);
+      __ movptr(rax, Address(rsp, 0 * wordSize));
     }
-    __ addq(rsp, 16 * wordSize);
+    __ addptr(rsp, LP64_ONLY(16) NOT_LP64(8) * wordSize);
 
     __ restore_vector_registers();
   }
   __ bind(done);
-#else
-  Unimplemented();
+
+#ifndef _LP64
+  __ pop(thread);
 #endif
 }
 
@@ -161,14 +178,6 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier(MacroAssembler* masm,
 
 // Special Shenandoah CAS implementation that handles false negatives
 // due to concurrent evacuation.
-#ifndef _LP64
-void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm,
-                                                Register res, Address addr, Register oldval, Register newval,
-                                                bool exchange, Register tmp1, Register tmp2) {
-  // Shenandoah has no 32-bit version for this.
-  Unimplemented();
-}
-#else
 void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm,
                                                 Register res, Address addr, Register oldval, Register newval,
                                                 bool exchange, Register tmp1, Register tmp2) {
@@ -178,18 +187,24 @@ void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm,
   Label retry, done;
 
   // Remember oldval for retry logic below
+#ifdef _LP64
   if (UseCompressedOops) {
     __ movl(tmp1, oldval);
-  } else {
+  } else
+#endif
+  {
     __ movptr(tmp1, oldval);
   }
 
   // Step 1. Try to CAS with given arguments. If successful, then we are done,
   // and can safely return.
   if (os::is_MP()) __ lock();
+#ifdef _LP64
   if (UseCompressedOops) {
     __ cmpxchgl(newval, addr);
-  } else {
+  } else
+#endif
+  {
     __ cmpxchgptr(newval, addr);
   }
   __ jcc(Assembler::equal, done, true);
@@ -201,15 +216,20 @@ void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm,
   // oldval and the value from memory -- this will give both to-space pointers.
   // If they mismatch, then it was a legitimate failure.
   //
+#ifdef _LP64
   if (UseCompressedOops) {
     __ decode_heap_oop(tmp1);
   }
+#endif
   resolve_forward_pointer(masm, tmp1);
 
+#ifdef _LP64
   if (UseCompressedOops) {
     __ movl(tmp2, oldval);
     __ decode_heap_oop(tmp2);
-  } else {
+  } else
+#endif
+  {
     __ movptr(tmp2, oldval);
   }
   resolve_forward_pointer(masm, tmp2);
@@ -225,17 +245,23 @@ void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm,
   // witness.
   __ bind(retry);
   if (os::is_MP()) __ lock();
+#ifdef _LP64
   if (UseCompressedOops) {
     __ cmpxchgl(newval, addr);
-  } else {
+  } else
+#endif
+  {
     __ cmpxchgptr(newval, addr);
   }
   __ jcc(Assembler::equal, done, true);
 
+#ifdef _LP64
   if (UseCompressedOops) {
     __ movl(tmp2, oldval);
     __ decode_heap_oop(tmp2);
-  } else {
+  } else
+#endif
+  {
     __ movptr(tmp2, oldval);
   }
   resolve_forward_pointer(masm, tmp2);
@@ -249,11 +275,21 @@ void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm,
   __ bind(done);
   if (!exchange) {
     assert(res != NULL, "need result register");
+#ifdef _LP64
     __ setb(Assembler::equal, res);
     __ movzbl(res, res);
+#else
+    // Need something else to clean the result, because some registers
+    // do not have byte encoding that movzbl wants. Cannot do the xor first,
+    // because it modifies the flags.
+    Label res_non_zero;
+    __ movptr(res, 1);
+    __ jcc(Assembler::equal, res_non_zero, true);
+    __ xorptr(res, res);
+    __ bind(res_non_zero);
+#endif
   }
 }
-#endif // LP64
 
 #undef __
 

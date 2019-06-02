@@ -1722,7 +1722,7 @@ void Arguments::set_shenandoah_gc_flags() {
   UNSUPPORTED_GC_OPTION(UseShenandoahGC);
 #endif
 
-#ifdef IA32
+#if 0 // leave this block as stepping stone for future platforms
   warning("Shenandoah GC is not fully supported on this platform:");
   warning("  concurrent modes are not supported, only STW cycles are enabled;");
   warning("  arch-specific barrier code is not implemented, disabling barriers;");
