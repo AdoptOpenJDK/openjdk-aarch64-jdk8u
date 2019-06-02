@@ -65,7 +65,7 @@ $gcc_cmd -O1 -DLINUX -fPIC -shared \
 
 # run the java test in the background
 cmd="${TESTJAVA}${FS}bin${FS}java -agentpath:./libTestHeapDump.so -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
-    -XX:+UseCompressedOops -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
+    -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
 
 echo "$cmd"
 eval $cmd
@@ -76,14 +76,19 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -agentpath:./libTestHeapDump.so -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
-    -XX:-UseCompressedOops -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
+if [ "$VM_BITS" = "64" ]; then
+  cmd="${TESTJAVA}${FS}bin${FS}java -agentpath:./libTestHeapDump.so -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
+      -XX:-UseCompressedOops -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
 
-echo "$cmd"
-eval $cmd
+  echo "$cmd"
+  eval $cmd
 
-if [ $? -ne 0 ]
-then
-    echo "Test Failed"
-    exit 1
+  if [ $? -ne 0 ]
+  then
+      echo "Test Failed"
+      exit 1
+  fi
+else
+    echo "Test passed; only valid for 64 bits"
+    exit 0;
 fi
