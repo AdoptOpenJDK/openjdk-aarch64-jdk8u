@@ -37,10 +37,6 @@
 #include "shenandoahBarrierSetAssembler_x86.hpp"
 #endif
 
-#ifndef PATCHED_ADDR
-#define PATCHED_ADDR  (max_jint)
-#endif
-
 #ifdef ASSERT
 #define __ gen->lir(__FILE__, __LINE__)->
 #else
