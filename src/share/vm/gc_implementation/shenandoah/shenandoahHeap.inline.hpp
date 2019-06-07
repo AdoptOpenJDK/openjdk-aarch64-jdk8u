@@ -98,11 +98,11 @@ inline oop ShenandoahHeap::maybe_update_with_forwarded(T* p) {
   }
 }
 
-inline oop ShenandoahHeap::atomic_compare_exchange_oop(oop n, oop* addr, oop c) {
+inline oop ShenandoahHeap::cas_oop(oop n, oop* addr, oop c) {
   return (oop) Atomic::cmpxchg_ptr(n, addr, c);
 }
 
-inline oop ShenandoahHeap::atomic_compare_exchange_oop(oop n, narrowOop* addr, oop c) {
+inline oop ShenandoahHeap::cas_oop(oop n, narrowOop* addr, oop c) {
   narrowOop cmp = oopDesc::encode_heap_oop(c);
   narrowOop val = oopDesc::encode_heap_oop(n);
   return oopDesc::decode_heap_oop((narrowOop) Atomic::cmpxchg(val, addr, cmp));
@@ -121,7 +121,7 @@ inline oop ShenandoahHeap::maybe_update_with_forwarded_not_null(T* p, oop heap_o
 
     // If this fails, another thread wrote to p before us, it will be logged in SATB and the
     // reference be updated later.
-    oop result = atomic_compare_exchange_oop(forwarded_oop, p, heap_oop);
+    oop result = cas_oop(forwarded_oop, p, heap_oop);
 
     if (result == heap_oop) { // CAS successful.
       return forwarded_oop;
