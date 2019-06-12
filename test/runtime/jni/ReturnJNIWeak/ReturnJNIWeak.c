@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,36 +19,34 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
-package sun.hotspot.code;
+/*
+ * Native support for ReturnJNIWeak test.
+ */
 
-import java.lang.reflect.Executable;
-import sun.hotspot.WhiteBox;
+#include "jni.h"
 
-public class NMethod {
-  private static final WhiteBox wb = WhiteBox.getWhiteBox();
-  public static NMethod get(Executable method, boolean isOsr) {
-    Object[] obj = wb.getNMethod(method, isOsr);
-    return obj == null ? null : new NMethod(obj);
-  }
-  private NMethod(Object[] obj) {
-    assert obj.length == 3;
-    comp_level = (Integer) obj[0];
-    compile_id = (Integer) obj[1];
-    insts = (byte[]) obj[2];
-  }
-  public final byte[] insts;
-  public final int comp_level;
-  public final int compile_id;
+static jweak registered = NULL;
 
-  @Override
-  public String toString() {
-    return "NMethod{" +
-        "insts=" + insts +
-        ", comp_level=" + comp_level +
-        ", compile_id=" + compile_id +
-        '}';
+JNIEXPORT void JNICALL
+Java_ReturnJNIWeak_registerObject(JNIEnv* env,
+                                  jclass jclazz,
+                                  jobject value) {
+  // assert registered == NULL
+  registered = (*env)->NewWeakGlobalRef(env, value);
+}
+
+JNIEXPORT void JNICALL
+Java_ReturnJNIWeak_unregisterObject(JNIEnv* env, jclass jclazz) {
+  if (registered != NULL) {
+    (*env)->DeleteWeakGlobalRef(env, registered);
+    registered = NULL;
   }
+}
+
+JNIEXPORT jobject JNICALL
+Java_ReturnJNIWeak_getObject(JNIEnv* env, jclass jclazz) {
+  // assert registered != NULL
+  return registered;
 }
