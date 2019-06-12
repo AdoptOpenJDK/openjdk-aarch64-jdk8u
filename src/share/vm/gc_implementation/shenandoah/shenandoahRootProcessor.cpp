@@ -153,9 +153,7 @@ void ShenandoahRootProcessor::process_vm_roots(OopClosure* strong_roots,
                                                OopClosure* jni_weak_roots,
                                                uint worker_id)
 {
-  ShenandoahHeap* heap = ShenandoahHeap::heap();
-
-  ShenandoahWorkerTimings* worker_times = heap->phase_timings()->worker_times();
+  ShenandoahWorkerTimings* worker_times = ShenandoahHeap::heap()->phase_timings()->worker_times();
   if (!_process_strong_tasks->is_task_claimed(SHENANDOAH_RP_PS_Universe_oops_do)) {
     ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::UniverseRoots, worker_id);
     Universe::oops_do(strong_roots);
@@ -181,15 +179,6 @@ void ShenandoahRootProcessor::process_vm_roots(OopClosure* strong_roots,
   if (!_process_strong_tasks->is_task_claimed(SHENANDOAH_RP_PS_SystemDictionary_oops_do)) {
     ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::SystemDictionaryRoots, worker_id);
     SystemDictionary::roots_oops_do(strong_roots, weak_roots);
-  }
-
-  // Note: Workaround bugs with JNI weak reference handling during concurrent cycles,
-  // by pessimistically assuming all JNI weak refs are alive. Achieve this by passing
-  // stronger closure, where weaker one would suffice otherwise. This effectively makes
-  // JNI weak refs non-reclaimable by concurrent GC, but they would be reclaimed by
-  // STW GCs, that are not affected by the bug, nevertheless.
-  if (!heap->is_full_gc_in_progress() && !heap->is_degenerated_gc_in_progress()) {
-    jni_weak_roots = strong_roots;
   }
 
   if (jni_weak_roots != NULL) {

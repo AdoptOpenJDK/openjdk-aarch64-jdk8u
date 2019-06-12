@@ -4231,7 +4231,7 @@ void MacroAssembler::resolve_jobject(Register value,
   movptr(value, Address(value, -JNIHandles::weak_tag_value));
   verify_oop(value);
 #if INCLUDE_ALL_GCS
-  if (UseG1GC) {
+  if (UseG1GC || (UseShenandoahGC && ShenandoahSATBBarrier)) {
     g1_write_barrier_pre(noreg /* obj */,
                          value /* pre_val */,
                          thread /* thread */,
