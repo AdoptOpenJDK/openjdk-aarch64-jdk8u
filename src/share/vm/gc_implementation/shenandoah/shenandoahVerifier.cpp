@@ -907,6 +907,44 @@ public:
   void do_oop(oop* p)       { do_oop_work(p); }
 };
 
+class ShenandoahVerifyInToSpaceClosure : public OopClosure {
+private:
+  template <class T>
+  void do_oop_work(T* p) {
+    T o = oopDesc::load_heap_oop(p);
+    if (!oopDesc::is_null(o)) {
+      oop obj = oopDesc::decode_heap_oop_not_null(o);
+      ShenandoahHeap* heap = ShenandoahHeap::heap();
+
+      if (!heap->marking_context()->is_marked(obj)) {
+        ShenandoahAsserts::print_failure(ShenandoahAsserts::_safe_all, obj, p, NULL,
+                "Verify Roots In To-Space", "Should be marked", __FILE__, __LINE__);
+      }
+
+      if (heap->in_collection_set(obj)) {
+        ShenandoahAsserts::print_failure(ShenandoahAsserts::_safe_all, obj, p, NULL,
+                "Verify Roots In To-Space", "Should not be in collection set", __FILE__, __LINE__);
+      }
+
+      oop fwd = (oop) ShenandoahForwarding::get_forwardee_raw_unchecked(obj);
+      if (obj != fwd) {
+        ShenandoahAsserts::print_failure(ShenandoahAsserts::_safe_all, obj, p, NULL,
+                "Verify Roots In To-Space", "Should not be forwarded", __FILE__, __LINE__);
+      }
+    }
+  }
+
+public:
+  void do_oop(narrowOop* p) { do_oop_work(p); }
+  void do_oop(oop* p)       { do_oop_work(p); }
+};
+
+void ShenandoahVerifier::verify_roots_in_to_space() {
+  ShenandoahRootVerifier verifier;
+  ShenandoahVerifyInToSpaceClosure cl;
+  verifier.oops_do(&cl);
+}
+
 void ShenandoahVerifier::verify_roots_no_forwarded() {
   guarantee(ShenandoahSafepoint::is_at_shenandoah_safepoint(), "only when nothing else happens");
   ShenandoahRootVerifier verifier;
