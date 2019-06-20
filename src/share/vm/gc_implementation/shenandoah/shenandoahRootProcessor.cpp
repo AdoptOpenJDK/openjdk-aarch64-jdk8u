@@ -154,9 +154,14 @@ ShenandoahClassLoaderDataRoots::ShenandoahClassLoaderDataRoots() {
   ClassLoaderDataGraph::clear_claimed_marks();
 }
 
-void ShenandoahClassLoaderDataRoots::clds_do(CLDClosure* strong_clds, CLDClosure* weak_clds, uint worker_id) {
+void ShenandoahClassLoaderDataRoots::cld_do(CLDClosure* clds, uint worker_id) {
   ShenandoahWorkerTimingsTracker timer(ShenandoahPhaseTimings::CLDGRoots, worker_id);
-  ClassLoaderDataGraph::roots_cld_do(strong_clds, weak_clds);
+  ClassLoaderDataGraph::roots_cld_do(clds, clds);
+}
+
+void ShenandoahClassLoaderDataRoots::always_strong_cld_do(CLDClosure* clds, uint worker_id) {
+  ShenandoahWorkerTimingsTracker timer(ShenandoahPhaseTimings::CLDGRoots, worker_id);
+  ClassLoaderDataGraph::always_strong_cld_do(clds);
 }
 
 ShenandoahRootProcessor::ShenandoahRootProcessor(ShenandoahPhaseTimings::Phase phase) :
@@ -216,7 +221,7 @@ void ShenandoahRootEvacuator::roots_do(uint worker_id, OopClosure* oops) {
   _serial_roots.oops_do(oops, worker_id);
   _dict_roots.oops_do(oops, worker_id);
   _thread_roots.oops_do(oops, NULL, NULL, worker_id);
-  _cld_roots.clds_do(&clds, &clds, worker_id);
+  _cld_roots.cld_do(&clds, worker_id);
   _code_roots.code_blobs_do(&blobsCl, worker_id);
 
   _weak_roots.oops_do(oops, worker_id);
@@ -236,7 +241,7 @@ void ShenandoahRootUpdater::roots_do(uint worker_id, BoolObjectClosure* is_alive
   _serial_roots.oops_do(keep_alive, worker_id);
   _dict_roots.oops_do(keep_alive, worker_id);
   _thread_roots.oops_do(keep_alive, &clds, &update_blobs, worker_id);
-  _cld_roots.clds_do(&clds, &clds, worker_id);
+  _cld_roots.cld_do(&clds, worker_id);
 
   if(_update_code_cache) {
     _code_roots.code_blobs_do(&update_blobs, worker_id);
@@ -260,7 +265,7 @@ void ShenandoahRootAdjuster::roots_do(uint worker_id, OopClosure* oops) {
   _serial_roots.oops_do(oops, worker_id);
   _dict_roots.oops_do(oops, worker_id);
   _thread_roots.oops_do(oops, NULL, NULL, worker_id);
-  _cld_roots.clds_do(&adjust_cld_closure, NULL, worker_id);
+  _cld_roots.always_strong_cld_do(&adjust_cld_closure, worker_id);
   _code_roots.code_blobs_do(&adjust_code_closure, worker_id);
 
   _weak_roots.oops_do(oops, worker_id);

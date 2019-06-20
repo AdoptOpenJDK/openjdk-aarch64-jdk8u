@@ -62,7 +62,7 @@ void ShenandoahRootScanner<ITR>::roots_do(uint worker_id, OopClosure* oops, CLDC
   _serial_roots.oops_do(oops, worker_id);
   _dict_roots.oops_do(oops, worker_id);
   _thread_roots.oops_do(oops, clds, code, worker_id);
-  _cld_roots.clds_do(clds, clds, worker_id);
+  _cld_roots.cld_do(clds, worker_id);
 
   // With ShenandoahConcurrentScanCodeRoots, we avoid scanning the entire code cache here,
   // and instead do that in concurrent phase under the relevant lock. This saves init mark
@@ -83,7 +83,7 @@ void ShenandoahRootScanner<ITR>::roots_do_unchecked(OopClosure* oops) {
   ResourceMark rm;
 
   _serial_roots.oops_do(oops, 0);
-  _cld_roots.clds_do(&clds, &clds, 0);
+  _cld_roots.cld_do(&clds, 0);
   _thread_roots.oops_do(oops, NULL, &code, 0);
   _code_roots.code_blobs_do(&code, 0);
 }
@@ -96,7 +96,7 @@ void ShenandoahRootScanner<ITR>::strong_roots_do(uint worker_id, OopClosure* oop
 
   _serial_roots.oops_do(oops, worker_id);
   _dict_roots.strong_oops_do(oops, worker_id);
-  _cld_roots.clds_do(clds, NULL, worker_id);
+  _cld_roots.always_strong_cld_do(clds, worker_id);
   _thread_roots.oops_do(oops, clds, code, worker_id);
 }
 #endif // SHARE_GC_SHENANDOAH_SHENANDOAHROOTPROCESSOR_INLINE_HPP
