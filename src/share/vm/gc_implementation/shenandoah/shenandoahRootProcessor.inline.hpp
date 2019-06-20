@@ -28,6 +28,7 @@
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "memory/resourceArea.hpp"
+#include "runtime/safepoint.hpp"
 
 template <typename ITR>
 void ShenandoahCodeCacheRoots<ITR>::code_blobs_do(CodeBlobClosure* blob_cl, uint worker_id) {
@@ -74,18 +75,6 @@ void ShenandoahRootScanner<ITR>::roots_do(uint worker_id, OopClosure* oops, CLDC
   _weak_roots.oops_do(oops, worker_id);
   _string_table_roots.oops_do(oops, worker_id);
   _dedup_roots.oops_do(oops, worker_id);
-}
-
-template <typename ITR>
-void ShenandoahRootScanner<ITR>::roots_do_unchecked(OopClosure* oops) {
-  CLDToOopClosure clds(oops, true /* must claim */);
-  MarkingCodeBlobClosure code(oops, !CodeBlobToOopClosure::FixRelocations);
-  ResourceMark rm;
-
-  _serial_roots.oops_do(oops, 0);
-  _cld_roots.cld_do(&clds, 0);
-  _thread_roots.oops_do(oops, NULL, &code, 0);
-  _code_roots.code_blobs_do(&code, 0);
 }
 
 template <typename ITR>

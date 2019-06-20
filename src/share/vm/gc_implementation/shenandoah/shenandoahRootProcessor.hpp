@@ -160,13 +160,26 @@ public:
   // roots when class unloading is disabled during this cycle
   void roots_do(uint worker_id, OopClosure* cl);
   void roots_do(uint worker_id, OopClosure* oops, CLDClosure* clds, CodeBlobClosure* code);
-
-  // For heap object iteration
-  void roots_do_unchecked(OopClosure* cl);
 };
 
 typedef ShenandoahRootScanner<ShenandoahAllCodeRootsIterator> ShenandoahAllRootScanner;
 typedef ShenandoahRootScanner<ShenandoahCsetCodeRootsIterator> ShenandoahCSetRootScanner;
+
+// This scanner is only for SH::object_iteration() and only supports single-threaded
+// root scanning
+class ShenandoahHeapIterationRootScanner : public ShenandoahRootProcessor {
+private:
+  ShenandoahSerialRoots                                    _serial_roots;
+  ShenandoahThreadRoots                                    _thread_roots;
+  ShenandoahClassLoaderDataRoots                            _cld_roots;
+  ShenandoahCodeCacheRoots<ShenandoahAllCodeRootsIterator> _code_roots;
+
+public:
+  ShenandoahHeapIterationRootScanner();
+
+  void roots_do(OopClosure* cl);
+  void strong_roots_do(OopClosure* cl);
+};
 
 // Evacuate all roots at a safepoint
 class ShenandoahRootEvacuator : public ShenandoahRootProcessor {
