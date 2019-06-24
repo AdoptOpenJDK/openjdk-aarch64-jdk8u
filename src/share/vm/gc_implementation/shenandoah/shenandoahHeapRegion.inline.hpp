@@ -32,6 +32,8 @@
 HeapWord* ShenandoahHeapRegion::allocate(size_t size, ShenandoahAllocRequest::Type type) {
   _heap->assert_heaplock_or_safepoint();
 
+  assert(is_object_aligned((intptr_t)size), err_msg("alloc size breaks alignment: " SIZE_FORMAT, size));
+
   HeapWord* obj = top();
   if (pointer_delta(end(), obj) >= size) {
     make_regular_allocation();
@@ -39,7 +41,9 @@ HeapWord* ShenandoahHeapRegion::allocate(size_t size, ShenandoahAllocRequest::Ty
 
     HeapWord* new_top = obj + size;
     set_top(new_top);
-    assert(is_aligned(obj) && is_aligned(new_top), "checking alignment");
+
+    assert(is_object_aligned((intptr_t)new_top), err_msg("new top breaks alignment: " PTR_FORMAT, p2i(new_top)));
+    assert(is_object_aligned((intptr_t)obj),     err_msg("obj is not aligned: "       PTR_FORMAT, p2i(obj)));
 
     return obj;
   } else {

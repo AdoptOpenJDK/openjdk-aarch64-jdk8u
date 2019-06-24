@@ -32,7 +32,7 @@ typedef jbyte ShenandoahSharedValue;
 typedef struct ShenandoahSharedFlag {
   enum {
     UNSET = 0,
-    SET = 1,
+    SET = 1
   };
 
   char _pad_0[128];
@@ -62,8 +62,8 @@ typedef struct ShenandoahSharedFlag {
     return OrderAccess::load_acquire((volatile ShenandoahSharedValue*) &value) == UNSET;
   }
 
-  void set_cond(bool value) {
-    if (value) {
+  void set_cond(bool val) {
+    if (val) {
       set();
     } else {
       unset();
@@ -167,8 +167,8 @@ typedef struct ShenandoahSharedBitmap {
     return (OrderAccess::load_acquire((volatile ShenandoahSharedValue*)&value)) == 0;
   }
 
-  void set_cond(uint mask, bool value) {
-    if (value) {
+  void set_cond(uint mask, bool val) {
+    if (val) {
       set(mask);
     } else {
       unset(mask);

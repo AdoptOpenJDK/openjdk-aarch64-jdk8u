@@ -1210,7 +1210,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     // Resolve jweak.
     __ ldr(r0, Address(r0, -JNIHandles::weak_tag_value));
 #if INCLUDE_ALL_GCS
-    if (UseG1GC) {
+    if (UseG1GC || (UseShenandoahGC && ShenandoahSATBBarrier)) {
       __ enter();                   // Barrier may call runtime.
       __ g1_write_barrier_pre(noreg /* obj */,
                               r0 /* pre_val */,

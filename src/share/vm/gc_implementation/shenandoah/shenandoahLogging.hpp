@@ -25,6 +25,7 @@
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHLOGGING_HPP
 
 #include <stdio.h> // for va_list and friends
+#include <stdarg.h>
 
 class ShenandoahLogger {
 public:
