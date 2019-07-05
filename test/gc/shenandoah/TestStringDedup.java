@@ -26,15 +26,50 @@
  * @summary Test Shenandoah string deduplication implementation
  * @key gc
  *
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive            -XX:+ShenandoahDegeneratedGC -XX:+UseStringDeduplication -Xmx256M TestStringDedup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive            -XX:-ShenandoahDegeneratedGC -XX:+UseStringDeduplication -Xmx256M TestStringDedup
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive
+ *      -XX:+ShenandoahDegeneratedGC
+ *      TestStringDedup
  *
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                         -XX:+UseStringDeduplication -Xmx256M TestStringDedup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive   -XX:+UseStringDeduplication -Xmx256M TestStringDedup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=compact      -XX:+UseStringDeduplication -Xmx256M TestStringDedup
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive
+ *      -XX:-ShenandoahDegeneratedGC
+ *      TestStringDedup
+ */
+
+/*
+ * @test TestStringDedup
+ * @summary Test Shenandoah string deduplication implementation
+ * @key gc
  *
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive      -XX:+UseStringDeduplication -Xmx256M TestStringDedup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -XX:+UseStringDeduplication -Xmx256M TestStringDedup
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=compact
+ *      TestStringDedup
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive
+ *      TestStringDedup
+ *
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC
+ *      TestStringDedup
+ *
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=compact
+ *      TestStringDedup
+ */
+
+/*
+ * @test TestStringDedup
+ * @summary Test Shenandoah string deduplication implementation
+ * @key gc
+ *
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal
+ *      TestStringDedup
+ *
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive
+ *      TestStringDedup
  */
 
 import java.lang.reflect.*;
