@@ -21,6 +21,8 @@
  *
  */
 
+#include "precompiled.hpp"
+
 #include "gc_implementation/shenandoah/shenandoahSynchronizerIterator.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/thread.hpp"
