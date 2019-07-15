@@ -35,7 +35,7 @@ ShenandoahBarrierSetC2* ShenandoahBarrierSetC2::bsc2() {
 
 bool ShenandoahBarrierSetC2::is_shenandoah_lrb_call(Node* call) {
   return call->is_CallLeaf() &&
-         call->as_CallLeaf()->entry_point() == CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_JRT);
+         call->as_CallLeaf()->entry_point() == CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier);
 }
 
 bool ShenandoahBarrierSetC2::is_shenandoah_state_load(Node* n) {

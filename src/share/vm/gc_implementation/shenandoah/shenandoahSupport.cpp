@@ -1011,7 +1011,9 @@ void ShenandoahBarrierC2Support::call_lrb_stub(Node*& ctrl, Node*& val, Node*& r
   mm->set_memory_at(Compile::AliasIdxRaw, raw_mem);
   phase->register_new_node(mm, ctrl);
 
-  Node* call = new (phase->C) CallLeafNode(ShenandoahBarrierSetC2::shenandoah_load_reference_barrier_Type(), CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_JRT), "shenandoah_load_reference_barrier", TypeRawPtr::BOTTOM);
+  Node* call = new (phase->C) CallLeafNode(ShenandoahBarrierSetC2::shenandoah_load_reference_barrier_Type(),
+                                           CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier),
+                                           "shenandoah_load_reference_barrier", TypeRawPtr::BOTTOM);
   call->init_req(TypeFunc::Control, ctrl);
   call->init_req(TypeFunc::I_O, phase->C->top());
   call->init_req(TypeFunc::Memory, mm);
