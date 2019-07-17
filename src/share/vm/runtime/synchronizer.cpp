@@ -855,17 +855,6 @@ static inline ObjectMonitor* next(ObjectMonitor* block) {
 
 
 void ObjectSynchronizer::oops_do(OopClosure* f) {
-  if (MonitorInUseLists) {
-    // When using thread local monitor lists, we only scan the
-    // global used list here (for moribund threads), and
-    // the thread-local monitors in Thread::oops_do().
-    global_used_oops_do(f);
-  } else {
-    global_oops_do(f);
-  }
-}
-
-void ObjectSynchronizer::global_oops_do(OopClosure* f) {
   assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
   for (ObjectMonitor* block = gBlockList; block != NULL; block = next(block)) {
     assert(block->object() == CHAINMARKER, "must be a block header");
@@ -878,26 +867,6 @@ void ObjectSynchronizer::global_oops_do(OopClosure* f) {
   }
 }
 
-
-void ObjectSynchronizer::global_used_oops_do(OopClosure* f) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
-  list_oops_do(gOmInUseList, f);
-}
-
-void ObjectSynchronizer::thread_local_used_oops_do(Thread* thread, OopClosure* f) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
-  list_oops_do(thread->omInUseList, f);}
-
-
-void ObjectSynchronizer::list_oops_do(ObjectMonitor* list, OopClosure* f) {
-  assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
-  ObjectMonitor* mid;
-  for (mid = list; mid != NULL; mid = mid->FreeNext) {
-    if (mid->object() != NULL) {
-      f->do_oop((oop*)mid->object_addr());
-    }
-  }
-}
 
 // -----------------------------------------------------------------------------
 // ObjectMonitor Lifecycle
@@ -1149,14 +1118,14 @@ void ObjectSynchronizer::omRelease (Thread * Self, ObjectMonitor * m, bool fromP
 // a global gOmInUseList under the global list lock so these
 // will continue to be scanned.
 //
-// We currently call omFlush() from Threads::remove() _before the thread
+// We currently call omFlush() from the Thread:: dtor _after the thread
 // has been excised from the thread list and is no longer a mutator.
-// This means that omFlush() can not run concurrently with a safepoint and
-// interleave with the scavenge operator. In particular, this ensures that
-// the thread's monitors are scanned by a GC safepoint, either via
-// Thread::oops_do() (if safepoint happens before omFlush()) or via
-// ObjectSynchronizer::oops_do() (if it happens after omFlush() and the thread's
-// monitors have been transferred to the global in-use list).
+// That means that omFlush() can run concurrently with a safepoint and
+// the scavenge operator.  Calling omFlush() from JavaThread::exit() might
+// be a better choice as we could safely reason that that the JVM is
+// not at a safepoint at the time of the call, and thus there could
+// be not inopportune interleavings between omFlush() and the scavenge
+// operator.
 
 void ObjectSynchronizer::omFlush (Thread * Self) {
     ObjectMonitor * List = Self->omFreeList ;  // Null-terminated SLL
@@ -1197,8 +1166,6 @@ void ObjectSynchronizer::omFlush (Thread * Self) {
       Tail->FreeNext = gFreeList ;
       gFreeList = List ;
       MonitorFreeCount += Tally;
-      assert(Self->omFreeCount == Tally, "free-count off");
-      Self->omFreeCount = 0;
     }
 
     if (InUseTail != NULL) {
@@ -1763,44 +1730,3 @@ int ObjectSynchronizer::verify_objmon_isinpool(ObjectMonitor *monitor) {
 }
 
 #endif
-
-ParallelObjectSynchronizerIterator ObjectSynchronizer::parallel_iterator() {
-  return ParallelObjectSynchronizerIterator(gBlockList);
-}
-
-// ParallelObjectSynchronizerIterator implementation
-ParallelObjectSynchronizerIterator::ParallelObjectSynchronizerIterator(ObjectMonitor * head)
-  : _cur(head) {
-  assert(SafepointSynchronize::is_at_safepoint(), "Must at safepoint");
-}
-
-ObjectMonitor* ParallelObjectSynchronizerIterator::claim() {
-  ObjectMonitor* my_cur = _cur;
-
-  while (true) {
-    if (my_cur == NULL) return NULL;
-    ObjectMonitor* next_block = next(my_cur);
-    ObjectMonitor* cas_result = (ObjectMonitor*) Atomic::cmpxchg_ptr(next_block, &_cur, my_cur);
-    if (my_cur == cas_result) {
-      // We succeeded.
-      return my_cur;
-    } else {
-      // We failed. Retry with offending CAS result.
-      my_cur = cas_result;
-    }
-  }
-}
-
-bool ParallelObjectSynchronizerIterator::parallel_oops_do(OopClosure* f) {
-  ObjectMonitor* block = claim();
-  if (block != NULL) {
-    for (int i = 1; i < ObjectSynchronizer::_BLOCKSIZE; i++) {
-      ObjectMonitor* mid = &block[i];
-      if (mid->object() != NULL) {
-        f->do_oop((oop*) mid->object_addr());
-      }
-    }
-    return true;
-  }
-  return false;
-}

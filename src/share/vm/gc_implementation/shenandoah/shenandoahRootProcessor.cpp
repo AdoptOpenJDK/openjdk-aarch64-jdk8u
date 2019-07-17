@@ -34,6 +34,7 @@
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahStringDedup.hpp"
+#include "gc_implementation/shenandoah/shenandoahSynchronizerIterator.hpp"
 #include "gc_implementation/shenandoah/shenandoahTimingTracker.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/fprofiler.hpp"
@@ -47,7 +48,7 @@ ShenandoahRootProcessor::ShenandoahRootProcessor(ShenandoahHeap* heap, uint n_wo
   _srs(heap, true),
   _phase(phase),
   _coderoots_all_iterator(ShenandoahCodeRoots::iterator()),
-  _om_iterator(ObjectSynchronizer::parallel_iterator())
+  _om_iterator(ShenandoahSynchronizerIterator())
 {
   heap->phase_timings()->record_workers_start(_phase);
   _process_strong_tasks->set_n_threads(n_workers);
@@ -196,12 +197,9 @@ void ShenandoahRootProcessor::process_vm_roots(OopClosure* strong_roots,
 
   {
     ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::ObjectSynchronizerRoots, worker_id);
-    if (ShenandoahFastSyncRoots && MonitorInUseLists) {
-      ObjectSynchronizer::oops_do(strong_roots);
-    } else {
-      while(_om_iterator.parallel_oops_do(strong_roots));
-    }
+    while(_om_iterator.parallel_oops_do(strong_roots));
   }
+
   // All threads execute the following. A specific chunk of buckets
   // from the StringTable are the individual tasks.
   if (weak_roots != NULL) {

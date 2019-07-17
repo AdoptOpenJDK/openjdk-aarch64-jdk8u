@@ -29,6 +29,7 @@
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahCodeRoots.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
+#include "gc_implementation/shenandoah/shenandoahSynchronizerIterator.hpp"
 #include "memory/allocation.hpp"
 #include "utilities/workgroup.hpp"
 
@@ -56,7 +57,7 @@ class ShenandoahRootProcessor : public StackObj {
   ShenandoahPhaseTimings::Phase _phase;
   ParallelCLDRootIterator   _cld_iterator;
   ShenandoahAllCodeRootsIterator _coderoots_all_iterator;
-  ParallelObjectSynchronizerIterator _om_iterator;
+  ShenandoahSynchronizerIterator _om_iterator;
 
   void process_java_roots(OopClosure* scan_non_heap_roots,
                           CLDClosure* thread_clds,

@@ -373,9 +373,6 @@
   develop(bool, ShenandoahVerifyOptoBarriers, false,                        \
           "Verify no missing barriers in c2")                               \
                                                                             \
-  experimental(bool, ShenandoahFastSyncRoots, true,                         \
-          "Enable fast synchronizer roots scanning")                        \
-                                                                            \
   product(bool, ShenandoahLogTrace, false,                                  \
           "Turns on logging in Shenandoah at trace level. ")                \
                                                                             \

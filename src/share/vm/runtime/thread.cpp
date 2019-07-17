@@ -373,6 +373,9 @@ void Thread::record_stack_base_and_size() {
 
 
 Thread::~Thread() {
+  // Reclaim the objectmonitors from the omFreeList of the moribund thread.
+  ObjectSynchronizer::omFlush (this) ;
+
   EVENT_THREAD_DESTRUCT(this);
 
   // stack_base can be NULL if the thread is never started or exited before
@@ -871,12 +874,6 @@ void Thread::oops_do(OopClosure* f, CLDClosure* cld_f, CodeBlobClosure* cf) {
   // Do oop for ThreadShadow
   f->do_oop((oop*)&_pending_exception);
   handle_area()->oops_do(f);
-#if INCLUDE_ALL_GCS
-  // TODO: Either need better abstractions or have all GCs use this.
-  if (UseShenandoahGC && ShenandoahFastSyncRoots && MonitorInUseLists) {
-    ObjectSynchronizer::thread_local_used_oops_do(this, f);
-  }
-#endif
 }
 
 void Thread::nmethods_do(CodeBlobClosure* cf) {
@@ -4186,10 +4183,6 @@ void Threads::add(JavaThread* p, bool force_daemon) {
 }
 
 void Threads::remove(JavaThread* p) {
-
-  // Reclaim the objectmonitors from the omInUseList and omFreeList of the moribund thread.
-  ObjectSynchronizer::omFlush(p);
-
   // Extra scope needed for Thread_lock, so we can check
   // that we do not remove thread without safepoint code notice
   { MutexLocker ml(Threads_lock);
