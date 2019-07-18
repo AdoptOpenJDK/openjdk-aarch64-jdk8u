@@ -3734,7 +3734,7 @@ void TemplateTable::monitorenter() {
                                      // starting with top-most entry
     __ lea(c_rarg2, monitor_block_bot); // points to word before bottom
                                      // of monitor block
-    __ jmpb_if_possible(entry);
+    __ jmpb(entry);
 
     __ bind(loop);
     // check if current entry is used
@@ -3830,7 +3830,7 @@ void TemplateTable::monitorexit() {
                                      // starting with top-most entry
     __ lea(c_rarg2, monitor_block_bot); // points to word before bottom
                                      // of monitor block
-    __ jmpb_if_possible(entry);
+    __ jmpb(entry);
 
     __ bind(loop);
     // check if current entry is for same object
