@@ -1235,7 +1235,7 @@ void LIRGenerator::do_Reference_get(Intrinsic* x) {
   if (UseShenandoahGC) {
     LIR_Opr tmp = new_register(T_OBJECT);
     __ load(referent_field_adr, tmp, info);
-    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp, NULL, true);
+    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp);
     __ move(tmp, result);
   } else
 #endif
@@ -1840,7 +1840,7 @@ void LIRGenerator::do_LoadField(LoadField* x) {
     if (is_volatile && os::is_MP()) {
       __ membar_acquire();
     }
-    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp, NULL, true);
+    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp);
     __ move(tmp, reg);
   } else
 #endif
@@ -1977,7 +1977,7 @@ void LIRGenerator::do_LoadIndexed(LoadIndexed* x) {
   if (UseShenandoahGC && (x->elt_type() == T_OBJECT || x->elt_type() == T_ARRAY)) {
     LIR_Opr tmp = new_register(T_OBJECT);
     __ move(array_addr, tmp, null_check_info);
-    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp, NULL, true);
+    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp);
     __ move(tmp, result);
   } else
 #endif
@@ -2275,7 +2275,7 @@ void LIRGenerator::do_UnsafeGetObject(UnsafeGetObject* x) {
   if (UseShenandoahGC && (type == T_OBJECT || type == T_ARRAY)) {
     LIR_Opr tmp = new_register(T_OBJECT);
     get_Object_unsafe(tmp, src.result(), off.result(), type, x->is_volatile());
-    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp, NULL, true);
+    tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, tmp);
     __ move(tmp, value);
   } else
 #endif

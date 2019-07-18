@@ -52,15 +52,15 @@ ShenandoahBarrierSetC1* ShenandoahBarrierSetC1::bsc1() {
   return ShenandoahBarrierSet::barrier_set()->bsc1();
 }
 
-LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier(LIRGenerator* gen, LIR_Opr obj, CodeEmitInfo* info, bool need_null_check) {
+LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier(LIRGenerator* gen, LIR_Opr obj) {
   if (ShenandoahLoadRefBarrier) {
-    return load_reference_barrier_impl(gen, obj, info, need_null_check);
+    return load_reference_barrier_impl(gen, obj);
   } else {
     return obj;
   }
 }
 
-LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier_impl(LIRGenerator* gen, LIR_Opr obj, CodeEmitInfo* info, bool need_null_check) {
+LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier_impl(LIRGenerator* gen, LIR_Opr obj) {
   assert(ShenandoahLoadRefBarrier, "Should be enabled");
   obj = ensure_in_register(gen, obj);
   assert(obj->is_register(), "must be a register at this point");
@@ -89,7 +89,7 @@ LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier_impl(LIRGenerator* gen, L
   }
   __ cmp(lir_cond_notEqual, flag_val, LIR_OprFact::intConst(0));
 
-  CodeStub* slow = new ShenandoahLoadReferenceBarrierStub(obj, result, info ? new CodeEmitInfo(info) : NULL, need_null_check);
+  CodeStub* slow = new ShenandoahLoadReferenceBarrierStub(obj, result);
   __ branch(lir_cond_notEqual, T_INT, slow);
   __ branch_destination(slow->continuation());
 
