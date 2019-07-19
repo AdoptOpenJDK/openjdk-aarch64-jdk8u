@@ -212,7 +212,7 @@ reg_class_dynamic any_reg(any_reg_no_rbp, any_reg_with_rbp, %{ PreserveFramePoin
 // Class for all pointer registers (excluding RSP)
 reg_class ptr_reg_with_rbp(RAX, RAX_H,
                            RDX, RDX_H,
-                           RBP, RBP_H,               
+                           RBP, RBP_H,
                            RDI, RDI_H,
                            RSI, RSI_H,
                            RCX, RCX_H,
@@ -809,7 +809,7 @@ void emit_cmpfp3(MacroAssembler& _masm, Register dst) {
   __ movzbl(dst, dst);
   __ bind(done);
 }
- 
+
 
 //=============================================================================
 const RegMask& MachConstantBaseNode::_out_RegMask = RegMask::Empty;
@@ -2932,16 +2932,6 @@ operand immI2()
 operand immI8()
 %{
   predicate((-0x80 <= n->get_int()) && (n->get_int() < 0x80));
-  match(ConI);
-
-  op_cost(5);
-  format %{ %}
-  interface(CONST_INTER);
-%}
-
-operand immU8()
-%{
-  predicate((0 <= n->get_int()) && (n->get_int() <= 255));
   match(ConI);
 
   op_cost(5);
