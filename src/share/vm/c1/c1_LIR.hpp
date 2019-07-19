@@ -940,7 +940,9 @@ enum LIR_Code {
       , lir_pack64
       , lir_unpack64
       , lir_unwind
+#if INCLUDE_ALL_GCS
       , lir_shenandoah_wb
+#endif
   , end_op1
   , begin_op2
       , lir_cmp

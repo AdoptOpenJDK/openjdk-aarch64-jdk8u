@@ -1851,7 +1851,9 @@ const char * LIR_Op::name() const {
      case lir_profile_call:          s = "profile_call";  break;
      // LIR_OpProfileType
      case lir_profile_type:          s = "profile_type";  break;
+#if INCLUDE_ALL_GCS
      case lir_shenandoah_wb:         s = "shenandoah_wb"; break;
+#endif
      // LIR_OpAssert
 #ifdef ASSERT
      case lir_assert:                s = "assert";        break;
