@@ -1137,6 +1137,23 @@ static Node* create_phis_on_call_return(Node* ctrl, Node* c, Node* n, Node* n_cl
     c = phase->idom(c);
   }
   assert(region != NULL, "");
+  if (n->is_Bool()) {
+    Node* bol_clone = n->clone();
+    n = n->in(1);
+    n_clone = n_clone->in(1);
+    assert(n->is_Cmp() && n_clone->is_Cmp(), "should be cmp");
+    Node* cmp_clone = n->clone();
+    bol_clone->set_req(1, cmp_clone);
+    if (n->in(1) != n_clone->in(1)) {
+      cmp_clone->set_req(1, create_phis_on_call_return(ctrl, region, n->in(1), n_clone->in(1), projs, phase));
+    }
+    if (n->in(2) != n_clone->in(2)) {
+      cmp_clone->set_req(2, create_phis_on_call_return(ctrl, region, n->in(2), n_clone->in(2), projs, phase));
+    }
+    phase->register_new_node(cmp_clone, region);
+    phase->register_new_node(bol_clone, region);
+    return bol_clone;
+  }
   Node* phi = new (phase->C) PhiNode(region, n->bottom_type());
   for (uint j = 1; j < region->req(); j++) {
     Node* in = region->in(j);
