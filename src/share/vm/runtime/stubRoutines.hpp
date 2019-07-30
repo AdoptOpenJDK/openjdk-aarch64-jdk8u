@@ -255,7 +255,7 @@ class StubRoutines: AllStatic {
   static bool contains(address addr) {
     return
       (_code1 != NULL && _code1->blob_contains(addr)) ||
-      (_code2 != NULL && _code1->blob_contains(addr)) ;
+      (_code2 != NULL && _code2->blob_contains(addr)) ;
   }
 
   static CodeBlob* code1() { return _code1; }
