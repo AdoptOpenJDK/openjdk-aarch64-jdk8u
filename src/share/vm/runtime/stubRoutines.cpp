@@ -186,9 +186,6 @@ void StubRoutines::initialize1() {
 typedef void (*arraycopy_fn)(address src, address dst, int count);
 
 // simple tests of generated arraycopy functions
-#ifdef __GNUC__
-static void test_arraycopy_func(address func, int alignment) __attribute__((unused));
-#endif
 static void test_arraycopy_func(address func, int alignment) {
   int v = 0xcc;
   int v2 = 0x11;
