@@ -105,7 +105,7 @@ static void* decode(struct hsdis_app_data* app_data, const char* options);
   void*             event_stream   = (app_data)->event_stream
 
 #define DECL_PRINTF_CALLBACK(app_data) \
-  printf_callback_t  printf_callback = (app_data)->printf_callback;	\
+  printf_callback_t  printf_callback = (app_data)->printf_callback; \
   void*              printf_stream   = (app_data)->printf_stream
 
 
@@ -476,7 +476,6 @@ static const bfd_arch_info_type* find_arch_info(const char* arch_name) {
 
 static const char* native_arch_name() {
   const char* res = NULL;
-#if 0
 #ifdef LIBARCH_i386
   res = "i386";
 #endif
@@ -492,10 +491,10 @@ static const char* native_arch_name() {
 #if defined(LIBARCH_ppc64) || defined(LIBARCH_ppc64le)
   res = "powerpc:common64";
 #endif
-#else
-    res = "aarch64";
-#endif  
-    if (res == NULL)
+#ifdef LIBARCH_aarch64
+  res = "aarch64";
+#endif
+  if (res == NULL)
     res = "architecture not set in Makefile!";
   return res;
 }
