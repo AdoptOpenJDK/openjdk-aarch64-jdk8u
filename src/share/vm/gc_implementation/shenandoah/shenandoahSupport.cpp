@@ -164,6 +164,8 @@ bool ShenandoahBarrierC2Support::verify_helper(Node* in, Node_Stack& phis, Vecto
       if (trace) {tty->print_cr("NULL");}
     } else if (!in->bottom_type()->make_ptr()->make_oopptr()) {
       if (trace) {tty->print_cr("Non oop");}
+    } else if (in->bottom_type()->make_ptr()->make_oopptr() == TypeInstPtr::MIRROR) {
+      if (trace) {tty->print_cr("Java mirror");}
     } else if (t == ShenandoahLoad && ShenandoahOptimizeStableFinals &&
                in->bottom_type()->make_ptr()->isa_aryptr() &&
                in->bottom_type()->make_ptr()->is_aryptr()->is_stable()) {
