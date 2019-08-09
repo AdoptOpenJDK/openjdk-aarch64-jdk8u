@@ -2856,6 +2856,8 @@ bool ShenandoahLoadReferenceBarrierNode::needs_barrier_impl(PhaseTransform* phas
     case Op_CMoveP:
       return needs_barrier_impl(phase, n->in(2), visited) ||
              needs_barrier_impl(phase, n->in(3), visited);
+    case Op_CreateEx:
+      return false;
     default:
       break;
   }
