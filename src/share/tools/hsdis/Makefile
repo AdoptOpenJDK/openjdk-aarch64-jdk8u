@@ -79,7 +79,6 @@ else
 ifeq		($(OS),Linux)
 ifneq           ($(MINGW),)
 LIB_EXT		= .dll
-CPPFLAGS += -g	
 CPPFLAGS += -I$(TARGET_DIR)/include
 LDFLAGS += -L$(TARGET_DIR)/lib
 OS=windows
@@ -94,11 +93,6 @@ else   #linux
 CPU             = $(shell uname -m)
 ARCH1=$(CPU:x86_64=amd64)
 ARCH=$(ARCH1:i686=i386)
-ifeq ($(BUILD_AARCH64),true)
-CONFIGURE_ARGS= --target=aarch64-none-linux-gnu
-LP64=1
-CFLAGS+= -DTARGET_ARCH_aarch64
-endif
 ifdef LP64
 CFLAGS/sparcv9	+= -m64
 CFLAGS/amd64	+= -m64
@@ -115,8 +109,7 @@ OS		= linux
 LIB_EXT		= .so
 CC 		= gcc
 endif
-CFLAGS		+= -g
-CFLAGS		+= -O0
+CFLAGS		+= -O
 DLDFLAGS	+= -shared
 LDFLAGS         += -ldl
 OUTFLAGS	+= -o $@
@@ -181,8 +174,6 @@ ifneq		($(LIBARCH64),)
 LIBARCH		= $(LIBARCH64)
 endif   # LIBARCH64/$(ARCH)
 endif   # LP64
-
-__JUNK__ := $(shell echo >&2 "LIBARCH = $(LIBARCH)")
 
 JDKARCH=$(LIBARCH:i386=i586)
 
