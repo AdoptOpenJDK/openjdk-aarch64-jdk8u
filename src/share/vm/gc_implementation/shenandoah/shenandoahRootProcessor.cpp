@@ -284,7 +284,7 @@ void ShenandoahRootEvacuator::roots_do(uint worker_id, OopClosure* oops) {
   _string_table_roots.oops_do(oops, worker_id);
 }
 
-ShenandoahRootUpdater::ShenandoahRootUpdater(ShenandoahPhaseTimings::Phase phase, bool update_code_cache) :
+ShenandoahRootUpdater::ShenandoahRootUpdater(ShenandoahPhaseTimings::Phase phase) :
   ShenandoahRootProcessor(phase),
   _serial_roots(phase),
   _dict_roots(phase),
@@ -293,8 +293,7 @@ ShenandoahRootUpdater::ShenandoahRootUpdater(ShenandoahPhaseTimings::Phase phase
   _weak_roots(phase),
   _dedup_roots(phase),
   _string_table_roots(phase),
-  _code_roots(phase),
-  _update_code_cache(update_code_cache)
+  _code_roots(phase)
 {}
 
 void ShenandoahRootUpdater::roots_do(uint worker_id, BoolObjectClosure* is_alive, OopClosure* keep_alive) {
@@ -303,12 +302,10 @@ void ShenandoahRootUpdater::roots_do(uint worker_id, BoolObjectClosure* is_alive
 
   _serial_roots.oops_do(keep_alive, worker_id);
   _dict_roots.oops_do(keep_alive, worker_id);
-  _thread_roots.oops_do(keep_alive, &clds, _update_code_cache ? NULL : &update_blobs, worker_id);
+  _thread_roots.oops_do(keep_alive, &clds, NULL, worker_id);
   _cld_roots.cld_do(&clds, worker_id);
 
-  if(_update_code_cache) {
-    _code_roots.code_blobs_do(&update_blobs, worker_id);
-  }
+  _code_roots.code_blobs_do(&update_blobs, worker_id);
 
   _weak_roots.weak_oops_do(is_alive, keep_alive, worker_id);
   _dedup_roots.oops_do(keep_alive, worker_id);
