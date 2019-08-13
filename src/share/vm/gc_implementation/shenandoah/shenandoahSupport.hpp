@@ -158,7 +158,7 @@ public:
   };
 
   enum Strength {
-    NONE, WEAK, STRONG, NA
+    NONE, STRONG
   };
 
   ShenandoahLoadReferenceBarrierNode(Node* ctrl, Node* val);
