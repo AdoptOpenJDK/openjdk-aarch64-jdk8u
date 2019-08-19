@@ -34,6 +34,7 @@
 #include "gc_implementation/shared/gcTimer.hpp"
 #include "gc_implementation/shared/gcWhen.hpp"
 #include "gc_implementation/shared/gcTrace.hpp"
+#include "utilities/debug.hpp"
 
 ShenandoahPhaseTimings::Phase ShenandoahGCPhase::_current_phase = ShenandoahGCPhase::_invalid_phase;
 
