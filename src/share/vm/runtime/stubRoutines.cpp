@@ -149,14 +149,12 @@ double (* StubRoutines::_intrinsic_sin   )(double) = NULL;
 double (* StubRoutines::_intrinsic_cos   )(double) = NULL;
 double (* StubRoutines::_intrinsic_tan   )(double) = NULL;
 
-#ifndef BUILTIN_SIM
 address StubRoutines::_safefetch32_entry                 = NULL;
 address StubRoutines::_safefetch32_fault_pc              = NULL;
 address StubRoutines::_safefetch32_continuation_pc       = NULL;
 address StubRoutines::_safefetchN_entry                  = NULL;
 address StubRoutines::_safefetchN_fault_pc               = NULL;
 address StubRoutines::_safefetchN_continuation_pc        = NULL;
-#endif
 
 address StubRoutines::_shenandoah_wb_C = NULL;
 
@@ -186,9 +184,6 @@ void StubRoutines::initialize1() {
 typedef void (*arraycopy_fn)(address src, address dst, int count);
 
 // simple tests of generated arraycopy functions
-#ifdef __GNUC__
-static void test_arraycopy_func(address func, int alignment) __attribute__((unused));
-#endif
 static void test_arraycopy_func(address func, int alignment) {
   int v = 0xcc;
   int v2 = 0x11;

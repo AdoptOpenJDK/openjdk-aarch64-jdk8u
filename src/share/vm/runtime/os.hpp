@@ -561,8 +561,7 @@ class os: AllStatic {
 
   // Reading directories.
   static DIR*           opendir(const char* dirname);
-  static int            readdir_buf_size(const char *path);
-  static struct dirent* readdir(DIR* dirp, dirent* dbuf);
+  static struct dirent* readdir(DIR* dirp);
   static int            closedir(DIR* dirp);
 
   // Dynamic library extension
@@ -1034,9 +1033,5 @@ class os: AllStatic {
 // It'd also be eligible for inlining on many platforms.
 
 extern "C" int SpinPause();
-#ifdef BUILTIN_SIM
-extern "C" int SafeFetch32(int * adr, int errValue) ;
-extern "C" intptr_t SafeFetchN(intptr_t * adr, intptr_t errValue) ;
-#endif
 
 #endif // SHARE_VM_RUNTIME_OS_HPP

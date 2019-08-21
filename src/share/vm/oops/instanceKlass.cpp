@@ -148,7 +148,7 @@ HS_DTRACE_PROBE_DECL5(hotspot, class__initialization__end,
       len = name->utf8_length();                                 \
     }                                                            \
     HOTSPOT_CLASS_INITIALIZATION_##type(                         \
-      data, len, (clss)->class_loader(), thread_type);           \
+      data, len, (void *)(clss)->class_loader(), thread_type); \
   }
 
 #define DTRACE_CLASSINIT_PROBE_WAIT(type, clss, thread_type, wait) \
@@ -161,7 +161,7 @@ HS_DTRACE_PROBE_DECL5(hotspot, class__initialization__end,
       len = name->utf8_length();                                 \
     }                                                            \
     HOTSPOT_CLASS_INITIALIZATION_##type(                         \
-      data, len, (clss)->class_loader(), thread_type, wait);     \
+      data, len, (void *)(clss)->class_loader(), thread_type, wait); \
   }
 #endif /* USDT2 */
 
@@ -3114,23 +3114,6 @@ static void print_vtable(intptr_t* start, int len, outputStream* st) {
 void InstanceKlass::print_on(outputStream* st) const {
   assert(is_klass(), "must be klass");
   Klass::print_on(st);
-
-  st->print(BULLET"primary supers:    ");
-  for (juint i = 0; i < Klass::primary_super_limit(); i++) {
-    if (_primary_supers[i]) {
-      _primary_supers[i]->name()->print_value_on(st);
-      st->print("   ");
-    }
-  }
-  st->cr();
-
-  st->print(BULLET"secondary supers:    ");
-  int cnt = secondary_supers()->length();
-  for (int i = 0; i < cnt; i++) {
-    secondary_supers()->at(i)->print_value_on(st);
-      st->print("   ");
-  }
-  st->cr();
 
   st->print(BULLET"instance size:     %d", size_helper());                        st->cr();
   st->print(BULLET"klass size:        %d", size());                               st->cr();

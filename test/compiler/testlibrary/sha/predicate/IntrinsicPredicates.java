@@ -66,18 +66,25 @@ public class IntrinsicPredicates {
                             null));
 
     public static final BooleanSupplier SHA256_INSTRUCTION_AVAILABLE
-            = new OrPredicate(
-                    new CPUSpecificPredicate("sparc.*", new String[] { "sha256" },
-                            null),
-                    new CPUSpecificPredicate("aarch64", new String[] { "sha256" },
-                            null));
+            = new OrPredicate(new CPUSpecificPredicate("aarch64", new String[] { "sha256" },
+                                                       null),
+              new OrPredicate(new CPUSpecificPredicate("sparc.*",   new String[] { "sha256" },
+                                                       null),
+              new OrPredicate(new CPUSpecificPredicate("ppc64.*",   new String[] { "sha"    },
+                                                       null),
+                              new CPUSpecificPredicate("ppc64le.*", new String[] { "sha"    },
+                                                       null))));
 
     public static final BooleanSupplier SHA512_INSTRUCTION_AVAILABLE
             = new OrPredicate(
-                    new CPUSpecificPredicate("sparc.*", new String[] { "sha512" },
-                            null),
                     new CPUSpecificPredicate("aarch64", new String[] { "sha512" },
-                            null));
+                                             null),
+                    new OrPredicate(new CPUSpecificPredicate("sparc.*",   new String[] { "sha512" },
+                                                             null),
+                    new OrPredicate(new CPUSpecificPredicate("ppc64.*",   new String[] { "sha"    },
+                                                       null),
+                    new CPUSpecificPredicate("ppc64le.*", new String[] { "sha"    },
+                                             null))));
 
     public static final BooleanSupplier ANY_SHA_INSTRUCTION_AVAILABLE
             = new OrPredicate(IntrinsicPredicates.SHA1_INSTRUCTION_AVAILABLE,
