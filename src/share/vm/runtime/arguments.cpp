@@ -1768,11 +1768,9 @@ void Arguments::set_shenandoah_gc_flags() {
 #endif
 
   // Enable NUMA by default. While Shenandoah is not NUMA-aware, enabling NUMA makes
-  // storage allocation code NUMA-aware, and NUMA interleaving makes the storage
-  // allocated in consistent manner (interleaving) to minimize run-to-run variance.
+  // storage allocation code NUMA-aware.
   if (FLAG_IS_DEFAULT(UseNUMA)) {
     FLAG_SET_DEFAULT(UseNUMA, true);
-    FLAG_SET_DEFAULT(UseNUMAInterleaving, true);
   }
 
   FLAG_SET_DEFAULT(ParallelGCThreads,
