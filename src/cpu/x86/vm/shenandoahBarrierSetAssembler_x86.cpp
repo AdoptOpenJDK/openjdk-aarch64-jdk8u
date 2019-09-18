@@ -412,8 +412,10 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
   Label done;
   Register obj = stub->obj()->as_register();
   Register res = stub->result()->as_register();
+  Register addr = stub->addr()->as_register();
   Register tmp1 = stub->tmp1()->as_register();
   Register tmp2 = stub->tmp2()->as_register();
+  assert_different_registers(obj, res, addr, tmp1, tmp2);
 
   Label slow_path;
 
@@ -442,31 +444,10 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 #endif
   __ jcc(Assembler::zero, *stub->continuation());
 
-  // Test if object is resolved.
-  __ movptr(tmp1, Address(res, oopDesc::mark_offset_in_bytes()));
-  // Test if both lowest bits are set. We trick it by negating the bits
-  // then test for both bits clear.
-  __ notptr(tmp1);
-#ifdef _LP64
-  __ testb(tmp1, markOopDesc::marked_value);
-#else
-  // On x86_32, C1 register allocator can give us the register without 8-bit support.
-  // Do the full-register access and test to avoid compilation failures.
-  __ testptr(tmp1, markOopDesc::marked_value);
-#endif
-
-  __ jccb(Assembler::notZero, slow_path);
-  // Clear both lower bits. It's still inverted, so set them, and then invert back.
-  __ orptr(tmp1, markOopDesc::marked_value);
-  __ notptr(tmp1);
-  // At this point, tmp1 contains the decoded forwarding pointer.
-  __ mov(res, tmp1);
-
-  __ jmp(*stub->continuation());
-
   __ bind(slow_path);
   ce->store_parameter(res, 0);
- __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::shenandoah_lrb_slow_id)));
+  ce->store_parameter(addr, 1);
+  __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::shenandoah_lrb_slow_id)));
 
   __ jmp(*stub->continuation());
 }

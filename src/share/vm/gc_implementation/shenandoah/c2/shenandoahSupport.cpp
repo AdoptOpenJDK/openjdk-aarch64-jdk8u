@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2015, 2019, Red Hat, Inc. All rights reserved.
  *
@@ -998,7 +999,7 @@ void ShenandoahBarrierC2Support::test_in_cset(Node*& ctrl, Node*& not_cset_ctrl,
   phase->register_new_node(cset_bool,      old_ctrl);
 }
 
-void ShenandoahBarrierC2Support::call_lrb_stub(Node*& ctrl, Node*& val, Node*& result_mem, Node* raw_mem, PhaseIdealLoop* phase) {
+void ShenandoahBarrierC2Support::call_lrb_stub(Node*& ctrl, Node*& val, Node* load_addr, Node*& result_mem, Node* raw_mem, bool is_native, PhaseIdealLoop* phase) {
   IdealLoopTree*loop = phase->get_loop(ctrl);
   const TypePtr* obj_type = phase->igvn().type(val)->is_oopptr();
 
@@ -1009,8 +1010,12 @@ void ShenandoahBarrierC2Support::call_lrb_stub(Node*& ctrl, Node*& val, Node*& r
   mm->set_memory_at(Compile::AliasIdxRaw, raw_mem);
   phase->register_new_node(mm, ctrl);
 
+  address target = LP64_ONLY(UseCompressedOops) NOT_LP64(false) ?
+          CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup_narrow) :
+          CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup);
+
   Node* call = new (phase->C) CallLeafNode(ShenandoahBarrierSetC2::shenandoah_load_reference_barrier_Type(),
-                                           CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier),
+                                           target,
                                            "shenandoah_load_reference_barrier", TypeRawPtr::BOTTOM);
   call->init_req(TypeFunc::Control, ctrl);
   call->init_req(TypeFunc::I_O, phase->C->top());
@@ -1018,6 +1023,7 @@ void ShenandoahBarrierC2Support::call_lrb_stub(Node*& ctrl, Node*& val, Node*& r
   call->init_req(TypeFunc::FramePtr, phase->C->top());
   call->init_req(TypeFunc::ReturnAdr, phase->C->top());
   call->init_req(TypeFunc::Parms, val);
+  call->init_req(TypeFunc::Parms+1, load_addr);
   phase->register_control(call, loop, ctrl);
   ctrl = new (phase->C) ProjNode(call, TypeFunc::Control);
   phase->register_control(ctrl, loop, call);
@@ -1381,7 +1387,7 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
     assert(val->bottom_type()->make_oopptr(), "need oop");
     assert(val->bottom_type()->make_oopptr()->const_oop() == NULL, "expect non-constant");
 
-    enum { _heap_stable = 1, _not_cset, _fwded, _evac_path, _null_path, PATH_LIMIT };
+    enum { _heap_stable = 1, _not_cset, _evac_path, _null_path, PATH_LIMIT };
     Node* region = new (phase->C) RegionNode(PATH_LIMIT);
     Node* val_phi = new (phase->C) PhiNode(region, uncasted_val->bottom_type()->is_oopptr());
     Node* raw_mem_phi = PhiNode::make(region, raw_mem, Type::MEMORY, TypeRawPtr::BOTTOM);
@@ -1431,49 +1437,44 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
       IfNode* iff = unc_ctrl->in(0)->as_If();
       phase->igvn().replace_input_of(iff, 1, phase->igvn().intcon(1));
     }
-    Node* addr = new (phase->C) AddPNode(new_val, uncasted_val, phase->igvn().MakeConX(oopDesc::mark_offset_in_bytes()));
-    phase->register_new_node(addr, ctrl);
-    assert(new_val->bottom_type()->isa_oopptr(), "what else?");
-    Node* markword = new (phase->C) LoadXNode(ctrl, raw_mem, addr, TypeRawPtr::BOTTOM, TypeX_X, MemNode::unordered);
-    phase->register_new_node(markword, ctrl);
-
-    // Test if object is forwarded. This is the case if lowest two bits are set.
-    Node* masked = new (phase->C) AndXNode(markword, phase->igvn().MakeConX(markOopDesc::lock_mask_in_place));
-    phase->register_new_node(masked, ctrl);
-    Node* cmp = new (phase->C) CmpXNode(masked, phase->igvn().MakeConX(markOopDesc::marked_value));
-    phase->register_new_node(cmp, ctrl);
-
-    // Only branch to LRB stub if object is not forwarded; otherwise reply with fwd ptr
-    Node* bol = new (phase->C) BoolNode(cmp, BoolTest::eq); // Equals 3 means it's forwarded
-    phase->register_new_node(bol, ctrl);
-
-    IfNode* iff = new (phase->C) IfNode(ctrl, bol, PROB_LIKELY(0.999), COUNT_UNKNOWN);
-    phase->register_control(iff, loop, ctrl);
-    Node* if_fwd = new (phase->C) IfTrueNode(iff);
-    phase->register_control(if_fwd, loop, iff);
-    Node* if_not_fwd = new (phase->C) IfFalseNode(iff);
-    phase->register_control(if_not_fwd, loop, iff);
-
-    // Decode forward pointer: since we already have the lowest bits, we can just subtract them
-    // from the mark word without the need for large immediate mask.
-    Node* masked2 = new (phase->C) SubXNode(markword, masked);
-    phase->register_new_node(masked2, if_fwd);
-    Node* fwdraw = new (phase->C) CastX2PNode(masked2);
-    fwdraw->init_req(0, if_fwd);
-    phase->register_new_node(fwdraw, if_fwd);
-    Node* fwd = new (phase->C) CheckCastPPNode(NULL, fwdraw, val->bottom_type());
-    phase->register_new_node(fwd, if_fwd);
-
-    // Wire up not-equal-path in slots 3.
-    region->init_req(_fwded, if_fwd);
-    val_phi->init_req(_fwded, fwd);
-    raw_mem_phi->init_req(_fwded, raw_mem);
 
     // Call lrb-stub and wire up that path in slots 4
     Node* result_mem = NULL;
-    ctrl = if_not_fwd;
-    fwd = new_val;
-    call_lrb_stub(ctrl, fwd, result_mem, raw_mem, phase);
+
+    Node* fwd = new_val;
+    Node* addr;
+    if (ShenandoahSelfFixing) {
+      VectorSet visited(Thread::current()->resource_area());
+      addr = get_load_addr(phase, visited, lrb);
+    } else {
+      addr = phase->igvn().zerocon(T_OBJECT);
+    }
+    if (addr->Opcode() == Op_AddP) {
+      Node* orig_base = addr->in(AddPNode::Base);
+      Node* base = new (phase->C) CheckCastPPNode(ctrl, orig_base, orig_base->bottom_type());
+      phase->register_new_node(base, ctrl);
+      if (addr->in(AddPNode::Base) == addr->in((AddPNode::Address))) {
+        // Field access
+        addr = addr->clone();
+        addr->set_req(AddPNode::Base, base);
+        addr->set_req(AddPNode::Address, base);
+        phase->register_new_node(addr, ctrl);
+      } else {
+        Node* addr2 = addr->in(AddPNode::Address);
+        if (addr2->Opcode() == Op_AddP && addr2->in(AddPNode::Base) == addr2->in(AddPNode::Address) &&
+              addr2->in(AddPNode::Base) == orig_base) {
+          addr2 = addr2->clone();
+          addr2->set_req(AddPNode::Base, base);
+          addr2->set_req(AddPNode::Address, base);
+          phase->register_new_node(addr2, ctrl);
+          addr = addr->clone();
+          addr->set_req(AddPNode::Base, base);
+          addr->set_req(AddPNode::Address, addr2);
+          phase->register_new_node(addr, ctrl);
+        }
+      }
+    }
+    call_lrb_stub(ctrl, fwd, addr, result_mem, raw_mem, false, phase);
     region->init_req(_evac_path, ctrl);
     val_phi->init_req(_evac_path, fwd);
     raw_mem_phi->init_req(_evac_path, result_mem);
@@ -1523,6 +1524,68 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
   }
   // Done expanding load-reference-barriers.
   assert(phase->C->shenandoah_barriers_count() == 0, "all load reference barrier nodes should have been replaced");
+
+}
+
+Node* ShenandoahBarrierC2Support::get_load_addr(PhaseIdealLoop* phase, VectorSet& visited, Node* in) {
+  if (visited.test_set(in->_idx)) {
+    return NULL;
+  }
+  switch (in->Opcode()) {
+    case Op_Proj:
+      return get_load_addr(phase, visited, in->in(0));
+    case Op_CastPP:
+    case Op_CheckCastPP:
+    case Op_DecodeN:
+    case Op_EncodeP:
+      return get_load_addr(phase, visited, in->in(1));
+    case Op_LoadN:
+    case Op_LoadP:
+      return in->in(MemNode::Address);
+    case Op_GetAndSetN:
+    case Op_GetAndSetP:
+      // Those instructions would just have stored a different
+      // value into the field. No use to attempt to fix it at this point.
+      return phase->igvn().zerocon(T_OBJECT);
+    case Op_CMoveP:
+    case Op_CMoveN: {
+      Node* t = get_load_addr(phase, visited, in->in(CMoveNode::IfTrue));
+      Node* f = get_load_addr(phase, visited, in->in(CMoveNode::IfFalse));
+      // Handle unambiguous cases: single address reported on both branches.
+      if (t != NULL && f == NULL) return t;
+      if (t == NULL && f != NULL) return f;
+      if (t != NULL && t == f)    return t;
+      // Ambiguity.
+      return phase->igvn().zerocon(T_OBJECT);
+    }
+    case Op_Phi: {
+      Node* addr = NULL;
+      for (uint i = 1; i < in->req(); i++) {
+        Node* addr1 = get_load_addr(phase, visited, in->in(i));
+        if (addr == NULL) {
+          addr = addr1;
+        }
+        if (addr != addr1) {
+          return phase->igvn().zerocon(T_OBJECT);
+        }
+      }
+      return addr;
+    }
+    case Op_ShenandoahLoadReferenceBarrier:
+      return get_load_addr(phase, visited, in->in(ShenandoahLoadReferenceBarrierNode::ValueIn));
+    case Op_CallDynamicJava:
+    case Op_CallLeaf:
+    case Op_CallStaticJava:
+    case Op_ConN:
+    case Op_ConP:
+    case Op_Parm:
+      return phase->igvn().zerocon(T_OBJECT);
+    default:
+#ifdef ASSERT
+      fatal(err_msg("Unknown node in get_load_addr: %s", NodeClassNames[in->Opcode()]));
+#endif
+      return phase->igvn().zerocon(T_OBJECT);
+  }
 
 }
 

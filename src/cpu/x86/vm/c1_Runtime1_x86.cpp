@@ -1785,8 +1785,19 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         // arg0 : object to be resolved
         
         save_live_registers(sasm, 1);
-        f.load_argument(0, LP64_ONLY(c_rarg0) NOT_LP64(rax));
-        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier), LP64_ONLY(c_rarg0) NOT_LP64(rax));
+#ifdef _LP64
+        f.load_argument(0, c_rarg0);
+        f.load_argument(1, c_rarg1);
+        if (UseCompressedOops) {
+          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup_narrow), c_rarg0, c_rarg1);
+        } else {
+          __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup), c_rarg0, c_rarg1);
+        }
+#else
+        f.load_argument(0, rax);
+        f.load_argument(1, rbx);
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup), rax, rbx);
+#endif
         restore_live_registers_except_rax(sasm, true);
 
       }

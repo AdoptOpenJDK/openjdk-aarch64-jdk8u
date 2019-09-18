@@ -1307,7 +1307,12 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         
         __ push_call_clobbered_registers();
         f.load_argument(0, r0);
-        __ mov(lr, CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier));
+        f.load_argument(1, r1);
+        if (UseCompressedOops) {
+          __ mov(lr, CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup_narrow));
+        } else {
+          __ mov(lr, CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup));
+        }
         __ blr(lr);
         __ mov(rscratch1, r0);
         __ pop_call_clobbered_registers();

@@ -245,6 +245,7 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 
   Register obj = stub->obj()->as_register();
   Register res = stub->result()->as_register();
+  Register addr = stub->addr()->as_register_lo();
   Register tmp1 = stub->tmp1()->as_register();
   Register tmp2 = stub->tmp2()->as_register();
 
@@ -277,6 +278,7 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 
   __ bind(slow_path);
   ce->store_parameter(res, 0);
+  ce->store_parameter(addr, 1);
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::shenandoah_lrb_slow_id)));
 
   __ b(*stub->continuation());

@@ -345,6 +345,10 @@
   product(bool, ShenandoahLogWarning, false,                                \
           "Turns on logging in Shenandoah at warning level. ")              \
                                                                             \
+  diagnostic(bool, ShenandoahSelfFixing, true,                              \
+          "Fix references with load reference barrier. Disabling this "     \
+          "might degrade performance.")                                     \
+
 
 SHENANDOAH_FLAGS(DECLARE_DEVELOPER_FLAG, \
                  DECLARE_PD_DEVELOPER_FLAG,     \
