@@ -43,6 +43,9 @@
 #ifdef COMPILER2
 #include "opto/runtime.hpp"
 #endif
+#if INCLUDE_ALL_GCS
+#include "shenandoahBarrierSetAssembler_x86.hpp"
+#endif
 
 // Declaration and definition of StubGenerator (no .hpp file).
 // For a more detailed description of the stub routine structure
@@ -703,13 +706,12 @@ class StubGenerator: public StubCodeGenerator {
   //  Input:
   //     start   -  starting address
   //     count   -  element count
-  void  gen_write_ref_array_pre_barrier(Register start, Register count, bool uninitialized_target) {
+  void  gen_write_ref_array_pre_barrier(Register src, Register start, Register count, bool uninitialized_target) {
     assert_different_registers(start, count);
     BarrierSet* bs = Universe::heap()->barrier_set();
     switch (bs->kind()) {
       case BarrierSet::G1SATBCT:
       case BarrierSet::G1SATBCTLogging:
-      case BarrierSet::ShenandoahBarrierSet:
         // With G1, don't generate the call if we statically know that the target in uninitialized
         if (!uninitialized_target) {
            __ pusha();                      // push registers
@@ -722,6 +724,11 @@ class StubGenerator: public StubCodeGenerator {
       case BarrierSet::CardTableExtension:
       case BarrierSet::ModRef:
         break;
+#if INCLUDE_ALL_GCS
+      case BarrierSet::ShenandoahBarrierSet:
+        ShenandoahBarrierSetAssembler::bsasm()->arraycopy_prologue(_masm, uninitialized_target, src, start, count);
+        break;
+#endif
       default      :
         ShouldNotReachHere();
 
@@ -743,7 +750,6 @@ class StubGenerator: public StubCodeGenerator {
     switch (bs->kind()) {
       case BarrierSet::G1SATBCT:
       case BarrierSet::G1SATBCTLogging:
-      case BarrierSet::ShenandoahBarrierSet:
         {
           __ pusha();                      // push registers
           __ call_VM_leaf(CAST_FROM_FN_PTR(address, BarrierSet::static_write_ref_array_post),
@@ -775,6 +781,7 @@ class StubGenerator: public StubCodeGenerator {
         }
         break;
       case BarrierSet::ModRef:
+      case BarrierSet::ShenandoahBarrierSet:
         break;
       default      :
         ShouldNotReachHere();
@@ -940,7 +947,7 @@ class StubGenerator: public StubCodeGenerator {
     if (t == T_OBJECT) {
       __ testl(count, count);
       __ jcc(Assembler::zero, L_0_count);
-      gen_write_ref_array_pre_barrier(to, count, dest_uninitialized);
+      gen_write_ref_array_pre_barrier(from, to, count, dest_uninitialized);
       __ mov(saved_to, to);          // save 'to'
     }
 
@@ -1119,7 +1126,7 @@ class StubGenerator: public StubCodeGenerator {
     if (t == T_OBJECT) {
       __ testl(count, count);
       __ jcc(Assembler::zero, L_0_count);
-      gen_write_ref_array_pre_barrier(dst, count, dest_uninitialized);
+      gen_write_ref_array_pre_barrier(src, dst, count, dest_uninitialized);
     }
 
     // copy from high to low
@@ -1466,7 +1473,7 @@ class StubGenerator: public StubCodeGenerator {
     Address elem_klass_addr(elem, oopDesc::klass_offset_in_bytes());
 
     // Copy from low to high addresses, indexed from the end of each array.
-    gen_write_ref_array_pre_barrier(to, count, dest_uninitialized);
+    gen_write_ref_array_pre_barrier(from, to, count, dest_uninitialized);
     __ lea(end_from, end_from_addr);
     __ lea(end_to,   end_to_addr);
     assert(length == count, "");        // else fix next line:

@@ -44,6 +44,7 @@
 #include "utilities/macros.hpp"
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
 #include "gc_implementation/shenandoah/shenandoahSupport.hpp"
 #endif
 
@@ -4549,20 +4550,22 @@ void LibraryCallKit::copy_to_clone(Node* obj, Node* alloc_obj, Node* obj_size, b
   countx = _gvn.transform(new (C) SubXNode(countx, MakeConX(base_off)));
   countx = _gvn.transform(new (C) URShiftXNode(countx, intcon(LogBytesPerLong) ));
 
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC && ShenandoahCloneBarrier) {
+    // Make sure that references in the cloned object are updated for Shenandoah.
+    make_runtime_call(RC_LEAF|RC_NO_FP,
+                      OptoRuntime::shenandoah_clone_barrier_Type(),
+                      CAST_FROM_FN_PTR(address, ShenandoahRuntime::shenandoah_clone_barrier),
+                      "shenandoah_clone_barrier", TypePtr::BOTTOM,
+                      src, dest, countx);
+  }
+#endif
+
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
   bool disjoint_bases = true;
   generate_unchecked_arraycopy(raw_adr_type, T_LONG, disjoint_bases,
                                src, NULL, dest, NULL, countx,
                                /*dest_uninitialized*/true);
-
-  if (UseShenandoahGC && ShenandoahCloneBarrier) {
-    // Make sure that references in the cloned object are updated for Shenandoah.
-    make_runtime_call(RC_LEAF|RC_NO_FP,
-                      OptoRuntime::shenandoah_clone_barrier_Type(),
-                      CAST_FROM_FN_PTR(address, SharedRuntime::shenandoah_clone_barrier),
-                      "shenandoah_clone_barrier", TypePtr::BOTTOM,
-                      alloc_obj);
-  }
 
   // If necessary, emit some card marks afterwards.  (Non-arrays only.)
   if (card_mark) {

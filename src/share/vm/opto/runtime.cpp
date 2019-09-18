@@ -583,9 +583,11 @@ const TypeFunc *OptoRuntime::g1_wb_post_Type() {
 }
 
 const TypeFunc *OptoRuntime::shenandoah_clone_barrier_Type() {
-  const Type **fields = TypeTuple::fields(1);
-  fields[TypeFunc::Parms+0] = TypeInstPtr::NOTNULL; // original field value
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+1, fields);
+  const Type **fields = TypeTuple::fields(3);
+  fields[TypeFunc::Parms+0] = TypeInstPtr::NOTNULL; // src
+  fields[TypeFunc::Parms+1] = TypeInstPtr::NOTNULL; // dst
+  fields[TypeFunc::Parms+2] = TypeInt::INT; // length
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+3, fields);
 
   // create result type (range)
   fields = TypeTuple::fields(0);

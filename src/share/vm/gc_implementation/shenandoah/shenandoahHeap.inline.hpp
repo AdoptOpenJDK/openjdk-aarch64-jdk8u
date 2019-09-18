@@ -126,6 +126,11 @@ inline oop ShenandoahHeap::cas_oop(oop n, oop* addr, oop c) {
   return (oop) Atomic::cmpxchg_ptr(n, addr, c);
 }
 
+inline oop ShenandoahHeap::cas_oop(oop n, narrowOop* addr, narrowOop c) {
+  narrowOop val = oopDesc::encode_heap_oop(n);
+  return oopDesc::decode_heap_oop((narrowOop) Atomic::cmpxchg(val, addr, c));
+}
+
 inline oop ShenandoahHeap::cas_oop(oop n, narrowOop* addr, oop c) {
   assert(is_ptr_aligned(addr, sizeof(narrowOop)), err_msg("Address should be aligned: " PTR_FORMAT, p2i(addr)));
   narrowOop cmp = oopDesc::encode_heap_oop(c);

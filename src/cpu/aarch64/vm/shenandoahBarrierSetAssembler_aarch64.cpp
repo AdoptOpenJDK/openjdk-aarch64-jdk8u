@@ -40,6 +40,45 @@ ShenandoahBarrierSetAssembler* ShenandoahBarrierSetAssembler::bsasm() {
 
 #define __ masm->
 
+void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, bool dest_uninitialized,
+                                                       Register src, Register dst, Register count) {
+  if ((ShenandoahSATBBarrier && !dest_uninitialized) || ShenandoahLoadRefBarrier) {
+
+    Label done;
+
+    // Avoid calling runtime if count == 0
+    __ cbz(count, done);
+
+    // Is marking active?
+    Address gc_state(rthread, in_bytes(JavaThread::gc_state_offset()));
+    __ ldrb(rscratch1, gc_state);
+    if (dest_uninitialized) {
+      __ tbz(rscratch2, ShenandoahHeap::HAS_FORWARDED_BITPOS, done);
+    } else {
+      __ mov(rscratch2, ShenandoahHeap::HAS_FORWARDED | ShenandoahHeap::MARKING);
+      __ tst(rscratch1, rscratch2);
+      __ br(Assembler::EQ, done);
+    }
+
+    __ push_call_clobbered_registers();
+    if (UseCompressedOops) {
+      if (dest_uninitialized) {
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_duinit_narrow_oop_entry), src, dst, count);
+      } else {
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_narrow_oop_entry), src, dst, count);
+      }
+    } else {
+      if (dest_uninitialized) {
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_duinit_oop_entry), src, dst, count);
+      } else {
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::write_ref_array_pre_oop_entry), src, dst, count);
+      }
+    }
+    __ pop_call_clobbered_registers();
+    __ bind(done);
+  }
+}
+
 void ShenandoahBarrierSetAssembler::resolve_forward_pointer(MacroAssembler* masm, Register dst, Register tmp) {
   assert(ShenandoahCASBarrier, "should be enabled");
   Label is_null;

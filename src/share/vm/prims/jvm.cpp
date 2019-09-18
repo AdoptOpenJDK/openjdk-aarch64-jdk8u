@@ -73,6 +73,7 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/histogram.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/top.hpp"
 #include "utilities/utf8.hpp"
 #ifdef TARGET_OS_FAMILY_linux
@@ -93,6 +94,7 @@
 
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
 #endif // INCLUDE_ALL_GCS
 
 #include <errno.h>
@@ -643,6 +645,12 @@ JVM_ENTRY(jobject, JVM_Clone(JNIEnv* env, jobject handle))
            "invariant");
     new_obj_oop = CollectedHeap::obj_allocate(klass, size, CHECK_NULL);
   }
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC && ShenandoahCloneBarrier) {
+    ShenandoahBarrierSet::barrier_set()->clone_barrier(obj());
+  }
+#endif
 
   // 4839641 (4840070): We must do an oop-atomic copy, because if another thread
   // is modifying a reference field in the clonee, a non-oop-atomic copy might

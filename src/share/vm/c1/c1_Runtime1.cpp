@@ -57,7 +57,10 @@
 #include "runtime/vframeArray.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/events.hpp"
-
+#include "utilities/macros.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
+#endif
 
 // Implementation of StubAssembler
 
@@ -1307,6 +1310,13 @@ template <class T> int obj_arraycopy_work(oopDesc* src, T* src_addr,
   BarrierSet* bs = Universe::heap()->barrier_set();
   assert(bs->has_write_ref_array_opt(), "Barrier set must have ref array opt");
   assert(bs->has_write_ref_array_pre_opt(), "For pre-barrier as well.");
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    ShenandoahBarrierSet::barrier_set()->arraycopy_pre(src_addr, dst_addr, length);
+  }
+#endif
+
   if (src == dst) {
     // same object, no check
     bs->write_ref_array_pre(dst_addr, length);

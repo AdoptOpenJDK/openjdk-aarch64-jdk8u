@@ -53,6 +53,8 @@ public:
 
   void load_reference_barrier(MacroAssembler* masm, Register dst);
 
+  virtual void arraycopy_prologue(MacroAssembler* masm, bool dest_uninitialized,
+                                  Register src, Register dst, Register count);
   virtual void cmpxchg_oop(MacroAssembler* masm,
                            Register res, Address addr, Register oldval, Register newval,
                            bool exchange, Register tmp1, Register tmp2);
