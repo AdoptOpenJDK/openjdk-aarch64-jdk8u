@@ -1225,7 +1225,10 @@ void ShenandoahHeap::object_iterate(ObjectClosure* cl) {
   // First, we process GC roots according to current GC cycle. This populates the work stack with initial objects.
   ShenandoahHeapIterationRootScanner rp;
   ObjectIterateScanRootClosure oops(&_aux_bit_map, &oop_stack);
-  if (unload_classes()) {
+  // If we are unloading classes right now, we should not touch weak roots,
+  // on the off-chance we would evacuate them and make them live accidentally.
+  // In other cases, we have to scan all roots.
+  if (is_evacuation_in_progress() && unload_classes()) {
     rp.strong_roots_do(&oops);
   } else {
     rp.roots_do(&oops);
