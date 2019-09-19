@@ -171,7 +171,10 @@ class ShenandoahHeapIterationRootScanner : public ShenandoahRootProcessor {
 private:
   ShenandoahSerialRoots                                    _serial_roots;
   ShenandoahThreadRoots                                    _thread_roots;
-  ShenandoahClassLoaderDataRoots                            _cld_roots;
+  ShenandoahClassLoaderDataRoots                           _cld_roots;
+  ShenandoahWeakRoots                                      _weak_roots;
+  ShenandoahStringDedupRoots                               _dedup_roots;
+  ShenandoahStringTableRoots                               _string_table_roots;
   ShenandoahCodeCacheRoots<ShenandoahAllCodeRootsIterator> _code_roots;
 
 public:

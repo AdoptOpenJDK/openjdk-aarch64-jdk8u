@@ -196,6 +196,10 @@ ShenandoahRootEvacuator::ShenandoahRootEvacuator(ShenandoahPhaseTimings::Phase p
    _cld_roots.cld_do(&clds, 0);
    _thread_roots.oops_do(oops, NULL, NULL, 0);
    _code_roots.code_blobs_do(&code, 0);
+
+   _weak_roots.oops_do(oops, 0);
+   _string_table_roots.oops_do(oops, 0);
+   _dedup_roots.oops_do(oops, 0);
  }
 
  void ShenandoahHeapIterationRootScanner::strong_roots_do(OopClosure* oops) {
