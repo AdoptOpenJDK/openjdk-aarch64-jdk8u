@@ -1166,7 +1166,22 @@ private:
     T o = oopDesc::load_heap_oop(p);
     if (!oopDesc::is_null(o)) {
       oop obj = oopDesc::decode_heap_oop_not_null(o);
-      obj = ShenandoahBarrierSet::resolve_forwarded_not_null(obj);
+      oop fwd = (oop) ShenandoahForwarding::get_forwardee_raw_unchecked(obj);
+      if (fwd == NULL) {
+        // There is an odd interaction with VM_HeapWalkOperation, see jvmtiTagMap.cpp.
+        //
+        // That operation walks the reachable objects on its own, storing the marking
+        // wavefront in the object marks. When it is done, it calls the CollectedHeap
+        // to iterate over all objects to clean up the mess. When it reaches here,
+        // the Shenandoah fwdptr resolution code encounters the marked objects with
+        // NULL forwardee. Trying to act on that would crash the VM. Or fail the
+        // asserts, should we go for resolve_forwarded_pointer(obj).
+        //
+        // Therefore, we have to dodge it by doing the raw access to forwardee, and
+        // assuming the object had no forwardee, if that thing is NULL.
+      } else {
+        obj = fwd;
+      }
       assert(obj->is_oop(), "must be a valid oop");
       if (!_bitmap->isMarked((HeapWord*) obj)) {
         _bitmap->mark((HeapWord*) obj);

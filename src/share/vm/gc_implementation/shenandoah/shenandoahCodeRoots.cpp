@@ -27,6 +27,7 @@
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCodeRoots.hpp"
 #include "memory/resourceArea.hpp"
+#include "runtime/vmThread.hpp"
 
 ShenandoahParallelCodeCacheIterator::ShenandoahParallelCodeCacheIterator() :
         _claimed_idx(0), _finished(false) {
@@ -299,9 +300,13 @@ void ShenandoahNMethod::assert_alive_and_correct() {
   ShenandoahHeap* heap = ShenandoahHeap::heap();
   for (int c = 0; c < _oops_count; c++) {
     oop *loc = _oops[c];
-    assert(_nm->code_contains((address)loc) || _nm->oops_contains(loc), "nmethod should contain the oop*");
+    assert(_nm->code_contains((address) loc) || _nm->oops_contains(loc), "nmethod should contain the oop*");
     oop o = oopDesc::load_heap_oop(loc);
-    shenandoah_assert_correct_except(loc, o, o == NULL || heap->is_full_gc_move_in_progress());
+    shenandoah_assert_correct_except(loc, o,
+             o == NULL ||
+             heap->is_full_gc_move_in_progress() ||
+             (VMThread::vm_operation() != NULL) && (VMThread::vm_operation()->type() == VM_Operation::VMOp_HeapWalkOperation)
+    );
   }
 }
 
