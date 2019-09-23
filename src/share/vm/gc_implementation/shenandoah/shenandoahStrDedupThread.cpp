@@ -48,6 +48,9 @@ ShenandoahStrDedupThread::~ShenandoahStrDedupThread() {
 }
 
 void ShenandoahStrDedupThread::run() {
+  initialize_in_thread();
+  wait_for_universe_init();
+
   for (;;) {
     ShenandoahStrDedupStats stats;
 
