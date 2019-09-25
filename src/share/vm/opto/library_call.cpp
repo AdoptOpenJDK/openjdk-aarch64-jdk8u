@@ -4552,12 +4552,15 @@ void LibraryCallKit::copy_to_clone(Node* obj, Node* alloc_obj, Node* obj_size, b
 
 #if INCLUDE_ALL_GCS
   if (UseShenandoahGC && ShenandoahCloneBarrier) {
+    assert (src->is_AddP(), "for clone the src should be the interior ptr");
+    assert (dest->is_AddP(), "for clone the dst should be the interior ptr");
+
     // Make sure that references in the cloned object are updated for Shenandoah.
     make_runtime_call(RC_LEAF|RC_NO_FP,
                       OptoRuntime::shenandoah_clone_barrier_Type(),
                       CAST_FROM_FN_PTR(address, ShenandoahRuntime::shenandoah_clone_barrier),
                       "shenandoah_clone_barrier", TypePtr::BOTTOM,
-                      src, dest, countx);
+                      src->in(AddPNode::Base), src, dest, countx);
   }
 #endif
 
