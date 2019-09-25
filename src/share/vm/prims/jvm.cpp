@@ -94,7 +94,7 @@
 
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSetClone.inline.hpp"
 #endif // INCLUDE_ALL_GCS
 
 #include <errno.h>

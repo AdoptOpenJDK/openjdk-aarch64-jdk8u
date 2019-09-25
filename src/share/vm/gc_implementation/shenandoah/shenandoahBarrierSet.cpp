@@ -25,6 +25,7 @@
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSetClone.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
@@ -304,4 +305,8 @@ oop ShenandoahBarrierSet::oop_atomic_cmpxchg_in_heap(oop new_value, volatile Hea
     storeval_barrier(new_value);
   }
   return result;
+}
+
+void ShenandoahBarrierSet::clone_barrier_runtime(oop src) {
+  clone_barrier(src);
 }

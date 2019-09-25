@@ -23,6 +23,7 @@
 
 #include "precompiled.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSetClone.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
 #include "runtime/interfaceSupport.hpp"
 #include "oops/oop.inline.hpp"
