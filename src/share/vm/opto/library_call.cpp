@@ -4560,7 +4560,7 @@ void LibraryCallKit::copy_to_clone(Node* obj, Node* alloc_obj, Node* obj_size, b
                       OptoRuntime::shenandoah_clone_barrier_Type(),
                       CAST_FROM_FN_PTR(address, ShenandoahRuntime::shenandoah_clone_barrier),
                       "shenandoah_clone_barrier", TypePtr::BOTTOM,
-                      src->in(AddPNode::Base), src, dest, countx);
+                      src->in(AddPNode::Base));
   }
 #endif
 

@@ -72,7 +72,7 @@ IRT_END
 
 // Shenandoah clone barrier: makes sure that references point to to-space
 // in cloned objects.
-JRT_LEAF(void, ShenandoahRuntime::shenandoah_clone_barrier(oopDesc* src, void* src_ptr, void* dst_ptr, size_t length))
+JRT_LEAF(void, ShenandoahRuntime::shenandoah_clone_barrier(oopDesc* src))
   oop s = oop(src);
   shenandoah_assert_correct(NULL, s);
   ShenandoahBarrierSet::barrier_set()->clone_barrier(s);
