@@ -792,8 +792,11 @@ void LIRGenerator::do_CompareAndSwap(Intrinsic* x, ValueType* type) {
   LIR_Opr ill = LIR_OprFact::illegalOpr;  // for convenience
   if (type == objectType) {
 #if INCLUDE_ALL_GCS
-    if (UseShenandoahGC) {
-      __ cas_obj(addr, cmp.result(), val.result(), new_register(T_OBJECT), new_register(T_OBJECT));
+    if (UseShenandoahGC && ShenandoahCASBarrier) {
+      LIR_Opr result = rlock_result(x);
+      __ cas_obj(addr, cmp.result(), val.result(), new_register(T_OBJECT), new_register(T_OBJECT), result);
+      // Shenandoah C1 barrier would do all result management itself, shortcut here.
+      return;
     } else
 #endif
     {
