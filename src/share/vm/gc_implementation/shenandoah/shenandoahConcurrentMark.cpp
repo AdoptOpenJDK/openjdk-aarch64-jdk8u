@@ -382,11 +382,18 @@ public:
 };
 
 void ShenandoahConcurrentMark::update_thread_roots(ShenandoahPhaseTimings::Phase root_phase) {
+  assert(ShenandoahSafepoint::is_at_shenandoah_safepoint(), "Must be at a safepoint");
+
+  ShenandoahGCPhase phase(root_phase);
+
+  COMPILER2_PRESENT(DerivedPointerTable::clear());
+
   WorkGang* workers = _heap->workers();
   bool is_par = workers->active_workers() > 1;
-  COMPILER2_PRESENT(DerivedPointerTable::clear());
+
   ShenandoahUpdateThreadRootsTask task(is_par, root_phase);
   workers->run_task(&task);
+
   COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
 }
 
