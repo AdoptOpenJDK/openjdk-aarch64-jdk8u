@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2020, Oracle and/or its affiliates. All rights reserved.
 #  DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 #  This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 
 ##
 ## @test
-## @requires (os.arch == "x86_64" | os.arch == "amd64")
+## @requires (os.arch == "x86_64" | os.arch == "amd64" | os.arch=="x86" | os.arch=="i386")
 ## @summary test JNI critical arrays support in Shenandoah
 ## @run shell/timeout=480 TestCriticalNativeArgs.sh
 ##
@@ -52,20 +52,18 @@ else
     exit 0;
 fi
 
-# Unfortunately, configurations cross-compiled to 32 bits would
-# fail with bitness mismatch, when compiled with platform gcc.
-# This would be fixed with /native support in JDK-8072842.
-if [ "$VM_BITS" = "32" ]; then
-    echo "Test passed; only reliable on 64-bit"
-    exit 0;
-fi
-
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
 ${TESTJAVA}${FS}bin${FS}javac TestCriticalNativeArgs.java
 
-$gcc_cmd -O1 -DLINUX -fPIC -shared \
+# default target 64-bits
+GCC_TARGET_BITS=""
+if [ "$VM_BITS" = "32" ]; then
+  GCC_TARGET_BITS="-m32"
+fi
+
+$gcc_cmd -O1 -DLINUX -fPIC -shared ${GCC_TARGET_BITS} \
     -o ${THIS_DIR}${FS}libTestCriticalNative.so \
     -I${TESTJAVA}${FS}include \
     -I${TESTJAVA}${FS}include${FS}linux \
