@@ -95,8 +95,9 @@ class outputStream;
   f(purge_cldg,                                     "    CLDG")                         \
   f(purge_string_dedup,                             "    String Dedup")                 \
   f(complete_liveness,                              "  Complete Liveness")              \
+  f(retire_tlabs,                                   "  Retire TLABs")                   \
+  f(trash_cset,                                     "  Trash CSet")                     \
   f(prepare_evac,                                   "  Prepare Evacuation")             \
-  f(recycle_regions,                                "  Recycle regions")                \
                                                                                         \
   /* Per-thread timer block, should have "roots" counters in consistent order */        \
   f(init_evac,                                      "  Initial Evacuation")             \
@@ -117,9 +118,12 @@ class outputStream;
                                                                                         \
   f(final_evac_gross,                               "Pause Final Evac (G)")             \
   f(final_evac,                                     "Pause Final Evac (N)")             \
+  f(final_evac_retire_gclabs,                       "  Retire GCLABs")                  \
                                                                                         \
   f(init_update_refs_gross,                         "Pause Init  Update Refs (G)")      \
   f(init_update_refs,                               "Pause Init  Update Refs (N)")      \
+  f(init_update_refs_retire_gclabs,                 "  Retire GCLABs")                  \
+  f(init_update_refs_prepare,                       "  Prepare")                        \
                                                                                         \
   f(final_update_refs_gross,                         "Pause Final Update Refs (G)")     \
   f(final_update_refs,                               "Pause Final Update Refs (N)")     \
@@ -142,7 +146,7 @@ class outputStream;
   f(final_update_refs_string_dedup_roots,            "    UR: String Dedup Roots")      \
   f(final_update_refs_finish_queues,                 "    UR: Finish Queues")           \
                                                                                         \
-  f(final_update_refs_recycle,                       "  Recycle")                       \
+  f(final_update_refs_trash_cset,                    "  Trash CSet")                    \
                                                                                         \
   f(degen_gc_gross,                                  "Pause Degenerated GC (G)")        \
   f(degen_gc,                                        "Pause Degenerated GC (N)")        \

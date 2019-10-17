@@ -1458,30 +1458,35 @@ void ShenandoahHeap::op_final_mark() {
 
     stop_concurrent_marking();
 
+    // All allocations past TAMS are implicitly live, adjust the region data.
+    // Bitmaps/TAMS are swapped at this point, so we need to poll complete bitmap.
     {
       ShenandoahGCPhase phase(ShenandoahPhaseTimings::complete_liveness);
-
-      // All allocations past TAMS are implicitly live, adjust the region data.
-      // Bitmaps/TAMS are swapped at this point, so we need to poll complete bitmap.
       ShenandoahCompleteLivenessClosure cl;
       parallel_heap_region_iterate(&cl);
+    }
+
+    // Force the threads to reacquire their TLABs outside the collection set.
+    {
+      ShenandoahGCPhase phase(ShenandoahPhaseTimings::retire_tlabs);
+      make_parsable(true);
+    }
+
+    // Trash the collection set left over from previous cycle, if any.
+    {
+      ShenandoahGCPhase phase(ShenandoahPhaseTimings::trash_cset);
+      trash_cset_regions();
     }
 
     {
       ShenandoahGCPhase prepare_evac(ShenandoahPhaseTimings::prepare_evac);
 
-      make_parsable(true);
+      ShenandoahHeapLocker locker(lock());
+      _collection_set->clear();
+      _free_set->clear();
 
-      trash_cset_regions();
-
-      {
-        ShenandoahHeapLocker locker(lock());
-        _collection_set->clear();
-        _free_set->clear();
-
-        heuristics()->choose_collection_set(_collection_set);
-        _free_set->rebuild();
-      }
+      heuristics()->choose_collection_set(_collection_set);
+      _free_set->rebuild();
     }
 
     // If collection set has candidates, start evacuation.
@@ -2067,14 +2072,19 @@ void ShenandoahHeap::op_init_updaterefs() {
   }
 
   set_update_refs_in_progress(true);
-  make_parsable(true);
-  for (uint i = 0; i < num_regions(); i++) {
-    ShenandoahHeapRegion* r = get_region(i);
-    r->set_concurrent_iteration_safe_limit(r->top());
-  }
 
-  // Reset iterator.
-  _update_refs_iterator.reset();
+  {
+    ShenandoahGCPhase phase(ShenandoahPhaseTimings::init_update_refs_prepare);
+
+    make_parsable(true);
+    for (uint i = 0; i < num_regions(); i++) {
+      ShenandoahHeapRegion* r = get_region(i);
+      r->set_concurrent_iteration_safe_limit(r->top());
+    }
+
+    // Reset iterator.
+    _update_refs_iterator.reset();
+  }
 
   if (ShenandoahPacing) {
     pacer()->setup_for_updaterefs();
@@ -2086,7 +2096,7 @@ void ShenandoahHeap::op_final_updaterefs() {
 
   // Check if there is left-over work, and finish it
   if (_update_refs_iterator.has_next()) {
-    ShenandoahGCPhase final_work(ShenandoahPhaseTimings::final_update_refs_finish_work);
+    ShenandoahGCPhase phase(ShenandoahPhaseTimings::final_update_refs_finish_work);
 
     // Finish updating references where we left off.
     clear_cancelled_gc();
@@ -2104,9 +2114,11 @@ void ShenandoahHeap::op_final_updaterefs() {
                                  ShenandoahPhaseTimings::degen_gc_update_roots:
                                  ShenandoahPhaseTimings::final_update_refs_roots);
 
-  ShenandoahGCPhase final_update_refs(ShenandoahPhaseTimings::final_update_refs_recycle);
+  {
+    ShenandoahGCPhase phase(ShenandoahPhaseTimings::final_update_refs_trash_cset);
+    trash_cset_regions();
+  }
 
-  trash_cset_regions();
   set_has_forwarded_objects(false);
   set_update_refs_in_progress(false);
 
