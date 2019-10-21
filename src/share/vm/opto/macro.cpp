@@ -24,7 +24,6 @@
 
 #include "precompiled.hpp"
 #include "compiler/compileLog.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "libadt/vectset.hpp"
 #include "opto/addnode.hpp"
 #include "opto/callnode.hpp"
@@ -39,10 +38,14 @@
 #include "opto/phaseX.hpp"
 #include "opto/rootnode.hpp"
 #include "opto/runtime.hpp"
-#include "opto/shenandoahSupport.hpp"
 #include "opto/subnode.hpp"
 #include "opto/type.hpp"
 #include "runtime/sharedRuntime.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 
 //
@@ -446,7 +449,13 @@ Node *PhaseMacroExpand::value_from_mem_phi(Node *mem, BasicType ft, const Type *
       if (val == mem) {
         values.at_put(j, mem);
       } else if (val->is_Store()) {
-        values.at_put(j, ShenandoahBarrierNode::skip_through_barrier(val->in(MemNode::ValueIn)));
+        Node* n = val->in(MemNode::ValueIn);
+#if INCLUDE_ALL_GCS
+        if (UseShenandoahGC) {
+          n = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(n);
+        }
+#endif
+        values.at_put(j, n);
       } else if(val->is_Proj() && val->in(0) == alloc) {
         values.at_put(j, _igvn.zerocon(ft));
       } else if (val->is_Phi()) {
@@ -548,7 +557,13 @@ Node *PhaseMacroExpand::value_from_mem(Node *sfpt_mem, BasicType ft, const Type 
       // hit a sentinel, return appropriate 0 value
       return _igvn.zerocon(ft);
     } else if (mem->is_Store()) {
-      return ShenandoahBarrierNode::skip_through_barrier(mem->in(MemNode::ValueIn));
+      Node* n = mem->in(MemNode::ValueIn);
+#if INCLUDE_ALL_GCS
+      if (UseShenandoahGC) {
+        n = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(n);
+      }
+#endif
+      return n;
     } else if (mem->is_Phi()) {
       // attempt to produce a Phi reflecting the values on the input paths of the Phi
       Node_Stack value_phis(a, 8);

@@ -848,9 +848,8 @@ public:
 
   void do_object(oop p) {
     shenandoah_assert_marked(NULL, p);
-    if (oopDesc::unsafe_equals(p, ShenandoahBarrierSet::resolve_forwarded_not_null(p))) {
-      bool evac;
-      _heap->evacuate_object(p, _thread, evac);
+    if (p == ShenandoahBarrierSet::resolve_forwarded_not_null(p)) {
+      _heap->evacuate_object(p, _thread);
     }
   }
 };
@@ -1949,14 +1948,12 @@ void ShenandoahHeap::unregister_nmethod(nmethod* nm) {
 }
 
 oop ShenandoahHeap::pin_object(JavaThread* thr, oop o) {
-  o = barrier_set()->write_barrier(o);
   ShenandoahHeapLocker locker(lock());
   heap_region_containing(o)->make_pinned();
   return o;
 }
 
 void ShenandoahHeap::unpin_object(JavaThread* thr, oop o) {
-  o = barrier_set()->read_barrier(o);
   ShenandoahHeapLocker locker(lock());
   heap_region_containing(o)->make_unpinned();
 }

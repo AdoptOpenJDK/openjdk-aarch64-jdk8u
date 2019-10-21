@@ -777,8 +777,6 @@ public:
                              Register tmp,
                              Register tmp2);
 
-  void shenandoah_write_barrier(Register dst);
-
 #endif // INCLUDE_ALL_GCS
 
   // split store_check(Register obj) to enhance instruction interleaving
@@ -971,8 +969,6 @@ public:
   void addptr(const Address &dst, int32_t src);
   void cmpptr(Register src1, Address src2);
 
-  void cmpoops(Register src1, Register src2);
-
   void cmpxchgptr(Register oldv, Register newv, Register addr, Register tmp,
 		  Label &suceed, Label *fail);
 
@@ -1004,8 +1000,6 @@ public:
                bool acquire, bool release,
                Register tmp = rscratch1);
 
-  void cmpxchg_oop_shenandoah(Register addr, Register expected, Register new_val,
-                              bool acquire, bool release, bool weak, bool is_cae, Register result);
   // Calls
 
   address trampoline_call(Address entry, CodeBuffer *cbuf = NULL);

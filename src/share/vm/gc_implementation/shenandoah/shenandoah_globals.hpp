@@ -230,7 +230,7 @@
           "Time is in microseconds.")                                       \
                                                                             \
   experimental(uintx, ShenandoahEvacAssist, 10,                             \
-          "How many objects to evacuate on WB assist path. "                \
+          "How many objects to evacuate on LRB assist path. "               \
           "Use zero to disable.")                                           \
                                                                             \
   experimental(bool, ShenandoahPacing, true,                                \
@@ -323,20 +323,14 @@
   diagnostic(bool, ShenandoahSATBBarrier, true,                             \
           "Turn on/off SATB barriers in Shenandoah")                        \
                                                                             \
-  diagnostic(bool, ShenandoahWriteBarrier, true,                            \
-          "Turn on/off write barriers in Shenandoah")                       \
-                                                                            \
-  diagnostic(bool, ShenandoahReadBarrier, true,                             \
-          "Turn on/off read barriers in Shenandoah")                        \
-                                                                            \
   diagnostic(bool, ShenandoahCASBarrier, true,                              \
           "Turn on/off CAS barriers in Shenandoah")                         \
                                                                             \
-  diagnostic(bool, ShenandoahAcmpBarrier, true,                             \
-          "Turn on/off acmp barriers in Shenandoah")                        \
-                                                                            \
   diagnostic(bool, ShenandoahCloneBarrier, true,                            \
           "Turn on/off clone barriers in Shenandoah")                       \
+                                                                            \
+  diagnostic(bool, ShenandoahLoadRefBarrier, true,                          \
+          "Turn on/off load-reference barriers in Shenandoah")              \
                                                                             \
   diagnostic(bool, ShenandoahStoreCheck, false,                             \
           "Emit additional code that checks objects are written to only"    \
@@ -366,9 +360,8 @@
           "Turn it off for maximum compatibility with reflection or JNI "   \
           "code that manipulates final fields.")                            \
                                                                             \
-  experimental(bool, ShenandoahDontIncreaseWBFreq, true,                    \
-          "Common 2 WriteBarriers or WriteBarrier and a ReadBarrier only "  \
-          "if the resulting WriteBarrier isn't executed more frequently")   \
+  experimental(bool, ShenandoahCommonGCStateLoads, false,                   \
+         "Enable commonming for GC state loads in generated code.")         \
                                                                             \
   develop(bool, ShenandoahVerifyOptoBarriers, false,                        \
           "Verify no missing barriers in c2")                               \

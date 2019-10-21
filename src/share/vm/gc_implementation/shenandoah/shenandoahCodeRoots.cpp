@@ -102,33 +102,6 @@ public:
   }
 };
 
-class ShenandoahNMethodOopInitializer : public OopClosure {
-public:
-  ShenandoahNMethodOopInitializer() {};
-
-private:
-  template <class T>
-  inline void do_oop_work(T* p) {
-    T o = oopDesc::load_heap_oop(p);
-    if (! oopDesc::is_null(o)) {
-      oop obj1 = oopDesc::decode_heap_oop_not_null(o);
-      oop obj2 = oopDesc::bs()->write_barrier(obj1);
-      if (! oopDesc::unsafe_equals(obj1, obj2)) {
-        shenandoah_assert_not_in_cset(NULL, obj2);
-        oopDesc::encode_store_heap_oop(p, obj2);
-      }
-    }
-  }
-
-public:
-  void do_oop(oop* o) {
-    do_oop_work(o);
-  }
-  void do_oop(narrowOop* o) {
-    do_oop_work(o);
-  }
-};
-
 ShenandoahCodeRoots::PaddedLock ShenandoahCodeRoots::_recorded_nms_lock;
 GrowableArray<ShenandoahNMethod*>* ShenandoahCodeRoots::_recorded_nms;
 
@@ -140,21 +113,13 @@ void ShenandoahCodeRoots::initialize() {
 void ShenandoahCodeRoots::add_nmethod(nmethod* nm) {
   switch (ShenandoahCodeRootsStyle) {
     case 0:
-    case 1: {
-      ShenandoahNMethodOopInitializer init;
-      nm->oops_do(&init);
-      nm->fix_oop_relocations();
+    case 1:
       break;
-    }
     case 2: {
       ShenandoahNMethodOopDetector detector;
       nm->oops_do(&detector);
 
       if (detector.has_oops()) {
-        ShenandoahNMethodOopInitializer init;
-        nm->oops_do(&init);
-        nm->fix_oop_relocations();
-
         ShenandoahNMethod* nmr = new ShenandoahNMethod(nm, detector.oops());
         nmr->assert_alive_and_correct();
 

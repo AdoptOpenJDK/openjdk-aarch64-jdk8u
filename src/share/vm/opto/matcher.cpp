@@ -34,7 +34,6 @@
 #include "opto/regmask.hpp"
 #include "opto/rootnode.hpp"
 #include "opto/runtime.hpp"
-#include "opto/shenandoahSupport.hpp"
 #include "opto/type.hpp"
 #include "opto/vectornode.hpp"
 #include "runtime/atomic.hpp"
@@ -53,6 +52,9 @@
 # include "adfiles/ad_zero.hpp"
 #elif defined TARGET_ARCH_MODEL_ppc_64
 # include "adfiles/ad_ppc_64.hpp"
+#endif
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
 #endif
 
 OptoReg::Name OptoReg::c_frame_pointer;
@@ -2165,13 +2167,6 @@ void Matcher::find_shared( Node *n ) {
       case Op_ClearArray:
       case Op_SafePoint:
         mem_op = true;
-        break;
-      case Op_ShenandoahReadBarrier:
-        if (n->in(ShenandoahBarrierNode::ValueIn)->is_DecodeNarrowPtr()) {
-          set_shared(n->in(ShenandoahBarrierNode::ValueIn)->in(1));
-        }
-        mem_op = true;
-        set_shared(n);
         break;
       default:
         if( n->is_Store() ) {

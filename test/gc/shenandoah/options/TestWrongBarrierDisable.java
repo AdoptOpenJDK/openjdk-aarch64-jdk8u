@@ -36,10 +36,8 @@ public class TestWrongBarrierDisable {
 
     public static void main(String[] args) throws Exception {
         String[] concurrent = {
-                "ShenandoahReadBarrier",
-                "ShenandoahWriteBarrier",
+                "ShenandoahLoadRefBarrier",
                 "ShenandoahCASBarrier",
-                "ShenandoahAcmpBarrier",
                 "ShenandoahCloneBarrier",
                 "ShenandoahSATBBarrier",
         };

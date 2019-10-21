@@ -73,12 +73,3 @@ void BarrierSet::static_write_ref_array_post(HeapWord* start, size_t count) {
   // simply delegate to instance method
   Universe::heap()->barrier_set()->write_ref_array(start, count);
 }
-
-bool BarrierSet::obj_equals(oop obj1, oop obj2) {
-  return oopDesc::unsafe_equals(obj1, obj2);
-}
-
-bool BarrierSet::obj_equals(narrowOop obj1, narrowOop obj2) {
-  return oopDesc::unsafe_equals(obj1, obj2);
-}
-

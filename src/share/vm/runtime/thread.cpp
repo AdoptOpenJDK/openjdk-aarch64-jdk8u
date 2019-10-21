@@ -3028,7 +3028,6 @@ const char* JavaThread::get_threadgroup_name() const {
     oop thread_group = java_lang_Thread::threadGroup(thread_obj);
     if (thread_group != NULL) {
       typeArrayOop name = java_lang_ThreadGroup::name(thread_group);
-      name = typeArrayOop(oopDesc::bs()->read_barrier(name));
       // ThreadGroup.name can be null
       if (name != NULL) {
         const char* str = UNICODE::as_utf8((jchar*) name->base(T_CHAR), name->length());
@@ -3048,7 +3047,6 @@ const char* JavaThread::get_parent_name() const {
       oop parent = java_lang_ThreadGroup::parent(thread_group);
       if (parent != NULL) {
         typeArrayOop name = java_lang_ThreadGroup::name(parent);
-        name = typeArrayOop(oopDesc::bs()->read_barrier(name));
         // ThreadGroup.name can be null
         if (name != NULL) {
           const char* str = UNICODE::as_utf8((jchar*) name->base(T_CHAR), name->length());

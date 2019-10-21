@@ -34,10 +34,6 @@
 
 #include "compiler/disassembler.hpp"
 #include "gc_interface/collectedHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/interfaceSupport.hpp"
@@ -58,6 +54,7 @@
 #include "gc_implementation/g1/g1CollectedHeap.inline.hpp"
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "gc_implementation/g1/heapRegion.hpp"
+#include "shenandoahBarrierSetAssembler_aarch64.hpp"
 #endif
 
 #ifdef COMPILER2
@@ -2212,64 +2209,6 @@ void MacroAssembler::cmpxchg(Register addr, Register expected,
   }
 }
 
-void MacroAssembler::cmpxchg_oop_shenandoah(Register addr, Register expected, Register new_val,
-                                            bool acquire, bool release, bool weak, bool is_cae,
-                                            Register result) {
-
-  Register tmp1 = rscratch1;
-  Register tmp2 = rscratch2;
-  bool is_narrow = UseCompressedOops;
-  Assembler::operand_size size = is_narrow ? Assembler::word : Assembler::xword;
-
-  assert_different_registers(addr, expected, new_val, tmp1, tmp2);
-
-  Label retry, done, fail;
-
-  // CAS, using LL/SC pair.
-  bind(retry);
-  load_exclusive(tmp1, addr, size, acquire);
-  if (is_narrow) {
-    cmpw(tmp1, expected);
-  } else {
-    cmp(tmp1, expected);
-  }
-  br(Assembler::NE, fail);
-  store_exclusive(tmp2, new_val, addr, size, release);
-  if (weak) {
-    cmpw(tmp2, 0u); // If the store fails, return NE to our caller
-  } else {
-    cbnzw(tmp2, retry);
-  }
-  b(done);
-
-   bind(fail);
-  // Check if rb(expected)==rb(tmp1)
-  // Shuffle registers so that we have memory value ready for next expected.
-  mov(tmp2, expected);
-  mov(expected, tmp1);
-  if (is_narrow) {
-    decode_heap_oop(tmp1, tmp1);
-    decode_heap_oop(tmp2, tmp2);
-  }
-  oopDesc::bs()->interpreter_read_barrier(this, tmp1);
-  oopDesc::bs()->interpreter_read_barrier(this, tmp2);
-  cmp(tmp1, tmp2);
-  // Retry with expected now being the value we just loaded from addr.
-  br(Assembler::EQ, retry);
-  if (is_cae && is_narrow) {
-    // For cmp-and-exchange and narrow oops, we need to restore
-    // the compressed old-value. We moved it to 'expected' a few lines up.
-    mov(result, expected);
-  }
-  bind(done);
-
-  if (is_cae) {
-    mov(result, tmp1);
-  } else {
-    cset(result, Assembler::EQ);
-  }
-}
-
 static bool different(Register a, RegisterOrConstant b, Register c) {
   if (b.is_constant())
     return a != c;
@@ -3186,11 +3125,6 @@ void MacroAssembler::store_check(Register obj) {
   store_check_part_2(obj);
 }
 
-void MacroAssembler::cmpoops(Register src1, Register src2) {
-  cmp(src1, src2);
-  oopDesc::bs()->asm_acmp_barrier(this, src1, src2);
-}
-
 void MacroAssembler::store_check(Register obj, Address dst) {
   store_check(obj);
 }
@@ -3537,6 +3471,12 @@ void MacroAssembler::load_heap_oop(Register dst, Address src)
   } else {
     ldr(dst, src);
   }
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    ShenandoahBarrierSetAssembler::bsasm()->load_reference_barrier(this, dst);
+  }
+#endif
 }
 
 void MacroAssembler::load_heap_oop_not_null(Register dst, Address src)
@@ -3547,6 +3487,12 @@ void MacroAssembler::load_heap_oop_not_null(Register dst, Address src)
   } else {
     ldr(dst, src);
   }
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    ShenandoahBarrierSetAssembler::bsasm()->load_reference_barrier(this, dst);
+  }
+#endif
 }
 
 void MacroAssembler::store_heap_oop(Address dst, Register src) {
@@ -3754,47 +3700,6 @@ void MacroAssembler::g1_write_barrier_post(Register store_addr,
   push(store_addr->bit(true) | new_val->bit(true), sp);
   call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::g1_wb_post), card_addr, thread);
   pop(store_addr->bit(true) | new_val->bit(true), sp);
-
-  bind(done);
-}
-
-void MacroAssembler::shenandoah_write_barrier(Register dst) {
-  assert(UseShenandoahGC && ShenandoahWriteBarrier, "Should be enabled");
-  assert(dst != rscratch1, "need rscratch1");
-  assert(dst != rscratch2, "need rscratch2");
-
-  Label done;
-
-  Address gc_state(rthread, in_bytes(JavaThread::gc_state_offset()));
-  ldrb(rscratch1, gc_state);
-
-  // Check for heap stability
-  mov(rscratch2, ShenandoahHeap::HAS_FORWARDED | ShenandoahHeap::EVACUATION);
-  tst(rscratch1, rscratch2);
-  br(Assembler::EQ, done);
-
-  // Heap is unstable, need to perform the read-barrier even if WB is inactive
-  ldr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
-
-  // Check for evacuation-in-progress and jump to WB slow-path if needed
-  mov(rscratch2, ShenandoahHeap::EVACUATION);
-  tst(rscratch1, rscratch2);
-  br(Assembler::EQ, done);
-
-  RegSet to_save = RegSet::of(r0);
-  if (dst != r0) {
-    push(to_save, sp);
-    mov(r0, dst);
-  }
-
-  assert(StubRoutines::aarch64::shenandoah_wb() != NULL, "need write barrier stub");
-  far_call(RuntimeAddress(CAST_FROM_FN_PTR(address, StubRoutines::aarch64::shenandoah_wb())));
-
-  if (dst != r0) {
-    mov(dst, r0);
-    pop(to_save, sp);
-  }
-  block_comment("} Shenandoah write barrier");
 
   bind(done);
 }
@@ -4901,7 +4806,7 @@ void MacroAssembler::char_arrays_equals(Register ary1, Register ary2,
     mov(result, false);
 
     // same array?
-    cmpoops(ary1, ary2);
+    cmp(ary1, ary2);
     br(Assembler::EQ, SAME);
 
     // ne if either null

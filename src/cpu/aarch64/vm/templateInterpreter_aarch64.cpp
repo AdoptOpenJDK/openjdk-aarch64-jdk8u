@@ -573,7 +573,6 @@ void InterpreterGenerator::lock_method(void) {
 #endif // ASSERT
 
     __ bind(done);
-    oopDesc::bs()->interpreter_write_barrier(_masm, r0);
   }
 
   // add space for monitor & lock
@@ -703,8 +702,6 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
     __ mov(r19, r13); // First call-saved register
     __ cbz(local_0, slow_path);
 
-    oopDesc::bs()->interpreter_read_barrier_not_null(_masm, local_0);
-
     // Load the value of the referent field.
     const Address field_address(local_0, referent_offset);
     __ load_heap_oop(local_0, field_address);
@@ -831,7 +828,6 @@ address InterpreterGenerator::generate_CRC32_updateBytes_entry(AbstractInterpret
       __ ldrw(crc,   Address(esp, 4*wordSize)); // Initial CRC
     } else {
       __ ldr(buf, Address(esp, 2*wordSize)); // byte[] array
-      oopDesc::bs()->interpreter_read_barrier_not_null(_masm, buf);
       __ add(buf, buf, arrayOopDesc::base_offset_in_bytes(T_BYTE)); // + header size
       __ ldrw(off, Address(esp, wordSize)); // offset
       __ add(buf, buf, off); // + offset

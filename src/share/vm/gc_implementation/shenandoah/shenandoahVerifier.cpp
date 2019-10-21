@@ -151,7 +151,7 @@ private:
 
     ShenandoahHeapRegion* fwd_reg = NULL;
 
-    if (!oopDesc::unsafe_equals(obj, fwd)) {
+    if (obj != fwd) {
       verify(ShenandoahAsserts::_safe_oop, obj, _heap->is_in(fwd),
              "Forwardee must be in heap");
       verify(ShenandoahAsserts::_safe_oop, obj, !oopDesc::is_null(fwd),
@@ -181,7 +181,7 @@ private:
              "Forwardee end should be within the region");
 
       oop fwd2 = (oop) ShenandoahBrooksPointer::get_raw_unchecked(fwd);
-      verify(ShenandoahAsserts::_safe_oop, obj, oopDesc::unsafe_equals(fwd, fwd2),
+      verify(ShenandoahAsserts::_safe_oop, obj, fwd == fwd2,
              "Double forwarding");
     } else {
       fwd_reg = obj_reg;
@@ -209,12 +209,12 @@ private:
         // skip
         break;
       case ShenandoahVerifier::_verify_forwarded_none: {
-        verify(ShenandoahAsserts::_safe_all, obj, oopDesc::unsafe_equals(obj, fwd),
+        verify(ShenandoahAsserts::_safe_all, obj, obj == fwd,
                "Should not be forwarded");
         break;
       }
       case ShenandoahVerifier::_verify_forwarded_allow: {
-        if (!oopDesc::unsafe_equals(obj, fwd)) {
+        if (obj != fwd) {
           verify(ShenandoahAsserts::_safe_all, obj, obj_reg != fwd_reg,
                  "Forwardee should be in another region");
         }
@@ -234,7 +234,7 @@ private:
         break;
       case ShenandoahVerifier::_verify_cset_forwarded:
         if (_heap->in_collection_set(obj)) {
-          verify(ShenandoahAsserts::_safe_all, obj, !oopDesc::unsafe_equals(obj, fwd),
+          verify(ShenandoahAsserts::_safe_all, obj, obj != fwd,
                  "Object in collection set, should have forwardee");
         }
         break;

@@ -25,10 +25,19 @@
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "runtime/interfaceSupport.hpp"
+
+#ifdef TARGET_ARCH_aarch64
+#include "shenandoahBarrierSetAssembler_aarch64.hpp"
+#endif
+#ifdef TARGET_ARCH_x86
+#include "shenandoahBarrierSetAssembler_x86.hpp"
+#endif
 
 class ShenandoahUpdateRefsForOopClosure: public ExtendedOopClosure {
 private:
@@ -49,9 +58,24 @@ public:
 
 ShenandoahBarrierSet::ShenandoahBarrierSet(ShenandoahHeap* heap) :
   BarrierSet(),
-  _heap(heap)
+  _heap(heap),
+  _bsasm(new ShenandoahBarrierSetAssembler()),
+  _bsc1(new ShenandoahBarrierSetC1()),
+  _bsc2(new ShenandoahBarrierSetC2())
 {
   _kind = BarrierSet::ShenandoahBarrierSet;
+}
+
+ShenandoahBarrierSetAssembler* ShenandoahBarrierSet::bsasm() const {
+  return _bsasm;
+}
+
+ShenandoahBarrierSetC1* ShenandoahBarrierSet::bsc1() const {
+  return _bsc1;
+}
+
+ShenandoahBarrierSetC2* ShenandoahBarrierSet::bsc2() const {
+  return _bsc2;
 }
 
 void ShenandoahBarrierSet::print_on(outputStream* st) const {
@@ -218,55 +242,35 @@ void ShenandoahBarrierSet::write_region_work(MemRegion mr) {
   obj->oop_iterate(&cl);
 }
 
-oop ShenandoahBarrierSet::read_barrier(oop src) {
-  // Check for forwarded objects, because on Full GC path we might deal with
-  // non-trivial fwdptrs that contain Full GC specific metadata. We could check
-  // for is_full_gc_in_progress(), but this also covers the case of stable heap,
-  // which provides a bit of performance improvement.
-  if (ShenandoahReadBarrier && _heap->has_forwarded_objects()) {
-    return ShenandoahBarrierSet::resolve_forwarded(src);
+oop ShenandoahBarrierSet::load_reference_barrier_not_null(oop obj) {
+  assert(obj != NULL, "");
+  if (ShenandoahLoadRefBarrier && _heap->has_forwarded_objects()) {
+    return load_reference_barrier_impl(obj);
   } else {
-    return src;
+    return obj;
   }
 }
 
-bool ShenandoahBarrierSet::obj_equals(oop obj1, oop obj2) {
-  bool eq = oopDesc::unsafe_equals(obj1, obj2);
-  if (! eq && ShenandoahAcmpBarrier) {
-    OrderAccess::loadload();
-    obj1 = resolve_forwarded(obj1);
-    obj2 = resolve_forwarded(obj2);
-    eq = oopDesc::unsafe_equals(obj1, obj2);
+oop ShenandoahBarrierSet::load_reference_barrier(oop obj) {
+  if (obj != NULL) {
+    return load_reference_barrier_not_null(obj);
+  } else {
+    return obj;
   }
-  return eq;
 }
 
-bool ShenandoahBarrierSet::obj_equals(narrowOop obj1, narrowOop obj2) {
-  return obj_equals(oopDesc::decode_heap_oop(obj1), oopDesc::decode_heap_oop(obj2));
-}
 
-JRT_LEAF(oopDesc*, ShenandoahBarrierSet::write_barrier_JRT(oopDesc* src))
-  oop result = ShenandoahBarrierSet::barrier_set()->write_barrier_mutator(src);
-  return (oopDesc*) result;
-JRT_END
-
-IRT_LEAF(oopDesc*, ShenandoahBarrierSet::write_barrier_IRT(oopDesc* src))
-  oop result = ShenandoahBarrierSet::barrier_set()->write_barrier_mutator(src);
-  return (oopDesc*) result;
-IRT_END
-
-oop ShenandoahBarrierSet::write_barrier_mutator(oop obj) {
-  assert(UseShenandoahGC && ShenandoahWriteBarrier, "should be enabled");
+oop ShenandoahBarrierSet::load_reference_barrier_mutator(oop obj) {
+  assert(ShenandoahLoadRefBarrier, "should be enabled");
   assert(_heap->is_gc_in_progress_mask(ShenandoahHeap::EVACUATION), "evac should be in progress");
   shenandoah_assert_in_cset(NULL, obj);
 
   oop fwd = resolve_forwarded_not_null(obj);
-  if (oopDesc::unsafe_equals(obj, fwd)) {
+  if (obj == fwd) {
     ShenandoahEvacOOMScope oom_evac_scope;
-    bool evac;
 
     Thread* thread = Thread::current();
-    oop res_oop = _heap->evacuate_object(obj, thread, evac);
+    oop res_oop = _heap->evacuate_object(obj, thread);
 
     // Since we are already here and paid the price of getting through runtime call adapters
     // and acquiring oom-scope, it makes sense to try and evacuate more adjacent objects,
@@ -288,8 +292,8 @@ oop ShenandoahBarrierSet::write_barrier_mutator(oop obj) {
       size_t count = 0;
       while ((cur < r->top()) && ctx->is_marked(oop(cur)) && (count++ < max)) {
         oop cur_oop = oop(cur);
-        if (oopDesc::unsafe_equals(cur_oop, resolve_forwarded_not_null(cur_oop))) {
-          _heap->evacuate_object(cur_oop, thread, evac);
+        if (cur_oop == resolve_forwarded_not_null(cur_oop)) {
+          _heap->evacuate_object(cur_oop, thread);
         }
         cur = cur + cur_oop->size() + ShenandoahBrooksPointer::word_size();
       }
@@ -300,28 +304,27 @@ oop ShenandoahBarrierSet::write_barrier_mutator(oop obj) {
   return fwd;
 }
 
-oop ShenandoahBarrierSet::write_barrier(oop obj) {
-  if (ShenandoahWriteBarrier && _heap->has_forwarded_objects()) {
-    if (!oopDesc::is_null(obj)) {
-      bool evac_in_progress = _heap->is_evacuation_in_progress();
-      oop fwd = resolve_forwarded_not_null(obj);
-      if (evac_in_progress &&
-          _heap->in_collection_set(obj) &&
-          oopDesc::unsafe_equals(obj, fwd)) {
-        Thread *t = Thread::current();
-        bool evac;
-        if (t->is_Worker_thread()) {
-          return _heap->evacuate_object(obj, t, evac);
-        } else {
-          ShenandoahEvacOOMScope oom_evac_scope;
-          return _heap->evacuate_object(obj, t, evac);
-        }
+oop ShenandoahBarrierSet::load_reference_barrier_impl(oop obj) {
+  assert(ShenandoahLoadRefBarrier, "should be enabled");
+  if (!oopDesc::is_null(obj)) {
+    bool evac_in_progress = _heap->is_gc_in_progress_mask(ShenandoahHeap::EVACUATION);
+    oop fwd = resolve_forwarded_not_null(obj);
+    if (evac_in_progress &&
+        _heap->in_collection_set(obj) &&
+        obj == fwd) {
+      Thread *t = Thread::current();
+      if (t->is_GC_task_thread()) {
+        return _heap->evacuate_object(obj, t);
       } else {
-        return fwd;
+        ShenandoahEvacOOMScope oom_evac_scope;
+        return _heap->evacuate_object(obj, t);
       }
+    } else {
+      return fwd;
     }
+  } else {
+    return obj;
   }
-  return obj;
 }
 
 void ShenandoahBarrierSet::enqueue(oop obj) {
@@ -331,4 +334,35 @@ void ShenandoahBarrierSet::enqueue(oop obj) {
   if (!_heap->requires_marking(obj)) return;
 
   G1SATBCardTableModRefBS::enqueue(obj);
+}
+
+oop ShenandoahBarrierSet::atomic_compare_exchange_oop(oop exchange_value,
+                                                      volatile HeapWord *dest,
+                                                      oop compare_value) {
+  if (UseCompressedOops) {
+    // encode exchange and compare value from oop to T
+    narrowOop val = oopDesc::encode_heap_oop(exchange_value);
+    narrowOop cmp = oopDesc::encode_heap_oop(compare_value);
+
+    narrowOop old = (narrowOop) Atomic::cmpxchg(val, (narrowOop*)dest, cmp);
+    // decode old from T to oop
+    return oopDesc::decode_heap_oop(old);
+  } else {
+    return (oop)Atomic::cmpxchg_ptr(exchange_value, (oop*)dest, compare_value);
+  }
+}
+
+oop ShenandoahBarrierSet::oop_atomic_cmpxchg_in_heap(oop new_value, volatile HeapWord* dest, oop compare_value) {
+  oop expected;
+  bool success;
+  do {
+    expected = compare_value;
+    compare_value = atomic_compare_exchange_oop(new_value, dest, expected);
+    success = (compare_value == expected);
+  } while ((! success) && resolve_forwarded(compare_value) == resolve_forwarded(expected));
+  oop result = load_reference_barrier(compare_value);
+  if (ShenandoahSATBBarrier && success && result != NULL) {
+    enqueue(result);
+  }
+  return result;
 }

@@ -1731,10 +1731,7 @@ void Arguments::set_shenandoah_gc_flags() {
   FLAG_SET_DEFAULT(ShenandoahGCHeuristics,           "passive");
 
   FLAG_SET_DEFAULT(ShenandoahSATBBarrier,            false);
-  FLAG_SET_DEFAULT(ShenandoahWriteBarrier,           false);
-  FLAG_SET_DEFAULT(ShenandoahReadBarrier,            false);
   FLAG_SET_DEFAULT(ShenandoahCASBarrier,             false);
-  FLAG_SET_DEFAULT(ShenandoahAcmpBarrier,            false);
   FLAG_SET_DEFAULT(ShenandoahCloneBarrier,           false);
 #endif
 #endif
@@ -1806,10 +1803,7 @@ void Arguments::set_shenandoah_gc_flags() {
   // C2 barrier verification is only reliable when all default barriers are enabled
   if (ShenandoahVerifyOptoBarriers &&
           (!FLAG_IS_DEFAULT(ShenandoahSATBBarrier)    ||
-           !FLAG_IS_DEFAULT(ShenandoahReadBarrier)    ||
-           !FLAG_IS_DEFAULT(ShenandoahWriteBarrier)   ||
            !FLAG_IS_DEFAULT(ShenandoahCASBarrier)     ||
-           !FLAG_IS_DEFAULT(ShenandoahAcmpBarrier)    ||
            !FLAG_IS_DEFAULT(ShenandoahCloneBarrier)
           )) {
     warning("Unusual barrier configuration, disabling C2 barrier verification");
@@ -1853,13 +1847,6 @@ void Arguments::set_shenandoah_gc_flags() {
     }
     FLAG_SET_DEFAULT(ClassUnloadingWithConcurrentMark, false);
   }
-
-  // JNI fast get field stuff is not currently supported by Shenandoah.
-  // It would introduce another heap memory access for reading the forwarding
-  // pointer, which would have to be guarded by the signal handler machinery.
-  // See:
-  // http://mail.openjdk.java.net/pipermail/hotspot-dev/2018-June/032763.html
-  FLAG_SET_DEFAULT(UseFastJNIAccessors, false);
 
   // TLAB sizing policy makes resizing decisions before each GC cycle. It averages
   // historical data, assigning more recent data the weight according to TLABAllocationWeight.

@@ -123,7 +123,7 @@ inline oop ShenandoahHeap::maybe_update_with_forwarded_not_null(T* p, oop heap_o
     // reference be updated later.
     oop result = atomic_compare_exchange_oop(forwarded_oop, p, heap_oop);
 
-    if (oopDesc::unsafe_equals(result, heap_oop)) { // CAS successful.
+    if (result == heap_oop) { // CAS successful.
       return forwarded_oop;
     } else {
       // Note: we used to assert the following here. This doesn't work because sometimes, during
@@ -132,7 +132,7 @@ inline oop ShenandoahHeap::maybe_update_with_forwarded_not_null(T* p, oop heap_o
       // updates all from-space refs to to-space refs, which leaves a short window where the new array
       // elements can be from-space.
       // assert(oopDesc::is_null(result) ||
-      //        oopDesc::unsafe_equals(result, ShenandoahBarrierSet::resolve_oop_static_not_null(result)),
+      //        result == ShenandoahBarrierSet::resolve_oop_static_not_null(result),
       //       "expect not forwarded");
       return NULL;
     }
@@ -172,9 +172,7 @@ inline HeapWord* ShenandoahHeap::allocate_from_gclab(Thread* thread, size_t size
   return allocate_from_gclab_slow(thread, size);
 }
 
-inline oop ShenandoahHeap::evacuate_object(oop p, Thread* thread, bool& evacuated) {
-  evacuated = false;
-
+inline oop ShenandoahHeap::evacuate_object(oop p, Thread* thread) {
   if (Thread::current()->is_oom_during_evac()) {
     // This thread went through the OOM during evac protocol and it is safe to return
     // the forward pointer. It must not attempt to evacuate any more.
@@ -227,9 +225,8 @@ inline oop ShenandoahHeap::evacuate_object(oop p, Thread* thread, bool& evacuate
   // Try to install the new forwarding pointer.
   oop result = ShenandoahBrooksPointer::try_update_forwardee(p, copy_val);
 
-  if (oopDesc::unsafe_equals(result, p)) {
+  if (result == p) {
     // Successfully evacuated. Our copy is now the public one!
-    evacuated = true;
     shenandoah_assert_correct(NULL, copy_val);
     return copy_val;
   }  else {

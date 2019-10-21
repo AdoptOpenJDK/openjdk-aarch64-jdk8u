@@ -27,6 +27,7 @@
 #include "utilities/macros.hpp"
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
 #endif // INCLUDE_ALL_GCS
 #include "memory/allocation.inline.hpp"
 #include "prims/jni.h"
@@ -167,17 +168,14 @@ jint Unsafe_invocation_key_to_method_slot(jint key) {
 
 #define GET_FIELD(obj, offset, type_name, v) \
   oop p = JNIHandles::resolve(obj); \
-  p = oopDesc::bs()->read_barrier(p); \
   type_name v = *(type_name*)index_oop_from_field_offset_long(p, offset)
 
 #define SET_FIELD(obj, offset, type_name, x) \
   oop p = JNIHandles::resolve(obj); \
-  p = oopDesc::bs()->write_barrier(p); \
   *(type_name*)index_oop_from_field_offset_long(p, offset) = truncate_##type_name(x)
 
 #define GET_FIELD_VOLATILE(obj, offset, type_name, v) \
   oop p = JNIHandles::resolve(obj); \
-  p = oopDesc::bs()->read_barrier(p); \
   if (support_IRIW_for_not_multiple_copy_atomic_cpu) { \
     OrderAccess::fence(); \
   } \
@@ -185,14 +183,12 @@ jint Unsafe_invocation_key_to_method_slot(jint key) {
 
 #define SET_FIELD_VOLATILE(obj, offset, type_name, x) \
   oop p = JNIHandles::resolve(obj); \
-  p = oopDesc::bs()->write_barrier(p); \
   OrderAccess::release_store_fence((volatile type_name*)index_oop_from_field_offset_long(p, offset), truncate_##type_name(x));
 
 // Macros for oops that check UseCompressedOops
 
 #define GET_OOP_FIELD(obj, offset, v) \
   oop p = JNIHandles::resolve(obj);   \
-  p = oopDesc::bs()->read_barrier(p); \
   oop v;                              \
   if (UseCompressedOops) {            \
     narrowOop n = *(narrowOop*)index_oop_from_field_offset_long(p, offset); \
@@ -200,7 +196,6 @@ jint Unsafe_invocation_key_to_method_slot(jint key) {
   } else {                            \
     v = *(oop*)index_oop_from_field_offset_long(p, offset);                 \
   }
-
 
 // Get/SetObject must be special-cased, since it works with handles.
 
@@ -235,6 +230,12 @@ UNSAFE_ENTRY(jobject, Unsafe_GetObject140(JNIEnv *env, jobject unsafe, jobject o
   if (obj == NULL)  THROW_0(vmSymbols::java_lang_NullPointerException());
   GET_OOP_FIELD(obj, offset, v)
 
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    v = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(v);
+  }
+#endif
+
   ensure_satb_referent_alive(p, offset, v);
 
   return JNIHandles::make_local(env, v);
@@ -243,9 +244,9 @@ UNSAFE_END
 UNSAFE_ENTRY(void, Unsafe_SetObject140(JNIEnv *env, jobject unsafe, jobject obj, jint offset, jobject x_h))
   UnsafeWrapper("Unsafe_SetObject");
   if (obj == NULL)  THROW(vmSymbols::java_lang_NullPointerException());
-  oop x = oopDesc::bs()->read_barrier(JNIHandles::resolve(x_h));
+  oop x = JNIHandles::resolve(x_h);
   //SET_FIELD(obj, offset, oop, x);
-  oop p = oopDesc::bs()->write_barrier(JNIHandles::resolve(obj));
+  oop p = JNIHandles::resolve(obj);
   if (UseCompressedOops) {
     if (x != NULL) {
       // If there is a heap base pointer, we are obliged to emit a store barrier.
@@ -271,6 +272,12 @@ UNSAFE_ENTRY(jobject, Unsafe_GetObject(JNIEnv *env, jobject unsafe, jobject obj,
   UnsafeWrapper("Unsafe_GetObject");
   GET_OOP_FIELD(obj, offset, v)
 
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    v = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(v);
+  }
+#endif
+
   ensure_satb_referent_alive(p, offset, v);
 
   return JNIHandles::make_local(env, v);
@@ -278,8 +285,8 @@ UNSAFE_END
 
 UNSAFE_ENTRY(void, Unsafe_SetObject(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jobject x_h))
   UnsafeWrapper("Unsafe_SetObject");
-  oop x = oopDesc::bs()->read_barrier(JNIHandles::resolve(x_h));
-  oop p = oopDesc::bs()->write_barrier(JNIHandles::resolve(obj));
+  oop x = JNIHandles::resolve(x_h);
+  oop p = JNIHandles::resolve(obj);
   if (UseCompressedOops) {
     oop_store((narrowOop*)index_oop_from_field_offset_long(p, offset), x);
   } else {
@@ -290,7 +297,6 @@ UNSAFE_END
 UNSAFE_ENTRY(jobject, Unsafe_GetObjectVolatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset))
   UnsafeWrapper("Unsafe_GetObjectVolatile");
   oop p = JNIHandles::resolve(obj);
-  p = oopDesc::bs()->read_barrier(p);
   void* addr = index_oop_from_field_offset_long(p, offset);
   volatile oop v;
   if (UseCompressedOops) {
@@ -299,6 +305,12 @@ UNSAFE_ENTRY(jobject, Unsafe_GetObjectVolatile(JNIEnv *env, jobject unsafe, jobj
   } else {
     (void)const_cast<oop&>(v = *(volatile oop*) addr);
   }
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    (void)const_cast<oop&>(v = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(v));
+  }
+#endif
 
   ensure_satb_referent_alive(p, offset, v);
 
@@ -310,8 +322,6 @@ UNSAFE_ENTRY(void, Unsafe_SetObjectVolatile(JNIEnv *env, jobject unsafe, jobject
   UnsafeWrapper("Unsafe_SetObjectVolatile");
   oop x = JNIHandles::resolve(x_h);
   oop p = JNIHandles::resolve(obj);
-  x = oopDesc::bs()->read_barrier(x);
-  p = oopDesc::bs()->write_barrier(p);
   void* addr = index_oop_from_field_offset_long(p, offset);
   OrderAccess::release();
   if (UseCompressedOops) {
@@ -360,7 +370,7 @@ UNSAFE_ENTRY(jlong, Unsafe_GetLongVolatile(JNIEnv *env, jobject unsafe, jobject 
     }
     else {
       Handle p (THREAD, JNIHandles::resolve(obj));
-      jlong* addr = (jlong*)(index_oop_from_field_offset_long(oopDesc::bs()->read_barrier(p()), offset));
+      jlong* addr = (jlong*)(index_oop_from_field_offset_long(p(), offset));
       MutexLockerEx mu(UnsafeJlong_lock, Mutex::_no_safepoint_check_flag);
       jlong value = Atomic::load(addr);
       return value;
@@ -376,7 +386,7 @@ UNSAFE_ENTRY(void, Unsafe_SetLongVolatile(JNIEnv *env, jobject unsafe, jobject o
     }
     else {
       Handle p (THREAD, JNIHandles::resolve(obj));
-      jlong* addr = (jlong*)(index_oop_from_field_offset_long(oopDesc::bs()->write_barrier(p()), offset));
+      jlong* addr = (jlong*)(index_oop_from_field_offset_long(p(), offset));
       MutexLockerEx mu(UnsafeJlong_lock, Mutex::_no_safepoint_check_flag);
       Atomic::store(x, addr);
     }
@@ -464,8 +474,6 @@ UNSAFE_ENTRY(void, Unsafe_SetOrderedObject(JNIEnv *env, jobject unsafe, jobject 
   UnsafeWrapper("Unsafe_SetOrderedObject");
   oop x = JNIHandles::resolve(x_h);
   oop p = JNIHandles::resolve(obj);
-  x = oopDesc::bs()->read_barrier(x);
-  p = oopDesc::bs()->write_barrier(p);
   void* addr = index_oop_from_field_offset_long(p, offset);
   OrderAccess::release();
   if (UseCompressedOops) {
@@ -488,7 +496,7 @@ UNSAFE_ENTRY(void, Unsafe_SetOrderedLong(JNIEnv *env, jobject unsafe, jobject ob
     }
     else {
       Handle p (THREAD, JNIHandles::resolve(obj));
-      jlong* addr = (jlong*)(index_oop_from_field_offset_long(oopDesc::bs()->write_barrier(p()), offset));
+      jlong* addr = (jlong*)(index_oop_from_field_offset_long(p(), offset));
       MutexLockerEx mu(UnsafeJlong_lock, Mutex::_no_safepoint_check_flag);
       Atomic::store(x, addr);
     }
@@ -676,7 +684,6 @@ UNSAFE_ENTRY(void, Unsafe_SetMemory2(JNIEnv *env, jobject unsafe, jobject obj, j
     THROW(vmSymbols::java_lang_IllegalArgumentException());
   }
   oop base = JNIHandles::resolve(obj);
-  base = oopDesc::bs()->write_barrier(base);
   void* p = index_oop_from_field_offset_long(base, offset);
   Copy::fill_to_memory_atomic(p, sz, value);
 UNSAFE_END
@@ -706,8 +713,6 @@ UNSAFE_ENTRY(void, Unsafe_CopyMemory2(JNIEnv *env, jobject unsafe, jobject srcOb
   }
   oop srcp = JNIHandles::resolve(srcObj);
   oop dstp = JNIHandles::resolve(dstObj);
-  srcp = oopDesc::bs()->read_barrier(srcp);
-  dstp = oopDesc::bs()->write_barrier(dstp);
   if (dstp != NULL && !dstp->is_typeArray()) {
     // NYI:  This works only for non-oop arrays at present.
     // Generalizing it would be reasonable, but requires card marking.
@@ -1215,45 +1220,24 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapObject(JNIEnv *env, jobject unsafe, 
   oop x = JNIHandles::resolve(x_h);
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
-
-  p = oopDesc::bs()->write_barrier(p);
-  x = oopDesc::bs()->read_barrier(x);
-
   HeapWord* addr = (HeapWord *)index_oop_from_field_offset_long(p, offset);
-  jboolean success;
-#if INCLUDE_ALL_GCS
-  if (UseShenandoahGC && ShenandoahCASBarrier) {
-    oop expected;
-    do {
-      expected = e;
-      e = oopDesc::atomic_compare_exchange_oop(x, addr, expected, true);
-      success  = oopDesc::unsafe_equals(e, expected);
-    } while ((! success) && oopDesc::unsafe_equals(oopDesc::bs()->read_barrier(e), oopDesc::bs()->read_barrier(expected)));
-  } else
-#endif
-  {
-    success = oopDesc::unsafe_equals(e, oopDesc::atomic_compare_exchange_oop(x, addr, e, true));
-  }
-  if (! success) {
-    return false;
-  }
-
-  update_barrier_set((void*)addr, x);
-
-  return true;
+  oop res = oopDesc::atomic_compare_exchange_oop(x, addr, e, true);
+  jboolean success  = (res == e);
+  if (success)
+    update_barrier_set((void*)addr, x);
+  return success;
 UNSAFE_END
 
 UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapInt(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jint e, jint x))
   UnsafeWrapper("Unsafe_CompareAndSwapInt");
-  // We are about to write to this entry so check to see if we need to copy it.
-  oop p = oopDesc::bs()->write_barrier(JNIHandles::resolve(obj));
+  oop p = JNIHandles::resolve(obj);
   jint* addr = (jint *) index_oop_from_field_offset_long(p, offset);
   return (jint)(Atomic::cmpxchg(x, addr, e)) == e;
 UNSAFE_END
 
 UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapLong(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jlong e, jlong x))
   UnsafeWrapper("Unsafe_CompareAndSwapLong");
-  Handle p (THREAD, oopDesc::bs()->write_barrier(JNIHandles::resolve(obj)));
+  Handle p (THREAD, JNIHandles::resolve(obj));
   jlong* addr = (jlong*)(index_oop_from_field_offset_long(p(), offset));
 #ifdef SUPPORTS_NATIVE_CX8
   return (jlong)(Atomic::cmpxchg(x, addr, e)) == e;
