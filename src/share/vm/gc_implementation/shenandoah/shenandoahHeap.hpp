@@ -513,6 +513,9 @@ public:
   oop pin_object(JavaThread* thread, oop obj);
   void unpin_object(JavaThread* thread, oop obj);
 
+  void sync_pinned_region_status();
+  void assert_pinned_region_status() NOT_DEBUG_RETURN;
+
 // ---------- Allocation support
 //
 private:

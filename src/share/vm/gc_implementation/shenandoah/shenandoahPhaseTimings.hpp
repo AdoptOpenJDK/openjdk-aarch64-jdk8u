@@ -96,6 +96,7 @@ class outputStream;
   f(purge_string_dedup,                             "    String Dedup")                 \
   f(complete_liveness,                              "  Complete Liveness")              \
   f(retire_tlabs,                                   "  Retire TLABs")                   \
+  f(sync_pinned,                                    "  Sync Pinned")                    \
   f(trash_cset,                                     "  Trash CSet")                     \
   f(prepare_evac,                                   "  Prepare Evacuation")             \
                                                                                         \
@@ -146,6 +147,7 @@ class outputStream;
   f(final_update_refs_string_dedup_roots,            "    UR: String Dedup Roots")      \
   f(final_update_refs_finish_queues,                 "    UR: Finish Queues")           \
                                                                                         \
+  f(final_update_refs_sync_pinned,                   "  Sync Pinned")                   \
   f(final_update_refs_trash_cset,                    "  Trash CSet")                    \
                                                                                         \
   f(degen_gc_gross,                                  "Pause Degenerated GC (G)")        \

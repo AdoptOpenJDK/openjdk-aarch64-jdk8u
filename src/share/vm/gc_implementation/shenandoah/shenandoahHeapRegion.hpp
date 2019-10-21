@@ -195,6 +195,10 @@ public:
   RegionState state()              const { return _state; }
   int  state_ordinal()             const { return region_state_to_ordinal(_state); }
 
+  void record_pin();
+  void record_unpin();
+  size_t pin_count() const;
+
 private:
   static size_t RegionCount;
   static size_t RegionSizeBytes;
@@ -215,7 +219,6 @@ private:
 
   // Rarely updated fields
   HeapWord* _new_top;
-  size_t _critical_pins;
   double _empty_time;
 
   // Seldom updated fields
@@ -227,6 +230,7 @@ private:
   size_t _shared_allocs;
 
   volatile jint _live_data;
+  volatile jint _critical_pins;
 
   // Claim some space at the end to protect next region
   char _pad0[DEFAULT_CACHE_LINE_SIZE];
