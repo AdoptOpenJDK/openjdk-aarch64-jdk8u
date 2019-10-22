@@ -189,7 +189,6 @@ void ShenandoahHeapRegion::make_pinned() {
     case _pinned_humongous_start:
       return;
     case _cset:
-      guarantee(_heap->cancelled_gc(), "only valid when evac has been cancelled");
       _state = _pinned_cset;
       return;
     default:
@@ -209,7 +208,6 @@ void ShenandoahHeapRegion::make_unpinned() {
     case _humongous_start:
       return;
     case _pinned_cset:
-      guarantee(_heap->cancelled_gc(), "only valid when evac has been cancelled");
       _state = _cset;
       return;
     case _pinned_humongous_start:
