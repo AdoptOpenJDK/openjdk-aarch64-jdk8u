@@ -487,6 +487,9 @@ void ShenandoahConcurrentMark::finish_mark_from_roots(bool full_gc) {
 
   assert(task_queues()->is_empty(), "Should be empty");
 
+  // Marking is completed, deactivate SATB barrier if it is active
+  _heap->complete_marking();
+
   // When we're done marking everything, we process weak references.
   // It is not obvious, but reference processing actually calls
   // JNIHandle::weak_oops_do() to cleanup JNI and JVMTI weak oops.

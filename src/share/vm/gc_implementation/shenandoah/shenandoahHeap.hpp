@@ -651,7 +651,7 @@ public:
 
   void trash_humongous_region_at(ShenandoahHeapRegion *r);
 
-  void stop_concurrent_marking();
+  void complete_marking();
 
 private:
   void trash_cset_regions();

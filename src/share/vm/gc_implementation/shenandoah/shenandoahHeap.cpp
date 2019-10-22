@@ -1465,8 +1465,6 @@ void ShenandoahHeap::op_final_mark() {
 
     TASKQUEUE_STATS_ONLY(concurrent_mark()->task_queues()->print_taskqueue_stats());
 
-    stop_concurrent_marking();
-
     {
       ShenandoahGCPhase phase(ShenandoahPhaseTimings::final_update_region_states);
       ShenandoahFinalMarkUpdateRegionStateClosure cl;
@@ -1531,7 +1529,7 @@ void ShenandoahHeap::op_final_mark() {
 
   } else {
     concurrent_mark()->cancel();
-    stop_concurrent_marking();
+    complete_marking();
 
     if (process_references()) {
       // Abandon reference processing right away: pre-cleaning must have failed.
@@ -1761,9 +1759,11 @@ void ShenandoahHeap::op_degenerated_futile() {
   op_full(GCCause::_shenandoah_upgrade_to_full_gc);
 }
 
-void ShenandoahHeap::stop_concurrent_marking() {
-  assert(is_concurrent_mark_in_progress(), "How else could we get here?");
-  set_concurrent_mark_in_progress(false);
+void ShenandoahHeap::complete_marking() {
+  if (is_concurrent_mark_in_progress()) {
+    set_concurrent_mark_in_progress(false);
+  }
+
   if (!cancelled_gc()) {
     // If we needed to update refs, and concurrent marking has been cancelled,
     // we need to finish updating references.
