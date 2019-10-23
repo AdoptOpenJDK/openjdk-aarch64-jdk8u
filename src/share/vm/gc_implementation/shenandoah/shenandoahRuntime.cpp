@@ -29,12 +29,14 @@
 
 void ShenandoahRuntime::write_ref_array_pre_oop_entry(oop* dst, size_t length) {
   ShenandoahBarrierSet *bs = ShenandoahBarrierSet::barrier_set();
-  bs->write_ref_array_pre(dst, length, false);
+  assert(length <= INT_MAX, err_msg("sanity: " SIZE_FORMAT, length));
+  bs->write_ref_array_pre(dst, (int)length, false);
 }
 
 void ShenandoahRuntime::write_ref_array_pre_narrow_oop_entry(narrowOop* dst, size_t length) {
   ShenandoahBarrierSet *bs = ShenandoahBarrierSet::barrier_set();
-  bs->write_ref_array_pre(dst, length, false);
+  assert(length <= INT_MAX, err_msg("sanity: " SIZE_FORMAT, length));
+  bs->write_ref_array_pre(dst, (int)length, false);
 }
 
 void ShenandoahRuntime::write_ref_array_post_entry(HeapWord* dst, size_t length) {
