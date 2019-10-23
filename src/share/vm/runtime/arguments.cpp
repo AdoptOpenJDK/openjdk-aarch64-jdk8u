@@ -1796,9 +1796,10 @@ void Arguments::set_shenandoah_gc_flags() {
 #ifdef COMPILER2
   // Shenandoah cares more about pause times, rather than raw throughput.
   // Enabling safepoints in counted loops makes it more responsive with
-  // long loops.
-  if (FLAG_IS_DEFAULT(UseCountedLoopSafepoints)) {
-    FLAG_SET_DEFAULT(UseCountedLoopSafepoints, true);
+  // long loops. However, it is risky in 8u, due to bugs it brings, for
+  // example JDK-8176506. Warn user about this, and proceed.
+  if (UseCountedLoopSafepoints) {
+    warning("Enabling -XX:UseCountedLoopSafepoints is known to cause JVM bugs. Use at your own risk.");
   }
 
 #ifdef ASSERT
