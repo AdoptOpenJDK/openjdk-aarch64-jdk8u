@@ -41,8 +41,6 @@ private:
 
   void load_reference_barrier_not_null(MacroAssembler* masm, Register dst);
 
-  void save_vector_registers(MacroAssembler* masm);
-  void restore_vector_registers(MacroAssembler* masm);
 public:
   static ShenandoahBarrierSetAssembler* bsasm();
 

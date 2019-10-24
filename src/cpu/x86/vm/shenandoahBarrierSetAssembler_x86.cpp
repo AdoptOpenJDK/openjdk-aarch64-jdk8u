@@ -64,7 +64,7 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembl
   __ jcc(Assembler::zero, done);
 
   {
-    //__ movq(Address(rsp, -5 * wordSize), rsp);
+    __ save_vector_registers();
 
     __ subq(rsp, 16 * wordSize);
 
@@ -107,6 +107,8 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembl
       __ movq(rax, Address(rsp, 15 * wordSize));
     }
     __ addq(rsp, 16 * wordSize);
+
+    __ restore_vector_registers();
   }
   __ bind(done);
 #else
@@ -219,14 +221,6 @@ void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm,
   }
 }
 #endif // LP64
-
-void ShenandoahBarrierSetAssembler::save_vector_registers(MacroAssembler* masm) {
-  //__ push_FPU_state();
-}
-
-void ShenandoahBarrierSetAssembler::restore_vector_registers(MacroAssembler* masm) {
-  //__ pop_FPU_state();
-}
 
 #undef __
 
