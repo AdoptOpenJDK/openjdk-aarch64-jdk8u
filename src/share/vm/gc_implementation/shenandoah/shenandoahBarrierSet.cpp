@@ -25,18 +25,25 @@
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "runtime/interfaceSupport.hpp"
+#include "utilities/macros.hpp"
 
-#ifdef TARGET_ARCH_aarch64
-#include "shenandoahBarrierSetAssembler_aarch64.hpp"
+#ifdef COMPILER1
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
 #endif
-#ifdef TARGET_ARCH_x86
+#ifdef COMPILER2
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#endif
+
+#if defined(TARGET_ARCH_aarch64)
+#include "shenandoahBarrierSetAssembler_aarch64.hpp"
+#elif defined(TARGET_ARCH_x86)
 #include "shenandoahBarrierSetAssembler_x86.hpp"
+#else
+#include "shenandoahBarrierSetAssembler_stub.hpp"
 #endif
 
 class ShenandoahUpdateRefsForOopClosure: public ExtendedOopClosure {
@@ -60,8 +67,8 @@ ShenandoahBarrierSet::ShenandoahBarrierSet(ShenandoahHeap* heap) :
   BarrierSet(),
   _heap(heap),
   _bsasm(new ShenandoahBarrierSetAssembler()),
-  _bsc1(new ShenandoahBarrierSetC1()),
-  _bsc2(new ShenandoahBarrierSetC2())
+  _bsc1(COMPILER1_PRESENT(new ShenandoahBarrierSetC1()) NOT_COMPILER1(NULL)),
+  _bsc2(COMPILER2_PRESENT(new ShenandoahBarrierSetC2()) NOT_COMPILER2(NULL))
 {
   _kind = BarrierSet::ShenandoahBarrierSet;
 }

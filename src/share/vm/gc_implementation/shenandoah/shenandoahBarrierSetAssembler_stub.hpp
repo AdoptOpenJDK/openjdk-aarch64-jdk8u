@@ -21,34 +21,14 @@
  *
  */
 
-#include "precompiled.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHBARRIERSETASSEMBLER_STUB_HPP
+#define SHARE_GC_SHENANDOAH_SHENANDOAHBARRIERSETASSEMBLER_STUB_HPP
 
 #include "asm/macroAssembler.hpp"
-#include "interpreter/interpreter.hpp"
+#include "memory/allocation.hpp"
 
-#define __ masm->
+class ShenandoahBarrierSetAssembler : public CHeapObj<mtGC> {
 
-#ifndef CC_INTERP
+};
 
-void ShenandoahBarrierSet::interpreter_read_barrier(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
-
-void ShenandoahBarrierSet::interpreter_read_barrier_not_null(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
-
-void ShenandoahBarrierSet::interpreter_write_barrier(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
-
-void ShenandoahBarrierSet::asm_acmp_barrier(MacroAssembler* masm, Register op1, Register op2) {
-  Unimplemented();
-}
-
-void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
-  Unimplemented();
-}
-#endif
+#endif // SHARE_GC_SHENANDOAH_SHENANDOAHBARRIERSETASSEMBLER_STUB_HPP
