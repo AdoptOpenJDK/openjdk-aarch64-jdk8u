@@ -444,6 +444,9 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
   _used = 0;
 
   _max_workers = MAX2(_max_workers, 1U);
+
+  // SharedHeap did not initialize this for us, and we want our own workgang anyway.
+  assert(SharedHeap::_workers == NULL && _workers == NULL, "Should not be initialized yet");
   _workers = new ShenandoahWorkGang("Shenandoah GC Threads", _max_workers,
                             /* are_GC_task_threads */true,
                             /* are_ConcurrentGC_threads */false);
@@ -452,6 +455,7 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
   } else {
     _workers->initialize_workers();
   }
+  assert(SharedHeap::_workers == _workers, "Sanity: initialized the correct field");
 }
 
 #ifdef _MSC_VER

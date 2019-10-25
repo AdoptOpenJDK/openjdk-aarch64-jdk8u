@@ -180,7 +180,6 @@ public:
 //
 private:
   uint _max_workers;
-  ShenandoahWorkGang* _workers;
 
 public:
   uint max_workers();

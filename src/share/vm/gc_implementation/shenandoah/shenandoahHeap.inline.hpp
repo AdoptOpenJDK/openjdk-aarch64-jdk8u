@@ -55,7 +55,7 @@ inline bool ShenandoahHeap::has_forwarded_objects() const {
 }
 
 inline ShenandoahWorkGang* ShenandoahHeap::workers() const {
-  return _workers;
+  return (ShenandoahWorkGang*)_workers;
 }
 
 inline size_t ShenandoahHeap::heap_region_index_containing(const void* addr) const {
