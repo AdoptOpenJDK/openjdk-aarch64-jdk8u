@@ -2737,7 +2737,7 @@ const Type* ShenandoahLoadReferenceBarrierNode::bottom_type() const {
   return t->is_oopptr();
 }
 
-const Type* ShenandoahLoadReferenceBarrierNode::Value(PhaseGVN* phase) const {
+const Type* ShenandoahLoadReferenceBarrierNode::Value(PhaseTransform *phase) const {
   // Either input is TOP ==> the result is TOP
   const Type *t2 = phase->type(in(ValueIn));
   if( t2 == Type::TOP ) return Type::TOP;
@@ -2750,7 +2750,7 @@ const Type* ShenandoahLoadReferenceBarrierNode::Value(PhaseGVN* phase) const {
   return type;
 }
 
-Node* ShenandoahLoadReferenceBarrierNode::Identity(PhaseGVN* phase) {
+Node* ShenandoahLoadReferenceBarrierNode::Identity(PhaseTransform *phase) {
   Node* value = in(ValueIn);
   if (!needs_barrier(phase, value)) {
     return value;
@@ -2758,12 +2758,12 @@ Node* ShenandoahLoadReferenceBarrierNode::Identity(PhaseGVN* phase) {
   return this;
 }
 
-bool ShenandoahLoadReferenceBarrierNode::needs_barrier(PhaseGVN* phase, Node* n) {
+bool ShenandoahLoadReferenceBarrierNode::needs_barrier(PhaseTransform* phase, Node* n) {
   Unique_Node_List visited;
   return needs_barrier_impl(phase, n, visited);
 }
 
-bool ShenandoahLoadReferenceBarrierNode::needs_barrier_impl(PhaseGVN* phase, Node* n, Unique_Node_List &visited) {
+bool ShenandoahLoadReferenceBarrierNode::needs_barrier_impl(PhaseTransform* phase, Node* n, Unique_Node_List &visited) {
   if (n == NULL) return false;
   if (visited.member(n)) {
     return false; // Been there.

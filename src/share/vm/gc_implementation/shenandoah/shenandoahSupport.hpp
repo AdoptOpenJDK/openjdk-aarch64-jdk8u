@@ -165,14 +165,14 @@ public:
 
   virtual int Opcode() const;
   virtual const Type* bottom_type() const;
-  virtual const Type* Value(PhaseGVN* phase) const;
+  virtual const Type* Value(PhaseTransform *phase) const;
   virtual const class TypePtr *adr_type() const { return TypeOopPtr::BOTTOM; }
   virtual uint match_edge(uint idx) const {
     return idx >= ValueIn;
   }
   virtual uint ideal_reg() const { return Op_RegP; }
 
-  virtual Node* Identity(PhaseGVN* phase);
+  virtual Node* Identity(PhaseTransform *phase);
 
   uint size_of() const {
     return sizeof(*this);
@@ -182,8 +182,8 @@ public:
   CallStaticJavaNode* pin_and_expand_null_check(PhaseIterGVN& igvn);
 
 private:
-  bool needs_barrier(PhaseGVN* phase, Node* n);
-  bool needs_barrier_impl(PhaseGVN* phase, Node* n, Unique_Node_List &visited);
+  bool needs_barrier(PhaseTransform* phase, Node* n);
+  bool needs_barrier_impl(PhaseTransform* phase, Node* n, Unique_Node_List &visited);
 };
 
 
