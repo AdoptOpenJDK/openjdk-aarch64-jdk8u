@@ -2809,6 +2809,11 @@ bool LibraryCallKit::inline_unsafe_access(bool is_native_ptr, bool is_store, Bas
 
   if (is_volatile) {
     if (!is_store) {
+#if INCLUDE_ALL_GCS
+      if (UseShenandoahGC) {
+        load = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(load);
+      }
+#endif
       Node* mb = insert_mem_bar(Op_MemBarAcquire, load);
       mb->as_MemBar()->set_trailing_load();
     } else {
