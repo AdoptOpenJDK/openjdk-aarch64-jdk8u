@@ -170,7 +170,7 @@ void ShenandoahControlThread::run() {
 
       heuristics->record_requested_gc();
 
-      if (ExplicitGCInvokesConcurrent) {
+      if (ShenandoahImplicitGCInvokesConcurrent) {
         policy->record_implicit_to_concurrent();
         mode = concurrent_normal;
 
