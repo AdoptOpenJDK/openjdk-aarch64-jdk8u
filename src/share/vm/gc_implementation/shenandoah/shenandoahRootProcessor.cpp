@@ -296,8 +296,14 @@ void ShenandoahRootEvacuator::process_evacuate_roots(OopClosure* oops,
   if (!_evacuation_tasks->is_task_claimed(SHENANDOAH_EVAC_jvmti_oops_do)) {
     ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::JVMTIRoots, worker_id);
     JvmtiExport::oops_do(oops);
+    // In JDK 8, this is handled by JNIHandles::weak_oops_do. We cannot enter here, because
+    // it would walk the JvmtiTagMap twice (which is okay) and possibly by multiple threads
+    // (which is not okay, because that walk is not thread-safe). In subsequent releases,
+    // it is handled in a more straightforward manner, see JDK-8189360.
+    /*
     ShenandoahForwardedIsAliveClosure is_alive;
     JvmtiExport::weak_oops_do(&is_alive, oops);
+    */
   }
 
   if (!_evacuation_tasks->is_task_claimed(SHENANDOAH_EVAC_SystemDictionary_oops_do)) {
