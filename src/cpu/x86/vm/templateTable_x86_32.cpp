@@ -669,7 +669,7 @@ void TemplateTable::aaload() {
   // rdx: array
   index_check(rdx, rax);  // kills rbx,
   // rax,: index
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
   if (UseShenandoahGC) {
     // Needs GC barriers
     __ load_heap_oop(rax, Address(rdx, rax, Address::times_ptr, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
@@ -2311,7 +2311,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static) {
   __ cmpl(flags, atos );
   __ jcc(Assembler::notEqual, notObj);
 
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
   if (UseShenandoahGC) {
     // Needs GC barriers
     __ load_heap_oop(rax, lo);
@@ -2886,7 +2886,7 @@ void TemplateTable::fast_accessfield(TosState state) {
     case Bytecodes::_fast_fgetfield: __ fld_s(lo);                        break;
     case Bytecodes::_fast_dgetfield: __ fld_d(lo);                        break;
     case Bytecodes::_fast_agetfield:
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
       if (UseShenandoahGC) {
         // Needs GC barriers
         __ load_heap_oop(rax, lo);
@@ -2920,7 +2920,7 @@ void TemplateTable::fast_xaccess(TosState state) {
   if (state == itos) {
     __ movl(rax, lo);
   } else if (state == atos) {
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
     if (UseShenandoahGC) {
       // Needs GC barriers
       __ load_heap_oop(rax, lo);

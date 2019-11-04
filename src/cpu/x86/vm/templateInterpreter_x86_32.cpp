@@ -747,7 +747,7 @@ address InterpreterGenerator::generate_accessor_entry(void) {
 
     __ bind(notChar);
 
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
     if (UseShenandoahGC) {
       Label notObj;
 
@@ -853,7 +853,7 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
 
     // Load the value of the referent field.
     const Address field_address(rax, referent_offset);
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
     if (UseShenandoahGC) {
       // Needs GC barriers
       __ load_heap_oop(rax, field_address);

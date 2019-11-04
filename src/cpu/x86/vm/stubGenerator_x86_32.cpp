@@ -38,6 +38,7 @@
 #include "runtime/stubCodeGenerator.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/top.hpp"
 #ifdef COMPILER2
 #include "opto/runtime.hpp"
@@ -1486,7 +1487,7 @@ class StubGenerator: public StubCodeGenerator {
     __ BIND(L_store_element);
     __ movptr(to_element_addr, elem);     // store the oop
     __ increment(count);                // increment the count toward zero
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
     if (UseShenandoahGC) {
       // Shenandoah barrier is too big for 8-bit offsets to work
       __ jcc(Assembler::zero, L_do_card_marks);
@@ -1496,7 +1497,7 @@ class StubGenerator: public StubCodeGenerator {
 
     // ======== loop entry is here ========
     __ BIND(L_load_element);
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
     if (UseShenandoahGC) {
       // Needs GC barriers
       __ load_heap_oop(elem, from_element_addr);
@@ -1504,7 +1505,7 @@ class StubGenerator: public StubCodeGenerator {
 #endif
     __ movptr(elem, from_element_addr);   // load the oop
     __ testptr(elem, elem);
-#ifdef INCLUDE_ALL_GCS
+#if INCLUDE_ALL_GCS
     if (UseShenandoahGC) {
       // Shenandoah barrier is too big for 8-bit offsets to work
       __ jcc(Assembler::zero, L_store_element);
