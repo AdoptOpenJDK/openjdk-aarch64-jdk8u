@@ -40,12 +40,15 @@
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionSet.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkCompact.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahMonitoringSupport.hpp"
 #include "gc_implementation/shenandoah/shenandoahMetrics.hpp"
+#include "gc_implementation/shenandoah/shenandoahNormalMode.hpp"
 #include "gc_implementation/shenandoah/shenandoahOopClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahPacer.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahPassiveMode.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
 #include "gc_implementation/shenandoah/shenandoahTaskqueue.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
@@ -54,11 +57,6 @@
 #include "gc_implementation/shenandoah/shenandoahVMOperations.hpp"
 #include "gc_implementation/shenandoah/shenandoahWorkGroup.hpp"
 #include "gc_implementation/shenandoah/shenandoahWorkerPolicy.hpp"
-#include "gc_implementation/shenandoah/heuristics/shenandoahAdaptiveHeuristics.hpp"
-#include "gc_implementation/shenandoah/heuristics/shenandoahAggressiveHeuristics.hpp"
-#include "gc_implementation/shenandoah/heuristics/shenandoahCompactHeuristics.hpp"
-#include "gc_implementation/shenandoah/heuristics/shenandoahPassiveHeuristics.hpp"
-#include "gc_implementation/shenandoah/heuristics/shenandoahStaticHeuristics.hpp"
 
 #include "memory/metaspace.hpp"
 #include "runtime/vmThread.hpp"
@@ -376,36 +374,32 @@ jint ShenandoahHeap::initialize() {
 #endif
 
 void ShenandoahHeap::initialize_heuristics() {
-  if (ShenandoahGCHeuristics != NULL) {
-    if (strcmp(ShenandoahGCHeuristics, "aggressive") == 0) {
-      _heuristics = new ShenandoahAggressiveHeuristics();
-    } else if (strcmp(ShenandoahGCHeuristics, "static") == 0) {
-      _heuristics = new ShenandoahStaticHeuristics();
-    } else if (strcmp(ShenandoahGCHeuristics, "adaptive") == 0) {
-      _heuristics = new ShenandoahAdaptiveHeuristics();
-    } else if (strcmp(ShenandoahGCHeuristics, "passive") == 0) {
-      _heuristics = new ShenandoahPassiveHeuristics();
-    } else if (strcmp(ShenandoahGCHeuristics, "compact") == 0) {
-      _heuristics = new ShenandoahCompactHeuristics();
+  if (ShenandoahGCMode != NULL) {
+    if (strcmp(ShenandoahGCMode, "normal") == 0) {
+      _gc_mode = new ShenandoahNormalMode();
+    } else if (strcmp(ShenandoahGCMode, "passive") == 0) {
+      _gc_mode = new ShenandoahPassiveMode();
     } else {
-      vm_exit_during_initialization("Unknown -XX:ShenandoahGCHeuristics option");
+      vm_exit_during_initialization("Unknown -XX:ShenandoahGCMode option");
     }
-
-    if (_heuristics->is_diagnostic() && !UnlockDiagnosticVMOptions) {
-      vm_exit_during_initialization(
-              err_msg("Heuristics \"%s\" is diagnostic, and must be enabled via -XX:+UnlockDiagnosticVMOptions.",
-                      _heuristics->name()));
-    }
-    if (_heuristics->is_experimental() && !UnlockExperimentalVMOptions) {
-      vm_exit_during_initialization(
-              err_msg("Heuristics \"%s\" is experimental, and must be enabled via -XX:+UnlockExperimentalVMOptions.",
-                      _heuristics->name()));
-    }
-    log_info(gc, init)("Shenandoah heuristics: %s",
-                       _heuristics->name());
   } else {
     ShouldNotReachHere();
   }
+  _gc_mode->initialize_flags();
+  _heuristics = _gc_mode->initialize_heuristics();
+
+  if (_heuristics->is_diagnostic() && !UnlockDiagnosticVMOptions) {
+    vm_exit_during_initialization(
+            err_msg("Heuristics \"%s\" is diagnostic, and must be enabled via -XX:+UnlockDiagnosticVMOptions.",
+                    _heuristics->name()));
+  }
+  if (_heuristics->is_experimental() && !UnlockExperimentalVMOptions) {
+    vm_exit_during_initialization(
+            err_msg("Heuristics \"%s\" is experimental, and must be enabled via -XX:+UnlockExperimentalVMOptions.",
+                    _heuristics->name()));
+  }
+  log_info(gc, init)("Shenandoah heuristics: %s",
+                     _heuristics->name());
 }
 
 ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :

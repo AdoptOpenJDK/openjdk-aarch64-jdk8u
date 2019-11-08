@@ -72,7 +72,7 @@ $gcc_cmd -O1 -DLINUX -fPIC -shared \
     ${TESTSRC}${FS}libTestCriticalNative.c
 
 # run the java test in the background
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:-ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive -XX:-ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
     -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"
@@ -84,7 +84,7 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:+ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive -XX:+ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
     -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"

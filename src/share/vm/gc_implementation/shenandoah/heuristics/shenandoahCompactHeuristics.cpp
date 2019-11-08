@@ -47,7 +47,7 @@ ShenandoahCompactHeuristics::ShenandoahCompactHeuristics() : ShenandoahHeuristic
   SHENANDOAH_CHECK_FLAG_SET(ShenandoahCloneBarrier);
 }
 
-bool ShenandoahCompactHeuristics::should_start_normal_gc() const {
+bool ShenandoahCompactHeuristics::should_start_gc() const {
   ShenandoahHeap* heap = ShenandoahHeap::heap();
 
   size_t capacity = heap->max_capacity();
@@ -78,7 +78,7 @@ bool ShenandoahCompactHeuristics::should_start_normal_gc() const {
     return true;
   }
 
-  return ShenandoahHeuristics::should_start_normal_gc();
+  return ShenandoahHeuristics::should_start_gc();
 }
 
 void ShenandoahCompactHeuristics::choose_collection_set_from_regiondata(ShenandoahCollectionSet* cset,

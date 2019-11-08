@@ -99,6 +99,8 @@ void ShenandoahControlThread::run() {
 
   ShenandoahHeap* heap = ShenandoahHeap::heap();
 
+  GCMode default_mode = concurrent_normal;
+  GCCause::Cause default_cause = GCCause::_shenandoah_concurrent_gc;
   int sleep = ShenandoahControlIntervalMin;
 
   double last_shrink_time = os::elapsedTime();
@@ -155,8 +157,7 @@ void ShenandoahControlThread::run() {
 
       if (ExplicitGCInvokesConcurrent) {
         policy->record_explicit_to_concurrent();
-        mode = concurrent_normal;
-
+        mode = default_mode;
         // Unload and clean up everything
         heap->set_process_references(heuristics->can_process_references());
         heap->set_unload_classes(heuristics->can_unload_classes());
@@ -172,7 +173,7 @@ void ShenandoahControlThread::run() {
 
       if (ShenandoahImplicitGCInvokesConcurrent) {
         policy->record_implicit_to_concurrent();
-        mode = concurrent_normal;
+        mode = default_mode;
 
         // Unload and clean up everything
         heap->set_process_references(heuristics->can_process_references());
@@ -183,9 +184,9 @@ void ShenandoahControlThread::run() {
       }
     } else {
       // Potential normal cycle: ask heuristics if it wants to act
-      if (heuristics->should_start_normal_gc()) {
-        mode = concurrent_normal;
-        cause = GCCause::_shenandoah_concurrent_gc;
+      if (heuristics->should_start_gc()) {
+        mode = default_mode;
+        cause = default_cause;
       }
 
       // Ask policy if this cycle wants to process references or unload classes

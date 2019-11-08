@@ -42,11 +42,11 @@ public class TestWrongBarrierDisable {
                 "ShenandoahSATBBarrier",
         };
 
-        shouldFailAll("adaptive",   concurrent);
-        shouldFailAll("static",     concurrent);
-        shouldFailAll("compact",    concurrent);
-        shouldFailAll("aggressive", concurrent);
-        shouldPassAll("passive",    concurrent);
+        shouldFailAll("-XX:ShenandoahGCHeuristics=adaptive",   concurrent);
+        shouldFailAll("-XX:ShenandoahGCHeuristics=static",     concurrent);
+        shouldFailAll("-XX:ShenandoahGCHeuristics=compact",    concurrent);
+        shouldFailAll("-XX:ShenandoahGCHeuristics=aggressive", concurrent);
+        shouldPassAll("-XX:ShenandoahGCMode=passive",          concurrent);
     }
 
     private static void shouldFailAll(String h, String[] barriers) throws Exception {
@@ -55,7 +55,7 @@ public class TestWrongBarrierDisable {
                     "-XX:+UnlockDiagnosticVMOptions",
                     "-XX:+UnlockExperimentalVMOptions",
                     "-XX:+UseShenandoahGC",
-                    "-XX:ShenandoahGCHeuristics=" + h,
+                    h,
                     "-XX:-" + b,
                     "-version"
             );
@@ -72,7 +72,7 @@ public class TestWrongBarrierDisable {
                     "-XX:+UnlockDiagnosticVMOptions",
                     "-XX:+UnlockExperimentalVMOptions",
                     "-XX:+UseShenandoahGC",
-                    "-XX:ShenandoahGCHeuristics=" + h,
+                    h,
                     "-XX:-" + b,
                     "-version"
             );

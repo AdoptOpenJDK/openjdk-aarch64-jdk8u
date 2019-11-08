@@ -95,7 +95,7 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:+ShenandoahVerify \
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive -XX:+ShenandoahVerify \
     -Djava.library.path=${THIS_DIR}${FS} TestJNIGlobalRefs"
 
 echo "$cmd"
@@ -107,7 +107,7 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive \
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive \
     -Djava.library.path=${THIS_DIR}${FS} TestJNIGlobalRefs"
 
 echo "$cmd"

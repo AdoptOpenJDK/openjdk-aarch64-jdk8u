@@ -46,6 +46,7 @@ class ShenandoahMarkCompact;
 class ShenandoahMonitoringSupport;
 class ShenandoahHeuristics;
 class ShenandoahMarkingContext;
+class ShenandoahMode;
 class ShenandoahPhaseTimings;
 class ShenandoahPacer;
 class ShenandoahVerifier;
@@ -388,6 +389,7 @@ private:
 private:
   ShenandoahControlThread*   _control_thread;
   ShenandoahCollectorPolicy* _shenandoah_policy;
+  ShenandoahMode*            _gc_mode;
   ShenandoahHeuristics*      _heuristics;
   ShenandoahFreeSet*         _free_set;
   ShenandoahConcurrentMark*  _scm;

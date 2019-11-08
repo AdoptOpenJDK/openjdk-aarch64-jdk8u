@@ -28,13 +28,13 @@
  *
  * @run main/othervm  -Xmx1g -Xms1g
  *                    -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+UseShenandoahGC
- *                    -XX:ShenandoahGCHeuristics=passive -XX:+ShenandoahDegeneratedGC
+ *                    -XX:ShenandoahGCMode=passive -XX:+ShenandoahDegeneratedGC
  *                    -XX:+ShenandoahVerify
  *                    TestVerifyJCStress
  *
  * @run main/othervm  -Xmx1g -Xms1g
  *                    -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+UseShenandoahGC
- *                    -XX:ShenandoahGCHeuristics=passive -XX:-ShenandoahDegeneratedGC
+ *                    -XX:ShenandoahGCMode=passive -XX:-ShenandoahDegeneratedGC
  *                    -XX:+ShenandoahVerify
  *                    TestVerifyJCStress
  *

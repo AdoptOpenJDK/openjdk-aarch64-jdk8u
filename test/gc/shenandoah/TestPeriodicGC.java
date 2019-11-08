@@ -64,11 +64,6 @@ public class TestPeriodicGC {
                 "static"
         };
 
-        String[] disabled = new String[] {
-                "aggressive",
-                "passive",
-        };
-
         for (String h : enabled) {
             testWith("Short period with " + h,
                     true,
@@ -91,17 +86,24 @@ public class TestPeriodicGC {
             );
         }
 
-        for (String h : disabled) {
-            testWith("Short period with " + h,
-                    false,
-                    "-verbose:gc",
-                    "-XX:+UnlockDiagnosticVMOptions",
-                    "-XX:+UnlockExperimentalVMOptions",
-                    "-XX:+UseShenandoahGC",
-                    "-XX:ShenandoahGCHeuristics=" + h,
-                    "-XX:ShenandoahGuaranteedGCInterval=1000"
-            );
-        }
+        testWith("Short period with aggressive",
+                 false,
+                 "-verbose:gc",
+                 "-XX:+UnlockDiagnosticVMOptions",
+                 "-XX:+UnlockExperimentalVMOptions",
+                 "-XX:+UseShenandoahGC",
+                 "-XX:ShenandoahGCHeuristics=aggressive",
+                 "-XX:ShenandoahGuaranteedGCInterval=1000"
+        );
+        testWith("Short period with passive",
+                 false,
+                 "-verbose:gc",
+                 "-XX:+UnlockDiagnosticVMOptions",
+                 "-XX:+UnlockExperimentalVMOptions",
+                 "-XX:+UseShenandoahGC",
+                 "-XX:ShenandoahGCMode=passive",
+                 "-XX:ShenandoahGuaranteedGCInterval=1000"
+        );
     }
 
 }

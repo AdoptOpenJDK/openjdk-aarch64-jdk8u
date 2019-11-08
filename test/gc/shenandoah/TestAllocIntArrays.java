@@ -26,10 +26,10 @@
  * @summary Acceptance tests: collector can withstand allocation
  * @key gc
  *
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=passive    -XX:+ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestAllocIntArrays
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=passive    -XX:-ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestAllocIntArrays
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=passive    -XX:+ShenandoahDegeneratedGC                       TestAllocIntArrays
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=passive    -XX:-ShenandoahDegeneratedGC                       TestAllocIntArrays
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCMode=passive          -XX:+ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestAllocIntArrays
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCMode=passive          -XX:-ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestAllocIntArrays
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCMode=passive          -XX:+ShenandoahDegeneratedGC                       TestAllocIntArrays
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCMode=passive          -XX:-ShenandoahDegeneratedGC                       TestAllocIntArrays
  *
  * @run main/othervm/timeout=240 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahOOMDuringEvacALot -XX:+ShenandoahVerify TestAllocIntArrays
  * @run main/othervm/timeout=240 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahAllocFailureALot  -XX:+ShenandoahVerify TestAllocIntArrays

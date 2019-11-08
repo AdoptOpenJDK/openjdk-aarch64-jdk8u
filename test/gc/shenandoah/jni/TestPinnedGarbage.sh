@@ -71,7 +71,7 @@ $gcc_cmd -O1 -DLINUX -fPIC -shared \
     ${TESTSRC}${FS}libTestPinnedGarbage.c
 
 # run the java test in the background
-cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:+ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:+ShenandoahDegeneratedGC -XX:ShenandoahGCMode=passive \
     -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"
@@ -83,7 +83,7 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:-ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:-ShenandoahDegeneratedGC -XX:ShenandoahGCMode=passive \
     -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,30 +21,15 @@
  *
  */
 
-#ifndef SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
-#define SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
+#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHPASSIVEMODE_HPP
+#define SHARE_GC_SHENANDOAH_SHENANDOAHPASSIVEMODE_HPP
 
-#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
+#include "gc_implementation/shenandoah/shenandoahNormalMode.hpp"
 
-class ShenandoahAggressiveHeuristics : public ShenandoahHeuristics {
+class ShenandoahPassiveMode : public ShenandoahNormalMode {
 public:
-  ShenandoahAggressiveHeuristics();
-
-  virtual void choose_collection_set_from_regiondata(ShenandoahCollectionSet* cset,
-                                                     RegionData* data, size_t size,
-                                                     size_t free);
-
-  virtual bool should_start_gc() const;
-
-  virtual bool should_process_references();
-
-  virtual bool should_unload_classes();
-
-  virtual const char* name();
-
-  virtual bool is_diagnostic();
-
-  virtual bool is_experimental();
+  virtual void initialize_flags() const;
+  virtual ShenandoahHeuristics* initialize_heuristics() const;
 };
 
-#endif // SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
+#endif // SHARE_GC_SHENANDOAH_SHENANDOAHNORMALMODE_HPP

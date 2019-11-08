@@ -26,10 +26,10 @@
  * @summary Acceptance tests: collector can deal with retained objects
  * @key gc
  *
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCHeuristics=passive    -XX:+ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestRetainObjects
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCHeuristics=passive    -XX:-ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestRetainObjects
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCHeuristics=passive    -XX:+ShenandoahDegeneratedGC                       TestRetainObjects
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCHeuristics=passive    -XX:-ShenandoahDegeneratedGC                       TestRetainObjects
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCMode=passive          -XX:+ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestRetainObjects
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCMode=passive          -XX:-ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestRetainObjects
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCMode=passive          -XX:+ShenandoahDegeneratedGC                       TestRetainObjects
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xms1g -Xmx1g -XX:ShenandoahGCMode=passive          -XX:-ShenandoahDegeneratedGC                       TestRetainObjects
  *
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahOOMDuringEvacALot TestRetainObjects
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahAllocFailureALot  TestRetainObjects

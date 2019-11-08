@@ -61,12 +61,16 @@
           " *) static  -  start concurrent GC when static free heap "       \
           "               threshold and static allocation threshold are "   \
           "               tripped;"                                         \
-          " *) passive -  do not start concurrent GC, wait for Full GC; "   \
           " *) aggressive - run concurrent GC continuously, evacuate "      \
           "               everything;"                                      \
           " *) compact - run GC with lower footprint target, may end up "   \
           "               doing continuous GC, evacuate lots of live "      \
           "               objects, uncommit heap aggressively;")            \
+                                                                            \
+  product(ccstr, ShenandoahGCMode, "normal",                                \
+          "The GC mode to use in Shenandoah GC. Possible values"            \
+          " *) normal    - normal GC (mark-evac-update)"                    \
+          " *) passive   - disable concurrent GC, do stop-the-world GC")    \
                                                                             \
   experimental(ccstr, ShenandoahUpdateRefsEarly, "adaptive",                \
           "Run a separate concurrent reference updating phase after"        \

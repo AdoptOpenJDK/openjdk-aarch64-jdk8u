@@ -309,7 +309,7 @@ double ShenandoahHeuristics::time_since_last_gc() const {
   return os::elapsedTime() - _cycle_start;
 }
 
-bool ShenandoahHeuristics::should_start_normal_gc() const {
+bool ShenandoahHeuristics::should_start_gc() const {
   // Perform GC to cleanup metaspace
   if (has_metaspace_oom()) {
     // Some of vmTestbase/metaspace tests depend on following line to count GC cycles

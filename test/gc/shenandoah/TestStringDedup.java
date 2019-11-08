@@ -26,8 +26,8 @@
  * @summary Test Shenandoah string deduplication implementation
  * @key gc
  *
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive      -XX:+ShenandoahDegeneratedGC -XX:+UseStringDeduplication -Xmx256M TestStringDedup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive      -XX:-ShenandoahDegeneratedGC -XX:+UseStringDeduplication -Xmx256M TestStringDedup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive            -XX:+ShenandoahDegeneratedGC -XX:+UseStringDeduplication -Xmx256M TestStringDedup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive            -XX:-ShenandoahDegeneratedGC -XX:+UseStringDeduplication -Xmx256M TestStringDedup
  *
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC                                         -XX:+UseStringDeduplication -Xmx256M TestStringDedup
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive   -XX:+UseStringDeduplication -Xmx256M TestStringDedup
