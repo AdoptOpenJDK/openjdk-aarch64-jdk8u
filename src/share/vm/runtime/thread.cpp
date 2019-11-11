@@ -1956,7 +1956,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   // from the list of active threads. We must do this after any deferred
   // card marks have been flushed (above) so that any entries that are
   // added to the thread's dirty card queue as a result are not lost.
-  if (UseG1GC || (UseShenandoahGC && ShenandoahSATBBarrier)) {
+  if (UseG1GC || (UseShenandoahGC)) {
     flush_barrier_queues();
   }
   if (UseShenandoahGC && UseTLAB && gclab().is_initialized()) {
@@ -2046,7 +2046,7 @@ void JavaThread::cleanup_failed_attach_current_thread() {
   }
 
 #if INCLUDE_ALL_GCS
-  if (UseG1GC || (UseShenandoahGC && ShenandoahSATBBarrier)) {
+  if (UseG1GC || (UseShenandoahGC)) {
     flush_barrier_queues();
   }
   if (UseShenandoahGC && UseTLAB && gclab().is_initialized()) {

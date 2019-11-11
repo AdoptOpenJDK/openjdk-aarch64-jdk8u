@@ -84,6 +84,30 @@
  *                   -XX:ShenandoahGCHeuristics=aggressive -XX:ShenandoahUpdateRefsEarly=off -XX:+ShenandoahOOMDuringEvacALot -DtargetStrings=2000000
  *                   -verbose:gc
  *                   TestStringDedupStress
+ *
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+UseStringDeduplication -Xmx1g
+ *                   -XX:ShenandoahGCMode=traversal
+ *                   -verbose:gc
+ *                   TestStringDedupStress
+ *
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+UseStringDeduplication -Xmx1g
+ *                   -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -DtargetStrings=2000000
+ *                   -verbose:gc
+ *                   TestStringDedupStress
+ *
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+UseStringDeduplication -Xmx1g
+ *                   -XX:ShenandoahGCMode=traversal
+ *                   -XX:+ShenandoahOOMDuringEvacALot
+ *                   -DtargetStrings=2000000
+ *                   -verbose:gc
+ *                   TestStringDedupStress
+ *
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+UseStringDeduplication -Xmx1g
+ *                   -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive
+ *                   -XX:+ShenandoahOOMDuringEvacALot
+ *                   -DtargetStrings=2000000
+ *                   -verbose:gc
+ *                   TestStringDedupStress
  */
 
 import java.lang.management.*;

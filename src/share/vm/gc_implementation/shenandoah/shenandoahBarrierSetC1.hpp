@@ -62,10 +62,13 @@ public:
 };
 
 class ShenandoahBarrierSetC1  : public CHeapObj<mtGC>{
+private:
+  CodeBlob* _pre_barrier_c1_runtime_code_blob;
 public:
   static ShenandoahBarrierSetC1* bsc1();
 
   LIR_Opr load_reference_barrier(LIRGenerator* gen, LIR_Opr obj, CodeEmitInfo* info, bool need_null_check);
+  LIR_Opr storeval_barrier(LIRGenerator* gen, LIR_Opr obj, CodeEmitInfo* info, bool patch);
 private:
   LIR_Opr load_reference_barrier_impl(LIRGenerator* gen, LIR_Opr obj, CodeEmitInfo* info, bool need_null_check);
   LIR_Opr ensure_in_register(LIRGenerator* gen, LIR_Opr obj);

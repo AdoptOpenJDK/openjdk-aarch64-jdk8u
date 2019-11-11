@@ -119,3 +119,27 @@ then
     echo "Test Failed"
     exit 1
 fi
+
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -Xcomp -Xmx256M -XX:+CriticalJNINatives \
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
+
+echo "$cmd"
+eval $cmd
+
+if [ $? -ne 0 ]
+then
+    echo "Test Failed"
+    exit 1
+fi
+
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -Xcomp -Xmx512M -XX:+CriticalJNINatives \
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
+
+echo "$cmd"
+eval $cmd
+
+if [ $? -ne 0 ]
+then
+    echo "Test Failed"
+    exit 1
+fi

@@ -41,6 +41,13 @@
  *
  * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCHeuristics=adaptive     TestAllocHumongousFragment
  * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCHeuristics=static       TestAllocHumongousFragment
+ *
+ * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahOOMDuringEvacALot -XX:+ShenandoahVerify TestAllocHumongousFragment
+ * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahAllocFailureALot -XX:+ShenandoahVerify TestAllocHumongousFragment
+ * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahOOMDuringEvacALot TestAllocHumongousFragment
+ * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -XX:+ShenandoahAllocFailureALot TestAllocHumongousFragment
+ * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCMode=traversal -XX:+ShenandoahVerify TestAllocHumongousFragment
+ * @run main/othervm -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -Xms1g -XX:ShenandoahTargetNumRegions=2048 -XX:ShenandoahGCMode=traversal TestAllocHumongousFragment
  */
 
 import java.util.*;

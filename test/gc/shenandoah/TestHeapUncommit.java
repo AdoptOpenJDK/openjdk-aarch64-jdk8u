@@ -39,6 +39,11 @@
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCHeuristics=static       -XX:ShenandoahUncommitDelay=0                       TestHeapUncommit
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCHeuristics=compact      -XX:ShenandoahUncommitDelay=0                       TestHeapUncommit
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCHeuristics=aggressive   -XX:ShenandoahUncommitDelay=0                       TestHeapUncommit
+ *
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCMode=traversal          -XX:ShenandoahUncommitDelay=0                       TestHeapUncommit
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCMode=traversal          -XX:ShenandoahUncommitDelay=0 -XX:+ShenandoahVerify TestHeapUncommit
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx1g -XX:+ShenandoahUncommit -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -XX:ShenandoahUncommitDelay=0 TestHeapUncommit
+ *
  */
 
 import java.util.Random;

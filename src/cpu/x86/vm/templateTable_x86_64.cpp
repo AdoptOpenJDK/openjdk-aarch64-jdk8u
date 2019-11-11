@@ -36,6 +36,9 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/synchronizer.hpp"
 #include "utilities/macros.hpp"
+#if INCLUDE_ALL_GCS
+#include "shenandoahBarrierSetAssembler_x86.hpp"
+#endif
 
 #ifndef CC_INTERP
 
@@ -140,7 +143,6 @@ static void do_oop_store(InterpreterMacroAssembler* _masm,
 #if INCLUDE_ALL_GCS
     case BarrierSet::G1SATBCT:
     case BarrierSet::G1SATBCTLogging:
-    case BarrierSet::ShenandoahBarrierSet:
       {
         // flatten object address if needed
         if (obj.index() == noreg && obj.disp() == 0) {
@@ -171,6 +173,32 @@ static void do_oop_store(InterpreterMacroAssembler* _masm,
                                    r15_thread /* thread */,
                                    r8 /* tmp */,
                                    rbx /* tmp2 */);
+        }
+      }
+      break;
+    case BarrierSet::ShenandoahBarrierSet:
+      {
+        // flatten object address if needed
+        if (obj.index() == noreg && obj.disp() == 0) {
+          if (obj.base() != rdx) {
+            __ movq(rdx, obj.base());
+          }
+        } else {
+          __ leaq(rdx, obj);
+        }
+        if (ShenandoahSATBBarrier) {
+          __ g1_write_barrier_pre(rdx /* obj */,
+                                  rbx /* pre_val */,
+                                  r15_thread /* thread */,
+                                  r8  /* tmp */,
+                                  val != noreg /* tosca_live */,
+                                  false /* expand_call */);
+        }
+        if (val == noreg) {
+          __ store_heap_oop_null(Address(rdx, 0));
+        } else {
+            ShenandoahBarrierSetAssembler::bsasm()->storeval_barrier(_masm, val, r8);
+          __ store_heap_oop(Address(rdx, 0), val);
         }
       }
       break;

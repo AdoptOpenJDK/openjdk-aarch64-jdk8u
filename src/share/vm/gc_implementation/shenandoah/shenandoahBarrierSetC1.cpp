@@ -112,3 +112,11 @@ LIR_Opr ShenandoahBarrierSetC1::ensure_in_register(LIRGenerator* gen, LIR_Opr ob
   }
   return obj;
 }
+
+LIR_Opr ShenandoahBarrierSetC1::storeval_barrier(LIRGenerator* gen, LIR_Opr obj, CodeEmitInfo* info, bool patch) {
+  if (ShenandoahStoreValEnqueueBarrier) {
+    obj = ensure_in_register(gen, obj);
+    gen->G1SATBCardTableModRef_pre_barrier(LIR_OprFact::illegalOpr, obj, false, false, NULL);
+  }
+  return obj;
+}

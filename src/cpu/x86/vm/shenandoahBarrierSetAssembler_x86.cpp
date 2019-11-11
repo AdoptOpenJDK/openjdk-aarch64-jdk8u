@@ -166,6 +166,47 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembl
 #endif
 }
 
+void ShenandoahBarrierSetAssembler::storeval_barrier(MacroAssembler* masm, Register dst, Register tmp) {
+  if (ShenandoahStoreValEnqueueBarrier) {
+    storeval_barrier_impl(masm, dst, tmp);
+  }
+}
+
+void ShenandoahBarrierSetAssembler::storeval_barrier_impl(MacroAssembler* masm, Register dst, Register tmp) {
+  assert(ShenandoahStoreValEnqueueBarrier, "should be enabled");
+
+  if (dst == noreg) return;
+
+  if (ShenandoahStoreValEnqueueBarrier) {
+    // The set of registers to be saved+restored is the same as in the write-barrier above.
+    // Those are the commonly used registers in the interpreter.
+    __ pusha();
+    // __ push_callee_saved_registers();
+    __ subptr(rsp, 2 * Interpreter::stackElementSize);
+    __ movdbl(Address(rsp, 0), xmm0);
+
+#ifdef _LP64
+    Register thread = r15_thread;
+#else
+    Register thread = rcx;
+    if (thread == dst || thread == tmp) {
+      thread = rdi;
+    }
+    if (thread == dst || thread == tmp) {
+      thread = rbx;
+    }
+    __ get_thread(thread);
+#endif
+    assert_different_registers(dst, tmp, thread);
+
+    __ g1_write_barrier_pre(noreg, dst, thread, tmp, true, false);
+    __ movdbl(xmm0, Address(rsp, 0));
+    __ addptr(rsp, 2 * Interpreter::stackElementSize);
+    //__ pop_callee_saved_registers();
+    __ popa();
+  }
+}
+
 void ShenandoahBarrierSetAssembler::load_reference_barrier(MacroAssembler* masm, Register dst) {
   if (ShenandoahLoadRefBarrier) {
     Label done;

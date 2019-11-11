@@ -70,6 +70,7 @@
   product(ccstr, ShenandoahGCMode, "normal",                                \
           "The GC mode to use in Shenandoah GC. Possible values"            \
           " *) normal    - normal GC (mark-evac-update)"                    \
+          " *) traversal - traversal GC (single-pass)"                      \
           " *) passive   - disable concurrent GC, do stop-the-world GC")    \
                                                                             \
   experimental(ccstr, ShenandoahUpdateRefsEarly, "adaptive",                \
@@ -323,6 +324,12 @@
                                                                             \
   diagnostic(bool, ShenandoahSATBBarrier, true,                             \
           "Turn on/off SATB barriers in Shenandoah")                        \
+                                                                            \
+  diagnostic(bool, ShenandoahKeepAliveBarrier, true,                        \
+          "Turn on/off keep alive barriers in Shenandoah")                  \
+                                                                            \
+  diagnostic(bool, ShenandoahStoreValEnqueueBarrier, false,                 \
+          "Turn on/off enqueuing of oops for storeval barriers")            \
                                                                             \
   diagnostic(bool, ShenandoahCASBarrier, true,                              \
           "Turn on/off CAS barriers in Shenandoah")                         \

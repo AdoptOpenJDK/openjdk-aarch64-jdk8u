@@ -100,6 +100,7 @@ protected:
   ShenandoahSharedFlag _metaspace_oom;
 
   static int compare_by_garbage(RegionData a, RegionData b);
+  static int compare_by_garbage_then_alloc_seq_ascending(RegionData a, RegionData b);
   static int compare_by_alloc_seq_ascending(RegionData a, RegionData b);
   static int compare_by_alloc_seq_descending(RegionData a, RegionData b);
 

@@ -91,8 +91,6 @@ public:
 
   void write_ref_array_pre(narrowOop* dst, int count, bool dest_uninitialized);
 
-  template <class T> static void write_ref_field_pre_static(T* field, oop newVal);
-
   // We export this to make it available in cases where the static
   // type of the barrier set is known.  Note that it is non-virtual.
   template <class T> inline void inline_write_ref_field_pre(T* field, oop newVal);
@@ -108,10 +106,8 @@ public:
   static inline oop resolve_forwarded_not_null(oop p);
   static inline oop resolve_forwarded(oop p);
 
-  static oopDesc* write_barrier_IRT(oopDesc* src);
-  static oopDesc* write_barrier_JRT(oopDesc* src);
-
-  oop write_barrier_mutator(oop obj);
+  void storeval_barrier(oop obj);
+  void keep_alive_barrier(oop obj);
 
   oop load_reference_barrier(oop obj);
   oop load_reference_barrier_mutator(oop obj);
@@ -124,7 +120,7 @@ public:
 private:
   inline bool need_update_refs_barrier();
 
-  template <class T>
+  template <class T, bool STOREVAL_EVAC_BARRIER>
   void write_ref_array_loop(HeapWord* start, size_t count);
 
   oop load_reference_barrier_impl(oop obj);

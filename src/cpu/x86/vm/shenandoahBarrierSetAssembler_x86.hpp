@@ -41,9 +41,12 @@ private:
 
   void load_reference_barrier_not_null(MacroAssembler* masm, Register dst);
 
+  void storeval_barrier_impl(MacroAssembler* masm, Register dst, Register tmp);
+
 public:
   static ShenandoahBarrierSetAssembler* bsasm();
 
+  void storeval_barrier(MacroAssembler* masm, Register dst, Register tmp);
 #ifdef COMPILER1
   void gen_load_reference_barrier_stub(LIR_Assembler* ce, ShenandoahLoadReferenceBarrierStub* stub);
 #endif

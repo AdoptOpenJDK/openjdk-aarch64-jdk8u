@@ -218,7 +218,7 @@ static bool is_java_lang_ref_Reference_access(oop o, jlong offset) {
 
 static void ensure_satb_referent_alive(oop o, jlong offset, oop v) {
 #if INCLUDE_ALL_GCS
-  if ((UseG1GC || (UseShenandoahGC && ShenandoahSATBBarrier)) && v != NULL && is_java_lang_ref_Reference_access(o, offset)) {
+  if ((UseG1GC || (UseShenandoahGC && ShenandoahKeepAliveBarrier)) && v != NULL && is_java_lang_ref_Reference_access(o, offset)) {
     G1SATBCardTableModRefBS::enqueue(v);
   }
 #endif

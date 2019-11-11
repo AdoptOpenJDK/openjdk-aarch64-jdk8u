@@ -86,6 +86,26 @@ public class TestPeriodicGC {
             );
         }
 
+        testWith("Short period with traversal mode",
+                 true,
+                 "-verbose:gc",
+                 "-XX:+UnlockDiagnosticVMOptions",
+                 "-XX:+UnlockExperimentalVMOptions",
+                 "-XX:+UseShenandoahGC",
+                 "-XX:ShenandoahGCMode=traversal",
+                 "-XX:ShenandoahGuaranteedGCInterval=1000"
+        );
+
+        testWith("Long period with traversal mode",
+                 false,
+                 "-verbose:gc",
+                 "-XX:+UnlockDiagnosticVMOptions",
+                 "-XX:+UnlockExperimentalVMOptions",
+                 "-XX:+UseShenandoahGC",
+                 "-XX:ShenandoahGCMode=traversal",
+                 "-XX:ShenandoahGuaranteedGCInterval=100000" // deliberately too long
+        );
+
         testWith("Short period with aggressive",
                  false,
                  "-verbose:gc",

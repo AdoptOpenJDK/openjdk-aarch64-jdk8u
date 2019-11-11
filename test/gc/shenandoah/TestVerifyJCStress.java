@@ -49,6 +49,12 @@
  *                    -XX:ShenandoahGCHeuristics=static
  *                    -XX:+ShenandoahVerify -XX:+IgnoreUnrecognizedVMOptions -XX:+ShenandoahVerifyOptoBarriers
  *                    TestVerifyJCStress
+ *
+ * @run main/othervm  -Xmx1g -Xms1g
+ *                    -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+UseShenandoahGC
+ *                    -XX:ShenandoahGCMode=traversal
+ *                    -XX:+ShenandoahVerify -XX:+IgnoreUnrecognizedVMOptions -XX:+ShenandoahVerifyOptoBarriers
+ *                    TestVerifyJCStress
  */
 
 import java.util.*;

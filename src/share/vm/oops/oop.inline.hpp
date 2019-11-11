@@ -307,6 +307,9 @@ inline oop oopDesc::atomic_exchange_oop(oop exchange_value, volatile HeapWord *d
   }
 #if INCLUDE_ALL_GCS
   if (UseShenandoahGC) {
+    if (exchange_value != NULL) {
+      ShenandoahBarrierSet::barrier_set()->storeval_barrier(exchange_value);
+    }
     result = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(result);
   }
 #endif

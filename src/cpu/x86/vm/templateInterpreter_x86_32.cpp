@@ -863,6 +863,7 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
 
     // Generate the G1 pre-barrier code to log the value of
     // the referent field in an SATB buffer.
+    if (!UseShenandoahGC || ShenandoahKeepAliveBarrier) {
     __ get_thread(rcx);
     __ g1_write_barrier_pre(noreg /* obj */,
                             rax /* pre_val */,
@@ -870,6 +871,7 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
                             rbx /* tmp */,
                             true /* tosca_save */,
                             true /* expand_call */);
+    }
 
     // _areturn
     __ pop(rsi);                // get sender sp

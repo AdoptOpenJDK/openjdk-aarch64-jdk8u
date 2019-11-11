@@ -815,12 +815,14 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
 
     // Generate the G1 pre-barrier code to log the value of
     // the referent field in an SATB buffer.
+    if (!UseShenandoahGC || ShenandoahKeepAliveBarrier) {
     __ g1_write_barrier_pre(noreg /* obj */,
                             rax /* pre_val */,
                             r15_thread /* thread */,
                             rbx /* tmp */,
                             true /* tosca_live */,
                             true /* expand_call */);
+    }
 
     // _areturn
     __ pop(rdi);                // get return address

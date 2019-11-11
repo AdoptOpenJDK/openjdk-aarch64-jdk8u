@@ -1539,10 +1539,13 @@ void GraphKit::pre_barrier(bool do_load,
   switch (bs->kind()) {
     case BarrierSet::G1SATBCT:
     case BarrierSet::G1SATBCTLogging:
-    case BarrierSet::ShenandoahBarrierSet:
       g1_write_barrier_pre(do_load, obj, adr, adr_idx, val, val_type, pre_val, bt);
       break;
-
+    case BarrierSet::ShenandoahBarrierSet:
+      if (ShenandoahSATBBarrier) {
+        g1_write_barrier_pre(do_load, obj, adr, adr_idx, val, val_type, pre_val, bt);
+      }
+      break;
     case BarrierSet::CardTableModRef:
     case BarrierSet::CardTableExtension:
     case BarrierSet::ModRef:
@@ -1590,14 +1593,17 @@ void GraphKit::post_barrier(Node* ctl,
     case BarrierSet::G1SATBCTLogging:
       g1_write_barrier_post(store, obj, adr, adr_idx, val, bt, use_precise);
       break;
-
+    case BarrierSet::ShenandoahBarrierSet:
+      if (ShenandoahStoreValEnqueueBarrier) {
+        g1_write_barrier_pre(false, NULL, NULL, max_juint, NULL, NULL, val, bt);
+      }
+      break;
     case BarrierSet::CardTableModRef:
     case BarrierSet::CardTableExtension:
       write_barrier_post(store, obj, adr, adr_idx, val, use_precise);
       break;
 
     case BarrierSet::ModRef:
-    case BarrierSet::ShenandoahBarrierSet:
       break;
 
     case BarrierSet::Other:
@@ -3948,7 +3954,7 @@ void GraphKit::g1_write_barrier_pre(bool do_load,
   if (UseShenandoahGC) {
     Node* gc_state = __ AddP(no_base, tls, __ ConX(in_bytes(JavaThread::gc_state_offset())));
     Node* ld = __ load(__ ctrl(), gc_state, TypeInt::BYTE, T_BYTE, Compile::AliasIdxRaw);
-    marking = __ AndI(ld, __ ConI(ShenandoahHeap::MARKING));
+    marking = __ AndI(ld, __ ConI(ShenandoahHeap::MARKING | ShenandoahHeap::TRAVERSAL));
     assert(ShenandoahBarrierC2Support::is_gc_state_load(ld), "Should match the shape");
   } else {
     assert(UseG1GC, "should be");

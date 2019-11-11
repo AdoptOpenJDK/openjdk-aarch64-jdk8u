@@ -26,7 +26,9 @@
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegionSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahTraversalGC.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "memory/resourceArea.hpp"
 
@@ -65,6 +67,9 @@ void ShenandoahAsserts::print_obj(ShenandoahMessageBuffer& msg, oop obj) {
 
   msg.append("  " PTR_FORMAT " - klass " PTR_FORMAT " %s\n", p2i(obj), p2i(obj->klass()), obj->klass()->external_name());
   msg.append("    %3s allocated after mark start\n", ctx->allocated_after_mark_start((HeapWord *) obj)     ? "" : "not");
+  if (heap->traversal_gc() != NULL) {
+    msg.append("    %3s in traversal set\n",         heap->traversal_gc()->traversal_set()->is_in((HeapWord*) obj) ? "" : "not");
+  }
   msg.append("    %3s marked \n",                    ctx->is_marked(obj) ? "" : "not");
   msg.append("    %3s in collection set\n",          heap->in_collection_set(obj) ? "" : "not");
   msg.append("  mark:%s\n", mw_ss.as_string());

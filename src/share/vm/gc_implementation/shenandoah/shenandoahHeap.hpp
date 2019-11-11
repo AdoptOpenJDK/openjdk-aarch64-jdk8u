@@ -49,6 +49,7 @@ class ShenandoahMarkingContext;
 class ShenandoahMode;
 class ShenandoahPhaseTimings;
 class ShenandoahPacer;
+class ShenandoahTraversalGC;
 class ShenandoahVerifier;
 class ShenandoahWorkGang;
 class VMStructs;
@@ -235,7 +236,10 @@ public:
     EVACUATION_BITPOS = 2,
 
     // Heap is under updating: needs SVRB/SVWB barriers.
-    UPDATEREFS_BITPOS = 3
+    UPDATEREFS_BITPOS = 3,
+
+    // Heap is under traversal collection
+    TRAVERSAL_BITPOS  = 4
   };
 
   enum GCState {
@@ -243,7 +247,8 @@ public:
     HAS_FORWARDED = 1 << HAS_FORWARDED_BITPOS,
     MARKING       = 1 << MARKING_BITPOS,
     EVACUATION    = 1 << EVACUATION_BITPOS,
-    UPDATEREFS    = 1 << UPDATEREFS_BITPOS
+    UPDATEREFS    = 1 << UPDATEREFS_BITPOS,
+    TRAVERSAL     = 1 << TRAVERSAL_BITPOS
   };
 
 private:
@@ -265,6 +270,7 @@ public:
   void set_degenerated_gc_in_progress(bool in_progress);
   void set_full_gc_in_progress(bool in_progress);
   void set_full_gc_move_in_progress(bool in_progress);
+  void set_concurrent_traversal_in_progress(bool in_progress);
   void set_has_forwarded_objects(bool cond);
 
   inline bool is_stable() const;
@@ -275,6 +281,7 @@ public:
   inline bool is_degenerated_gc_in_progress() const;
   inline bool is_full_gc_in_progress() const;
   inline bool is_full_gc_move_in_progress() const;
+  inline bool is_concurrent_traversal_in_progress() const;
   inline bool has_forwarded_objects() const;
   inline bool is_gc_in_progress_mask(uint mask) const;
 
@@ -285,6 +292,7 @@ public:
 public:
   enum ShenandoahDegenPoint {
     _degenerated_unset,
+    _degenerated_traversal,
     _degenerated_outside_cycle,
     _degenerated_mark,
     _degenerated_evac,
@@ -296,6 +304,8 @@ public:
     switch (point) {
       case _degenerated_unset:
         return "<UNSET>";
+      case _degenerated_traversal:
+        return "Traversal";
       case _degenerated_outside_cycle:
         return "Outside of Cycle";
       case _degenerated_mark:
@@ -333,6 +343,8 @@ public:
   void vmop_entry_final_evac();
   void vmop_entry_init_updaterefs();
   void vmop_entry_final_updaterefs();
+  void vmop_entry_init_traversal();
+  void vmop_entry_final_traversal();
   void vmop_entry_full(GCCause::Cause cause);
   void vmop_degenerated(ShenandoahDegenPoint point);
 
@@ -343,6 +355,8 @@ public:
   void entry_final_evac();
   void entry_init_updaterefs();
   void entry_final_updaterefs();
+  void entry_init_traversal();
+  void entry_final_traversal();
   void entry_full(GCCause::Cause cause);
   void entry_degenerated(int point);
 
@@ -354,6 +368,7 @@ public:
   void entry_cleanup();
   void entry_evac();
   void entry_updaterefs();
+  void entry_traversal();
   void entry_uncommit(double shrink_before);
 
 private:
@@ -363,6 +378,8 @@ private:
   void op_final_evac();
   void op_init_updaterefs();
   void op_final_updaterefs();
+  void op_init_traversal();
+  void op_final_traversal();
   void op_full(GCCause::Cause cause);
   void op_degenerated(ShenandoahDegenPoint point);
   void op_degenerated_fail();
@@ -375,6 +392,7 @@ private:
   void op_conc_evac();
   void op_stw_evac();
   void op_updaterefs();
+  void op_traversal();
   void op_uncommit(double shrink_before);
 
   // Messages for GC trace event, they have to be immortal for
@@ -393,6 +411,7 @@ private:
   ShenandoahHeuristics*      _heuristics;
   ShenandoahFreeSet*         _free_set;
   ShenandoahConcurrentMark*  _scm;
+  ShenandoahTraversalGC*     _traversal_gc;
   ShenandoahMarkCompact*     _full_gc;
   ShenandoahPacer*           _pacer;
   ShenandoahVerifier*        _verifier;
@@ -408,6 +427,8 @@ public:
   ShenandoahHeuristics*      heuristics()        const { return _heuristics;        }
   ShenandoahFreeSet*         free_set()          const { return _free_set;          }
   ShenandoahConcurrentMark*  concurrent_mark()         { return _scm;               }
+  ShenandoahTraversalGC*     traversal_gc()      const { return _traversal_gc;      }
+  bool                       is_traversal_mode() const { return _traversal_gc != NULL; }
   ShenandoahPacer*           pacer()             const { return _pacer;             }
 
   ShenandoahPhaseTimings*    phase_timings()     const { return _phase_timings;     }
@@ -636,6 +657,9 @@ public:
 // ---------- Helper functions
 //
 public:
+  template <class T>
+  inline oop evac_update_with_forwarded(T* p);
+
   template <class T>
   inline oop maybe_update_with_forwarded(T* p);
 

@@ -693,7 +693,7 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
   const int referent_offset = java_lang_ref_Reference::referent_offset;
   guarantee(referent_offset > 0, "referent offset not initialized");
 
-  if (UseG1GC || UseShenandoahGC) {
+  if (UseG1GC || (UseShenandoahGC && ShenandoahKeepAliveBarrier)) {
     Label slow_path;
     const Register local_0 = c_rarg0;
     // Check if local 0 != NULL
@@ -1187,7 +1187,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     // Resolve jweak.
     __ ldr(r0, Address(r0, -JNIHandles::weak_tag_value));
 #if INCLUDE_ALL_GCS
-    if (UseG1GC || (UseShenandoahGC && ShenandoahSATBBarrier)) {
+    if (UseG1GC || (UseShenandoahGC && ShenandoahKeepAliveBarrier)) {
       __ enter();                   // Barrier may call runtime.
       __ g1_write_barrier_pre(noreg /* obj */,
                               r0 /* pre_val */,

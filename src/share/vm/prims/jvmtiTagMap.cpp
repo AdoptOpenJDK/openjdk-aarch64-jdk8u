@@ -1521,7 +1521,7 @@ class TagObjectCollector : public JvmtiTagHashmapEntryClosure {
         oop o = entry->object();
         assert(o != NULL && Universe::heap()->is_in_reserved(o), "sanity check");
 #if INCLUDE_ALL_GCS
-        if (UseG1GC || UseShenandoahGC) {
+        if (UseG1GC || (UseShenandoahGC && ShenandoahKeepAliveBarrier)) {
           // The reference in this tag map could be the only (implicitly weak)
           // reference to that object. If we hand it out, we need to keep it live wrt
           // SATB marking similar to other j.l.ref.Reference referents.

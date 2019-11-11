@@ -170,6 +170,89 @@ class outputStream;
   f(degen_gc_update_string_dedup_roots,              "    DU: String Dedup Roots")      \
   f(degen_gc_update_finish_queues,                   "    DU: Finish Queues")           \
                                                                                         \
+  f(init_traversal_gc_gross,                         "Pause Init Traversal (G)")        \
+  f(init_traversal_gc,                               "Pause Init Traversal (N)")        \
+  f(traversal_gc_prepare,                            "  Prepare")                       \
+  f(traversal_gc_accumulate_stats,                   "    Accumulate Stats")            \
+  f(traversal_gc_make_parsable,                      "    Make Parsable")               \
+  f(traversal_gc_resize_tlabs,                       "    Resize TLABs")                \
+  f(traversal_gc_prepare_sync_pinned,                "    Sync Pinned")                 \
+                                                                                        \
+  /* Per-thread timer block, should have "roots" counters in consistent order */        \
+  f(init_traversal_gc_work,                          "  Work")                          \
+  f(init_traversal_gc_thread_roots,                  "    TI: Thread Roots")            \
+  f(init_traversal_gc_code_roots,                    "    TI: Code Cache Roots")        \
+  f(init_traversal_gc_string_table_roots,            "    TI: String Table Roots")      \
+  f(init_traversal_gc_universe_roots,                "    TI: Universe Roots")          \
+  f(init_traversal_gc_jni_roots,                     "    TI: JNI Roots")               \
+  f(init_traversal_gc_jni_weak_roots,                "    TI: JNI Weak Roots")          \
+  f(init_traversal_gc_synchronizer_roots,            "    TI: Synchronizer Roots")      \
+  f(init_traversal_gc_management_roots,              "    TI: Management Roots")        \
+  f(init_traversal_gc_system_dict_roots,             "    TI: System Dict Roots")       \
+  f(init_traversal_gc_cldg_roots,                    "    TI: CLDG Roots")              \
+  f(init_traversal_gc_jvmti_roots,                   "    TI: JVMTI Roots")             \
+  f(init_traversal_gc_string_dedup_table_roots,      "    TI: Dedup Table Roots")       \
+  f(init_traversal_gc_string_dedup_queue_roots,      "    TI: Dedup Queue Roots")       \
+  f(init_traversal_gc_finish_queues,                 "    TI: Finish Queues")           \
+                                                                                        \
+  /* Per-thread timer block, should have "roots" counters in consistent order */        \
+  f(init_weak_traversal_gc_work,                     "  Weak")                          \
+  f(init_weak_traversal_gc_thread_roots,             "    TW: Thread Roots")            \
+  f(init_weak_traversal_gc_code_roots,               "    TW: Code Cache Roots")        \
+  f(init_weak_traversal_gc_string_table_roots,       "    TW: String Table Roots")      \
+  f(init_weak_traversal_gc_universe_roots,           "    TW: Universe Roots")          \
+  f(init_weak_traversal_gc_jni_roots,                "    TW: JNI Roots")               \
+  f(init_weak_traversal_gc_jni_weak_roots,           "    TW: JNI Weak Roots")          \
+  f(init_weak_traversal_gc_synchronizer_roots,       "    TW: Synchronizer Roots")      \
+  f(init_weak_traversal_gc_management_roots,         "    TW: Management Roots")        \
+  f(init_weak_traversal_gc_system_dict_roots,        "    TW: System Dict Roots")       \
+  f(init_weak_traversal_gc_cldg_roots,               "    TW: CLDG Roots")              \
+  f(init_weak_traversal_gc_jvmti_roots,              "    TW: JVMTI Roots")             \
+  f(init_weak_traversal_gc_string_dedup_table_roots, "    TW: Dedup Table Roots") \
+  f(init_weak_traversal_gc_string_dedup_queue_roots, "    TW: Dedup Queue Roots")       \
+  f(init_weak_traversal_gc_finish_queues,            "    TW: Finish Queues")           \
+                                                                                        \
+  f(final_traversal_gc_gross,                        "Pause Final Traversal (G)")       \
+  f(final_traversal_gc,                              "Pause Final Traversal (N)")       \
+                                                                                        \
+  /* Per-thread timer block, should have "roots" counters in consistent order */        \
+  f(final_traversal_gc_work,                         "  Work")                          \
+  f(final_traversal_gc_thread_roots,                 "    TF: Thread Roots")            \
+  f(final_traversal_gc_code_roots,                   "    TF: Code Cache Roots")        \
+  f(final_traversal_gc_string_table_roots,           "    TF: String Table Roots")      \
+  f(final_traversal_gc_universe_roots,               "    TF: Universe Roots")          \
+  f(final_traversal_gc_jni_roots,                    "    TF: JNI Roots")               \
+  f(final_traversal_gc_jni_weak_roots,               "    TF: JNI Weak Roots")          \
+  f(final_traversal_gc_synchronizer_roots,           "    TF: Synchronizer Roots")      \
+  f(final_traversal_gc_management_roots,             "    TF: Management Roots")        \
+  f(final_traversal_gc_system_dict_roots,            "    TF: System Dict Roots")       \
+  f(final_traversal_gc_cldg_roots,                   "    TF: CLDG Roots")              \
+  f(final_traversal_gc_jvmti_roots,                  "    TF: JVMTI Roots")             \
+  f(final_traversal_gc_string_dedup_table_roots,     "    TF: Dedup Table Roots")       \
+  f(final_traversal_gc_string_dedup_queue_roots,     "    TF: Dedup Queue Roots")       \
+  f(final_traversal_gc_finish_queues,                "    TF: Finish Queues")           \
+  f(final_traversal_gc_termination,                  "    TF:   Termination")           \
+                                                                                        \
+  /* Per-thread timer block, should have "roots" counters in consistent order */        \
+  f(final_traversal_update_roots,                    "  Update Roots")                  \
+  f(final_traversal_update_thread_roots,             "    TU: Thread Roots")            \
+  f(final_traversal_update_code_roots,               "    TU: Code Cache Roots")        \
+  f(final_traversal_update_string_table_roots,       "    TU: String Table Roots")      \
+  f(final_traversal_update_universe_roots,           "    TU: Universe Roots")          \
+  f(final_traversal_update_jni_roots,                "    TU: JNI Roots")               \
+  f(final_traversal_update_jni_weak_roots,           "    TU: JNI Weak Roots")          \
+  f(final_traversal_update_synchronizer_roots,       "    TU: Synchronizer Roots")      \
+  f(final_traversal_update_management_roots,         "    TU: Management Roots")        \
+  f(final_traversal_update_system_dict_roots,        "    TU: System Dict Roots")       \
+  f(final_traversal_update_cldg_roots,               "    TU: CLDG Roots")              \
+  f(final_traversal_update_jvmti_roots,              "    TU: JVMTI Roots")             \
+  f(final_traversal_update_string_dedup_table_roots, "    TU: Dedup Table Roots")       \
+  f(final_traversal_update_string_dedup_queue_roots, "    TU: Dedup Queue Roots")       \
+  f(final_traversal_update_finish_queues,            "    TU: Finish Queues")           \
+                                                                                        \
+  f(traversal_gc_sync_pinned,                        "  Sync Pinned")                   \
+  f(traversal_gc_cleanup,                            "  Cleanup")                       \
+                                                                                        \
   f(full_gc_gross,                                   "Pause Full GC (G)")               \
   f(full_gc,                                         "Pause Full GC (N)")               \
   f(full_gc_heapdumps,                               "  Heap Dumps")                    \

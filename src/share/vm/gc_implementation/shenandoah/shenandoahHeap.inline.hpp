@@ -98,6 +98,29 @@ inline oop ShenandoahHeap::maybe_update_with_forwarded(T* p) {
   }
 }
 
+template <class T>
+inline oop ShenandoahHeap::evac_update_with_forwarded(T* p) {
+  T o = oopDesc::load_heap_oop(p);
+  if (!oopDesc::is_null(o)) {
+    oop heap_oop = oopDesc::decode_heap_oop_not_null(o);
+    if (in_collection_set(heap_oop)) {
+      oop forwarded_oop = ShenandoahBarrierSet::resolve_forwarded_not_null(heap_oop);
+      if (forwarded_oop == heap_oop) {
+        forwarded_oop = evacuate_object(heap_oop, Thread::current());
+      }
+      oop prev = cas_oop(forwarded_oop, p, heap_oop);
+      if (prev == heap_oop) {
+        return forwarded_oop;
+      } else {
+        return NULL;
+      }
+    }
+    return heap_oop;
+  } else {
+    return NULL;
+  }
+}
+
 inline oop ShenandoahHeap::cas_oop(oop n, oop* addr, oop c) {
   assert(is_ptr_aligned(addr, sizeof(narrowOop)), err_msg("Address should be aligned: " PTR_FORMAT, p2i(addr)));
   return (oop) Atomic::cmpxchg_ptr(n, addr, c);
@@ -272,11 +295,15 @@ inline bool ShenandoahHeap::is_stable() const {
 }
 
 inline bool ShenandoahHeap::is_idle() const {
-  return _gc_state.is_unset(MARKING | EVACUATION | UPDATEREFS);
+  return _gc_state.is_unset(MARKING | EVACUATION | UPDATEREFS | TRAVERSAL);
 }
 
 inline bool ShenandoahHeap::is_concurrent_mark_in_progress() const {
   return _gc_state.is_set(MARKING);
+}
+
+inline bool ShenandoahHeap::is_concurrent_traversal_in_progress() const {
+  return _gc_state.is_set(TRAVERSAL);
 }
 
 inline bool ShenandoahHeap::is_evacuation_in_progress() const {

@@ -36,6 +36,9 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/synchronizer.hpp"
 #include "utilities/macros.hpp"
+#if INCLUDE_ALL_GCS
+#include "shenandoahBarrierSetAssembler_x86.hpp"
+#endif
 
 #ifndef CC_INTERP
 #define __ _masm->
@@ -129,7 +132,6 @@ static void do_oop_store(InterpreterMacroAssembler* _masm,
 #if INCLUDE_ALL_GCS
     case BarrierSet::G1SATBCT:
     case BarrierSet::G1SATBCTLogging:
-    case BarrierSet::ShenandoahBarrierSet:
       {
         // flatten object address if needed
         // We do it regardless of precise because we need the registers
@@ -161,6 +163,41 @@ static void do_oop_store(InterpreterMacroAssembler* _masm,
                                    rcx /* thread */,
                                    rbx /* tmp */,
                                    rsi /* tmp2 */);
+        }
+        __ restore_bcp();
+
+      }
+      break;
+    case BarrierSet::ShenandoahBarrierSet:
+      {
+        // flatten object address if needed
+        // We do it regardless of precise because we need the registers
+        if (obj.index() == noreg && obj.disp() == 0) {
+          if (obj.base() != rdx) {
+            __ movl(rdx, obj.base());
+          }
+        } else {
+          __ leal(rdx, obj);
+        }
+        __ get_thread(rcx);
+        __ save_bcp();
+        if (ShenandoahSATBBarrier) {
+          __ g1_write_barrier_pre(rdx /* obj */,
+                                  rbx /* pre_val */,
+                                  rcx /* thread */,
+                                  rsi /* tmp */,
+                                  val != noreg /* tosca_live */,
+                                  false /* expand_call */);
+	}
+
+        // Do the actual store
+        // noreg means NULL
+        if (val == noreg) {
+          __ movptr(Address(rdx, 0), NULL_WORD);
+          // No post barrier for NULL
+        } else {
+          ShenandoahBarrierSetAssembler::bsasm()->storeval_barrier(_masm, val, rsi);
+          __ movl(Address(rdx, 0), val);
         }
         __ restore_bcp();
 

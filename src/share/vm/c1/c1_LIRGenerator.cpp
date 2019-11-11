@@ -1430,8 +1430,12 @@ void LIRGenerator::pre_barrier(LIR_Opr addr_opr, LIR_Opr pre_val,
 #if INCLUDE_ALL_GCS
     case BarrierSet::G1SATBCT:
     case BarrierSet::G1SATBCTLogging:
-    case BarrierSet::ShenandoahBarrierSet:
       G1SATBCardTableModRef_pre_barrier(addr_opr, pre_val, do_load, patch, info);
+      break;
+    case BarrierSet::ShenandoahBarrierSet:
+      if (ShenandoahSATBBarrier) {
+        G1SATBCardTableModRef_pre_barrier(addr_opr, pre_val, do_load, patch, info);
+      }
       break;
 #endif // INCLUDE_ALL_GCS
     case BarrierSet::CardTableModRef:
@@ -1456,6 +1460,7 @@ void LIRGenerator::post_barrier(LIR_OprDesc* addr, LIR_OprDesc* new_val) {
       G1SATBCardTableModRef_post_barrier(addr,  new_val);
       break;
     case BarrierSet::ShenandoahBarrierSet:
+      ShenandoahBarrierSetC1::bsc1()->storeval_barrier(this, new_val, NULL, false);
       break;
 #endif // INCLUDE_ALL_GCS
     case BarrierSet::CardTableModRef:

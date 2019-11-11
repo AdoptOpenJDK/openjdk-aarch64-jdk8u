@@ -38,7 +38,8 @@ bool ShenandoahForwardedIsAliveClosure::do_object_b(oop obj) {
   }
   obj = ShenandoahBarrierSet::resolve_forwarded_not_null(obj);
   shenandoah_assert_not_forwarded_if(NULL, obj,
-                                     ShenandoahHeap::heap()->is_concurrent_mark_in_progress());
+                                     (ShenandoahHeap::heap()->is_concurrent_mark_in_progress() ||
+                                     ShenandoahHeap::heap()->is_concurrent_traversal_in_progress()));
   return _mark_context->is_marked(obj);
 }
 

@@ -120,6 +120,21 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier_not_null(MacroAssembl
   __ leave();
 }
 
+void ShenandoahBarrierSetAssembler::storeval_barrier(MacroAssembler* masm, Register dst, Register tmp) {
+  if (ShenandoahStoreValEnqueueBarrier) {
+    // Save possibly live regs.
+    RegSet live_regs = RegSet::range(r0, r4) - dst;
+    __ push(live_regs, sp);
+    __ strd(v0, __ pre(sp, 2 * -wordSize));
+
+    __ g1_write_barrier_pre(noreg, dst, rthread, tmp, true, false);
+
+    // Restore possibly live regs.
+    __ ldrd(v0, __ post(sp, 2 * wordSize));
+    __ pop(live_regs, sp);
+  }
+}
+
 void ShenandoahBarrierSetAssembler::load_reference_barrier(MacroAssembler* masm, Register dst) {
   if (ShenandoahLoadRefBarrier) {
     Label is_null;
