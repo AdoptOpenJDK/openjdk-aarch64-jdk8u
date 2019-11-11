@@ -48,6 +48,8 @@ size_t ShenandoahHeapRegion::HumongousThresholdWords = 0;
 size_t ShenandoahHeapRegion::MaxTLABSizeBytes = 0;
 size_t ShenandoahHeapRegion::MaxTLABSizeWords = 0;
 
+ShenandoahHeapRegion::PaddedAllocSeqNum ShenandoahHeapRegion::_alloc_seq_num;
+
 ShenandoahHeapRegion::ShenandoahHeapRegion(ShenandoahHeap* heap, HeapWord* start,
                                            size_t size_words, size_t index, bool committed) :
   _heap(heap),
@@ -59,6 +61,10 @@ ShenandoahHeapRegion::ShenandoahHeapRegion(ShenandoahHeap* heap, HeapWord* start
   _tlab_allocs(0),
   _gclab_allocs(0),
   _shared_allocs(0),
+  _seqnum_first_alloc_mutator(0),
+  _seqnum_first_alloc_gc(0),
+  _seqnum_last_alloc_mutator(0),
+  _seqnum_last_alloc_gc(0),
   _live_data(0),
   _critical_pins(0) {
 
@@ -301,6 +307,10 @@ void ShenandoahHeapRegion::reset_alloc_metadata() {
   _tlab_allocs = 0;
   _gclab_allocs = 0;
   _shared_allocs = 0;
+  _seqnum_first_alloc_mutator = 0;
+  _seqnum_last_alloc_mutator = 0;
+  _seqnum_first_alloc_gc = 0;
+  _seqnum_last_alloc_gc = 0;
 }
 
 void ShenandoahHeapRegion::reset_alloc_metadata_to_shared() {
@@ -308,6 +318,11 @@ void ShenandoahHeapRegion::reset_alloc_metadata_to_shared() {
     _tlab_allocs = 0;
     _gclab_allocs = 0;
     _shared_allocs = used() >> LogHeapWordSize;
+    uint64_t next = _alloc_seq_num.value++;
+    _seqnum_first_alloc_mutator = next;
+    _seqnum_last_alloc_mutator = next;
+    _seqnum_first_alloc_gc = 0;
+    _seqnum_last_alloc_gc = 0;
   } else {
     reset_alloc_metadata();
   }
@@ -401,7 +416,9 @@ void ShenandoahHeapRegion::print_on(outputStream* st) const {
   st->print("|S " SIZE_FORMAT_W(5) "%1s", byte_size_in_proper_unit(get_shared_allocs()),   proper_unit_for_byte_size(get_shared_allocs()));
   st->print("|L " SIZE_FORMAT_W(5) "%1s", byte_size_in_proper_unit(get_live_data_bytes()), proper_unit_for_byte_size(get_live_data_bytes()));
   st->print("|CP " SIZE_FORMAT_W(3), pin_count());
-
+  st->print("|SN " UINT64_FORMAT_X_W(12) ", " UINT64_FORMAT_X_W(8) ", " UINT64_FORMAT_X_W(8) ", " UINT64_FORMAT_X_W(8),
+            seqnum_first_alloc_mutator(), seqnum_last_alloc_mutator(),
+            seqnum_first_alloc_gc(), seqnum_last_alloc_gc());
   st->cr();
 }
 
