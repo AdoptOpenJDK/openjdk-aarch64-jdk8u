@@ -209,7 +209,7 @@ void ObjectSynchronizer::fast_exit(oop object, BasicLock* lock, TRAPS) {
   // swing the displaced header from the box back to the mark.
   if (mark == (markOop) lock) {
      assert (dhw->is_neutral(), "invariant") ;
-     if (object->cas_set_mark(dhw, mark) == mark) {
+     if ((markOop) Atomic::cmpxchg_ptr (dhw, object->mark_addr(), mark) == mark) {
         TEVENT (fast_exit: release stacklock) ;
         return;
      }
@@ -231,7 +231,7 @@ void ObjectSynchronizer::slow_enter(Handle obj, BasicLock* lock, TRAPS) {
     // Anticipate successful CAS -- the ST of the displaced mark must
     // be visible <= the ST performed by the CAS.
     lock->set_displaced_header(mark);
-    if (mark == obj()->cas_set_mark((markOop) lock, mark)) {
+    if (mark == (markOop) Atomic::cmpxchg_ptr(lock, obj()->mark_addr(), mark)) {
       TEVENT (slow_enter: release stacklock) ;
       return ;
     }
@@ -650,7 +650,7 @@ intptr_t ObjectSynchronizer::FastHashCode (Thread * Self, oop obj) {
     hash = get_next_hash(Self, obj);  // allocate a new hash code
     temp = mark->copy_set_hash(hash); // merge the hash code into header
     // use (machine word version) atomic operation to install the hash
-    test = obj->cas_set_mark(temp, mark);
+    test = (markOop) Atomic::cmpxchg_ptr(temp, obj->mark_addr(), mark);
     if (test == mark) {
       return hash;
     }
@@ -1215,7 +1215,7 @@ ObjectMonitor * ATTR ObjectSynchronizer::inflate (Thread * Self, oop object) {
       if (mark->has_monitor()) {
           ObjectMonitor * inf = mark->monitor() ;
           assert (inf->header()->is_neutral(), "invariant");
-          assert ((oop) inf->object() == object, "invariant") ;
+          assert (inf->object() == object, "invariant") ;
           assert (ObjectSynchronizer::verify_objmon_isinpool(inf), "monitor is invalid");
           return inf ;
       }
@@ -1262,7 +1262,7 @@ ObjectMonitor * ATTR ObjectSynchronizer::inflate (Thread * Self, oop object) {
           m->_recursions   = 0 ;
           m->_SpinDuration = ObjectMonitor::Knob_SpinLimit ;   // Consider: maintain by type/class
 
-          markOop cmp = object->cas_set_mark(markOopDesc::INFLATING(), mark);
+          markOop cmp = (markOop) Atomic::cmpxchg_ptr (markOopDesc::INFLATING(), object->mark_addr(), mark) ;
           if (cmp != mark) {
              omRelease (Self, m, true) ;
              continue ;       // Interference -- just retry
@@ -1355,7 +1355,7 @@ ObjectMonitor * ATTR ObjectSynchronizer::inflate (Thread * Self, oop object) {
       m->_Responsible  = NULL ;
       m->_SpinDuration = ObjectMonitor::Knob_SpinLimit ;       // consider: keep metastats by type/class
 
-      if (object->cas_set_mark(markOopDesc::encode(m), mark) != mark) {
+      if (Atomic::cmpxchg_ptr (markOopDesc::encode(m), object->mark_addr(), mark) != mark) {
           m->set_object (NULL) ;
           m->set_owner  (NULL) ;
           m->OwnerIsThread = 0 ;
