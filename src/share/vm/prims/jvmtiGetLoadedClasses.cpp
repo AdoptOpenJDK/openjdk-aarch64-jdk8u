@@ -60,7 +60,6 @@ public:
   void do_klass(Klass* k) {
     // Collect all jclasses
     _classStack.push((jclass) _env->jni_reference(k->java_mirror()));
-    ensure_klass_alive(k->java_mirror());
   }
 
   int extract(jclass* result_list) {
@@ -70,7 +69,10 @@ public:
 
     // Pop all jclasses, fill backwards
     while (!_classStack.is_empty()) {
-      result_list[--i] = _classStack.pop();
+      jclass klass_handle = _classStack.pop();
+      oop klass_mirror = JNIHandles::resolve(klass_handle);
+      ensure_klass_alive(klass_mirror);
+      result_list[--i] = klass_handle;
     }
 
     // Return the number of elements written

@@ -148,6 +148,7 @@ hotspot_tier2_gc_shenandoah = \
   gc/logging/TestGCId.java \
   gc/metaspace/TestMetaspacePerfCounters.java \
   gc/startup_warnings/TestShenandoah.java \
+  gc/shenandoah/jvmti/TestGetLoadedClasses.sh \
   gc/shenandoah/
   -gc/shenandoah/TestStringDedupStress.java \
   -gc/shenandoah/jni/TestCriticalNativeStress.sh \
