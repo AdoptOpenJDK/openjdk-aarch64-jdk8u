@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -67,8 +67,14 @@ public class TestHeapDump {
                 throw new RuntimeException("Expected " + EXPECTED_OBJECTS + " objects, but got " + numObjs);
             }
         }
+        reachabilityFence(array);
+        reachabilityFence(localRoot);
     }
 
     // We look for the instances of this class during the heap scan
     public static class TestObject {}
+
+    // See Reference.reachabilityFence() implementation in later
+    // JDKs.
+    static void reachabilityFence(Object obj) {}
 }
