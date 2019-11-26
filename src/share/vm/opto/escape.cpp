@@ -2991,7 +2991,6 @@ void ConnectionGraph::split_unique_types(GrowableArray<Node *>  &alloc_worklist)
                n->is_CheckCastPP() ||
                n->is_EncodeP() ||
                n->is_DecodeN() ||
-               n->Opcode() == Op_ShenandoahLoadReferenceBarrier ||
                (n->is_ConstraintCast() && n->Opcode() == Op_CastPP)) {
       if (visited.test_set(n->_idx)) {
         assert(n->is_Phi(), "loops only through Phi's");
@@ -3062,7 +3061,6 @@ void ConnectionGraph::split_unique_types(GrowableArray<Node *>  &alloc_worklist)
                  use->is_CheckCastPP() ||
                  use->is_EncodeNarrowPtr() ||
                  use->is_DecodeNarrowPtr() ||
-                 use->Opcode() == Op_ShenandoahLoadReferenceBarrier ||
                  (use->is_ConstraintCast() && use->Opcode() == Op_CastPP)) {
         alloc_worklist.append_if_missing(use);
 #ifdef ASSERT
