@@ -93,7 +93,6 @@ void ShenandoahRootProcessor::process_all_roots_slow(OopClosure* oops) {
 }
 
 void ShenandoahRootProcessor::process_strong_roots(OopClosure* oops,
-                                                   OopClosure* weak_oops,
                                                    CLDClosure* clds,
                                                    CLDClosure* weak_clds,
                                                    CodeBlobClosure* blobs,
@@ -101,13 +100,12 @@ void ShenandoahRootProcessor::process_strong_roots(OopClosure* oops,
                                                    uint worker_id) {
   assert(thread_cl == NULL, "not implemented yet");
   process_java_roots(oops, clds, clds, weak_clds, blobs, worker_id);
-  process_vm_roots(oops, NULL, weak_oops, worker_id);
+  process_vm_roots(oops, NULL, NULL, worker_id);
 
   _process_strong_tasks->all_tasks_completed();
 }
 
 void ShenandoahRootProcessor::process_all_roots(OopClosure* oops,
-                                                OopClosure* weak_oops,
                                                 CLDClosure* clds,
                                                 CodeBlobClosure* blobs,
                                                 ThreadClosure* thread_cl,
@@ -116,7 +114,7 @@ void ShenandoahRootProcessor::process_all_roots(OopClosure* oops,
   assert(thread_cl == NULL, "not implemented yet");
   ShenandoahWorkerTimings* worker_times = ShenandoahHeap::heap()->phase_timings()->worker_times();
   process_java_roots(oops, NULL, clds, clds, NULL, worker_id);
-  process_vm_roots(oops, oops, weak_oops, worker_id);
+  process_vm_roots(oops, oops, oops, worker_id);
 
   if (blobs != NULL) {
     ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::CodeCacheRoots, worker_id);

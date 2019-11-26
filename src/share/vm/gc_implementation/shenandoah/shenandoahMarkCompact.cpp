@@ -630,7 +630,7 @@ public:
     MarkingCodeBlobClosure adjust_code_closure(&cl,
                                              CodeBlobToOopClosure::FixRelocations);
 
-    _rp->process_all_roots(&cl, &cl,
+    _rp->process_all_roots(&cl,
                            &adjust_cld_closure,
                            &adjust_code_closure, NULL, worker_id);
     _preserved_marks->get(worker_id)->adjust_during_full_gc();

@@ -197,13 +197,13 @@ public:
       ShenandoahMarkCLDClosure cld_cl(&roots_cl);
       MarkingCodeBlobClosure code_cl(&roots_cl, CodeBlobToOopClosure::FixRelocations);
       if (unload_classes) {
-        _rp->process_strong_roots(&roots_cl, NULL, &cld_cl, NULL, NULL, NULL, worker_id);
+        _rp->process_strong_roots(&roots_cl, &cld_cl, NULL, NULL, NULL, worker_id);
         // Need to pre-evac code roots here. Otherwise we might see from-space constants.
         ShenandoahWorkerTimings* worker_times = _heap->phase_timings()->worker_times();
         ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::CodeCacheRoots, worker_id);
         _cset_coderoots.possibly_parallel_blobs_do(&code_cl);
       } else {
-        _rp->process_all_roots(&roots_cl, process_refs ? NULL : &roots_cl, &cld_cl, &code_cl, NULL, worker_id);
+        _rp->process_all_roots(&roots_cl, &cld_cl, &code_cl, NULL, worker_id);
       }
     }
   }
@@ -254,7 +254,7 @@ public:
     ShenandoahTraversalWeakRootsClosure roots_cl;
     CLDToOopClosure cld_cl(&roots_cl);
     MarkingCodeBlobClosure code_cl(&roots_cl, CodeBlobToOopClosure::FixRelocations);
-    _rp->process_all_roots(&roots_cl, &roots_cl, &cld_cl, &code_cl, NULL, worker_id);
+    _rp->process_all_roots(&roots_cl, &cld_cl, &code_cl, NULL, worker_id);
   }
 };
 
@@ -341,18 +341,18 @@ public:
       CLDToOopClosure cld_cl(&roots_cl);
       if (unload_classes) {
         ShenandoahRemarkCLDClosure weak_cld_cl(&roots_cl);
-        _rp->process_strong_roots(&roots_cl, process_refs ? NULL : &roots_cl, &cld_cl, &weak_cld_cl, NULL, NULL, worker_id);
+        _rp->process_strong_roots(&roots_cl, &cld_cl, &weak_cld_cl, NULL, NULL, worker_id);
       } else {
-        _rp->process_all_roots(&roots_cl, process_refs ? NULL : &roots_cl, &cld_cl, NULL, NULL, worker_id);
+        _rp->process_all_roots(&roots_cl, &cld_cl, NULL, NULL, worker_id);
       }
     } else {
       ShenandoahTraversalDegenClosure roots_cl(q, rp);
       CLDToOopClosure cld_cl(&roots_cl);
       if (unload_classes) {
         ShenandoahRemarkCLDClosure weak_cld_cl(&roots_cl);
-        _rp->process_strong_roots(&roots_cl, process_refs ? NULL : &roots_cl, &cld_cl, &weak_cld_cl, NULL, NULL, worker_id);
+        _rp->process_strong_roots(&roots_cl, &cld_cl, &weak_cld_cl, NULL, NULL, worker_id);
       } else {
-        _rp->process_all_roots(&roots_cl, process_refs ? NULL : &roots_cl, &cld_cl, NULL, NULL, worker_id);
+        _rp->process_all_roots(&roots_cl, &cld_cl, NULL, NULL, worker_id);
       }
     }
 
@@ -799,7 +799,7 @@ public:
     ShenandoahTraversalFixRootsClosure cl;
     MarkingCodeBlobClosure blobsCl(&cl, CodeBlobToOopClosure::FixRelocations);
     CLDToOopClosure cldCl(&cl);
-    _rp->process_all_roots(&cl, &cl, &cldCl, &blobsCl, NULL, worker_id);
+    _rp->process_all_roots(&cl, &cldCl, &blobsCl, NULL, worker_id);
   }
 };
 

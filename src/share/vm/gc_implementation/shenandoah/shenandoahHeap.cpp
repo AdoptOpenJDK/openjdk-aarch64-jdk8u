@@ -1004,16 +1004,6 @@ void ShenandoahHeap::evacuate_and_update_roots() {
   COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
 }
 
-void ShenandoahHeap::roots_iterate(OopClosure* cl) {
-  assert(ShenandoahSafepoint::is_at_shenandoah_safepoint(), "Only iterate roots while world is stopped");
-
-  CodeBlobToOopClosure blobsCl(cl, false);
-  CLDToOopClosure cldCl(cl);
-
-  ShenandoahRootProcessor rp(this, 1, ShenandoahPhaseTimings::_num_phases);
-  rp.process_all_roots(cl, NULL, &cldCl, &blobsCl, NULL, 0);
-}
-
 size_t  ShenandoahHeap::unsafe_max_tlab_alloc(Thread *thread) const {
   // Returns size in bytes
   return MIN2(_free_set->unsafe_peek_free(), ShenandoahHeapRegion::max_tlab_size_bytes());
@@ -1246,7 +1236,7 @@ void ShenandoahHeap::object_iterate(ObjectClosure* cl) {
   ObjectIterateScanRootClosure oops(&_aux_bit_map, &oop_stack);
   CLDToOopClosure clds(&oops, false);
   CodeBlobToOopClosure blobs(&oops, false);
-  rp.process_all_roots(&oops, &oops, &clds, &blobs, NULL, 0);
+  rp.process_all_roots(&oops, &clds, &blobs, NULL, 0);
 
   // Work through the oop stack to traverse heap.
   while (! oop_stack.is_empty()) {

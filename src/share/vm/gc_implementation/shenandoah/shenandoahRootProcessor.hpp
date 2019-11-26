@@ -77,7 +77,7 @@ public:
   ~ShenandoahRootProcessor();
 
   // Apply oops, clds and blobs to all strongly reachable roots in the system
-  void process_strong_roots(OopClosure* oops, OopClosure* weak_oops,
+  void process_strong_roots(OopClosure* oops,
                             CLDClosure* clds,
                             CLDClosure* weak_clds,
                             CodeBlobClosure* blobs,
@@ -85,7 +85,7 @@ public:
                             uint worker_id);
 
   // Apply oops, clds and blobs to strongly and weakly reachable roots in the system
-  void process_all_roots(OopClosure* oops, OopClosure* weak_oops,
+  void process_all_roots(OopClosure* oops,
                          CLDClosure* clds,
                          CodeBlobClosure* blobs,
                          ThreadClosure* thread_cl,
