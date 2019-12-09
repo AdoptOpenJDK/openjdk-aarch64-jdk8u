@@ -52,6 +52,14 @@ else
     exit 0;
 fi
 
+# Unfortunately, configurations cross-compiled to 32 bits would
+# fail with bitness mismatch, when compiled with platform gcc.
+# This would be fixed with /native support in JDK-8072842.
+if [ "$VM_BITS" = "32" ]; then
+    echo "Test passed; only reliable on 64-bit"
+    exit 0;
+fi
+
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
@@ -64,7 +72,7 @@ $gcc_cmd -O1 -DLINUX -fPIC -shared \
     ${TESTSRC}${FS}libTestCriticalNative.c
 
 # run the java test in the background
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:-ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive -XX:-ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
     -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"
@@ -76,7 +84,7 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=passive -XX:+ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=passive -XX:+ShenandoahDegeneratedGC -Xcomp -Xmx512M -XX:+CriticalJNINatives \
     -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"
@@ -101,6 +109,30 @@ then
 fi
 
 cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive -Xcomp -Xmx512M -XX:+CriticalJNINatives \
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
+
+echo "$cmd"
+eval $cmd
+
+if [ $? -ne 0 ]
+then
+    echo "Test Failed"
+    exit 1
+fi
+
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -Xcomp -Xmx256M -XX:+CriticalJNINatives \
+    -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
+
+echo "$cmd"
+eval $cmd
+
+if [ $? -ne 0 ]
+then
+    echo "Test Failed"
+    exit 1
+fi
+
+cmd="${TESTJAVA}${FS}bin${FS}java -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive -Xcomp -Xmx512M -XX:+CriticalJNINatives \
     -Djava.library.path=${THIS_DIR}${FS} TestCriticalNativeArgs"
 
 echo "$cmd"

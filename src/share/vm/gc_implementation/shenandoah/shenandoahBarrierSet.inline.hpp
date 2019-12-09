@@ -25,6 +25,7 @@
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHBARRIERSET_INLINE_HPP
 
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 
 bool ShenandoahBarrierSet::need_update_refs_barrier() {
@@ -33,7 +34,7 @@ bool ShenandoahBarrierSet::need_update_refs_barrier() {
 }
 
 inline oop ShenandoahBarrierSet::resolve_forwarded_not_null(oop p) {
-  return ShenandoahBrooksPointer::forwardee(p);
+  return ShenandoahForwarding::get_forwardee(p);
 }
 
 inline oop ShenandoahBarrierSet::resolve_forwarded(oop p) {

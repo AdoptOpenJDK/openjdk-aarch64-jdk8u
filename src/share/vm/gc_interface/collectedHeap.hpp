@@ -199,8 +199,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   virtual CollectedHeap::Name kind() const { return CollectedHeap::Abstract; }
 
-  virtual HeapWord* tlab_post_allocation_setup(HeapWord* obj);
-
   /**
    * Returns JNI error code JNI_ENOMEM if memory could not be allocated,
    * and JNI_OK on success.
@@ -326,12 +324,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   inline static void post_allocation_install_obj_klass(KlassHandle klass,
                                                        oop obj);
-
-  virtual uint oop_extra_words();
-
-#ifndef CC_INTERP
-  virtual void compile_prepare_oop(MacroAssembler* masm, Register obj);
-#endif
 
   // Raw memory allocation facilities
   // The obj and array allocate methods are covers for these methods.

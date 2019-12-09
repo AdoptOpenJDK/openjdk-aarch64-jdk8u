@@ -190,10 +190,14 @@ public:
 
   // Macro-properties:
   bool is_alloc_allowed()          const { return is_empty() || is_regular() || _state == _pinned; }
-  bool is_move_allowed()           const { return is_regular() || _state == _cset || (ShenandoahHumongousMoves && _state == _humongous_start); }
+  bool is_stw_move_allowed()       const { return is_regular() || _state == _cset || (ShenandoahHumongousMoves && _state == _humongous_start); }
 
   RegionState state()              const { return _state; }
   int  state_ordinal()             const { return region_state_to_ordinal(_state); }
+
+  void record_pin();
+  void record_unpin();
+  size_t pin_count() const;
 
 private:
   static size_t RegionCount;
@@ -208,6 +212,21 @@ private:
   static size_t MaxTLABSizeBytes;
   static size_t MaxTLABSizeWords;
 
+  // Global allocation counter, increased for each allocation under Shenandoah heap lock.
+  // Padded to avoid false sharing with the read-only fields above.
+  struct PaddedAllocSeqNum {
+    char _pad0[DEFAULT_CACHE_LINE_SIZE];
+    uint64_t value;
+    char _pad1[DEFAULT_CACHE_LINE_SIZE];
+
+    PaddedAllocSeqNum() {
+      // start with 1, reserve 0 for uninitialized value
+      value = 1;
+    }
+  };
+
+  static PaddedAllocSeqNum _alloc_seq_num;
+
   // Never updated fields
   ShenandoahHeap* _heap;
   MemRegion _reserved;
@@ -215,7 +234,6 @@ private:
 
   // Rarely updated fields
   HeapWord* _new_top;
-  size_t _critical_pins;
   double _empty_time;
 
   // Seldom updated fields
@@ -226,7 +244,13 @@ private:
   size_t _gclab_allocs;
   size_t _shared_allocs;
 
+  uint64_t _seqnum_first_alloc_mutator;
+  uint64_t _seqnum_first_alloc_gc;
+  uint64_t _seqnum_last_alloc_mutator;
+  uint64_t _seqnum_last_alloc_gc;
+
   volatile jint _live_data;
+  volatile jint _critical_pins;
 
   // Claim some space at the end to protect next region
   char _pad0[DEFAULT_CACHE_LINE_SIZE];
@@ -314,6 +338,11 @@ public:
     return ShenandoahHeapRegion::MaxTLABSizeWords;
   }
 
+  static uint64_t seqnum_current_alloc() {
+    // Last used seq number
+    return _alloc_seq_num.value - 1;
+  }
+
   size_t region_number() const;
 
   // Allocation (return NULL if full)
@@ -359,6 +388,32 @@ public:
   size_t get_shared_allocs() const;
   size_t get_tlab_allocs() const;
   size_t get_gclab_allocs() const;
+
+  uint64_t seqnum_first_alloc() const {
+    if (_seqnum_first_alloc_mutator == 0) return _seqnum_first_alloc_gc;
+    if (_seqnum_first_alloc_gc == 0)      return _seqnum_first_alloc_mutator;
+    return MIN2(_seqnum_first_alloc_mutator, _seqnum_first_alloc_gc);
+  }
+
+  uint64_t seqnum_last_alloc() const {
+    return MAX2(_seqnum_last_alloc_mutator, _seqnum_last_alloc_gc);
+  }
+
+  uint64_t seqnum_first_alloc_mutator() const {
+    return _seqnum_first_alloc_mutator;
+  }
+
+  uint64_t seqnum_last_alloc_mutator()  const {
+    return _seqnum_last_alloc_mutator;
+  }
+
+  uint64_t seqnum_first_alloc_gc() const {
+    return _seqnum_first_alloc_gc;
+  }
+
+  uint64_t seqnum_last_alloc_gc()  const {
+    return _seqnum_last_alloc_gc;
+  }
 
 private:
   void do_commit();

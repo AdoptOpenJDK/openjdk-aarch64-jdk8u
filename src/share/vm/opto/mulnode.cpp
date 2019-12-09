@@ -29,9 +29,11 @@
 #include "opto/memnode.hpp"
 #include "opto/mulnode.hpp"
 #include "opto/phaseX.hpp"
-#include "opto/shenandoahSupport.hpp"
 #include "opto/subnode.hpp"
 #include "utilities/macros.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 // Portions of code courtesy of Clifford Click
 
@@ -476,7 +478,7 @@ Node *AndINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   uint lop = load->Opcode();
 
 #if INCLUDE_ALL_GCS
-  if (UseShenandoahGC && ShenandoahWriteBarrierNode::is_gc_state_load(load)) {
+  if (UseShenandoahGC && ShenandoahBarrierC2Support::is_gc_state_load(load)) {
     // Do not touch the load+mask, we would match the whole sequence exactly.
     // Converting the load to LoadUB/LoadUS would mismatch and waste a register
     // on the barrier fastpath.

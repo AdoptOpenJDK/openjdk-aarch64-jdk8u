@@ -51,6 +51,14 @@ else
     exit 0;
 fi
 
+# Unfortunately, configurations cross-compiled to 32 bits would
+# fail with bitness mismatch, when compiled with platform gcc.
+# This would be fixed with /native support in JDK-8072842.
+if [ "$VM_BITS" = "32" ]; then
+    echo "Test passed; only reliable on 64-bit"
+    exit 0;
+fi
+
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
@@ -63,7 +71,7 @@ $gcc_cmd -O1 -DLINUX -fPIC -shared \
     ${TESTSRC}${FS}libTestPinnedGarbage.c
 
 # run the java test in the background
-cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:+ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:+ShenandoahDegeneratedGC -XX:ShenandoahGCMode=passive \
     -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"
@@ -75,7 +83,7 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:-ShenandoahDegeneratedGC -XX:ShenandoahGCHeuristics=passive \
+cmd="${TESTJAVA}${FS}bin${FS}java -Xmx512m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahVerify -XX:-ShenandoahDegeneratedGC -XX:ShenandoahGCMode=passive \
     -Djava.library.path=${THIS_DIR}${FS} TestPinnedGarbage"
 
 echo "$cmd"

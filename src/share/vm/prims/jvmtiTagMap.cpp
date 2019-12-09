@@ -166,11 +166,6 @@ class JvmtiTagHashmap : public CHeapObj<mtInternal> {
   static unsigned int hash(oop key, int size) {
     // shift right to get better distribution (as these bits will be zero
     // with aligned addresses)
-#if INCLUDE_ALL_GCS
-    if (UseShenandoahGC) {
-      key = oopDesc::bs()->write_barrier(key);
-    }
-#endif
     unsigned int addr = (unsigned int)(cast_from_oop<intptr_t>(key));
 #ifdef _LP64
     return (addr >> 3) % size;
@@ -307,7 +302,7 @@ class JvmtiTagHashmap : public CHeapObj<mtInternal> {
     unsigned int h = hash(key);
     JvmtiTagHashmapEntry* entry = _table[h];
     while (entry != NULL) {
-      if (oopDesc::equals(entry->object(), key)) {
+      if (entry->object() == key) {
          return entry;
       }
       entry = entry->next();
@@ -349,7 +344,7 @@ class JvmtiTagHashmap : public CHeapObj<mtInternal> {
     JvmtiTagHashmapEntry* entry = _table[h];
     JvmtiTagHashmapEntry* prev = NULL;
     while (entry != NULL) {
-      if (oopDesc::equals(key, entry->object())) {
+      if (key == entry->object()) {
         break;
       }
       prev = entry;
@@ -1526,7 +1521,7 @@ class TagObjectCollector : public JvmtiTagHashmapEntryClosure {
         oop o = entry->object();
         assert(o != NULL && Universe::heap()->is_in_reserved(o), "sanity check");
 #if INCLUDE_ALL_GCS
-        if (UseG1GC || UseShenandoahGC) {
+        if (UseG1GC || (UseShenandoahGC && ShenandoahKeepAliveBarrier)) {
           // The reference in this tag map could be the only (implicitly weak)
           // reference to that object. If we hand it out, we need to keep it live wrt
           // SATB marking similar to other j.l.ref.Reference referents.

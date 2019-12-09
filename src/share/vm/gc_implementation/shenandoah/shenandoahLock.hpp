@@ -25,9 +25,10 @@
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEAPLOCK_HPP
 
 #include "memory/allocation.hpp"
+#include "runtime/safepoint.hpp"
 #include "runtime/thread.hpp"
 
-class ShenandoahHeapLock  {
+class ShenandoahLock  {
 private:
   enum LockState { unlocked = 0, locked = 1 };
 
@@ -38,9 +39,12 @@ private:
   char _pad2[DEFAULT_CACHE_LINE_SIZE];
 
 public:
-  ShenandoahHeapLock() : _state(unlocked), _owner(NULL) {};
+  ShenandoahLock() : _state(unlocked), _owner(NULL) {};
 
   void lock() {
+#ifdef ASSERT
+    assert(_owner != Thread::current(), "reentrant locking attempt, would deadlock");
+#endif
     Thread::SpinAcquire(&_state, "Shenandoah Heap Lock");
 #ifdef ASSERT
     assert(_state == locked, "must be locked");
@@ -76,16 +80,16 @@ public:
 #endif
 };
 
-class ShenandoahHeapLocker : public StackObj {
+class ShenandoahLocker : public StackObj {
 private:
-  ShenandoahHeapLock* _lock;
+  ShenandoahLock* _lock;
 public:
-  ShenandoahHeapLocker(ShenandoahHeapLock* lock) {
+  ShenandoahLocker(ShenandoahLock* lock) {
     _lock = lock;
     _lock->lock();
   }
 
-  ~ShenandoahHeapLocker() {
+  ~ShenandoahLocker() {
     _lock->unlock();
   }
 };

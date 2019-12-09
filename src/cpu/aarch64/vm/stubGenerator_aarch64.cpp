@@ -27,10 +27,6 @@
 #include "precompiled.hpp"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "interpreter/interpreter.hpp"
 #include "nativeInst_aarch64.hpp"
 #include "oops/instanceOop.hpp"
@@ -518,58 +514,6 @@ class StubGenerator: public StubCodeGenerator {
     // r19: exception handler
     __ verify_oop(r0);
     __ br(r19);
-
-    return start;
-  }
-
-  // Shenandoah write barrier.
-  //
-  // Input:
-  //   r0: OOP to evacuate.  Not null.
-  //
-  // Output:
-  //   r0: Pointer to evacuated OOP.
-  //
-  // Trash rscratch1, rscratch2.  Preserve everything else.
-
-  address generate_shenandoah_wb(bool c_abi, bool do_cset_test) {
-    StubCodeMark mark(this, "StubRoutines", "shenandoah_wb");
-
-    __ align(6);
-    address start = __ pc();
-
-    if (do_cset_test) {
-      Label work;
-      __ mov(rscratch2, ShenandoahHeap::in_cset_fast_test_addr());
-      __ lsr(rscratch1, r0, ShenandoahHeapRegion::region_size_bytes_shift_jint());
-      __ ldrb(rscratch2, Address(rscratch2, rscratch1));
-      __ tbnz(rscratch2, 0, work);
-      __ ret(lr);
-      __ bind(work);
-    }
-
-    Register obj = r0;
-
-    __ enter(); // required for proper stackwalking of RuntimeStub frame
-
-    if (!c_abi) {
-      __ push_call_clobbered_registers();
-    } else {
-      __ push_call_clobbered_fp_registers();
-    }
-
-    __ mov(lr, CAST_FROM_FN_PTR(address, ShenandoahBarrierSet::write_barrier_JRT));
-    __ blr(lr);
-    if (!c_abi) {
-      __ mov(rscratch1, obj);
-      __ pop_call_clobbered_registers();
-      __ mov(obj, rscratch1);
-    } else {
-      __ pop_call_clobbered_fp_registers();
-    }
-
-    __ leave(); // required for proper stackwalking of RuntimeStub frame
-    __ ret(lr);
 
     return start;
   }
@@ -4294,11 +4238,6 @@ class StubGenerator: public StubCodeGenerator {
       // We use generate_multiply() rather than generate_square()
       // because it's faster for the sizes of modulus we care about.
       StubRoutines::_montgomerySquare = g.generate_multiply();
-    }
-
-    if (UseShenandoahGC && ShenandoahWriteBarrier) {
-      StubRoutines::aarch64::_shenandoah_wb = generate_shenandoah_wb(false, true);
-      StubRoutines::_shenandoah_wb_C = generate_shenandoah_wb(true, false);
     }
 
     if (UseAESIntrinsics) {
