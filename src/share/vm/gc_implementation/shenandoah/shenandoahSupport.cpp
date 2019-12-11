@@ -991,7 +991,7 @@ void ShenandoahBarrierC2Support::in_cset_fast_test(Node*& ctrl, Node*& not_cset_
 
 void ShenandoahBarrierC2Support::call_lrb_stub(Node*& ctrl, Node*& val, Node*& result_mem, Node* raw_mem, PhaseIdealLoop* phase) {
   IdealLoopTree*loop = phase->get_loop(ctrl);
-  const TypePtr* obj_type = phase->igvn().type(val)->is_oopptr()->cast_to_nonconst();
+  const TypePtr* obj_type = phase->igvn().type(val)->is_oopptr();
 
   // The slow path stub consumes and produces raw memory in addition
   // to the existing memory edges
@@ -2747,7 +2747,7 @@ const Type* ShenandoahLoadReferenceBarrierNode::Value(PhaseTransform *phase) con
     return t2;
   }
 
-  const Type* type = t2->is_oopptr()/*->cast_to_nonconst()*/;
+  const Type* type = t2->is_oopptr();
   return type;
 }
 
