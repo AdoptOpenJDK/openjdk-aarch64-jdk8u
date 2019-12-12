@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2017, 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -27,9 +27,12 @@ import sun.jvm.hotspot.gc_interface.CollectedHeap;
 import sun.jvm.hotspot.gc_interface.CollectedHeapName;
 import sun.jvm.hotspot.debugger.Address;
 import sun.jvm.hotspot.runtime.VM;
+import sun.jvm.hotspot.runtime.VMObjectFactory;
 import sun.jvm.hotspot.types.Type;
 import sun.jvm.hotspot.types.TypeDataBase;
 import sun.jvm.hotspot.memory.MemRegion;
+import sun.jvm.hotspot.memory.SpaceClosure;
+import sun.jvm.hotspot.types.AddressField;
 import sun.jvm.hotspot.types.CIntegerField;
 import sun.jvm.hotspot.types.JLongField;
 import java.io.PrintStream;
@@ -40,6 +43,8 @@ public class ShenandoahHeap extends CollectedHeap {
     static private CIntegerField numRegions;
     static private JLongField    used;
     static private CIntegerField committed;
+    static private AddressField  regions;
+
     static {
         VM.registerVMInitializedObserver(new Observer() {
             public void update(Observable o, Object data) {
@@ -53,6 +58,7 @@ public class ShenandoahHeap extends CollectedHeap {
         numRegions = type.getCIntegerField("_num_regions");
         used = type.getJLongField("_used");
         committed = type.getCIntegerField("_committed");
+        regions = type.getAddressField("_regions");
     }
 
     @Override
@@ -83,5 +89,21 @@ public class ShenandoahHeap extends CollectedHeap {
 
     public ShenandoahHeap(Address addr) {
         super(addr);
+    }
+
+    public void iterateHeapRegions(SpaceClosure scl) {
+        for (long index = 0; index < numOfRegions(); index ++) {
+            ShenandoahHeapRegion region = at(index);
+            scl.doSpace(region);
+        }
+    }
+
+    private ShenandoahHeapRegion at(long index) {
+        Address arrayAddr = regions.getValue(addr);
+        // Offset of &_regions[index]
+        long offset = index * VM.getVM().getAddressSize();
+        Address regionAddr = arrayAddr.getAddressAt(offset);
+        return (ShenandoahHeapRegion) VMObjectFactory.newObject(ShenandoahHeapRegion.class,
+                regionAddr);
     }
 }
