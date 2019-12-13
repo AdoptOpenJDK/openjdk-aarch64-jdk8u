@@ -677,8 +677,12 @@ void ShenandoahTraversalGC::final_traversal_collection() {
     COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
   }
 
-  if (!_heap->cancelled_gc() && _heap->process_references()) {
-    weak_refs_work();
+  if (!_heap->cancelled_gc()) {
+    if (_heap->process_references()) {
+      weak_refs_work();
+    } else {
+      ShenandoahConcurrentMark::cleanup_jni_refs();
+    }
   }
 
   if (!_heap->cancelled_gc()) {

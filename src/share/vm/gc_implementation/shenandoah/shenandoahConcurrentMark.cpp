@@ -463,6 +463,8 @@ void ShenandoahConcurrentMark::finish_mark_from_roots(bool full_gc) {
   // When we're done marking everything, we process weak references.
   if (_heap->process_references()) {
     weak_refs_work(full_gc);
+  } else {
+    cleanup_jni_refs();
   }
 
   // And finally finish class unloading
@@ -717,6 +719,19 @@ void ShenandoahConcurrentMark::weak_refs_work_doit(bool full_gc) {
     ShenandoahGCPhase phase(phase_enqueue);
     rp->enqueue_discovered_references(&executor);
   }
+}
+
+// No-op closure. Weak JNI refs are cleaned by iterating them.
+// Nothing else to do here.
+class ShenandoahCleanupWeakRootsClosure : public OopClosure {
+  virtual void do_oop(oop* o) {}
+  virtual void do_oop(narrowOop* o) {}
+};
+
+void ShenandoahConcurrentMark::cleanup_jni_refs() {
+  ShenandoahIsAliveSelector is_alive;
+  ShenandoahCleanupWeakRootsClosure cl;
+  JNIHandles::weak_oops_do(is_alive.is_alive_closure(), &cl);
 }
 
 class ShenandoahCancelledGCYieldClosure : public YieldClosure {
