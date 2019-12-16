@@ -25,6 +25,7 @@
  * @test TestWriteBarrierClearControl
  * @summary Clearing control during final graph reshape causes memory barrier to loose dependency on null check
  * @key gc
+ * @requires vm.flavor == "server"
  *
  * @run main/othervm -XX:+IgnoreUnrecognizedVMOptions -XX:-BackgroundCompilation -XX:-UseOnStackReplacement -XX:-TieredCompilation
  *                   -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC

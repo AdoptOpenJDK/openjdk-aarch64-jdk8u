@@ -28,7 +28,6 @@
 #include "ci/ciInstanceKlass.hpp"
 #include "ci/ciUtilities.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/oop.inline.hpp"
@@ -179,12 +178,12 @@ ciConstantPoolCache* ciInstanceKlass::field_cache() {
 //
 ciInstanceKlass* ciInstanceKlass::get_canonical_holder(int offset) {
   #ifdef ASSERT
-  if (!((offset >= 0 && offset < layout_helper()) || (UseShenandoahGC && offset == ShenandoahBrooksPointer::byte_offset()))) {
+  if (!(offset >= 0 && offset < layout_helper())) {
     tty->print("*** get_canonical_holder(%d) on ", offset);
     this->print();
     tty->print_cr(" ***");
-    fatal("offset must be tame");
-  }
+  };
+  assert(offset >= 0 && offset < layout_helper(), "offset must be tame");
   #endif
 
   if (offset < instanceOopDesc::base_offset_in_bytes()) {
@@ -716,27 +715,3 @@ void ciInstanceKlass::dump_replay_data(outputStream* out) {
     ik->do_local_static_fields(&sffp);
   }
 }
-
-#ifdef ASSERT
-bool ciInstanceKlass::debug_final_field_at(int offset) {
-  GUARDED_VM_ENTRY(
-    InstanceKlass* ik = get_instanceKlass();
-    fieldDescriptor fd;
-    if (ik->find_field_from_offset(offset, false, &fd)) {
-      return fd.is_final();
-    }
-  );
-  return false;
-}
-
-bool ciInstanceKlass::debug_stable_field_at(int offset) {
-  GUARDED_VM_ENTRY(
-    InstanceKlass* ik = get_instanceKlass();
-    fieldDescriptor fd;
-    if (ik->find_field_from_offset(offset, false, &fd)) {
-      return fd.is_stable();
-    }
-  );
-  return false;
-}
-#endif

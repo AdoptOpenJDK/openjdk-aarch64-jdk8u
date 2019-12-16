@@ -32,8 +32,8 @@
 static bool    returns_to_call_stub(address return_pc)   { return return_pc == _call_stub_return_address; }
 
 enum platform_dependent_constants {
-  code_size1 = 30000,          // simply increase if too small (assembler will crash if too small)
-  code_size2 = 46700           // simply increase if too small (assembler will crash if too small)
+  code_size1 = 19000,          // simply increase if too small (assembler will crash if too small)
+  code_size2 = 24000           // simply increase if too small (assembler will crash if too small)
 };
 
 class x86 {
@@ -43,7 +43,6 @@ class x86 {
   static address _get_previous_fp_entry;
   static address _get_previous_sp_entry;
 
-  static address _shenandoah_wb;
   static address _f2i_fixup;
   static address _f2l_fixup;
   static address _d2i_fixup;
@@ -64,11 +63,6 @@ class x86 {
   static address get_previous_sp_entry()
   {
     return _get_previous_sp_entry;
-  }
-
-  static address shenandoah_wb()
-  {
-    return _shenandoah_wb;
   }
 
   static address f2i_fixup()

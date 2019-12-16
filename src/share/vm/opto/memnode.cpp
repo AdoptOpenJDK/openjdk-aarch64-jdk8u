@@ -25,7 +25,6 @@
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "compiler/compileLog.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "opto/addnode.hpp"
@@ -39,7 +38,11 @@
 #include "opto/mulnode.hpp"
 #include "opto/phaseX.hpp"
 #include "opto/regmask.hpp"
-#include "opto/shenandoahSupport.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 // Portions of code courtesy of Clifford Click
 
@@ -898,7 +901,11 @@ Node* MemNode::can_see_stored_value(Node* st, PhaseTransform* phase) const {
         (tp != NULL) && tp->is_ptr_to_boxed_value()) {
       intptr_t ignore = 0;
       Node* base = AddPNode::Ideal_base_and_offset(ld_adr, phase, ignore);
-      base = ShenandoahBarrierNode::skip_through_barrier(base);
+#if INCLUDE_ALL_GCS
+      if (UseShenandoahGC) {
+        base = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(base);
+      }
+#endif
       if (base != NULL && base->is_Proj() &&
           base->as_Proj()->_con == TypeFunc::Parms &&
           base->in(0)->is_CallStaticJava() &&
@@ -954,7 +961,7 @@ Node *LoadNode::Identity( PhaseTransform *phase ) {
         value->is_Phi() &&
         value->req() > 2 &&
         value->in(1) != NULL &&
-        value->in(1)->is_ShenandoahBarrier()) {
+        value->in(1)->Opcode() == Op_ShenandoahLoadReferenceBarrier) {
       if (igvn->_worklist.member(value) ||
           igvn->_worklist.member(value->in(0)) ||
           (value->in(0)->in(1) != NULL &&
@@ -968,8 +975,9 @@ Node *LoadNode::Identity( PhaseTransform *phase ) {
     }
     // (This works even when value is a Con, but LoadNode::Value
     // usually runs first, producing the singleton type of the Con.)
-    if (UseShenandoahGC) {
-      Node* value_no_barrier = ShenandoahBarrierNode::skip_through_barrier(value->Opcode() == Op_EncodeP ? value->in(1) : value);
+    // TODO!!
+    if (false && UseShenandoahGC) {
+      Node* value_no_barrier = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(value->Opcode() == Op_EncodeP ? value->in(1) : value);
       if (value->Opcode() == Op_EncodeP) {
         if (value_no_barrier != value->in(1)) {
           Node* encode = value->clone();
@@ -1044,7 +1052,7 @@ Node* LoadNode::eliminate_autobox(PhaseGVN* phase) {
       return NULL; // Complex address
     }
     AddPNode* address = base->in(Address)->as_AddP();
-    Node* cache_base = ShenandoahBarrierNode::skip_through_barrier(address->in(AddPNode::Base));
+    Node* cache_base = address->in(AddPNode::Base);
     if ((cache_base != NULL) && cache_base->is_DecodeN()) {
       // Get ConP node which is static 'cache' field.
       cache_base = cache_base->in(1);
@@ -1517,21 +1525,12 @@ const Type *LoadNode::Value( PhaseTransform *phase ) const {
     // as to alignment, which will therefore produce the smallest
     // possible base offset.
     const int min_base_off = arrayOopDesc::base_offset_in_bytes(T_BYTE);
-    const bool off_beyond_header = (off != ShenandoahBrooksPointer::byte_offset() || !UseShenandoahGC) && ((uint)off >= (uint)min_base_off);
+    const bool off_beyond_header = ((uint)off >= (uint)min_base_off);
 
     // Try to constant-fold a stable array element.
     if (FoldStableValues && ary->is_stable()) {
       // Make sure the reference is not into the header and the offset is constant
-      ciObject* aobj = NULL;
-      if (UseShenandoahGC && adr->is_AddP() && !adr->in(AddPNode::Base)->is_top()) {
-        Node* base = ShenandoahBarrierNode::skip_through_barrier(adr->in(AddPNode::Base));
-        if (!base->is_top()) {
-          ary = phase->type(base)->is_aryptr();
-          aobj = ary->const_oop();
-        }
-      } else {
-        aobj = ary->const_oop();
-      }
+      ciObject* aobj = ary->const_oop();
       if (aobj != NULL && off_beyond_header && adr->is_AddP() && off != Type::OffsetBot) {
         const Type* con_type = fold_stable_ary_elem(ary, off, memory_type());
         if (con_type != NULL) {
@@ -1621,19 +1620,7 @@ const Type *LoadNode::Value( PhaseTransform *phase ) const {
       }
     }
     // Optimizations for constant objects
-    ciObject* const_oop = NULL;
-    if (UseShenandoahGC && adr->is_AddP() && !adr->in(AddPNode::Base)->is_top()) {
-      Node* base = ShenandoahBarrierNode::skip_through_barrier(adr->in(AddPNode::Base));
-      if (phase->type(base) != Type::TOP) {
-        const TypePtr* base_t = phase->type(base)->is_ptr();
-        if (base_t != TypePtr::NULL_PTR) {
-          tinst = base_t->is_instptr();
-          const_oop = tinst->const_oop();
-        }
-      }
-    } else {
-      const_oop = tinst->const_oop();
-    }
+    ciObject* const_oop = tinst->const_oop();
     if (const_oop != NULL) {
       // For constant Boxed value treat the target field as a compile time constant.
       if (tinst->is_ptr_to_boxed_value()) {

@@ -35,7 +35,9 @@
 #include "opto/phaseX.hpp"
 #include "opto/regalloc.hpp"
 #include "opto/rootnode.hpp"
-#include "opto/shenandoahSupport.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 //=============================================================================
 #define NODE_HASH_MINIMUM_SIZE    255
@@ -1294,10 +1296,7 @@ void PhaseIterGVN::remove_globally_dead_node( Node *dead ) {
                   i++;
                 }
                 assert(!(i < imax), "sanity");
-              }
-            } else if (dead->Opcode() == Op_ShenandoahWBMemProj) {
-              assert(i == 0 && in->Opcode() == Op_ShenandoahWriteBarrier, "broken graph");
-              _worklist.push(in);
+	      }              
             } else if (in->Opcode() == Op_AddP && CallLeafNode::has_only_g1_wb_pre_uses(in)) {
               add_users_to_worklist(in);
             }
@@ -1347,8 +1346,8 @@ void PhaseIterGVN::remove_globally_dead_node( Node *dead ) {
       if (dead->is_expensive()) {
         C->remove_expensive_node(dead);
       }
-      if (dead->is_ShenandoahBarrier()) {
-        C->remove_shenandoah_barrier(dead->as_ShenandoahBarrier());
+      if (dead->Opcode() == Op_ShenandoahLoadReferenceBarrier) {
+        C->remove_shenandoah_barrier(reinterpret_cast<ShenandoahLoadReferenceBarrierNode*>(dead));
       }
       CastIINode* cast = dead->isa_CastII();
       if (cast != NULL && cast->has_range_check()) {
@@ -1564,7 +1563,7 @@ void PhaseIterGVN::add_users_to_worklist( Node *n ) {
       if (imem != NULL)  add_users_to_worklist0(imem);
     }
 
-    if (use->is_ShenandoahBarrier()) {
+    if (use->Opcode() == Op_ShenandoahLoadReferenceBarrier) {
       Node* cmp = use->find_out_with(Op_CmpP);
       if (cmp != NULL) {
         _worklist.push(cmp);
@@ -1694,7 +1693,7 @@ void PhaseCCP::analyze() {
             }
           }
         }
-        if (m->is_ShenandoahBarrier()) {
+        if (m->Opcode() == Op_ShenandoahLoadReferenceBarrier) {
           for (DUIterator_Fast i2max, i2 = m->fast_outs(i2max); i2 < i2max; i2++) {
             Node* p = m->fast_out(i2);
             if (p->Opcode() == Op_CmpP) {

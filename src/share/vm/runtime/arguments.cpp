@@ -1722,7 +1722,7 @@ void Arguments::set_shenandoah_gc_flags() {
   UNSUPPORTED_GC_OPTION(UseShenandoahGC);
 #endif
 
-#ifdef IA32
+#if 0 // leave this block as stepping stone for future platforms
   warning("Shenandoah GC is not fully supported on this platform:");
   warning("  concurrent modes are not supported, only STW cycles are enabled;");
   warning("  arch-specific barrier code is not implemented, disabling barriers;");
@@ -1731,11 +1731,13 @@ void Arguments::set_shenandoah_gc_flags() {
   FLAG_SET_DEFAULT(ShenandoahGCHeuristics,           "passive");
 
   FLAG_SET_DEFAULT(ShenandoahSATBBarrier,            false);
-  FLAG_SET_DEFAULT(ShenandoahWriteBarrier,           false);
-  FLAG_SET_DEFAULT(ShenandoahReadBarrier,            false);
+  FLAG_SET_DEFAULT(ShenandoahLoadRefBarrier,         false);
+  FLAG_SET_DEFAULT(ShenandoahKeepAliveBarrier,       false);
+  FLAG_SET_DEFAULT(ShenandoahStoreValEnqueueBarrier, false);
   FLAG_SET_DEFAULT(ShenandoahCASBarrier,             false);
-  FLAG_SET_DEFAULT(ShenandoahAcmpBarrier,            false);
   FLAG_SET_DEFAULT(ShenandoahCloneBarrier,           false);
+
+  FLAG_SET_DEFAULT(ShenandoahVerifyOptoBarriers,     false);
 #endif
 #endif
 
@@ -1773,12 +1775,48 @@ void Arguments::set_shenandoah_gc_flags() {
     FLAG_SET_DEFAULT(UseNUMA, true);
   }
 
-  FLAG_SET_DEFAULT(ParallelGCThreads,
-                   Abstract_VM_Version::parallel_worker_threads());
+  // Set up default number of concurrent threads. We want to have cycles complete fast
+  // enough, but we also do not want to steal too much CPU from the concurrently running
+  // application. Using 1/4 of available threads for concurrent GC seems a good
+  // compromise here.
+  bool ergo_conc = FLAG_IS_DEFAULT(ConcGCThreads);
+  if (ergo_conc) {
+    FLAG_SET_DEFAULT(ConcGCThreads, MAX2(1, os::processor_count() / 4));
+  }
 
-  if (FLAG_IS_DEFAULT(ConcGCThreads)) {
-    uint conc_threads = MAX2((uint) 1, (uint)ParallelGCThreads);
-    FLAG_SET_DEFAULT(ConcGCThreads, conc_threads);
+  if (ConcGCThreads == 0) {
+    vm_exit_during_initialization("Shenandoah expects ConcGCThreads > 0, check -XX:ConcGCThreads=#");
+  }
+
+  // Set up default number of parallel threads. We want to have decent pauses performance
+  // which would use parallel threads, but we also do not want to do too many threads
+  // that will overwhelm the OS scheduler. Using 1/2 of available threads seems to be a fair
+  // compromise here. Due to implementation constraints, it should not be lower than
+  // the number of concurrent threads.
+  bool ergo_parallel = FLAG_IS_DEFAULT(ParallelGCThreads);
+  if (ergo_parallel) {
+    FLAG_SET_DEFAULT(ParallelGCThreads, MAX2(1, os::processor_count() / 2));
+  }
+
+  if (ParallelGCThreads == 0) {
+    vm_exit_during_initialization("Shenandoah expects ParallelGCThreads > 0, check -XX:ParallelGCThreads=#");
+  }
+
+  // Make sure ergonomic decisions do not break the thread count invariants.
+  // This may happen when user overrides one of the flags, but not the other.
+  // When that happens, we want to adjust the setting that was set ergonomically.
+  if (ParallelGCThreads < ConcGCThreads) {
+    if (ergo_conc && !ergo_parallel) {
+      FLAG_SET_DEFAULT(ConcGCThreads, ParallelGCThreads);
+    } else if (!ergo_conc && ergo_parallel) {
+      FLAG_SET_DEFAULT(ParallelGCThreads, ConcGCThreads);
+    } else if (ergo_conc && ergo_parallel) {
+      // Should not happen, check the ergonomic computation above. Fail with relevant error.
+      vm_exit_during_initialization("Shenandoah thread count ergonomic error");
+    } else {
+      // User settings error, report and ask user to rectify.
+      vm_exit_during_initialization("Shenandoah expects ConcGCThreads <= ParallelGCThreads, check -XX:ParallelGCThreads, -XX:ConcGCThreads");
+    }
   }
 
   if (FLAG_IS_DEFAULT(ParallelRefProcEnabled)) {
@@ -1796,19 +1834,20 @@ void Arguments::set_shenandoah_gc_flags() {
 #ifdef COMPILER2
   // Shenandoah cares more about pause times, rather than raw throughput.
   // Enabling safepoints in counted loops makes it more responsive with
-  // long loops.
-  if (FLAG_IS_DEFAULT(UseCountedLoopSafepoints)) {
-    FLAG_SET_DEFAULT(UseCountedLoopSafepoints, true);
+  // long loops. However, it is risky in 8u, due to bugs it brings, for
+  // example JDK-8176506. Warn user about this, and proceed.
+  if (UseCountedLoopSafepoints) {
+    warning("Enabling -XX:UseCountedLoopSafepoints is known to cause JVM bugs. Use at your own risk.");
   }
 
 #ifdef ASSERT
   // C2 barrier verification is only reliable when all default barriers are enabled
   if (ShenandoahVerifyOptoBarriers &&
           (!FLAG_IS_DEFAULT(ShenandoahSATBBarrier)    ||
-           !FLAG_IS_DEFAULT(ShenandoahReadBarrier)    ||
-           !FLAG_IS_DEFAULT(ShenandoahWriteBarrier)   ||
+           !FLAG_IS_DEFAULT(ShenandoahLoadRefBarrier) ||
+           !FLAG_IS_DEFAULT(ShenandoahKeepAliveBarrier)       ||
+           !FLAG_IS_DEFAULT(ShenandoahStoreValEnqueueBarrier) ||
            !FLAG_IS_DEFAULT(ShenandoahCASBarrier)     ||
-           !FLAG_IS_DEFAULT(ShenandoahAcmpBarrier)    ||
            !FLAG_IS_DEFAULT(ShenandoahCloneBarrier)
           )) {
     warning("Unusual barrier configuration, disabling C2 barrier verification");
@@ -1852,13 +1891,6 @@ void Arguments::set_shenandoah_gc_flags() {
     }
     FLAG_SET_DEFAULT(ClassUnloadingWithConcurrentMark, false);
   }
-
-  // JNI fast get field stuff is not currently supported by Shenandoah.
-  // It would introduce another heap memory access for reading the forwarding
-  // pointer, which would have to be guarded by the signal handler machinery.
-  // See:
-  // http://mail.openjdk.java.net/pipermail/hotspot-dev/2018-June/032763.html
-  FLAG_SET_DEFAULT(UseFastJNIAccessors, false);
 
   // TLAB sizing policy makes resizing decisions before each GC cycle. It averages
   // historical data, assigning more recent data the weight according to TLABAllocationWeight.

@@ -123,6 +123,12 @@ public:
   // Allocate size HeapWords. The memory is NOT initialized to zero.
   inline HeapWord* allocate(size_t size);
 
+  // Reserve space at the end of TLAB
+  static size_t end_reserve() {
+    int reserve_size = typeArrayOopDesc::header_size(T_INT);
+    return MAX2(reserve_size, VM_Version::reserve_for_allocation_prefetch());
+  }
+
   // Resize based on amount of allocation, etc.
   void resize();
 
@@ -132,7 +138,6 @@ public:
   // Rolls back a single allocation of the given size.
   void rollback(size_t size);
 
-  static size_t end_reserve();
   static size_t alignment_reserve()              { return align_object_size(end_reserve()); }
   static size_t alignment_reserve_in_bytes()     { return alignment_reserve() * HeapWordSize; }
 

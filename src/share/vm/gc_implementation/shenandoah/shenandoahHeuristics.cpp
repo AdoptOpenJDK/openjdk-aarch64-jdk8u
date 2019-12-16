@@ -24,7 +24,6 @@
 #include "precompiled.hpp"
 
 #include "gc_interface/gcCause.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
@@ -38,6 +37,14 @@ int ShenandoahHeuristics::compare_by_garbage(RegionData a, RegionData b) {
   else if (a._garbage < b._garbage)
     return 1;
   else return 0;
+}
+
+int ShenandoahHeuristics::compare_by_garbage_then_alloc_seq_ascending(RegionData a, RegionData b) {
+  int r = compare_by_garbage(a, b);
+  if (r != 0) {
+    return r;
+  }
+  return compare_by_alloc_seq_ascending(a, b);
 }
 
 int ShenandoahHeuristics::compare_by_alloc_seq_ascending(RegionData a, RegionData b) {
@@ -112,6 +119,9 @@ void ShenandoahHeuristics::choose_collection_set(ShenandoahCollectionSet* collec
 
   ShenandoahHeap* heap = ShenandoahHeap::heap();
 
+  // Check all pinned regions have updated status before choosing the collection set.
+  heap->assert_pinned_region_status();
+
   // Step 1. Build up the region candidates we care about, rejecting losers and accepting winners right away.
 
   size_t num_regions = heap->num_regions();
@@ -155,7 +165,7 @@ void ShenandoahHeuristics::choose_collection_set(ShenandoahCollectionSet* collec
       // Reclaim humongous regions here, and count them as the immediate garbage
 #ifdef ASSERT
       bool reg_live = region->has_live();
-      bool bm_live = ctx->is_marked(oop(region->bottom() + ShenandoahBrooksPointer::word_size()));
+      bool bm_live = ctx->is_marked(oop(region->bottom()));
       assert(reg_live == bm_live,
              err_msg("Humongous liveness and marks should agree. Region live: %s; Bitmap live: %s; Region Live Words: " SIZE_FORMAT,
                      BOOL_TO_STR(reg_live), BOOL_TO_STR(bm_live), region->get_live_data_words()));
@@ -178,8 +188,9 @@ void ShenandoahHeuristics::choose_collection_set(ShenandoahCollectionSet* collec
   // given the amount of immediately reclaimable garbage. If we do, figure out the collection set.
 
   assert (immediate_garbage <= total_garbage,
-          err_msg("Cannot have more immediate garbage than total garbage: " SIZE_FORMAT "M vs " SIZE_FORMAT "M",
-                  immediate_garbage / M, total_garbage / M));
+          err_msg("Cannot have more immediate garbage than total garbage: " SIZE_FORMAT "%s vs " SIZE_FORMAT "%s",
+                  byte_size_in_proper_unit(immediate_garbage), proper_unit_for_byte_size(immediate_garbage),
+                  byte_size_in_proper_unit(total_garbage),     proper_unit_for_byte_size(total_garbage)));
 
   size_t immediate_percent = total_garbage == 0 ? 0 : (immediate_garbage * 100 / total_garbage);
 
@@ -188,13 +199,17 @@ void ShenandoahHeuristics::choose_collection_set(ShenandoahCollectionSet* collec
     collection_set->update_region_status();
 
     size_t cset_percent = total_garbage == 0 ? 0 : (collection_set->garbage() * 100 / total_garbage);
-    log_info(gc, ergo)("Collectable Garbage: " SIZE_FORMAT "M (" SIZE_FORMAT "%% of total), " SIZE_FORMAT "M CSet, " SIZE_FORMAT " CSet regions",
-                       collection_set->garbage() / M, cset_percent, collection_set->live_data() / M, collection_set->count());
+    log_info(gc, ergo)("Collectable Garbage: " SIZE_FORMAT "%s (" SIZE_FORMAT "%% of total), " SIZE_FORMAT "%s CSet, " SIZE_FORMAT " CSet regions",
+                       byte_size_in_proper_unit(collection_set->garbage()),   proper_unit_for_byte_size(collection_set->garbage()),
+                       cset_percent,
+                       byte_size_in_proper_unit(collection_set->live_data()), proper_unit_for_byte_size(collection_set->live_data()),
+                       collection_set->count());
   }
   end_choose_collection_set();
 
-  log_info(gc, ergo)("Immediate Garbage: " SIZE_FORMAT "M (" SIZE_FORMAT "%% of total), " SIZE_FORMAT " regions",
-                     immediate_garbage / M, immediate_percent, immediate_regions);
+  log_info(gc, ergo)("Immediate Garbage: " SIZE_FORMAT "%s (" SIZE_FORMAT "%% of total), " SIZE_FORMAT " regions",
+                     byte_size_in_proper_unit(immediate_garbage), proper_unit_for_byte_size(immediate_garbage),
+                     immediate_percent, immediate_regions);
 }
 
 void ShenandoahHeuristics::record_gc_start() {
@@ -302,7 +317,7 @@ double ShenandoahHeuristics::time_since_last_gc() const {
   return os::elapsedTime() - _cycle_start;
 }
 
-bool ShenandoahHeuristics::should_start_normal_gc() const {
+bool ShenandoahHeuristics::should_start_gc() const {
   // Perform GC to cleanup metaspace
   if (has_metaspace_oom()) {
     // Some of vmTestbase/metaspace tests depend on following line to count GC cycles

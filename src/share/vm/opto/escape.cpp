@@ -34,7 +34,9 @@
 #include "opto/escape.hpp"
 #include "opto/phaseX.hpp"
 #include "opto/rootnode.hpp"
-#include "opto/shenandoahSupport.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 ConnectionGraph::ConnectionGraph(Compile * C, PhaseIterGVN *igvn) :
   _nodes(C->comp_arena(), C->unique(), C->unique(), NULL),
@@ -566,12 +568,11 @@ void ConnectionGraph::add_node_to_connection_graph(Node *n, Unique_Node_List *de
       add_java_object(n, PointsToNode::ArgEscape);
       break;
     }
-    case Op_ShenandoahReadBarrier:
-    case Op_ShenandoahWriteBarrier:
-      // Barriers 'pass through' its arguments. I.e. what goes in, comes out.
-      // It doesn't escape.
-      add_local_var_and_edge(n, PointsToNode::NoEscape, n->in(ShenandoahBarrierNode::ValueIn), delayed_worklist);
+#if INCLUDE_ALL_GCS
+    case Op_ShenandoahLoadReferenceBarrier:
+      add_local_var_and_edge(n, PointsToNode::NoEscape, n->in(ShenandoahLoadReferenceBarrierNode::ValueIn), delayed_worklist);
       break;
+#endif
     default:
       ; // Do nothing for nodes not related to EA.
   }
@@ -766,13 +767,12 @@ void ConnectionGraph::add_final_edges(Node *n) {
       }
       break;
     }
-    case Op_ShenandoahReadBarrier:
-    case Op_ShenandoahWriteBarrier:
-      // Barriers 'pass through' its arguments. I.e. what goes in, comes out.
-      // It doesn't escape.
-      add_local_var_and_edge(n, PointsToNode::NoEscape, n->in(ShenandoahBarrierNode::ValueIn), NULL);
+#if INCLUDE_ALL_GCS
+    case Op_ShenandoahLoadReferenceBarrier:
+      add_local_var_and_edge(n, PointsToNode::NoEscape, n->in(ShenandoahLoadReferenceBarrierNode::ValueIn), NULL);
       break;
-    default: {
+#endif
+  default: {
       // This method should be called only for EA specific nodes which may
       // miss some edges when they were created.
 #ifdef ASSERT
@@ -2289,7 +2289,7 @@ Node* ConnectionGraph::get_addp_base(Node *addp) {
            (uncast_base->is_Mem() && (uncast_base->bottom_type()->isa_rawptr() != NULL)) ||
            (uncast_base->is_Proj() && uncast_base->in(0)->is_Allocate()) ||
            (uncast_base->is_Phi() && (uncast_base->bottom_type()->isa_rawptr() != NULL)) ||
-           uncast_base->is_ShenandoahBarrier(), "sanity");
+           uncast_base->Opcode() == Op_ShenandoahLoadReferenceBarrier, "sanity");
   }
   return base;
 }
@@ -2991,7 +2991,6 @@ void ConnectionGraph::split_unique_types(GrowableArray<Node *>  &alloc_worklist)
                n->is_CheckCastPP() ||
                n->is_EncodeP() ||
                n->is_DecodeN() ||
-               n->is_ShenandoahBarrier() ||
                (n->is_ConstraintCast() && n->Opcode() == Op_CastPP)) {
       if (visited.test_set(n->_idx)) {
         assert(n->is_Phi(), "loops only through Phi's");
@@ -3062,7 +3061,6 @@ void ConnectionGraph::split_unique_types(GrowableArray<Node *>  &alloc_worklist)
                  use->is_CheckCastPP() ||
                  use->is_EncodeNarrowPtr() ||
                  use->is_DecodeNarrowPtr() ||
-                 use->is_ShenandoahBarrier() ||
                  (use->is_ConstraintCast() && use->Opcode() == Op_CastPP)) {
         alloc_worklist.append_if_missing(use);
 #ifdef ASSERT
@@ -3087,8 +3085,7 @@ void ConnectionGraph::split_unique_types(GrowableArray<Node *>  &alloc_worklist)
         if (!(op == Op_CmpP || op == Op_Conv2B ||
               op == Op_CastP2X || op == Op_StoreCM ||
               op == Op_FastLock || op == Op_AryEq || op == Op_StrComp ||
-              op == Op_StrEquals || op == Op_StrIndexOf ||
-              op == Op_ShenandoahWBMemProj)) {
+              op == Op_StrEquals || op == Op_StrIndexOf)) {
           n->dump();
           use->dump();
           assert(false, "EA: missing allocation reference path");

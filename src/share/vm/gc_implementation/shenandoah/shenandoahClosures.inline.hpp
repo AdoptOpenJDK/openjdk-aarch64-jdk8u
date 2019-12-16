@@ -38,7 +38,8 @@ bool ShenandoahForwardedIsAliveClosure::do_object_b(oop obj) {
   }
   obj = ShenandoahBarrierSet::resolve_forwarded_not_null(obj);
   shenandoah_assert_not_forwarded_if(NULL, obj,
-                                     ShenandoahHeap::heap()->is_concurrent_mark_in_progress());
+                                     (ShenandoahHeap::heap()->is_concurrent_mark_in_progress() ||
+                                     ShenandoahHeap::heap()->is_concurrent_traversal_in_progress()));
   return _mark_context->is_marked(obj);
 }
 
@@ -90,9 +91,8 @@ void ShenandoahEvacuateUpdateRootsClosure::do_oop_work(T* p) {
     if (_heap->in_collection_set(obj)) {
       shenandoah_assert_marked(p, obj);
       oop resolved = ShenandoahBarrierSet::resolve_forwarded_not_null(obj);
-      if (oopDesc::unsafe_equals(resolved, obj)) {
-	bool evac;
-        resolved = _heap->evacuate_object(obj, _thread, evac);
+      if (resolved == obj) {
+        resolved = _heap->evacuate_object(obj, _thread);
       }
       oopDesc::encode_store_heap_oop(p, resolved);
     }

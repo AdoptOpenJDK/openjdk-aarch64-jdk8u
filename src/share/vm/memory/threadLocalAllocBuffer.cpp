@@ -124,8 +124,7 @@ void ThreadLocalAllocBuffer::make_parsable(bool retire) {
       }
     }
 
-    HeapWord* obj = Universe::heap()->tlab_post_allocation_setup(top());
-    CollectedHeap::fill_with_object(obj, hard_end(), retire);
+    CollectedHeap::fill_with_object(top(), hard_end(), retire);
 
     if (retire || ZeroTLAB) {  // "Reset" the TLAB
       set_start(NULL);
@@ -308,11 +307,6 @@ Thread* ThreadLocalAllocBuffer::myThread() {
   assert(this == (_gclab ? &thread->gclab() : &thread->tlab()), "must be");
 #endif
   return thread;
-}
-
-size_t ThreadLocalAllocBuffer::end_reserve() {
-  int reserve_size = typeArrayOopDesc::header_size(T_INT) + Universe::heap()->oop_extra_words();
-  return MAX2(reserve_size, VM_Version::reserve_for_allocation_prefetch());
 }
 
 void ThreadLocalAllocBuffer::rollback(size_t size) {

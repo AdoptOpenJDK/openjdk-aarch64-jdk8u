@@ -64,8 +64,10 @@ ShenandoahTerminationTimingsTracker::~ShenandoahTerminationTimingsTracker() {
 ShenandoahTerminationTracker::ShenandoahTerminationTracker(ShenandoahPhaseTimings::Phase phase) : _phase(phase) {
   assert(_current_termination_phase == ShenandoahPhaseTimings::_num_phases, "Should be invalid");
   assert(phase == ShenandoahPhaseTimings::termination ||
+         phase == ShenandoahPhaseTimings::final_traversal_gc_termination ||
          phase == ShenandoahPhaseTimings::full_gc_mark_termination ||
          phase == ShenandoahPhaseTimings::conc_termination ||
+         phase == ShenandoahPhaseTimings::conc_traversal_termination ||
          phase == ShenandoahPhaseTimings::weakrefs_termination ||
          phase == ShenandoahPhaseTimings::full_gc_weakrefs_termination,
          "Only these phases");

@@ -21,34 +21,31 @@
  *
  */
 
-#include "precompiled.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#ifndef SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHTRAVERSALAGGRESSIVEHEURISTICS_HPP
+#define SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHTRAVERSALAGGRESSIVEHEURISTICS_HPP
 
-#include "asm/macroAssembler.hpp"
-#include "interpreter/interpreter.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 
-#define __ masm->
+class ShenandoahTraversalAggressiveHeuristics : public ShenandoahHeuristics {
+private:
+  uint64_t _last_cset_select;
 
-#ifndef CC_INTERP
+protected:
+  virtual void choose_collection_set_from_regiondata(ShenandoahCollectionSet* set,
+                                                     RegionData* data, size_t data_size,
+                                                     size_t free);
 
-void ShenandoahBarrierSet::interpreter_read_barrier(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
+public:
+  ShenandoahTraversalAggressiveHeuristics();
 
-void ShenandoahBarrierSet::interpreter_read_barrier_not_null(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
+  virtual bool is_experimental();
 
-void ShenandoahBarrierSet::interpreter_write_barrier(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
+  virtual bool is_diagnostic();
 
-void ShenandoahBarrierSet::asm_acmp_barrier(MacroAssembler* masm, Register op1, Register op2) {
-  Unimplemented();
-}
+  virtual const char* name();
 
-void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
-  Unimplemented();
-}
-#endif
+  virtual void choose_collection_set(ShenandoahCollectionSet* collection_set);
+  virtual bool should_start_gc() const;
+};
+
+#endif // SHARE_GC_SHENANDOAH_HEURISTICS_SHENANDOAHTRAVERSALAGGRESSIVEHEURISTICS_HPP

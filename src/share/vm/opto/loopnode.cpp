@@ -37,6 +37,10 @@
 #include "opto/rootnode.hpp"
 #include "opto/superword.hpp"
 
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
+
 //=============================================================================
 //------------------------------is_loop_iv-------------------------------------
 // Determine if a node is Counted loop induction variable.
@@ -2347,9 +2351,11 @@ void PhaseIdealLoop::build_and_optimize(bool do_split_ifs, bool skip_loop_opts) 
       C->set_major_progress();
     }
 
+#if INCLUDE_ALL_GCS
     if (UseShenandoahGC && !C->major_progress()) {
-      shenandoah_pin_and_expand_barriers();
+      ShenandoahBarrierC2Support::pin_and_expand(this);
     }
+#endif
 
     // Cleanup any modified bits
     _igvn.optimize();
@@ -3540,8 +3546,6 @@ void PhaseIdealLoop::build_loop_late_post( Node *n ) {
     case Op_StrEquals:
     case Op_StrIndexOf:
     case Op_AryEq:
-    case Op_ShenandoahReadBarrier:
-    case Op_ShenandoahWriteBarrier:
       pinned = false;
     }
     if( pinned ) {
@@ -3598,27 +3602,33 @@ void PhaseIdealLoop::build_loop_late_post( Node *n ) {
   // which can inhibit range check elimination.
   if (least != early) {
     Node* ctrl_out = least->unique_ctrl_out();
-    if (UseShenandoahGC &&
-        ctrl_out && ctrl_out->is_Loop() &&
+    if (UseShenandoahGC && ctrl_out && ctrl_out->is_Loop() &&
         least == ctrl_out->in(LoopNode::EntryControl)) {
+      // Move the node above predicates as far up as possible so a
+      // following pass of loop predication doesn't hoist a predicate
+      // that depends on it above that node.
       Node* new_ctrl = least;
-      if (find_predicate_insertion_point(new_ctrl, Deoptimization::Reason_loop_limit_check) != NULL) {
-        new_ctrl = new_ctrl->in(0)->in(0);
-        assert(is_dominator(early, new_ctrl), "least != early so we can move up the dominator tree");
-      }
-      if (find_predicate_insertion_point(new_ctrl, Deoptimization::Reason_predicate) != NULL) {
+      for (;;) {
+        if (!new_ctrl->is_Proj()) {
+          break;
+        }
+        CallStaticJavaNode* call = new_ctrl->as_Proj()->is_uncommon_trap_if_pattern(Deoptimization::Reason_none);
+        if (call == NULL) {
+          break;
+        }
+        int req = call->uncommon_trap_request();
+        Deoptimization::DeoptReason trap_reason = Deoptimization::trap_request_reason(req);
+        if (trap_reason != Deoptimization::Reason_loop_limit_check &&
+            trap_reason != Deoptimization::Reason_predicate) {
+          break;
+        }
         Node* c = new_ctrl->in(0)->in(0);
-        assert(is_dominator(early, c), "least != early so we can move up the dominator tree");
+        if (is_dominator(c, early) && c != early) {
+          break;
+        }
         new_ctrl = c;
       }
-      if (new_ctrl != least) {
-        least = new_ctrl;
-      } else if (ctrl_out->is_CountedLoop()) {
-        Node* least_dom = idom(least);
-        if (get_loop(least_dom)->is_member(get_loop(least))) {
-          least = least_dom;
-        }
-      }
+      least = new_ctrl;
     } else if (ctrl_out && ctrl_out->is_CountedLoop() &&
                least == ctrl_out->in(LoopNode::EntryControl)) {
       Node* least_dom = idom(least);
@@ -3651,16 +3661,6 @@ void PhaseIdealLoop::build_loop_late_post( Node *n ) {
   IdealLoopTree *chosen_loop = get_loop(least);
   if( !chosen_loop->_child )   // Inner loop?
     chosen_loop->_body.push(n);// Collect inner loops
-
-  if (n->Opcode() == Op_ShenandoahWriteBarrier) {
-    // The write barrier and its memory proj must have the same
-    // control otherwise some loop opts could put nodes (Phis) between
-    // them
-    Node* proj = n->find_out_with(Op_ShenandoahWBMemProj);
-    if (proj != NULL) {
-      set_ctrl_and_loop(proj, least);
-    }
-  }
 }
 
 #ifdef ASSERT

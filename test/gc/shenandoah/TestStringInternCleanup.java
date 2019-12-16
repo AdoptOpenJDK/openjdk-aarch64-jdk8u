@@ -26,10 +26,10 @@
  * @summary Check that Shenandoah cleans up interned strings
  * @key gc
  *
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=passive      -XX:+ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestStringInternCleanup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=passive      -XX:-ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestStringInternCleanup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=passive      -XX:+ShenandoahDegeneratedGC                       TestStringInternCleanup
- * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=passive      -XX:-ShenandoahDegeneratedGC                       TestStringInternCleanup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCMode=passive            -XX:+ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestStringInternCleanup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCMode=passive            -XX:-ShenandoahDegeneratedGC -XX:+ShenandoahVerify TestStringInternCleanup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCMode=passive            -XX:+ShenandoahDegeneratedGC                       TestStringInternCleanup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCMode=passive            -XX:-ShenandoahDegeneratedGC                       TestStringInternCleanup
  *
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=aggressive                         TestStringInternCleanup
 
@@ -39,6 +39,10 @@
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=adaptive                           TestStringInternCleanup
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=static                             TestStringInternCleanup
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCHeuristics=compact                            TestStringInternCleanup
+ *
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCMode=traversal -XX:+ShenandoahVerify          TestStringInternCleanup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCMode=traversal -XX:+ShenandoahVerify -XX:ShenandoahGCHeuristics=aggressive TestStringInternCleanup
+ * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ClassUnloadingWithConcurrentMark -Xmx64m -XX:ShenandoahGCMode=traversal                            TestStringInternCleanup
  *
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:-ClassUnloadingWithConcurrentMark -Xmx64m                                                               TestStringInternCleanup
  */

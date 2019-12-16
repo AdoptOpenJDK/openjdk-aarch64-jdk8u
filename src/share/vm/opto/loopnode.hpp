@@ -1047,7 +1047,6 @@ public:
   Node *split_thru_region( Node *n, Node *region );
   // Split Node 'n' through merge point if there is enough win.
   Node *split_thru_phi( Node *n, Node *region, int policy );
-  void split_mem_thru_phi(Node*, Node* r, Node* phi);
 
   // Found an If getting its condition-code input from a Phi in the
   // same block.  Split thru the Region.
@@ -1073,48 +1072,6 @@ private:
   bool split_up( Node *n, Node *blk1, Node *blk2 );
   void sink_use( Node *use, Node *post_loop );
   Node *place_near_use( Node *useblock ) const;
-
-  Node* try_common_shenandoah_barriers(Node* n, Node *n_ctrl);
-  MergeMemNode* shenandoah_allocate_merge_mem(Node* mem, int alias, Node* rep_proj, Node* rep_ctrl);
-  bool shenandoah_should_process_phi(Node* phi, int alias);
-  MergeMemNode* shenandoah_clone_merge_mem(Node* u, Node* mem, int alias, Node* rep_proj, Node* rep_ctrl, DUIterator& i);
-  Node* shenandoah_no_branches(Node* c, Node* dom, bool allow_one_proj);
-  Node* try_move_shenandoah_barrier_before_loop(Node* n, Node *n_ctrl);
-#ifdef ASSERT
-  bool shenandoah_memory_dominates_all_paths(Node* mem, Node* rep_ctrl, int alias);
-  void shenandoah_memory_dominates_all_paths_helper(Node* c, Node* rep_ctrl, Unique_Node_List& controls);
-#endif
-  bool shenandoah_fix_mem_phis(Node* mem, Node* mem_ctrl, Node* rep_ctrl, int alias);
-  bool shenandoah_fix_mem_phis_helper(Node* c, Node* mem, Node* mem_ctrl, Node* rep_ctrl, int alias, VectorSet& controls, GrowableArray<Node*>& phis);
-  void try_move_shenandoah_read_barrier(Node* n, Node *n_ctrl);
-  Node* shenandoah_dom_mem(Node* mem, Node*& mem_ctrl, Node* n, Node* rep_ctrl, int alias);
-  Node* try_move_shenandoah_barrier_before_pre_loop(Node* c, Node* val_ctrl);
-  Node* try_move_shenandoah_barrier_before_loop_helper(Node* n, Node* cl,  Node* val_ctrl, Node* mem);
-  Node* shenandoah_move_above_predicates(Node* cl, Node* val_ctrl);
-  void shenandoah_pin_and_expand_barriers();
-  CallStaticJavaNode* shenandoah_pin_and_expand_barriers_null_check(ShenandoahBarrierNode* wb);
-  void shenandoah_pin_and_expand_barriers_move_barrier(ShenandoahBarrierNode* wb);
-  Node* shenandoah_pick_phi(Node* phi1, Node* phi2, Node_Stack& phis, VectorSet& visited);
-  Node* shenandoah_find_bottom_mem(Node* ctrl);
-  void shenandoah_follow_barrier_uses(Node* n, Node* ctrl, Unique_Node_List& uses);
-  bool shenandoah_already_has_better_phi(Node* region, int alias, Node* m, Node* m_ctrl);
-  void shenandoah_fix_raw_mem(Node* ctrl, Node* region, Node* raw_mem, Node* raw_mem_for_ctrl,
-                              Node* raw_mem_phi, Node_List& memory_nodes,
-                              Unique_Node_List& uses);
-  void shenandoah_test_evacuation_in_progress(Node* ctrl, int alias, Node*& raw_mem, Node*& wb_mem,
-                                              IfNode*& evacuation_iff, Node*& evac_in_progress,
-                                              Node*& evac_not_in_progress);
-  void shenandoah_evacuation_not_in_progress(Node* c, Node* v, Node* unc_ctrl, Node* raw_mem, Node* wb_mem, Node* region,
-                                             Node* val_phi, Node* mem_phi, Node* raw_mem_phi, Node*& unc_region);
-  void shenandoah_evacuation_in_progress(Node* c, Node* val, Node* evacuation_iff, Node* unc, Node* unc_ctrl,
-                                         Node* raw_mem, Node* wb_mem, Node* region, Node* val_phi, Node* mem_phi,
-                                         Node* raw_mem_phi, Node* unc_region, int alias, Unique_Node_List& uses);
-  void shenandoah_evacuation_not_in_progress_null_check(Node*& c, Node*& val, Node* unc_ctrl, Node*& unc_region);
-  void shenandoah_evacuation_in_progress_null_check(Node*& c, Node*& val, Node* evacuation_iff, Node* unc, Node* unc_ctrl,
-                                                    Node* unc_region, Unique_Node_List& uses);
-  void shenandoah_in_cset_fast_test(Node*& c, Node* rbtrue, Node* raw_mem, Node* wb_mem, Node* region, Node* val_phi,
-                                    Node* mem_phi, Node* raw_mem_phi);
-  Node* shenandoah_get_ctrl(Node* n);
 
   bool _created_loop_node;
 public:

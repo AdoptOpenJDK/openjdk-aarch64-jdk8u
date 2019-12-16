@@ -149,11 +149,11 @@ public:
 
 public:
   ObjArrayChunkedTask(oop o = NULL) {
-    assert(oopDesc::unsafe_equals(decode_oop(encode_oop(o)), o), err_msg("oop can be encoded: " PTR_FORMAT, p2i(o)));
+    assert(decode_oop(encode_oop(o)) == o, err_msg("oop can be encoded: " PTR_FORMAT, p2i(o)));
     _obj = encode_oop(o);
   }
   ObjArrayChunkedTask(oop o, int chunk, int pow) {
-    assert(oopDesc::unsafe_equals(decode_oop(encode_oop(o)), o), err_msg("oop can be encoded: " PTR_FORMAT, p2i(o)));
+    assert(decode_oop(encode_oop(o)) == o, err_msg("oop can be encoded: " PTR_FORMAT, p2i(o)));
     assert(decode_chunk(encode_chunk(chunk)) == chunk, err_msg("chunk can be encoded: %d", chunk));
     assert(decode_pow(encode_pow(pow)) == pow, err_msg("pow can be encoded: %d", pow));
     _obj = encode_oop(o) | encode_chunk(chunk) | encode_pow(pow);

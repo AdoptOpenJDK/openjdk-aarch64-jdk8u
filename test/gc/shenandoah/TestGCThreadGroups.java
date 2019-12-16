@@ -29,16 +29,14 @@
  * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m                                         -Dtarget=1000 TestGCThreadGroups
  * @run main/othervm -XX:-UseDynamicNumberOfGCThreads            -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m                                         -Dtarget=1000 TestGCThreadGroups
  * @run main/othervm -XX:+UnlockDiagnosticVMOptions -XX:+ForceDynamicNumberOfGCThreads          -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m                                         -Dtarget=1000 TestGCThreadGroups
- * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=passive      -Dtarget=1000 TestGCThreadGroups
+ * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCMode=passive            -Dtarget=1000 TestGCThreadGroups
  * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=adaptive     -Dtarget=1000 TestGCThreadGroups
  * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=static       -Dtarget=1000 TestGCThreadGroups
  * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=compact      -Dtarget=100  TestGCThreadGroups
  * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=aggressive   -Dtarget=100  TestGCThreadGroups
- * @run main/othervm -XX:ConcGCThreads=4 -XX:ParallelGCThreads=2 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=passive      -Dtarget=1000 TestGCThreadGroups
- * @run main/othervm -XX:ConcGCThreads=4 -XX:ParallelGCThreads=2 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=adaptive     -Dtarget=1000 TestGCThreadGroups
- * @run main/othervm -XX:ConcGCThreads=4 -XX:ParallelGCThreads=2 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=static       -Dtarget=1000 TestGCThreadGroups
- * @run main/othervm -XX:ConcGCThreads=4 -XX:ParallelGCThreads=2 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=compact      -Dtarget=100  TestGCThreadGroups
- * @run main/othervm -XX:ConcGCThreads=4 -XX:ParallelGCThreads=2 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCHeuristics=aggressive   -Dtarget=100  TestGCThreadGroups
+ *
+ * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCMode=traversal -Dtarget=100  TestGCThreadGroups
+ * @run main/othervm -XX:ConcGCThreads=2 -XX:ParallelGCThreads=4 -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Xmx16m -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive   -Dtarget=100  TestGCThreadGroups
 */
 
 public class TestGCThreadGroups {

@@ -77,7 +77,7 @@ public:
   ~ShenandoahRootProcessor();
 
   // Apply oops, clds and blobs to all strongly reachable roots in the system
-  void process_strong_roots(OopClosure* oops, OopClosure* weak_oops,
+  void process_strong_roots(OopClosure* oops,
                             CLDClosure* clds,
                             CLDClosure* weak_clds,
                             CodeBlobClosure* blobs,
@@ -85,7 +85,7 @@ public:
                             uint worker_id);
 
   // Apply oops, clds and blobs to strongly and weakly reachable roots in the system
-  void process_all_roots(OopClosure* oops, OopClosure* weak_oops,
+  void process_all_roots(OopClosure* oops,
                          CLDClosure* clds,
                          CodeBlobClosure* blobs,
                          ThreadClosure* thread_cl,
@@ -102,9 +102,17 @@ class ShenandoahRootEvacuator : public StackObj {
   SubTasksDone* _evacuation_tasks;
   SharedHeap::StrongRootsScope _srs;
   ShenandoahPhaseTimings::Phase _phase;
+  ParallelCLDRootIterator   _cld_iterator;
   ShenandoahCsetCodeRootsIterator _coderoots_cset_iterator;
+  ShenandoahSynchronizerIterator _om_iterator;
 
   enum Shenandoah_evacuate_roots_tasks {
+    SHENANDOAH_EVAC_Universe_oops_do,
+    SHENANDOAH_EVAC_JNIHandles_oops_do,
+    SHENANDOAH_EVAC_JNIHandles_weak_oops_do,
+    SHENANDOAH_EVAC_FlatProfiler_oops_do,
+    SHENANDOAH_EVAC_Management_oops_do,
+    SHENANDOAH_EVAC_SystemDictionary_oops_do,
     SHENANDOAH_EVAC_jvmti_oops_do,
     // Leave this one last.
     SHENANDOAH_EVAC_NumElements
