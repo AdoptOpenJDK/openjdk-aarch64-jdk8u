@@ -58,7 +58,6 @@ public class TestEvilSyncBug {
                             "-XX:+UnlockDiagnosticVMOptions",
                             "-XX:+UseShenandoahGC",
                             "-XX:ShenandoahGCHeuristics=aggressive",
-                            "-XX:+ShenandoahStoreCheck",
                             "TestEvilSyncBug", "test");
                     OutputAnalyzer output = new OutputAnalyzer(pb.start());
                     output.shouldHaveExitValue(0);

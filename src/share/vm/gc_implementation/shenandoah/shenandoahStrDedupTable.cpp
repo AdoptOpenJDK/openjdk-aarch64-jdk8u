@@ -151,7 +151,7 @@ bool ShenandoahStrDedupTable::deduplicate(oop java_string) {
     _rehash_needed = true;
   }
 
-  if (oopDesc::equals(existing_value, value)) {
+  if (existing_value == value) {
     return false;
   }
 

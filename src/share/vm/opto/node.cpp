@@ -33,9 +33,11 @@
 #include "opto/node.hpp"
 #include "opto/opcodes.hpp"
 #include "opto/regmask.hpp"
-#include "opto/shenandoahSupport.hpp"
 #include "opto/type.hpp"
 #include "utilities/copy.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 class RegMask;
 // #include "phase.hpp"
@@ -523,8 +525,8 @@ Node *Node::clone() const {
   if (is_expensive())
     C->add_expensive_node(n);
 
-  if (Opcode() == Op_ShenandoahWriteBarrier) {
-    C->add_shenandoah_barrier(n->as_ShenandoahBarrier());
+  if (Opcode() == Op_ShenandoahLoadReferenceBarrier) {
+    C->add_shenandoah_barrier(reinterpret_cast<ShenandoahLoadReferenceBarrierNode*>(n));
   }
   // If the cloned node is a range check dependent CastII, add it to the list.
   CastIINode* cast = n->isa_CastII();
@@ -659,8 +661,8 @@ void Node::destruct() {
   if (is_expensive()) {
     compile->remove_expensive_node(this);
   }
-  if (is_ShenandoahBarrier()) {
-    compile->remove_shenandoah_barrier(this->as_ShenandoahBarrier());
+  if (Opcode() == Op_ShenandoahLoadReferenceBarrier) {
+    compile->remove_shenandoah_barrier(reinterpret_cast<ShenandoahLoadReferenceBarrierNode*>(this));
   }
   CastIINode* cast = isa_CastII();
   if (cast != NULL && cast->has_range_check()) {
@@ -1160,8 +1162,6 @@ bool Node::has_special_unique_user() const {
   } else if( op == Op_SubI || op == Op_SubL ) {
     // Condition for subI(x,subI(y,z)) ==> subI(addI(x,z),y)
     return n->Opcode() == op && n->in(2) == this;
-  } else if (op == Op_ShenandoahWriteBarrier) {
-    return n->Opcode() == Op_ShenandoahWBMemProj;
   }
   return false;
 };
@@ -1380,8 +1380,8 @@ static void kill_dead_code( Node *dead, PhaseIterGVN *igvn ) {
       if (dead->is_expensive()) {
         igvn->C->remove_expensive_node(dead);
       }
-      if (dead->is_ShenandoahBarrier()) {
-        igvn->C->remove_shenandoah_barrier(dead->as_ShenandoahBarrier());
+      if (dead->Opcode() == Op_ShenandoahLoadReferenceBarrier) {
+        igvn->C->remove_shenandoah_barrier(reinterpret_cast<ShenandoahLoadReferenceBarrierNode*>(dead));
       }
       CastIINode* cast = dead->isa_CastII();
       if (cast != NULL && cast->has_range_check()) {

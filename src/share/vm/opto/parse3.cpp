@@ -36,6 +36,10 @@
 #include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
 
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#endif
+
 //=============================================================================
 // Helper methods for _get* and _put* bytecodes
 //=============================================================================
@@ -203,16 +207,6 @@ void Parse::do_get_xxx(Node* obj, ciField* field, bool is_field) {
   // Compute address and memory type.
   int offset = field->offset_in_bytes();
   const TypePtr* adr_type = C->alias_type(field)->adr_type();
-
-  // Insert read barrier for Shenandoah.
-  if ((ShenandoahOptimizeStaticFinals   && field->is_static()  && field->is_final()) ||
-      (ShenandoahOptimizeInstanceFinals && !field->is_static() && field->is_final()) ||
-      (ShenandoahOptimizeStableFinals   && field->is_stable())) {
-    // Skip the barrier for special fields
-  } else {
-    obj = shenandoah_read_barrier(obj);
-  }
-
   Node *adr = basic_plus_adr(obj, obj, offset);
   BasicType bt = field->layout_type();
 
@@ -246,16 +240,13 @@ void Parse::do_get_xxx(Node* obj, ciField* field, bool is_field) {
   MemNode::MemOrd mo = is_vol ? MemNode::acquire : MemNode::unordered;
   Node* ld = make_load(NULL, adr, type, bt, adr_type, mo, LoadNode::DependsOnlyOnTest, is_vol);
 
-  // Only enabled for Shenandoah. Can this be useful in general?
-  if (UseShenandoahGC && ShenandoahOptimizeStableFinals && UseImplicitStableValues) {
-    if (field->holder()->name() == ciSymbol::java_lang_String() &&
-        field->offset() == java_lang_String::value_offset_in_bytes()) {
-      const TypeAryPtr* value_type = TypeAryPtr::make(TypePtr::NotNull,
-                                                      TypeAry::make(TypeInt::CHAR, TypeInt::POS),
-                                                      ciTypeArrayKlass::make(T_CHAR), true, 0);
-      ld = cast_array_to_stable(ld, value_type);
-    }
+  Node* load = ld;
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC && (bt == T_OBJECT || bt == T_ARRAY)) {
+    ld = ShenandoahBarrierSetC2::bsc2()->load_reference_barrier(this, ld);
   }
+#endif
+
   // Adjust Java stack
   if (type2size[bt] == 1)
     push(ld);
@@ -294,7 +285,7 @@ void Parse::do_get_xxx(Node* obj, ciField* field, bool is_field) {
   if (field->is_volatile()) {
     // Memory barrier includes bogus read of value to force load BEFORE membar
     assert(leading_membar == NULL || support_IRIW_for_not_multiple_copy_atomic_cpu, "no leading membar expected");
-    Node* mb = insert_mem_bar(Op_MemBarAcquire, ld);
+    Node* mb = insert_mem_bar(Op_MemBarAcquire, load);
     mb->as_MemBar()->set_trailing_load();
   }
 }
@@ -308,9 +299,6 @@ void Parse::do_put_xxx(Node* obj, ciField* field, bool is_field) {
   if (is_vol) {
     leading_membar = insert_mem_bar(Op_MemBarRelease);
   }
-
-  // Insert write barrier for Shenandoah.
-  obj = shenandoah_write_barrier(obj);
 
   // Compute address and memory type.
   int offset = field->offset_in_bytes();
@@ -341,9 +329,6 @@ void Parse::do_put_xxx(Node* obj, ciField* field, bool is_field) {
     } else {
       field_type = TypeOopPtr::make_from_klass(field->type()->as_klass());
     }
-
-    val = shenandoah_read_barrier_storeval(val);
-
     store = store_oop_to_object(control(), obj, adr, adr_type, val, field_type, bt, mo);
   } else {
     store = store_to_memory(control(), adr, val, bt, adr_type, mo, is_vol);

@@ -27,6 +27,7 @@
 
 #include "memory/freeBlockDictionary.hpp"
 #include "memory/freeList.hpp"
+#include "memory/memRegion.hpp"
 
 /*
  * A binary tree based search structure for free blocks.

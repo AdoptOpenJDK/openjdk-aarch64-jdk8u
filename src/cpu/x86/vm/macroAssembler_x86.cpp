@@ -43,8 +43,8 @@
 #include "gc_implementation/g1/g1CollectedHeap.inline.hpp"
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "gc_implementation/g1/heapRegion.hpp"
+#include "shenandoahBarrierSetAssembler_x86.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #endif // INCLUDE_ALL_GCS
 
 #ifdef PRODUCT
@@ -3856,103 +3856,6 @@ void MacroAssembler::serialize_memory(Register thread, Register tmp) {
   movl(as_Address(ArrayAddress(page, index)), tmp);
 }
 
-// Special Shenandoah CAS implementation that handles false negatives
-// due to concurrent evacuation.
-#if INCLUDE_ALL_GCS
-#ifndef _LP64
-void MacroAssembler::cmpxchg_oop_shenandoah(Register res, Address addr, Register oldval, Register newval,
-                              bool exchange,
-                              Register tmp1, Register tmp2) {
-  // Shenandoah has no 32-bit version for this.
-  Unimplemented();
-}
-#else
-void MacroAssembler::cmpxchg_oop_shenandoah(Register res, Address addr, Register oldval, Register newval,
-                              bool exchange,
-                              Register tmp1, Register tmp2) {
-  assert (UseShenandoahGC && ShenandoahCASBarrier, "Should only be used with Shenandoah");
-  assert(oldval == rax, "must be in rax for implicit use in cmpxchg");
-
-  Label retry, done;
-
-  // Remember oldval for retry logic below
-  if (UseCompressedOops) {
-    movl(tmp1, oldval);
-  } else {
-    movptr(tmp1, oldval);
-  }
-
-  // Step 1. Try to CAS with given arguments. If successful, then we are done,
-  // and can safely return.
-  if (os::is_MP()) lock();
-  if (UseCompressedOops) {
-    cmpxchgl(newval, addr);
-  } else {
-    cmpxchgptr(newval, addr);
-  }
-  jcc(Assembler::equal, done, true);
-
-  // Step 2. CAS had failed. This may be a false negative.
-  //
-  // The trouble comes when we compare the to-space pointer with the from-space
-  // pointer to the same object. To resolve this, it will suffice to read both
-  // oldval and the value from memory through the read barriers -- this will give
-  // both to-space pointers. If they mismatch, then it was a legitimate failure.
-  //
-  if (UseCompressedOops) {
-    decode_heap_oop(tmp1);
-  }
-  oopDesc::bs()->interpreter_read_barrier(this, tmp1);
-
-  if (UseCompressedOops) {
-    movl(tmp2, oldval);
-    decode_heap_oop(tmp2);
-  } else {
-    movptr(tmp2, oldval);
-  }
-  oopDesc::bs()->interpreter_read_barrier(this, tmp2);
-
-  cmpptr(tmp1, tmp2);
-  jcc(Assembler::notEqual, done, true);
-
-  // Step 3. Try to CAS again with resolved to-space pointers.
-  //
-  // Corner case: it may happen that somebody stored the from-space pointer
-  // to memory while we were preparing for retry. Therefore, we can fail again
-  // on retry, and so need to do this in loop, always re-reading the failure
-  // witness through the read barrier.
-  bind(retry);
-  if (os::is_MP()) lock();
-  if (UseCompressedOops) {
-    cmpxchgl(newval, addr);
-  } else {
-    cmpxchgptr(newval, addr);
-  }
-  jcc(Assembler::equal, done, true);
-
-  if (UseCompressedOops) {
-    movl(tmp2, oldval);
-    decode_heap_oop(tmp2);
-  } else {
-    movptr(tmp2, oldval);
-  }
-  oopDesc::bs()->interpreter_read_barrier(this, tmp2);
-
-  cmpptr(tmp1, tmp2);
-  jcc(Assembler::equal, retry, true);
-
-  // Step 4. If we need a boolean result out of CAS, check the flag again,
-  // and promote the result. Note that we handle the flag from both the CAS
-  // itself and from the retry loop.
-  bind(done);
-  if (!exchange) {
-    setb(Assembler::equal, res);
-    movzbl(res, res);
-  }
-}
-#endif // INCLUDE_ALL_GCS
-#endif // LP64
-
 // Calls to C land
 //
 // When entering C land, the rbp, & rsp of the last Java frame have to be recorded
@@ -4292,7 +4195,7 @@ void MacroAssembler::g1_write_barrier_pre(Register obj,
 
   if (UseShenandoahGC) {
     Address gc_state(thread, in_bytes(JavaThread::gc_state_offset()));
-    testb(gc_state, ShenandoahHeap::MARKING);
+    testb(gc_state, ShenandoahHeap::MARKING | ShenandoahHeap::TRAVERSAL);
     jcc(Assembler::zero, done);
   } else {
     assert(UseG1GC, "Should be");
@@ -4474,44 +4377,6 @@ void MacroAssembler::g1_write_barrier_post(Register store_addr,
   bind(done);
 }
 
-#ifndef _LP64
-void MacroAssembler::shenandoah_write_barrier(Register dst) {
-  Unimplemented();
-}
-#else
-void MacroAssembler::shenandoah_write_barrier(Register dst) {
-  assert(UseShenandoahGC && ShenandoahWriteBarrier, "Should be enabled");
-
-  Label done;
-
-  Address gc_state(r15_thread, in_bytes(JavaThread::gc_state_offset()));
-
-  // Check for heap stability
-  testb(gc_state, ShenandoahHeap::HAS_FORWARDED | ShenandoahHeap::EVACUATION);
-  jccb(Assembler::zero, done);
-
-  // Heap is unstable, need to perform the read-barrier even if WB is inactive
-  movptr(dst, Address(dst, ShenandoahBrooksPointer::byte_offset()));
-
-  // Check for evacuation-in-progress and jump to WB slow-path if needed
-  testb(gc_state, ShenandoahHeap::EVACUATION);
-  jccb(Assembler::zero, done);
-
-  if (dst != rax) {
-    xchgptr(dst, rax); // Move obj into rax and save rax into obj.
-  }
-
-  assert(StubRoutines::x86::shenandoah_wb() != NULL, "need write barrier stub");
-  call(RuntimeAddress(CAST_FROM_FN_PTR(address, StubRoutines::x86::shenandoah_wb())));
-
-  if (dst != rax) {
-    xchgptr(rax, dst); // Swap back obj with rax.
-  }
-
-  bind(done);
-}
-#endif // _LP64
-
 #endif // INCLUDE_ALL_GCS
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -4608,15 +4473,10 @@ void MacroAssembler::tlab_allocate(Register obj,
 
   NOT_LP64(get_thread(thread));
 
-  uint oop_extra_words = Universe::heap()->oop_extra_words();
-
   movptr(obj, Address(thread, JavaThread::tlab_top_offset()));
   if (var_size_in_bytes == noreg) {
-    lea(end, Address(obj, con_size_in_bytes + oop_extra_words * HeapWordSize));
+    lea(end, Address(obj, con_size_in_bytes));
   } else {
-    if (oop_extra_words > 0) {
-      addptr(var_size_in_bytes, oop_extra_words * HeapWordSize);
-    }
     lea(end, Address(obj, var_size_in_bytes, Address::times_1));
   }
   cmpptr(end, Address(thread, JavaThread::tlab_end_offset()));
@@ -4624,8 +4484,6 @@ void MacroAssembler::tlab_allocate(Register obj,
 
   // update the tlab top pointer
   movptr(Address(thread, JavaThread::tlab_top_offset()), end);
-
-  Universe::heap()->compile_prepare_oop(this, obj);
 
   // recover var_size_in_bytes if necessary
   if (var_size_in_bytes == end) {
@@ -5400,23 +5258,6 @@ void MacroAssembler::verify_oop(Register reg, const char* s) {
   BLOCK_COMMENT("} verify_oop");
 }
 
-#if INCLUDE_ALL_GCS
-void MacroAssembler::in_heap_check(Register raddr, Register tmp, Label& done) {
-  ShenandoahHeap *h = (ShenandoahHeap *)Universe::heap();
-
-  HeapWord* heap_base = (HeapWord*) h->base();
-  HeapWord* last_region_end = heap_base + (ShenandoahHeapRegion::region_size_bytes() / HeapWordSize) * h->num_regions();
-  guarantee(heap_base < last_region_end, err_msg("sanity: %p < %p", heap_base, last_region_end));
-  movptr(tmp, (intptr_t) heap_base);
-  cmpptr(raddr, tmp);
-  jcc(Assembler::below, done);
-  movptr(tmp, (intptr_t) last_region_end);
-  cmpptr(raddr, tmp);
-  jcc(Assembler::aboveEqual, done);
-
-}
-#endif
-
 RegisterOrConstant MacroAssembler::delayed_value_impl(intptr_t* delayed_value_addr,
                                                       Register tmp,
                                                       int offset) {
@@ -5953,6 +5794,12 @@ void MacroAssembler::load_heap_oop(Register dst, Address src) {
   } else
 #endif
     movptr(dst, src);
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    ShenandoahBarrierSetAssembler::bsasm()->load_reference_barrier(this, dst);
+  }
+#endif
 }
 
 // Doesn't do verfication, generates fixed size code
@@ -5964,6 +5811,12 @@ void MacroAssembler::load_heap_oop_not_null(Register dst, Address src) {
   } else
 #endif
     movptr(dst, src);
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    ShenandoahBarrierSetAssembler::bsasm()->load_reference_barrier(this, dst);
+  }
+#endif
 }
 
 void MacroAssembler::store_heap_oop(Address dst, Register src) {
@@ -7077,11 +6930,7 @@ void MacroAssembler::char_arrays_equals(bool is_array_equ, Register ary1, Regist
   int base_offset    = arrayOopDesc::base_offset_in_bytes(T_CHAR);
 
   // Check the input args
-  if (is_array_equ) {
-    cmpoops(ary1, ary2);
-  } else {
-    cmpptr(ary1, ary2);
-  }
+  cmpptr(ary1, ary2);
   jcc(Assembler::equal, TRUE_LABEL);
 
   if (is_array_equ) {
@@ -8762,24 +8611,4 @@ SkipIfEqual::SkipIfEqual(
 
 SkipIfEqual::~SkipIfEqual() {
   _masm->bind(_label);
-}
-
-void MacroAssembler::cmpoops(Register src1, Register src2) {
-  cmpptr(src1, src2);
-  oopDesc::bs()->asm_acmp_barrier(this, src1, src2);
-}
-
-void MacroAssembler::cmpoops(Register src1, Address src2) {
-  cmpptr(src1, src2);
-#if INCLUDE_ALL_GCS
-  if (UseShenandoahGC && ShenandoahAcmpBarrier) {
-    Label done;
-    jccb(Assembler::equal, done);
-    movptr(rscratch2, src2);
-    oopDesc::bs()->interpreter_read_barrier(this, src1);
-    oopDesc::bs()->interpreter_read_barrier(this, rscratch2);
-    cmpptr(src1, rscratch2);
-    bind(done);
-  }
-#endif
 }

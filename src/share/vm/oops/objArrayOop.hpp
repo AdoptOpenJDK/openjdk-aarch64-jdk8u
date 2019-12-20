@@ -28,6 +28,10 @@
 #include "memory/barrierSet.hpp"
 #include "oops/arrayOop.hpp"
 
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
+#endif
+
 // An objArrayOop is an array containing oops.
 // Evaluating "String arg[10]" will create an objArrayOop.
 
@@ -80,23 +84,27 @@ private:
 
   // Accessing
   oop obj_at(int index) const {
-    objArrayOop p = (objArrayOop) oopDesc::bs()->read_barrier((oop) this);
+    oop obj;
     // With UseCompressedOops decode the narrow oop in the objArray to an
     // uncompressed oop.  Otherwise this is simply a "*" operator.
     if (UseCompressedOops) {
-      return load_decode_heap_oop(p->obj_at_addr<narrowOop>(index));
+      obj = load_decode_heap_oop(obj_at_addr<narrowOop>(index));
     } else {
-      return load_decode_heap_oop(p->obj_at_addr<oop>(index));
+      obj = load_decode_heap_oop(obj_at_addr<oop>(index));
     }
+#if INCLUDE_ALL_GCS
+    if (UseShenandoahGC) {
+      obj = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(obj);
+    }
+#endif
+    return obj;
   }
 
   void obj_at_put(int index, oop value) {
-    objArrayOop p = (objArrayOop) oopDesc::bs()->write_barrier(this);
-    value = oopDesc::bs()->read_barrier(value);
     if (UseCompressedOops) {
-      oop_store(p->obj_at_addr<narrowOop>(index), value);
+      oop_store(obj_at_addr<narrowOop>(index), value);
     } else {
-      oop_store(p->obj_at_addr<oop>(index), value);
+      oop_store(obj_at_addr<oop>(index), value);
     }
   }
   // Sizing

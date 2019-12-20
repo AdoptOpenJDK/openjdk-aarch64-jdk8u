@@ -37,9 +37,11 @@
 #include "opto/multnode.hpp"
 #include "opto/node.hpp"
 #include "opto/rootnode.hpp"
-#include "opto/shenandoahSupport.hpp"
 #include "opto/subnode.hpp"
 #include "opto/vectornode.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 // ----------------------------------------------------------------------------
 // Build a table of virtual functions to map from Nodes to dense integer

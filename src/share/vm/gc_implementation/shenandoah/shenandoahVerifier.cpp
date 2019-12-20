@@ -23,8 +23,8 @@
 
 #include "precompiled.hpp"
 
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
@@ -136,7 +136,7 @@ private:
           // skip
           break;
         case ShenandoahVerifier::_verify_liveness_complete:
-          Atomic::add(obj->size() + ShenandoahBrooksPointer::word_size(), &_ld[obj_reg->region_number()]);
+          Atomic::add((uint) obj->size(), &_ld[obj_reg->region_number()]);
           // fallthrough for fast failure for un-live regions:
         case ShenandoahVerifier::_verify_liveness_conservative:
           verify(ShenandoahAsserts::_safe_oop, obj, obj_reg->has_live(),
@@ -147,11 +147,11 @@ private:
       }
     }
 
-    oop fwd = (oop) ShenandoahBrooksPointer::get_raw_unchecked(obj);
+    oop fwd = (oop) ShenandoahForwarding::get_forwardee_raw_unchecked(obj);
 
     ShenandoahHeapRegion* fwd_reg = NULL;
 
-    if (!oopDesc::unsafe_equals(obj, fwd)) {
+    if (obj != fwd) {
       verify(ShenandoahAsserts::_safe_oop, obj, _heap->is_in(fwd),
              "Forwardee must be in heap");
       verify(ShenandoahAsserts::_safe_oop, obj, !oopDesc::is_null(fwd),
@@ -180,8 +180,8 @@ private:
       verify(ShenandoahAsserts::_safe_oop, obj, (fwd_addr + fwd->size()) <= fwd_reg->top(),
              "Forwardee end should be within the region");
 
-      oop fwd2 = (oop) ShenandoahBrooksPointer::get_raw_unchecked(fwd);
-      verify(ShenandoahAsserts::_safe_oop, obj, oopDesc::unsafe_equals(fwd, fwd2),
+      oop fwd2 = (oop) ShenandoahForwarding::get_forwardee_raw_unchecked(fwd);
+      verify(ShenandoahAsserts::_safe_oop, obj, fwd == fwd2,
              "Double forwarding");
     } else {
       fwd_reg = obj_reg;
@@ -209,12 +209,12 @@ private:
         // skip
         break;
       case ShenandoahVerifier::_verify_forwarded_none: {
-        verify(ShenandoahAsserts::_safe_all, obj, oopDesc::unsafe_equals(obj, fwd),
+        verify(ShenandoahAsserts::_safe_all, obj, obj == fwd,
                "Should not be forwarded");
         break;
       }
       case ShenandoahVerifier::_verify_forwarded_allow: {
-        if (!oopDesc::unsafe_equals(obj, fwd)) {
+        if (obj != fwd) {
           verify(ShenandoahAsserts::_safe_all, obj, obj_reg != fwd_reg,
                  "Forwardee should be in another region");
         }
@@ -234,7 +234,7 @@ private:
         break;
       case ShenandoahVerifier::_verify_cset_forwarded:
         if (_heap->in_collection_set(obj)) {
-          verify(ShenandoahAsserts::_safe_all, obj, !oopDesc::unsafe_equals(obj, fwd),
+          verify(ShenandoahAsserts::_safe_all, obj, obj != fwd,
                  "Object in collection set, should have forwardee");
         }
         break;
@@ -388,6 +388,27 @@ public:
 
     verify(r, r->is_cset() == _heap->collection_set()->is_in(r),
            "Transitional: region flags and collection set agree");
+
+    verify(r, r->is_empty() || r->seqnum_first_alloc() != 0,
+           "Non-empty regions should have first seqnum set");
+
+    verify(r, r->is_empty() || (r->seqnum_first_alloc_mutator() != 0 || r->seqnum_first_alloc_gc() != 0),
+           "Non-empty regions should have first seqnum set to either GC or mutator");
+
+    verify(r, r->is_empty() || r->seqnum_last_alloc() != 0,
+           "Non-empty regions should have last seqnum set");
+
+    verify(r, r->is_empty() || (r->seqnum_last_alloc_mutator() != 0 || r->seqnum_last_alloc_gc() != 0),
+           "Non-empty regions should have last seqnum set to either GC or mutator");
+
+    verify(r, r->seqnum_first_alloc() <= r->seqnum_last_alloc(),
+           "First seqnum should not be greater than last timestamp");
+
+    verify(r, r->seqnum_first_alloc_mutator() <= r->seqnum_last_alloc_mutator(),
+           "First mutator seqnum should not be greater than last seqnum");
+
+    verify(r, r->seqnum_first_alloc_gc() <= r->seqnum_last_alloc_gc(),
+           "First GC seqnum should not be greater than last seqnum");
   }
 };
 
@@ -504,7 +525,7 @@ public:
 
   virtual void work_humongous(ShenandoahHeapRegion *r, ShenandoahVerifierStack& stack, ShenandoahVerifyOopClosure& cl) {
     jlong processed = 0;
-    HeapWord* obj = r->bottom() + ShenandoahBrooksPointer::word_size();
+    HeapWord* obj = r->bottom();
     if (_heap->complete_marking_context()->is_marked((oop)obj)) {
       verify_and_follow(obj, stack, cl, &processed);
     }
@@ -518,12 +539,12 @@ public:
 
     // Bitmaps, before TAMS
     if (tams > r->bottom()) {
-      HeapWord* start = r->bottom() + ShenandoahBrooksPointer::word_size();
+      HeapWord* start = r->bottom();
       HeapWord* addr = mark_bit_map->getNextMarkedWordAddress(start, tams);
 
       while (addr < tams) {
         verify_and_follow(addr, stack, cl, &processed);
-        addr += ShenandoahBrooksPointer::word_size();
+        addr += 1;
         if (addr < tams) {
           addr = mark_bit_map->getNextMarkedWordAddress(addr, tams);
         }
@@ -533,11 +554,11 @@ public:
     // Size-based, after TAMS
     {
       HeapWord* limit = r->top();
-      HeapWord* addr = tams + ShenandoahBrooksPointer::word_size();
+      HeapWord* addr = tams;
 
       while (addr < limit) {
         verify_and_follow(addr, stack, cl, &processed);
-        addr += oop(addr)->size() + ShenandoahBrooksPointer::word_size();
+        addr += oop(addr)->size();
       }
     }
 
@@ -637,13 +658,17 @@ void ShenandoahVerifier::verify_at_safepoint(const char *label,
     _heap->heap_region_iterate(&cl);
     size_t heap_used = _heap->used();
     guarantee(cl.used() == heap_used,
-              err_msg("%s: heap used size must be consistent: heap-used = " SIZE_FORMAT "K, regions-used = " SIZE_FORMAT "K",
-                      label, heap_used/K, cl.used()/K));
+              err_msg("%s: heap used size must be consistent: heap-used = " SIZE_FORMAT "%s, regions-used = " SIZE_FORMAT "%s",
+                      label,
+                      byte_size_in_proper_unit(heap_used), proper_unit_for_byte_size(heap_used),
+                      byte_size_in_proper_unit(cl.used()), proper_unit_for_byte_size(cl.used())));
 
     size_t heap_committed = _heap->committed();
     guarantee(cl.committed() == heap_committed,
-              err_msg("%s: heap committed size must be consistent: heap-committed = " SIZE_FORMAT "K, regions-committed = " SIZE_FORMAT "K",
-                      label, heap_committed/K, cl.committed()/K));
+              err_msg("%s: heap committed size must be consistent: heap-committed = " SIZE_FORMAT "%s, regions-committed = " SIZE_FORMAT "%s",
+                      label,
+                      byte_size_in_proper_unit(heap_committed), proper_unit_for_byte_size(heap_committed),
+                      byte_size_in_proper_unit(cl.committed()), proper_unit_for_byte_size(cl.committed())));
   }
 
   // Internal heap region checks
@@ -834,6 +859,30 @@ void ShenandoahVerifier::verify_after_updaterefs() {
           _verify_liveness_disable,    // no reliable liveness data anymore
           _verify_regions_nocset,      // no cset regions, trash regions have appeared
           _verify_gcstate_stable       // update refs had cleaned up forwarded objects
+  );
+}
+
+void ShenandoahVerifier::verify_before_traversal() {
+  verify_at_safepoint(
+          "Before Traversal",
+          _verify_forwarded_none,      // cannot have forwarded objects
+          _verify_marked_disable,      // bitmaps are not relevant before traversal
+          _verify_cset_none,           // no cset references before traversal
+          _verify_liveness_disable,    // no reliable liveness data anymore
+          _verify_regions_notrash_nocset, // no trash and no cset regions
+          _verify_gcstate_stable       // nothing forwarded before traversal
+  );
+}
+
+void ShenandoahVerifier::verify_after_traversal() {
+  verify_at_safepoint(
+          "After Traversal",
+          _verify_forwarded_none,      // cannot have forwarded objects
+          _verify_marked_complete,     // should have complete marking after traversal
+          _verify_cset_none,           // no cset references left after traversal
+          _verify_liveness_disable,    // liveness data is not collected for new allocations
+          _verify_regions_nocset,      // no cset regions, trash regions allowed
+          _verify_gcstate_stable       // nothing forwarded after traversal
   );
 }
 

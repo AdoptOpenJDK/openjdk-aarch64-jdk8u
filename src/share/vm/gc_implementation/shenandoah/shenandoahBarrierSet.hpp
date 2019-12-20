@@ -27,11 +27,17 @@
 #include "memory/barrierSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 
+class ShenandoahBarrierSetAssembler;
+class ShenandoahBarrierSetC1;
+class ShenandoahBarrierSetC2;
 class ShenandoahHeap;
 
 class ShenandoahBarrierSet: public BarrierSet {
 private:
   ShenandoahHeap* _heap;
+  ShenandoahBarrierSetAssembler* const _bsasm;
+  ShenandoahBarrierSetC1* const _bsc1;
+  ShenandoahBarrierSetC2* const _bsc2;
 
 public:
   ShenandoahBarrierSet(ShenandoahHeap* heap);
@@ -41,6 +47,10 @@ public:
     assert(bs->kind() == BarrierSet::ShenandoahBarrierSet, "sanity");
     return (ShenandoahBarrierSet*)bs;
   }
+
+  ShenandoahBarrierSetAssembler* bsasm() const;
+  ShenandoahBarrierSetC1* bsc1() const;
+  ShenandoahBarrierSetC2* bsc2() const;
 
   void print_on(outputStream* st) const;
 
@@ -81,8 +91,6 @@ public:
 
   void write_ref_array_pre(narrowOop* dst, int count, bool dest_uninitialized);
 
-  template <class T> static void write_ref_field_pre_static(T* field, oop newVal);
-
   // We export this to make it available in cases where the static
   // type of the barrier set is known.  Note that it is non-virtual.
   template <class T> inline void inline_write_ref_field_pre(T* field, oop newVal);
@@ -95,36 +103,31 @@ public:
   void write_ref_field_work(void* v, oop o, bool release = false);
   void write_region_work(MemRegion mr);
 
-  virtual oop read_barrier(oop src);
-
   static inline oop resolve_forwarded_not_null(oop p);
   static inline oop resolve_forwarded(oop p);
 
-  virtual oop write_barrier(oop obj);
-  static oopDesc* write_barrier_IRT(oopDesc* src);
-  static oopDesc* write_barrier_JRT(oopDesc* src);
+  void storeval_barrier(oop obj);
+  void keep_alive_barrier(oop obj);
 
-  oop write_barrier_mutator(oop obj);
+  oop load_reference_barrier(oop obj);
+  oop load_reference_barrier_mutator(oop obj);
+  oop load_reference_barrier_not_null(oop obj);
 
-  bool obj_equals(oop obj1, oop obj2);
-  bool obj_equals(narrowOop obj1, narrowOop obj2);
+  oop oop_atomic_cmpxchg_in_heap(oop new_value, volatile HeapWord* dest, oop compare_value);
 
   void enqueue(oop obj);
 
 private:
   inline bool need_update_refs_barrier();
 
-  template <class T>
+  template <class T, bool STOREVAL_EVAC_BARRIER>
   void write_ref_array_loop(HeapWord* start, size_t count);
 
-#ifndef CC_INTERP
-public:
-  virtual void interpreter_read_barrier(MacroAssembler* masm, Register dst);
-  virtual void interpreter_read_barrier_not_null(MacroAssembler* masm, Register dst);
-  void interpreter_write_barrier(MacroAssembler* masm, Register dst);
-  void asm_acmp_barrier(MacroAssembler* masm, Register op1, Register op2);
+  oop load_reference_barrier_impl(oop obj);
 
-#endif
+  oop atomic_compare_exchange_oop(oop exchange_value,
+                                  volatile HeapWord *dest,
+                                  oop compare_value);
 };
 
 #endif //SHARE_VM_GC_SHENANDOAH_SHENANDOAHBARRIERSET_HPP

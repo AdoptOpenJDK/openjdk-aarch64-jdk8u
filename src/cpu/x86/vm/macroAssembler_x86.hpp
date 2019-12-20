@@ -316,8 +316,6 @@ class MacroAssembler: public Assembler {
                              Register tmp,
                              Register tmp2);
 
-  void shenandoah_write_barrier(Register dst);
-
 #endif // INCLUDE_ALL_GCS
 
   // split store_check(Register obj) to enhance instruction interleaving
@@ -756,19 +754,7 @@ class MacroAssembler: public Assembler {
   // cmp64 to avoild hiding cmpq
   void cmp64(Register src1, AddressLiteral src);
 
-  // Special cmp for heap objects, possibly inserting required barriers.
-  void cmpoops(Register src1, Register src2);
-  void cmpoops(Register src1, Address src2);
-
   void cmpxchgptr(Register reg, Address adr);
-
-#if INCLUDE_ALL_GCS
-  // Special Shenandoah CAS implementation that handles false negatives
-  // due to concurrent evacuation.
-  void cmpxchg_oop_shenandoah(Register res, Address addr, Register oldval, Register newval,
-                              bool exchange,
-                              Register tmp1, Register tmp2);
-#endif
 
   void locked_cmpxchgptr(Register reg, AddressLiteral adr);
 

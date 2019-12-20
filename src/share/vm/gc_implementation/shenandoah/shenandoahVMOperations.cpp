@@ -66,6 +66,16 @@ void VM_ShenandoahFullGC::doit() {
   ShenandoahHeap::heap()->entry_full(_gc_cause);
 }
 
+void VM_ShenandoahInitTraversalGC::doit() {
+  ShenandoahGCPauseMark mark(SvcGCMarker::OTHER);
+  ShenandoahHeap::heap()->entry_init_traversal();
+}
+
+void VM_ShenandoahFinalTraversalGC::doit() {
+  ShenandoahGCPauseMark mark(SvcGCMarker::OTHER);
+  ShenandoahHeap::heap()->entry_final_traversal();
+}
+
 void VM_ShenandoahInitUpdateRefs::doit() {
   ShenandoahGCPauseMark mark(SvcGCMarker::OTHER);
   ShenandoahHeap::heap()->entry_init_updaterefs();

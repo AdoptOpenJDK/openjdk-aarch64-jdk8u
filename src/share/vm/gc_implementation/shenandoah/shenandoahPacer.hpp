@@ -67,6 +67,7 @@ public:
   void setup_for_mark();
   void setup_for_evac();
   void setup_for_updaterefs();
+  void setup_for_traversal();
 
   inline void report_mark(size_t words);
   inline void report_evac(size_t words);

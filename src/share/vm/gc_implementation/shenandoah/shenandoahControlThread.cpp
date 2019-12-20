@@ -33,6 +33,7 @@
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahMonitoringSupport.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
+#include "gc_implementation/shenandoah/shenandoahTraversalGC.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "gc_implementation/shenandoah/shenandoahVMOperations.hpp"
 #include "gc_implementation/shenandoah/shenandoahWorkerPolicy.hpp"
@@ -99,6 +100,10 @@ void ShenandoahControlThread::run() {
 
   ShenandoahHeap* heap = ShenandoahHeap::heap();
 
+  GCMode default_mode = heap->is_traversal_mode() ?
+                           concurrent_traversal : concurrent_normal;
+  GCCause::Cause default_cause = heap->is_traversal_mode() ?
+                           GCCause::_shenandoah_traversal_gc : GCCause::_shenandoah_concurrent_gc;
   int sleep = ShenandoahControlIntervalMin;
 
   double last_shrink_time = os::elapsedTime();
@@ -155,8 +160,7 @@ void ShenandoahControlThread::run() {
 
       if (ExplicitGCInvokesConcurrent) {
         policy->record_explicit_to_concurrent();
-        mode = concurrent_normal;
-
+        mode = default_mode;
         // Unload and clean up everything
         heap->set_process_references(heuristics->can_process_references());
         heap->set_unload_classes(heuristics->can_unload_classes());
@@ -170,9 +174,9 @@ void ShenandoahControlThread::run() {
 
       heuristics->record_requested_gc();
 
-      if (ExplicitGCInvokesConcurrent) {
+      if (ShenandoahImplicitGCInvokesConcurrent) {
         policy->record_implicit_to_concurrent();
-        mode = concurrent_normal;
+        mode = default_mode;
 
         // Unload and clean up everything
         heap->set_process_references(heuristics->can_process_references());
@@ -183,9 +187,9 @@ void ShenandoahControlThread::run() {
       }
     } else {
       // Potential normal cycle: ask heuristics if it wants to act
-      if (heuristics->should_start_normal_gc()) {
-        mode = concurrent_normal;
-        cause = GCCause::_shenandoah_concurrent_gc;
+      if (heuristics->should_start_gc()) {
+        mode = default_mode;
+        cause = default_cause;
       }
 
       // Ask policy if this cycle wants to process references or unload classes
@@ -218,6 +222,9 @@ void ShenandoahControlThread::run() {
 
     switch (mode) {
       case none:
+        break;
+      case concurrent_traversal:
+        service_concurrent_traversal_cycle(cause);
         break;
       case concurrent_normal:
         service_concurrent_normal_cycle(cause);
@@ -308,6 +315,30 @@ void ShenandoahControlThread::run() {
     os::naked_short_sleep(ShenandoahControlIntervalMin);
   }
   terminate();
+}
+
+void ShenandoahControlThread::service_concurrent_traversal_cycle(GCCause::Cause cause) {
+  ShenandoahGCSession session(cause);
+
+  ShenandoahHeap* heap = ShenandoahHeap::heap();
+  TraceCollectorStats tcs(heap->monitoring_support()->concurrent_collection_counters());
+
+  // Reset for upcoming cycle
+  heap->entry_reset();
+
+  heap->vmop_entry_init_traversal();
+
+  if (check_cancellation_or_degen(ShenandoahHeap::_degenerated_traversal)) return;
+
+  heap->entry_traversal();
+  if (check_cancellation_or_degen(ShenandoahHeap::_degenerated_traversal)) return;
+
+  heap->vmop_entry_final_traversal();
+
+  heap->entry_cleanup();
+
+  heap->heuristics()->record_success_concurrent();
+  heap->shenandoah_policy()->record_success_concurrent();
 }
 
 void ShenandoahControlThread::service_concurrent_normal_cycle(GCCause::Cause cause) {

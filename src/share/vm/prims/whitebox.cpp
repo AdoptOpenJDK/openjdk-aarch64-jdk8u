@@ -305,7 +305,7 @@ WB_END
 
 WB_ENTRY(jlong, WB_GetObjectSize(JNIEnv* env, jobject o, jobject obj))
   oop p = JNIHandles::resolve(obj);
-  return (p->size() + Universe::heap()->oop_extra_words()) * HeapWordSize;
+  return p->size() * HeapWordSize;
 WB_END
 
 #if INCLUDE_ALL_GCS

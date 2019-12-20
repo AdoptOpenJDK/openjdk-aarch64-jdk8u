@@ -42,7 +42,9 @@
 #include "runtime/sharedRuntime.hpp"
 #include "vmreg_aarch64.inline.hpp"
 
-
+#if INCLUDE_ALL_GCS
+#include "shenandoahBarrierSetAssembler_aarch64.hpp"
+#endif
 
 #ifndef PRODUCT
 #define COMMENT(x)   do { __ block_comment(x); } while (0)
@@ -1158,33 +1160,6 @@ void LIR_Assembler::emit_opBranch(LIR_OpBranch* op) {
 
 
 
-#if INCLUDE_ALL_GCS
-void LIR_Assembler::emit_opShenandoahWriteBarrier(LIR_OpShenandoahWriteBarrier* op) {
-
-  Register obj = op->in_opr()->as_register();
-  Register res = op->result_opr()->as_register();
-
-  Label done;
-
-  __ block_comment("Shenandoah write barrier {");
-
-  if (res != obj) {
-    __ mov(res, obj);
-  }
-  // Check for null.
-  if (op->need_null_check()) {
-    __ cbz(res, done);
-  }
-
-  __ shenandoah_write_barrier(res);
-
-  __ bind(done);
-
-  __ block_comment("} Shenandoah write barrier");
-
-}
-#endif
-
 void LIR_Assembler::emit_opConvert(LIR_OpConvert* op) {
   LIR_Opr src  = op->in_opr();
   LIR_Opr dest = op->result_opr();
@@ -1662,7 +1637,7 @@ void LIR_Assembler::emit_compare_and_swap(LIR_OpCompareAndSwap* op) {
         Register t2 = op->tmp2()->as_register();
         __ encode_heap_oop(t2, newval);
         newval = t2;
-        __ cmpxchg_oop_shenandoah(addr, cmpval, newval, /*acquire*/ false, /*release*/ true, /*weak*/ false, /*is_cae*/ false, res);
+        ShenandoahBarrierSetAssembler::bsasm()->cmpxchg_oop(_masm, addr, cmpval, newval, /*acquire*/ false, /*release*/ true, /*weak*/ false, /*is_cae*/ false, res);
       } else
 #endif
       {
@@ -1676,7 +1651,7 @@ void LIR_Assembler::emit_compare_and_swap(LIR_OpCompareAndSwap* op) {
     } else {
 #if INCLUDE_ALL_GCS
       if (UseShenandoahGC && ShenandoahCASBarrier) {
-        __ cmpxchg_oop_shenandoah(addr, cmpval, newval, /*acquire*/ false, /*release*/ true, /*weak*/ false, /*is_cae*/ false, res);
+        ShenandoahBarrierSetAssembler::bsasm()->cmpxchg_oop(_masm, addr, cmpval, newval, /*acquire*/ false, /*release*/ true, /*weak*/ false, /*is_cae*/ false, res);
       } else
 #endif
       {
@@ -1979,7 +1954,7 @@ void LIR_Assembler::comp_op(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2,
       // cpu register - cpu register
       Register reg2 = opr2->as_register();
       if (opr1->type() == T_OBJECT || opr1->type() == T_ARRAY) {
-        __ cmpoops(reg1, reg2);
+        __ cmp(reg1, reg2);
       } else {
         assert(opr2->type() != T_OBJECT && opr2->type() != T_ARRAY, "cmp int, oop?");
         __ cmpw(reg1, reg2);

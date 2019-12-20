@@ -119,11 +119,11 @@ ifeq ($(INCLUDE_ALL_GCS), false)
 	psMemoryPool.cpp
 
       Src_Files_EXCLUDE +=                                              \
-        shenandoahBarrierSet_x86.cpp                                    \
-        shenandoahBarrierSet_aarch64.cpp                                \
-        shenandoahBarrierSet_ppc.cpp                                    \
-        shenandoahBarrierSet_sparc.cpp                                  \
-        shenandoahBarrierSet_zero.cpp
+        shenandoahBarrierSetAssembler_x86.cpp                           \
+        shenandoahBarrierSetAssembler_aarch64.cpp                       \
+        shenandoahBarrierSetAssembler_ppc.cpp                           \
+        shenandoahBarrierSetAssembler_sparc.cpp                         \
+        shenandoahBarrierSetAssembler_zero.cpp
 endif
 
 ifeq ($(INCLUDE_NMT), false)

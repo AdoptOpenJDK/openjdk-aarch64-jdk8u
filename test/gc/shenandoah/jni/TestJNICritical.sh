@@ -51,6 +51,14 @@ else
     exit 0;
 fi
 
+# Unfortunately, configurations cross-compiled to 32 bits would
+# fail with bitness mismatch, when compiled with platform gcc.
+# This would be fixed with /native support in JDK-8072842.
+if [ "$VM_BITS" = "32" ]; then
+    echo "Test passed; only reliable on 64-bit"
+    exit 0;
+fi
+
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}

@@ -52,6 +52,14 @@ else
     exit 0;
 fi
 
+# Unfortunately, configurations cross-compiled to 32 bits would
+# fail with bitness mismatch, when compiled with platform gcc.
+# This would be fixed with /native support in JDK-8072842.
+if [ "$VM_BITS" = "32" ]; then
+    echo "Test passed; only reliable on 64-bit"
+    exit 0;
+fi
+
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
@@ -65,7 +73,7 @@ $gcc_cmd -O1 -DLINUX -fPIC -shared \
 
 # run the java test in the background
 cmd="${TESTJAVA}${FS}bin${FS}java -agentpath:./libTestHeapDump.so -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
-    -XX:+UseCompressedOops -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
+    -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
 
 echo "$cmd"
 eval $cmd
@@ -76,14 +84,19 @@ then
     exit 1
 fi
 
-cmd="${TESTJAVA}${FS}bin${FS}java -agentpath:./libTestHeapDump.so -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
-    -XX:-UseCompressedOops -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
+if [ "$VM_BITS" = "64" ]; then
+  cmd="${TESTJAVA}${FS}bin${FS}java -agentpath:./libTestHeapDump.so -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive \
+      -XX:-UseCompressedOops -Djava.library.path=${THIS_DIR}${FS} TestHeapDump"
 
-echo "$cmd"
-eval $cmd
+  echo "$cmd"
+  eval $cmd
 
-if [ $? -ne 0 ]
-then
-    echo "Test Failed"
-    exit 1
+  if [ $? -ne 0 ]
+  then
+      echo "Test Failed"
+      exit 1
+  fi
+else
+    echo "Test passed; only valid for 64 bits"
+    exit 0;
 fi

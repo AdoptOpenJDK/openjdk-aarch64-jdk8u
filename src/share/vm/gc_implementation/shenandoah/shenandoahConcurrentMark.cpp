@@ -28,7 +28,6 @@
 #include "code/codeCache.hpp"
 
 #include "gc_implementation/shared/parallelCleaning.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahConcurrentMark.inline.hpp"
@@ -129,11 +128,10 @@ private:
 
     CLDToOopClosure clds_cl(oops);
     MarkingCodeBlobClosure blobs_cl(oops, ! CodeBlobToOopClosure::FixRelocations);
-    OopClosure* weak_oops = _process_refs ? NULL : oops;
 
     ResourceMark m;
     if (heap->unload_classes()) {
-      _rp->process_strong_roots(oops, weak_oops, &clds_cl, NULL, &blobs_cl, NULL, worker_id);
+      _rp->process_strong_roots(oops, &clds_cl, NULL, &blobs_cl, NULL, worker_id);
     } else {
       if (ShenandoahConcurrentScanCodeRoots) {
         CodeBlobClosure* code_blobs = NULL;
@@ -146,9 +144,9 @@ private:
           code_blobs = &assert_to_space;
         }
 #endif
-        _rp->process_all_roots(oops, weak_oops, &clds_cl, code_blobs, NULL, worker_id);
+        _rp->process_all_roots(oops, &clds_cl, code_blobs, NULL, worker_id);
       } else {
-        _rp->process_all_roots(oops, weak_oops, &clds_cl, &blobs_cl, NULL, worker_id);
+        _rp->process_all_roots(oops, &clds_cl, &blobs_cl, NULL, worker_id);
       }
     }
   }
@@ -186,7 +184,7 @@ public:
         DEBUG_ONLY(&assert_to_space)
         NOT_DEBUG(NULL);
     }
-    _rp->process_all_roots(&cl, &cl, &cldCl, code_blobs, NULL, worker_id);
+    _rp->process_all_roots(&cl, &cldCl, code_blobs, NULL, worker_id);
   }
 };
 
@@ -465,13 +463,16 @@ void ShenandoahConcurrentMark::finish_mark_from_roots(bool full_gc) {
   // When we're done marking everything, we process weak references.
   if (_heap->process_references()) {
     weak_refs_work(full_gc);
+  } else {
+    cleanup_jni_refs();
   }
 
   // And finally finish class unloading
   if (_heap->unload_classes()) {
     _heap->unload_classes_and_cleanup_tables(full_gc);
+  } else if (ShenandoahStringDedup::is_enabled()) {
+    ShenandoahStringDedup::parallel_cleanup();
   }
-
   assert(task_queues()->is_empty(), "Should be empty");
   TASKQUEUE_STATS_ONLY(task_queues()->print_taskqueue_stats());
   TASKQUEUE_STATS_ONLY(task_queues()->reset_taskqueue_stats());
@@ -718,6 +719,19 @@ void ShenandoahConcurrentMark::weak_refs_work_doit(bool full_gc) {
     ShenandoahGCPhase phase(phase_enqueue);
     rp->enqueue_discovered_references(&executor);
   }
+}
+
+// No-op closure. Weak JNI refs are cleaned by iterating them.
+// Nothing else to do here.
+class ShenandoahCleanupWeakRootsClosure : public OopClosure {
+  virtual void do_oop(oop* o) {}
+  virtual void do_oop(narrowOop* o) {}
+};
+
+void ShenandoahConcurrentMark::cleanup_jni_refs() {
+  ShenandoahIsAliveSelector is_alive;
+  ShenandoahCleanupWeakRootsClosure cl;
+  JNIHandles::weak_oops_do(is_alive.is_alive_closure(), &cl);
 }
 
 class ShenandoahCancelledGCYieldClosure : public YieldClosure {

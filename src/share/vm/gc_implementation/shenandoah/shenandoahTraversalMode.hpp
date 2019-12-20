@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,34 +21,17 @@
  *
  */
 
-#include "precompiled.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHTRAVERSALMODE_HPP
+#define SHARE_GC_SHENANDOAH_SHENANDOAHTRAVERSALMODE_HPP
 
-#include "asm/macroAssembler.hpp"
-#include "interpreter/interpreter.hpp"
+#include "gc_implementation/shenandoah/shenandoahMode.hpp"
 
-#define __ masm->
+class ShenandoahHeuristics;
 
-#ifndef CC_INTERP
+class ShenandoahTraversalMode : public ShenandoahMode {
+public:
+  virtual void initialize_flags() const;
+  virtual ShenandoahHeuristics* initialize_heuristics() const;
+};
 
-void ShenandoahBarrierSet::interpreter_read_barrier(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
-
-void ShenandoahBarrierSet::interpreter_read_barrier_not_null(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
-
-void ShenandoahBarrierSet::interpreter_write_barrier(MacroAssembler* masm, Register dst) {
-  Unimplemented();
-}
-
-void ShenandoahBarrierSet::asm_acmp_barrier(MacroAssembler* masm, Register op1, Register op2) {
-  Unimplemented();
-}
-
-void ShenandoahHeap::compile_prepare_oop(MacroAssembler* masm, Register obj) {
-  Unimplemented();
-}
-#endif
+#endif // SHARE_GC_SHENANDOAH_SHENANDOAHTRAVERSALMODE_HPP

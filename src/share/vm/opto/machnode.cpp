@@ -26,7 +26,9 @@
 #include "gc_interface/collectedHeap.hpp"
 #include "opto/machnode.hpp"
 #include "opto/regalloc.hpp"
-#include "opto/shenandoahSupport.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#endif
 
 //=============================================================================
 // Return the value requested

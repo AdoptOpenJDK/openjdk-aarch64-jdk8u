@@ -37,7 +37,9 @@
 #include "opto/regmask.hpp"
 #include "opto/rootnode.hpp"
 #include "opto/runtime.hpp"
-#include "opto/shenandoahSupport.hpp"
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#endif
 
 // Portions of code courtesy of Clifford Click
 
@@ -1553,8 +1555,14 @@ bool AbstractLockNode::find_matching_unlock(const Node* ctrl, LockNode* lock,
     Node *n = ctrl_proj->in(0);
     if (n != NULL && n->is_Unlock()) {
       UnlockNode *unlock = n->as_Unlock();
-      Node* lock_obj = ShenandoahBarrierNode::skip_through_barrier(lock->obj_node());
-      Node* unlock_obj = ShenandoahBarrierNode::skip_through_barrier(unlock->obj_node());
+      Node* lock_obj = lock->obj_node();
+      Node* unlock_obj = unlock->obj_node();
+#if INCLUDE_ALL_GCS
+      if (UseShenandoahGC) {
+        lock_obj = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(lock_obj);
+        unlock_obj = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(unlock_obj);
+      }
+#endif
       if (lock_obj->eqv_uncast(unlock_obj) &&
           BoxLockNode::same_slot(lock->box_node(), unlock->box_node()) &&
           !unlock->is_eliminated()) {
@@ -1600,8 +1608,14 @@ LockNode *AbstractLockNode::find_matching_lock(UnlockNode* unlock) {
   }
   if (ctrl->is_Lock()) {
     LockNode *lock = ctrl->as_Lock();
-    Node* lock_obj = ShenandoahBarrierNode::skip_through_barrier(lock->obj_node());
-    Node* unlock_obj = ShenandoahBarrierNode::skip_through_barrier(unlock->obj_node());
+    Node* lock_obj = lock->obj_node();
+    Node* unlock_obj = unlock->obj_node();
+#if INCLUDE_ALL_GCS
+    if (UseShenandoahGC) {
+      lock_obj = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(lock_obj);
+      unlock_obj = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(unlock_obj);
+    }
+#endif
     if (lock_obj->eqv_uncast(unlock_obj) &&
         BoxLockNode::same_slot(lock->box_node(), unlock->box_node())) {
       lock_result = lock;
@@ -1633,8 +1647,14 @@ bool AbstractLockNode::find_lock_and_unlock_through_if(Node* node, LockNode* loc
       }
       if (lock1_node != NULL && lock1_node->is_Lock()) {
         LockNode *lock1 = lock1_node->as_Lock();
-        Node* lock_obj = ShenandoahBarrierNode::skip_through_barrier(lock->obj_node());
-        Node* lock1_obj = ShenandoahBarrierNode::skip_through_barrier(lock1->obj_node());
+        Node* lock_obj = lock->obj_node();
+        Node* lock1_obj = lock1->obj_node();
+#if INCLUDE_ALL_GCS
+        if (UseShenandoahGC) {
+          lock_obj = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(lock_obj);
+          lock1_obj = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(lock1_obj);
+        }
+#endif
         if (lock_obj->eqv_uncast(lock1_obj) &&
             BoxLockNode::same_slot(lock->box_node(), lock1->box_node()) &&
             !lock1->is_eliminated()) {
@@ -1831,7 +1851,11 @@ bool LockNode::is_nested_lock_region(Compile * c) {
     return false;
   }
 
-  obj = ShenandoahBarrierNode::skip_through_barrier(obj);
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    obj = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(obj);
+  }
+#endif
   // Look for external lock for the same object.
   SafePointNode* sfn = this->as_SafePoint();
   JVMState* youngest_jvms = sfn->jvms();
@@ -1842,7 +1866,11 @@ bool LockNode::is_nested_lock_region(Compile * c) {
     // Loop over monitors
     for (int idx = 0; idx < num_mon; idx++) {
       Node* obj_node = sfn->monitor_obj(jvms, idx);
-      obj_node = ShenandoahBarrierNode::skip_through_barrier(obj_node);
+#if INCLUDE_ALL_GCS
+      if (UseShenandoahGC) {
+        obj_node = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(obj_node);
+      }
+#endif
       BoxLockNode* box_node = sfn->monitor_box(jvms, idx)->as_BoxLock();
       if ((box_node->stack_slot() < stk_slot) && obj_node->eqv_uncast(obj)) {
         return true;

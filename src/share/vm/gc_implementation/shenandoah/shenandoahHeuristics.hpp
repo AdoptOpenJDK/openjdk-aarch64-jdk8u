@@ -100,6 +100,7 @@ protected:
   ShenandoahSharedFlag _metaspace_oom;
 
   static int compare_by_garbage(RegionData a, RegionData b);
+  static int compare_by_garbage_then_alloc_seq_ascending(RegionData a, RegionData b);
   static int compare_by_alloc_seq_ascending(RegionData a, RegionData b);
   static int compare_by_alloc_seq_descending(RegionData a, RegionData b);
 
@@ -127,7 +128,7 @@ public:
 
   virtual void record_phase_time(ShenandoahPhaseTimings::Phase phase, double secs);
 
-  virtual bool should_start_normal_gc() const;
+  virtual bool should_start_gc() const;
 
   virtual bool should_start_update_refs();
 

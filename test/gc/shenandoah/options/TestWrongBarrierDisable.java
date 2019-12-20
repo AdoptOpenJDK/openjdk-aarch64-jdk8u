@@ -36,19 +36,26 @@ public class TestWrongBarrierDisable {
 
     public static void main(String[] args) throws Exception {
         String[] concurrent = {
-                "ShenandoahReadBarrier",
-                "ShenandoahWriteBarrier",
+                "ShenandoahLoadRefBarrier",
                 "ShenandoahCASBarrier",
-                "ShenandoahAcmpBarrier",
                 "ShenandoahCloneBarrier",
                 "ShenandoahSATBBarrier",
+                "ShenandoahKeepAliveBarrier",
         };
 
-        shouldFailAll("adaptive",   concurrent);
-        shouldFailAll("static",     concurrent);
-        shouldFailAll("compact",    concurrent);
-        shouldFailAll("aggressive", concurrent);
-        shouldPassAll("passive",    concurrent);
+        String[] traversal = {
+                "ShenandoahLoadRefBarrier",
+                "ShenandoahCASBarrier",
+                "ShenandoahCloneBarrier",
+        };
+
+        shouldFailAll("-XX:ShenandoahGCHeuristics=adaptive",   concurrent);
+        shouldFailAll("-XX:ShenandoahGCHeuristics=static",     concurrent);
+        shouldFailAll("-XX:ShenandoahGCHeuristics=compact",    concurrent);
+        shouldFailAll("-XX:ShenandoahGCHeuristics=aggressive", concurrent);
+        shouldFailAll("-XX:ShenandoahGCMode=traversal",        traversal);
+        shouldPassAll("-XX:ShenandoahGCMode=passive",          concurrent);
+        shouldPassAll("-XX:ShenandoahGCMode=passive",          traversal);
     }
 
     private static void shouldFailAll(String h, String[] barriers) throws Exception {
@@ -57,7 +64,7 @@ public class TestWrongBarrierDisable {
                     "-XX:+UnlockDiagnosticVMOptions",
                     "-XX:+UnlockExperimentalVMOptions",
                     "-XX:+UseShenandoahGC",
-                    "-XX:ShenandoahGCHeuristics=" + h,
+                    h,
                     "-XX:-" + b,
                     "-version"
             );
@@ -74,7 +81,7 @@ public class TestWrongBarrierDisable {
                     "-XX:+UnlockDiagnosticVMOptions",
                     "-XX:+UnlockExperimentalVMOptions",
                     "-XX:+UseShenandoahGC",
-                    "-XX:ShenandoahGCHeuristics=" + h,
+                    h,
                     "-XX:-" + b,
                     "-version"
             );

@@ -91,13 +91,13 @@ void Dictionary::free_entry(DictionaryEntry* entry) {
 
 bool DictionaryEntry::contains_protection_domain(oop protection_domain) const {
 #ifdef ASSERT
-  if (oopDesc::equals(protection_domain, klass()->protection_domain())) {
+  if (protection_domain == klass()->protection_domain()) {
     // Ensure this doesn't show up in the pd_set (invariant)
     bool in_pd_set = false;
     for (ProtectionDomainEntry* current = _pd_set;
                                 current != NULL;
                                 current = current->next()) {
-      if (oopDesc::equals(current->protection_domain(), protection_domain)) {
+      if (current->protection_domain() == protection_domain) {
         in_pd_set = true;
         break;
       }
@@ -109,7 +109,7 @@ bool DictionaryEntry::contains_protection_domain(oop protection_domain) const {
   }
 #endif /* ASSERT */
 
-  if (oopDesc::equals(protection_domain, klass()->protection_domain())) {
+  if (protection_domain == klass()->protection_domain()) {
     // Succeeds trivially
     return true;
   }
@@ -117,7 +117,7 @@ bool DictionaryEntry::contains_protection_domain(oop protection_domain) const {
   for (ProtectionDomainEntry* current = _pd_set;
                               current != NULL;
                               current = current->next()) {
-    if (oopDesc::equals(current->protection_domain(), protection_domain)) return true;
+    if (current->protection_domain() == protection_domain) return true;
   }
   return false;
 }
@@ -596,7 +596,7 @@ ProtectionDomainCacheEntry* ProtectionDomainCacheTable::get(oop protection_domai
 
 ProtectionDomainCacheEntry* ProtectionDomainCacheTable::find_entry(int index, oop protection_domain) {
   for (ProtectionDomainCacheEntry* e = bucket(index); e != NULL; e = e->next()) {
-    if (oopDesc::equals(e->protection_domain(), protection_domain)) {
+    if (e->protection_domain() == protection_domain) {
       return e;
     }
   }

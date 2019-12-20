@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2018, 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -30,6 +30,7 @@
 #define VM_STRUCTS_SHENANDOAH(nonstatic_field, volatile_nonstatic_field, static_field)  \
   static_field(ShenandoahHeapRegion, RegionSizeBytes,        size_t)                    \
   nonstatic_field(ShenandoahHeap, _num_regions,              size_t)                    \
+  nonstatic_field(ShenandoahHeap, _regions,                  ShenandoahHeapRegion**)    \
   volatile_nonstatic_field(ShenandoahHeap, _used,            jlong)                     \
   volatile_nonstatic_field(ShenandoahHeap, _committed,       size_t)                    \
 

@@ -24,9 +24,11 @@
 #include "precompiled.hpp"
 
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
-#include "gc_implementation/shenandoah/shenandoahBrooksPointer.hpp"
+#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegionSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahTraversalGC.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "memory/resourceArea.hpp"
 
@@ -58,12 +60,19 @@ void ShenandoahAsserts::print_obj(ShenandoahMessageBuffer& msg, oop obj) {
   stringStream ss;
   r->print_on(&ss);
 
+  stringStream mw_ss;
+  obj->mark()->print_on(&mw_ss);
+
   ShenandoahMarkingContext* const ctx = heap->marking_context();
 
   msg.append("  " PTR_FORMAT " - klass " PTR_FORMAT " %s\n", p2i(obj), p2i(obj->klass()), obj->klass()->external_name());
   msg.append("    %3s allocated after mark start\n", ctx->allocated_after_mark_start((HeapWord *) obj)     ? "" : "not");
+  if (heap->traversal_gc() != NULL) {
+    msg.append("    %3s in traversal set\n",         heap->traversal_gc()->traversal_set()->is_in((HeapWord*) obj) ? "" : "not");
+  }
   msg.append("    %3s marked \n",                    ctx->is_marked(obj) ? "" : "not");
   msg.append("    %3s in collection set\n",          heap->in_collection_set(obj) ? "" : "not");
+  msg.append("  mark:%s\n", mw_ss.as_string());
   msg.append("  region: %s", ss.as_string());
 }
 
@@ -131,9 +140,9 @@ void ShenandoahAsserts::print_failure(SafeLevel level, oop obj, void* interior_l
   msg.append("\n");
 
   if (level >= _safe_oop) {
-    oop fwd = (oop) ShenandoahBrooksPointer::get_raw_unchecked(obj);
+    oop fwd = (oop) ShenandoahForwarding::get_forwardee_raw_unchecked(obj);
     msg.append("Forwardee:\n");
-    if (!oopDesc::unsafe_equals(obj, fwd)) {
+    if (obj != fwd) {
       if (level >= _safe_oop_fwd) {
         print_obj(msg, fwd);
       } else {
@@ -146,9 +155,9 @@ void ShenandoahAsserts::print_failure(SafeLevel level, oop obj, void* interior_l
   }
 
   if (level >= _safe_oop_fwd) {
-    oop fwd = (oop) ShenandoahBrooksPointer::get_raw_unchecked(obj);
-    oop fwd2 = (oop) ShenandoahBrooksPointer::get_raw_unchecked(fwd);
-    if (!oopDesc::unsafe_equals(fwd, fwd2)) {
+    oop fwd = (oop) ShenandoahForwarding::get_forwardee_raw_unchecked(obj);
+    oop fwd2 = (oop) ShenandoahForwarding::get_forwardee_raw_unchecked(fwd);
+    if (fwd != fwd2) {
       msg.append("Second forwardee:\n");
       print_obj_safe(msg, fwd2);
       msg.append("\n");
@@ -192,9 +201,9 @@ void ShenandoahAsserts::assert_correct(void* interior_loc, oop obj, const char* 
                   file,line);
   }
 
-  oop fwd = oop(ShenandoahBrooksPointer::get_raw_unchecked(obj));
+  oop fwd = oop(ShenandoahForwarding::get_forwardee_raw_unchecked(obj));
 
-  if (!oopDesc::unsafe_equals(obj, fwd)) {
+  if (obj != fwd) {
     // When Full GC moves the objects, we cannot trust fwdptrs. If we got here, it means something
     // tries fwdptr manipulation when Full GC is running. The only exception is using the fwdptr
     // that still points to the object itself.
@@ -225,8 +234,8 @@ void ShenandoahAsserts::assert_correct(void* interior_loc, oop obj, const char* 
     }
 
     // Step 4. Check for multiple forwardings
-    oop fwd2 = oop(ShenandoahBrooksPointer::get_raw_unchecked(fwd));
-    if (!oopDesc::unsafe_equals(fwd, fwd2)) {
+    oop fwd2 = oop(ShenandoahForwarding::get_forwardee_raw_unchecked(fwd));
+    if (fwd != fwd2) {
       print_failure(_safe_all, obj, interior_loc, NULL, "Shenandoah assert_correct failed",
                     "Multiple forwardings",
                     file, line);
@@ -245,7 +254,7 @@ void ShenandoahAsserts::assert_in_correct_region(void* interior_loc, oop obj, co
                   file, line);
   }
 
-  size_t alloc_size = obj->size() + ShenandoahBrooksPointer::word_size();
+  size_t alloc_size = obj->size();
   if (alloc_size > ShenandoahHeapRegion::humongous_threshold_words()) {
     size_t idx = r->region_number();
     size_t num_regions = ShenandoahHeapRegion::required_regions(alloc_size * HeapWordSize);
@@ -267,9 +276,9 @@ void ShenandoahAsserts::assert_in_correct_region(void* interior_loc, oop obj, co
 
 void ShenandoahAsserts::assert_forwarded(void* interior_loc, oop obj, const char* file, int line) {
   assert_correct(interior_loc, obj, file, line);
-  oop fwd = oop(ShenandoahBrooksPointer::get_raw_unchecked(obj));
+  oop fwd = oop(ShenandoahForwarding::get_forwardee_raw_unchecked(obj));
 
-  if (oopDesc::unsafe_equals(obj, fwd)) {
+  if (obj == fwd) {
     print_failure(_safe_all, obj, interior_loc, NULL, "Shenandoah assert_forwarded failed",
                   "Object should be forwarded",
                   file, line);
@@ -278,9 +287,9 @@ void ShenandoahAsserts::assert_forwarded(void* interior_loc, oop obj, const char
 
 void ShenandoahAsserts::assert_not_forwarded(void* interior_loc, oop obj, const char* file, int line) {
   assert_correct(interior_loc, obj, file, line);
-  oop fwd = oop(ShenandoahBrooksPointer::get_raw_unchecked(obj));
+  oop fwd = oop(ShenandoahForwarding::get_forwardee_raw_unchecked(obj));
 
-  if (!oopDesc::unsafe_equals(obj, fwd)) {
+  if (obj != fwd) {
     print_failure(_safe_all, obj, interior_loc, NULL, "Shenandoah assert_not_forwarded failed",
                   "Object should not be forwarded",
                   file, line);

@@ -626,7 +626,7 @@ bool IfNode::is_shenandoah_marking_if(PhaseTransform *phase) const {
       cmpx->is_Cmp() && cmpx->in(2) == phase->intcon(0) &&
       cmpx->in(1)->in(1)->is_shenandoah_state_load() &&
       cmpx->in(1)->in(2)->is_Con() &&
-      cmpx->in(1)->in(2) == phase->intcon(ShenandoahHeap::MARKING)) {
+      cmpx->in(1)->in(2) == phase->intcon(ShenandoahHeap::MARKING | ShenandoahHeap::TRAVERSAL)) {
     return true;
   }
 

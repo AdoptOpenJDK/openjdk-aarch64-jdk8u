@@ -25,7 +25,6 @@
 #ifndef SHARE_VM_OOPS_OOP_HPP
 #define SHARE_VM_OOPS_OOP_HPP
 
-#include "memory/barrierSet.hpp"
 #include "memory/iterator.hpp"
 #include "memory/memRegion.hpp"
 #include "memory/specialized_oop_closures.hpp"
@@ -51,6 +50,7 @@ class OopClosure;
 class ScanClosure;
 class FastScanClosure;
 class FilteringClosure;
+class BarrierSet;
 class CMSIsAliveClosure;
 
 class PSPromotionManager;
@@ -69,20 +69,10 @@ class oopDesc {
   static BarrierSet* _bs;
 
  public:
-  markOop  mark()      const {
-    oop p = bs()->read_barrier((oop) this);
-    return p->_mark;
-  }
+  markOop  mark() const         { return _mark; }
   markOop* mark_addr() const    { return (markOop*) &_mark; }
 
-  void set_mark(volatile markOop m) {
-    oop p = bs()->write_barrier(this);
-    p->_mark = m;
-  }
-
-  void set_mark_raw(volatile markOop m) {
-    _mark = m;
-  }
+  void set_mark(volatile markOop m)      { _mark = m; }
 
   void    release_set_mark(markOop m);
   markOop cas_set_mark(markOop new_mark, markOop old_mark);
@@ -151,26 +141,6 @@ class oopDesc {
   static bool is_null(oop obj);
   static bool is_null(narrowOop obj);
   static bool is_null(Klass* obj);
-
-  inline static bool equals(oop o1, oop o2) {
-    return bs()->obj_equals(o1, o2);
-  }
-
-  inline static bool equals(narrowOop o1, narrowOop o2) {
-    return bs()->obj_equals(o1, o2);
-  }
-
-  inline static bool unsafe_equals(oop o1, oop o2) {
-#ifdef CHECK_UNHANDLED_OOPS
-    return o1.obj() == o2.obj();
-#else
-    return o1 == o2;
-#endif
-  }
-
-  inline static bool unsafe_equals(narrowOop o1, narrowOop o2) {
-    return o1 == o2;
-  }
 
   // Decode an oop pointer from a narrowOop if compressed.
   // These are overloaded for oop and narrowOop as are the other functions

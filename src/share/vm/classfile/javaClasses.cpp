@@ -52,6 +52,10 @@
 #include "runtime/vframe.hpp"
 #include "utilities/preserveException.hpp"
 
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
+#endif
+
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 #define INJECTED_FIELD_COMPUTE_OFFSET(klass, name, signature, may_be_java)    \
@@ -206,8 +210,7 @@ Handle java_lang_String::create_from_str(const char* utf8_str, TRAPS) {
   int length = UTF8::unicode_length(utf8_str);
   Handle h_obj = basic_create(length, CHECK_NH);
   if (length > 0) {
-    typeArrayOop buffer = value(h_obj());
-    UTF8::convert_to_unicode(utf8_str, buffer->char_at_addr(0), length);
+    UTF8::convert_to_unicode(utf8_str, value(h_obj())->char_at_addr(0), length);
   }
   return h_obj;
 }
@@ -221,8 +224,7 @@ Handle java_lang_String::create_from_symbol(Symbol* symbol, TRAPS) {
   int length = UTF8::unicode_length((char*)symbol->bytes(), symbol->utf8_length());
   Handle h_obj = basic_create(length, CHECK_NH);
   if (length > 0) {
-    typeArrayOop buffer = value(h_obj());
-    UTF8::convert_to_unicode((char*)symbol->bytes(), buffer->char_at_addr(0), length);
+    UTF8::convert_to_unicode((char*)symbol->bytes(), value(h_obj())->char_at_addr(0), length);
   }
   return h_obj;
 }
@@ -628,7 +630,7 @@ void java_lang_Class::create_mirror(KlassHandle k, Handle class_loader,
     }
 
     // set the classLoader field in the java_lang_Class instance
-    assert(oopDesc::equals(class_loader(), k->class_loader()), "should be same");
+    assert(class_loader() == k->class_loader(), "should be same");
     set_class_loader(mirror(), class_loader());
 
     // Setup indirection from klass->mirror last
@@ -653,7 +655,7 @@ int  java_lang_Class::oop_size(oop java_class) {
 }
 void java_lang_Class::set_oop_size(oop java_class, int size) {
   assert(_oop_size_offset != 0, "must be set");
-  java_class->int_field_put_raw(_oop_size_offset, size);
+  java_class->int_field_put(_oop_size_offset, size);
 }
 int  java_lang_Class::static_oop_field_count(oop java_class) {
   assert(_static_oop_field_count_offset != 0, "must be set");
@@ -839,9 +841,9 @@ BasicType java_lang_Class::primitive_type(oop java_class) {
     // Note: create_basic_type_mirror above initializes ak to a non-null value.
     type = ArrayKlass::cast(ak)->element_type();
   } else {
-    assert(oopDesc::equals(java_class, Universe::void_mirror()), "only valid non-array primitive");
+    assert(java_class == Universe::void_mirror(), "only valid non-array primitive");
   }
-  assert(oopDesc::equals(Universe::java_mirror(type), java_class), "must be consistent");
+  assert(Universe::java_mirror(type) == java_class, "must be consistent");
   return type;
 }
 
@@ -1209,11 +1211,18 @@ void java_lang_ThreadGroup::compute_offsets() {
 oop java_lang_Throwable::unassigned_stacktrace() {
   InstanceKlass* ik = InstanceKlass::cast(SystemDictionary::Throwable_klass());
   address addr = ik->static_field_addr(static_unassigned_stacktrace_offset);
+  oop result;
   if (UseCompressedOops) {
-    return oopDesc::load_decode_heap_oop((narrowOop *)addr);
+    result = oopDesc::load_decode_heap_oop((narrowOop *)addr);
   } else {
-    return oopDesc::load_decode_heap_oop((oop*)addr);
+    result = oopDesc::load_decode_heap_oop((oop*)addr);
   }
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    result = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(result);
+  }
+#endif
+  return result;
 }
 
 oop java_lang_Throwable::backtrace(oop throwable) {
@@ -2639,11 +2648,18 @@ HeapWord *java_lang_ref_Reference::pending_list_lock_addr() {
 oop java_lang_ref_Reference::pending_list_lock() {
   InstanceKlass* ik = InstanceKlass::cast(SystemDictionary::Reference_klass());
   address addr = ik->static_field_addr(static_lock_offset);
+  oop result;
   if (UseCompressedOops) {
-    return oopDesc::load_decode_heap_oop((narrowOop *)addr);
+    result = oopDesc::load_decode_heap_oop((narrowOop *)addr);
   } else {
-    return oopDesc::load_decode_heap_oop((oop*)addr);
+    result = oopDesc::load_decode_heap_oop((oop*)addr);
   }
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    result = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(result);
+  }
+#endif
+  return result;
 }
 
 HeapWord *java_lang_ref_Reference::pending_list_addr() {
@@ -2655,11 +2671,18 @@ HeapWord *java_lang_ref_Reference::pending_list_addr() {
 
 oop java_lang_ref_Reference::pending_list() {
   char *addr = (char *)pending_list_addr();
+  oop result;
   if (UseCompressedOops) {
-    return oopDesc::load_decode_heap_oop((narrowOop *)addr);
+    result = oopDesc::load_decode_heap_oop((narrowOop *)addr);
   } else {
-    return oopDesc::load_decode_heap_oop((oop*)addr);
+    result = oopDesc::load_decode_heap_oop((oop*)addr);
   }
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    result = ShenandoahBarrierSet::barrier_set()->load_reference_barrier(result);
+  }
+#endif
+  return result;
 }
 
 
@@ -2881,12 +2904,12 @@ void java_lang_invoke_MemberName::set_vmindex(oop mname, intptr_t index) {
 }
 
 bool java_lang_invoke_MemberName::equals(oop mn1, oop mn2) {
-  if (oopDesc::equals(mn1, mn2)) {
+  if (mn1 == mn2) {
      return true;
   }
   return (vmtarget(mn1) == vmtarget(mn2) && flags(mn1) == flags(mn2) &&
           vmindex(mn1) == vmindex(mn2) &&
-          oopDesc::equals(clazz(mn1), clazz(mn2)));
+          clazz(mn1) == clazz(mn2));
 }
 
 oop java_lang_invoke_LambdaForm::vmentry(oop lform) {
@@ -2934,14 +2957,14 @@ Symbol* java_lang_invoke_MethodType::as_signature(oop mt, bool intern_if_not_fou
 }
 
 bool java_lang_invoke_MethodType::equals(oop mt1, oop mt2) {
-  if (oopDesc::equals(mt1, mt2))
+  if (mt1 == mt2)
     return true;
-  if (! oopDesc::equals(rtype(mt1), rtype(mt2)))
+  if (rtype(mt1) != rtype(mt2))
     return false;
   if (ptype_count(mt1) != ptype_count(mt2))
     return false;
   for (int i = ptype_count(mt1) - 1; i >= 0; i--) {
-    if (! oopDesc::equals(ptype(mt1, i), ptype(mt2, i)))
+    if (ptype(mt1, i) != ptype(mt2, i))
       return false;
   }
   return true;
@@ -3065,7 +3088,6 @@ ClassLoaderData** java_lang_ClassLoader::loader_data_addr(oop loader) {
 }
 
 ClassLoaderData* java_lang_ClassLoader::loader_data(oop loader) {
-  loader = oopDesc::bs()->read_barrier(loader);
   return *java_lang_ClassLoader::loader_data_addr(loader);
 }
 
@@ -3094,7 +3116,7 @@ bool java_lang_ClassLoader::isAncestor(oop loader, oop cl) {
   // This loop taken verbatim from ClassLoader.java:
   do {
     acl = parent(acl);
-    if (oopDesc::equals(cl, acl)) {
+    if (cl == acl) {
       return true;
     }
     assert(++loop_count > 0, "loop_count overflow");
@@ -3121,7 +3143,7 @@ bool java_lang_ClassLoader::is_trusted_loader(oop loader) {
 
   oop cl = SystemDictionary::java_system_loader();
   while(cl != NULL) {
-    if (oopDesc::equals(cl, loader)) return true;
+    if (cl == loader) return true;
     cl = parent(cl);
   }
   return false;

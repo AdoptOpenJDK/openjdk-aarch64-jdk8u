@@ -440,9 +440,7 @@ public class ObjectHeap {
         g1h.heapRegionIterate(lrc);
     } else if (heap instanceof ShenandoahHeap) {
         ShenandoahHeap sh = (ShenandoahHeap) heap;
-        // Operation (currently) not supported with Shenandoah GC. Print
-        // a warning and leave the list of live regions empty.
-        System.err.println("Warning: Operation not supported with Shenandoah GC");
+        sh.iterateHeapRegions(lrc);
     } else {
        if (Assert.ASSERTS_ENABLED) {
           Assert.that(false, "Expecting GenCollectedHeap, G1CollectedHeap, " +
