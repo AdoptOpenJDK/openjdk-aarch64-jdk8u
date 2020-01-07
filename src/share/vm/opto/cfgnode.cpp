@@ -1269,13 +1269,7 @@ static Node *is_x2logic( PhaseGVN *phase, PhiNode *phi, int true_path ) {
   } else return NULL;
 
   // Build int->bool conversion
-  Node* in1 = cmp->in(1);
-#if INCLUDE_ALL_GCS
-  if (UseShenandoahGC) {
-    in1 = ShenandoahBarrierSetC2::bsc2()->step_over_gc_barrier(in1);
-  }
-#endif
-  Node *n = new (phase->C) Conv2BNode(in1);
+  Node *n = new (phase->C) Conv2BNode(cmp->in(1));
   if( flipped )
     n = new (phase->C) XorINode( phase->transform(n), phase->intcon(1) );
 
