@@ -1755,9 +1755,9 @@ void Arguments::set_shenandoah_gc_flags() {
     }
   }
 
-  if (!FLAG_IS_DEFAULT(ShenandoahFreeThreshold)) {
-    if (0 > ShenandoahFreeThreshold || ShenandoahFreeThreshold > 100) {
-      vm_exit_during_initialization("The flag -XX:ShenandoahFreeThreshold is out of range", NULL);
+  if (!FLAG_IS_DEFAULT(ShenandoahMinFreeThreshold)) {
+    if (0 > ShenandoahMinFreeThreshold || ShenandoahMinFreeThreshold > 100) {
+      vm_exit_during_initialization("The flag -XX:ShenandoahMinFreeThreshold is out of range", NULL);
     }
   }
 #endif

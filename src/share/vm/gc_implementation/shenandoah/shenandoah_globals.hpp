@@ -92,10 +92,6 @@
           "it can be marked for collection. Does not apply to all "         \
           "heuristics.")                                                    \
                                                                             \
-  experimental(uintx, ShenandoahFreeThreshold, 10,                          \
-          "Set the percentage of free heap at which a GC cycle is started. "\
-          "Does not apply to all heuristics.")                              \
-                                                                            \
   experimental(uintx, ShenandoahInitFreeThreshold, 70,                      \
           "Initial remaining free heap threshold for learning steps in "    \
           "heuristics. In percents of total heap size. Does not apply to "  \
