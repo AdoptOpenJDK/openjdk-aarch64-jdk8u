@@ -44,7 +44,7 @@ private:
     T o = oopDesc::load_heap_oop(p);
     if (!oopDesc::is_null(o)) {
       oop obj = oopDesc::decode_heap_oop_not_null(o);
-      if (_cset->is_in((HeapWord *)obj)) {
+      if (_cset->is_in(obj)) {
         oop fwd = _bs->resolve_forwarded_not_null(obj);
         if (EVAC && obj == fwd) {
           fwd = _heap->evacuate_object(obj, _thread);
