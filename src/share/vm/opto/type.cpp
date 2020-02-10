@@ -28,7 +28,6 @@
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "compiler/compileLog.hpp"
-#include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "libadt/dict.hpp"
 #include "memory/gcLocker.hpp"
 #include "memory/oopFactory.hpp"

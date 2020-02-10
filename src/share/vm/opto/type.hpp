@@ -1649,7 +1649,7 @@ inline const TypePtr* Type::make_ptr() const {
 }
 
 inline const TypeOopPtr* Type::make_oopptr() const {
-  return (_base == NarrowOop) ? is_narrowoop()->get_ptrtype()->is_oopptr() : isa_oopptr();
+  return (_base == NarrowOop) ? is_narrowoop()->get_ptrtype()->is_oopptr() : is_oopptr();
 }
 
 inline const TypeNarrowOop* Type::make_narrowoop() const {

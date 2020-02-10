@@ -2788,7 +2788,9 @@ bool ShenandoahLoadReferenceBarrierNode::needs_barrier_impl(PhaseTransform* phas
     // tty->print_cr("optimize barrier on null");
     return false;
   }
-  if (type->make_oopptr() && type->make_oopptr()->const_oop() != NULL) {
+  // Impl detail: Need to check isa_(narrow)oop before calling to make_oopptr on potentially non-oop types
+  // in 8u, otherwise make_oopptr would assert. make_oopptr is fixed later during JDK-8078629.
+  if ((type->isa_oopptr() || type->isa_narrowoop()) && type->make_oopptr()->const_oop() != NULL) {
     // tty->print_cr("optimize barrier on constant");
     return false;
   }
