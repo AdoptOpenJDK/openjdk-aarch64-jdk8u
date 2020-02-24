@@ -197,11 +197,7 @@ public:
       ShenandoahMarkCLDClosure cld_cl(&roots_cl);
       MarkingCodeBlobClosure code_cl(&roots_cl, CodeBlobToOopClosure::FixRelocations);
       if (unload_classes) {
-        _rp->process_strong_roots(&roots_cl, &cld_cl, NULL, NULL, NULL, worker_id);
-        // Need to pre-evac code roots here. Otherwise we might see from-space constants.
-        ShenandoahWorkerTimings* worker_times = _heap->phase_timings()->worker_times();
-        ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::CodeCacheRoots, worker_id);
-        _cset_coderoots.possibly_parallel_blobs_do(&code_cl);
+        _rp->process_all_roots(&roots_cl, NULL, &code_cl, NULL, worker_id);
       } else {
         _rp->process_all_roots(&roots_cl, &cld_cl, &code_cl, NULL, worker_id);
       }
