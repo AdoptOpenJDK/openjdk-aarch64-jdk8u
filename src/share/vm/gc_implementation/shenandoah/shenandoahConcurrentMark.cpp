@@ -354,6 +354,37 @@ void ShenandoahConcurrentMark::update_roots(ShenandoahPhaseTimings::Phase root_p
   COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
 }
 
+class ShenandoahUpdateThreadRootsTask : public AbstractGangTask {
+private:
+  SharedHeap::StrongRootsScope _srs;
+  ShenandoahPhaseTimings::Phase   _phase;
+public:
+  ShenandoahUpdateThreadRootsTask(bool is_par, ShenandoahPhaseTimings::Phase phase) :
+    AbstractGangTask("Shenandoah Update Thread Roots"),
+    _srs(ShenandoahHeap::heap(), true),
+    _phase(phase) {
+    ShenandoahHeap::heap()->phase_timings()->record_workers_start(_phase);
+  }
+
+  ~ShenandoahUpdateThreadRootsTask() {
+    ShenandoahHeap::heap()->phase_timings()->record_workers_end(_phase);
+  }
+  void work(uint worker_id) {
+    ShenandoahUpdateRefsClosure cl;
+    ShenandoahWorkerTimings* worker_times = ShenandoahHeap::heap()->phase_timings()->worker_times();
+    ShenandoahWorkerTimingsTracker timer(worker_times, ShenandoahPhaseTimings::ThreadRoots, worker_id);
+    ResourceMark rm;
+    Threads::possibly_parallel_oops_do(&cl, NULL, NULL);
+  }
+};
+
+void ShenandoahConcurrentMark::update_thread_roots(ShenandoahPhaseTimings::Phase root_phase) {
+  WorkGang* workers = _heap->workers();
+  bool is_par = workers->active_workers() > 1;
+  ShenandoahUpdateThreadRootsTask task(is_par, root_phase);
+  workers->run_task(&task);
+}
+
 void ShenandoahConcurrentMark::initialize(uint workers) {
   _heap = ShenandoahHeap::heap();
 
