@@ -138,7 +138,7 @@ template <class T>
 inline void ShenandoahBarrierSet::inline_write_ref_field_pre(T* field, oop newVal) {
   newVal = load_reference_barrier(newVal);
   storeval_barrier(newVal);
-  if (ShenandoahSATBBarrier) {
+  if (ShenandoahSATBBarrier && _heap->is_concurrent_mark_in_progress()) {
     T heap_oop = oopDesc::load_heap_oop(field);
     shenandoah_assert_not_in_cset_loc_except(field, ShenandoahHeap::heap()->cancelled_gc());
     if (!oopDesc::is_null(heap_oop)) {
@@ -264,13 +264,21 @@ void ShenandoahBarrierSet::keep_alive_barrier(oop obj) {
 
 void ShenandoahBarrierSet::enqueue(oop obj) {
   shenandoah_assert_not_forwarded_if(NULL, obj, _heap->is_concurrent_traversal_in_progress());
+  assert(JavaThread::satb_mark_queue_set().shared_satb_queue()->is_active(), "only get here when SATB active");
 
   // Filter marked objects before hitting the SATB queues. The same predicate would
   // be used by SATBMQ::filter to eliminate already marked objects downstream, but
   // filtering here helps to avoid wasteful SATB queueing work to begin with.
   if (!_heap->requires_marking(obj)) return;
 
-  G1SATBCardTableModRefBS::enqueue(obj);
+  Thread* thr = Thread::current();
+  if (thr->is_Java_thread()) {
+    JavaThread* jt = (JavaThread*)thr;
+    jt->satb_mark_queue().enqueue_known_active(obj);
+  } else {
+    MutexLockerEx x(Shared_SATB_Q_lock, Mutex::_no_safepoint_check_flag);
+    JavaThread::satb_mark_queue_set().shared_satb_queue()->enqueue_known_active(obj);
+  }
 }
 
 oop ShenandoahBarrierSet::atomic_compare_exchange_oop(oop exchange_value,
@@ -298,7 +306,8 @@ oop ShenandoahBarrierSet::oop_atomic_cmpxchg_in_heap(oop new_value, volatile Hea
     success = (compare_value == expected);
   } while ((! success) && resolve_forwarded(compare_value) == resolve_forwarded(expected));
   oop result = load_reference_barrier(compare_value);
-  if (ShenandoahSATBBarrier && success && result != NULL) {
+  if (ShenandoahSATBBarrier && success && result != NULL &&
+        ShenandoahHeap::heap()->is_concurrent_mark_in_progress()) {
     enqueue(result);
   }
   if (new_value != NULL) {
