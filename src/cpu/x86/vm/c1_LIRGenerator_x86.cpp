@@ -1503,10 +1503,8 @@ void LIRGenerator::do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x) {
 
 #if INCLUDE_ALL_GCS
     if (UseShenandoahGC && is_obj) {
-      dst = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, dst, NULL, true);
-      LIR_Opr tmp = new_register(type);
-      __ move(dst, tmp);
-      dst = tmp;
+      LIR_Opr tmp = ShenandoahBarrierSet::barrier_set()->bsc1()->load_reference_barrier(this, dst, NULL, true);
+      __ move(tmp, dst);
     }
 #endif
 
