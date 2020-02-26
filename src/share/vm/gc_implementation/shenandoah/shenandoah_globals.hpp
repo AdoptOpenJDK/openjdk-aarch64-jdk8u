@@ -313,7 +313,7 @@
           "Forcefully flush non-empty SATB buffers at this interval. "      \
           "Time is in milliseconds.")                                       \
                                                                             \
-  experimental(bool, ShenandoahPreclean, true,                              \
+  diagnostic(bool, ShenandoahPreclean, true,                                \
           "Do concurrent preclean phase before final mark: process "        \
           "definitely alive references to avoid dealing with them during "  \
           "pause.")                                                         \
@@ -336,10 +336,10 @@
   diagnostic(bool, ShenandoahLoadRefBarrier, true,                          \
           "Turn on/off load-reference barriers in Shenandoah")              \
                                                                             \
-  experimental(bool, ShenandoahConcurrentScanCodeRoots, true,               \
+  diagnostic(bool, ShenandoahConcurrentScanCodeRoots, true,                 \
           "Scan code roots concurrently, instead of during a pause")        \
                                                                             \
-  experimental(uintx, ShenandoahCodeRootsStyle, 2,                          \
+  diagnostic(uintx, ShenandoahCodeRootsStyle, 2,                            \
           "Use this style to scan code cache:"                              \
           " 0 - sequential iterator;"                                       \
           " 1 - parallel iterator;"                                         \
