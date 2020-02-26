@@ -103,6 +103,7 @@ public:
   void write_region_work(MemRegion mr) {};
 
   static inline oop resolve_forwarded_not_null(oop p);
+  static inline oop resolve_forwarded_not_null_mutator(oop p);
   static inline oop resolve_forwarded(oop p);
 
   void storeval_barrier(oop obj);

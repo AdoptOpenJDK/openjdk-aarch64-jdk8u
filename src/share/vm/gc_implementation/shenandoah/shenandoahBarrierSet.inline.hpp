@@ -44,11 +44,15 @@ inline oop ShenandoahBarrierSet::resolve_forwarded(oop p) {
   }
 }
 
+inline oop ShenandoahBarrierSet::resolve_forwarded_not_null_mutator(oop p) {
+  return ShenandoahForwarding::get_forwardee_mutator(p);
+}
+
 inline oop ShenandoahBarrierSet::load_reference_barrier_mutator(oop obj) {
   assert(ShenandoahLoadRefBarrier, "should be enabled");
   shenandoah_assert_in_cset(NULL, obj);
 
-  oop fwd = resolve_forwarded_not_null(obj);
+  oop fwd = resolve_forwarded_not_null_mutator(obj);
   if (obj == fwd) {
     assert(_heap->is_evacuation_in_progress(),
            "evac should be in progress");

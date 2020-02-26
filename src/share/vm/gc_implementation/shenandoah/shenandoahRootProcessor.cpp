@@ -226,18 +226,6 @@ ShenandoahHeapIterationRootScanner::ShenandoahHeapIterationRootScanner() :
    _dedup_roots.oops_do(oops, 0);
  }
 
- void ShenandoahHeapIterationRootScanner::strong_roots_do(OopClosure* oops) {
-   assert(Thread::current()->is_VM_thread(), "Only by VM thread");
-   // Must use _claim_none to avoid interfering with concurrent CLDG iteration
-   CLDToOopClosure clds(oops, false /* must claim */);
-   MarkingCodeBlobClosure code(oops, !CodeBlobToOopClosure::FixRelocations);
-   ResourceMark rm;
-
-   _serial_roots.oops_do(oops, 0);
-   _cld_roots.always_strong_cld_do(&clds, 0);
-   _thread_roots.oops_do(oops, &clds, &code, 0);
- }
-
 void ShenandoahRootEvacuator::roots_do(uint worker_id, OopClosure* oops) {
   {
     // Evacuate the PLL here so that the SurrogateLockerThread doesn't
