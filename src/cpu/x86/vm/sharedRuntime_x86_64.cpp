@@ -2198,7 +2198,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   int pinned_slot = oop_handle_offset;
 
   VMRegPair tmp_vmreg;
-  tmp_vmreg.set1(rbx->as_VMReg());
+  tmp_vmreg.set2(rbx->as_VMReg());
 
   if (!is_critical_native) {
     for (int i = total_in_args - 1, c_arg = total_c_args - 1; i >= 0; i--, c_arg--) {
