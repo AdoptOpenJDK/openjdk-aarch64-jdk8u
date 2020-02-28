@@ -347,10 +347,6 @@ jint ShenandoahHeap::initialize() {
   ShenandoahStringDedup::initialize();
   ShenandoahCodeRoots::initialize();
 
-  if (ShenandoahAllocationTrace) {
-    _alloc_tracker = new ShenandoahAllocTracker();
-  }
-
   if (ShenandoahPacing) {
     _pacer = new ShenandoahPacer(this);
     _pacer->setup_for_idle();
@@ -432,8 +428,7 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
   _verifier(NULL),
   _pacer(NULL),
   _gc_timer(new (ResourceObj::C_HEAP, mtGC) ConcurrentGCTimer()),
-  _phase_timings(NULL),
-  _alloc_tracker(NULL)
+  _phase_timings(NULL)
 {
   log_info(gc, init)("GC threads: " UINTX_FORMAT " parallel, " UINTX_FORMAT " concurrent", ParallelGCThreads, ConcGCThreads);
   log_info(gc, init)("Reference processing: %s", ParallelRefProcEnabled ? "parallel" : "serial");
@@ -751,8 +746,6 @@ ShenandoahHeap* ShenandoahHeap::heap_no_check() {
 }
 
 HeapWord* ShenandoahHeap::allocate_memory(ShenandoahAllocRequest& req) {
-  ShenandoahAllocTrace trace_alloc(req.size(), req.type());
-
   intptr_t pacer_epoch = 0;
   bool in_new_region = false;
   HeapWord* result = NULL;
@@ -1130,13 +1123,6 @@ void ShenandoahHeap::print_tracing_info() const {
 
     out->cr();
     out->cr();
-
-    if (ShenandoahAllocationTrace) {
-      assert(alloc_tracker() != NULL, "Must be");
-      alloc_tracker()->print_on(out);
-    } else {
-      out->print_cr("  Allocation tracing is disabled, use -XX:+ShenandoahAllocationTrace to enable.");
-    }
   }
 }
 
