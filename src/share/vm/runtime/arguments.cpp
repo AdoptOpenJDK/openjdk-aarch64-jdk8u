@@ -1902,16 +1902,6 @@ void Arguments::set_shenandoah_gc_flags() {
     FLAG_SET_DEFAULT(TLABAllocationWeight, 90);
   }
 #endif
-
-  // Make sure safepoint deadlocks are failing predictably. This sets up VM to report
-  // fatal error after 10 seconds of wait for safepoint syncronization (not the VM
-  // operation itself). There is no good reason why Shenandoah would spend that
-  // much time synchronizing.
-#ifdef ASSERT
-  FLAG_SET_DEFAULT(SafepointTimeout, true);
-  FLAG_SET_DEFAULT(SafepointTimeoutDelay, 10000);
-  FLAG_SET_DEFAULT(AbortVMOnSafepointTimeout, true);
-#endif
 }
 
 #if !INCLUDE_ALL_GCS
