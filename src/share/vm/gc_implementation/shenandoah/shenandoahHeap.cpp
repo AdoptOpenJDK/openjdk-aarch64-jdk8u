@@ -28,7 +28,6 @@
 #include "gc_implementation/shenandoah/shenandoahGCTraceTime.hpp"
 #include "gc_implementation/shared/parallelCleaning.hpp"
 
-#include "gc_implementation/shenandoah/shenandoahAllocTracker.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"

@@ -33,7 +33,6 @@
 
 class ConcurrentGCTimer;
 
-class ShenandoahAllocTracker;
 class ShenandoahCollectionSet;
 class ShenandoahCollectorPolicy;
 class ShenandoahConcurrentMark;
