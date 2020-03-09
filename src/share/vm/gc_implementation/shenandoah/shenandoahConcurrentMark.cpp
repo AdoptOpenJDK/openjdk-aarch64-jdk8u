@@ -361,17 +361,14 @@ class ShenandoahUpdateThreadRootsTask : public AbstractGangTask {
 private:
   SharedHeap::StrongRootsScope _srs;
   ShenandoahPhaseTimings::Phase   _phase;
+  ShenandoahGCWorkerPhase         _worker_phase;
 public:
   ShenandoahUpdateThreadRootsTask(bool is_par, ShenandoahPhaseTimings::Phase phase) :
     AbstractGangTask("Shenandoah Update Thread Roots"),
     _srs(ShenandoahHeap::heap(), true),
-    _phase(phase) {
-    ShenandoahHeap::heap()->phase_timings()->record_workers_start(_phase);
-  }
+    _phase(phase),
+    _worker_phase(phase) {}
 
-  ~ShenandoahUpdateThreadRootsTask() {
-    ShenandoahHeap::heap()->phase_timings()->record_workers_end(_phase);
-  }
   void work(uint worker_id) {
     ShenandoahUpdateRefsClosure cl;
     ShenandoahWorkerTimingsTracker timer(ShenandoahPhaseTimings::ThreadRoots, worker_id);

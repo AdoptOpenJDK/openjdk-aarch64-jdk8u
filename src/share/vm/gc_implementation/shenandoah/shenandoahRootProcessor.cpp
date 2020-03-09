@@ -46,10 +46,10 @@ ShenandoahRootProcessor::ShenandoahRootProcessor(ShenandoahHeap* heap, uint n_wo
   _process_strong_tasks(new SubTasksDone(SHENANDOAH_RP_PS_NumElements)),
   _srs(heap, true),
   _phase(phase),
+  _worker_phase(phase),
   _coderoots_all_iterator(ShenandoahCodeRoots::iterator()),
   _om_iterator(ShenandoahSynchronizerIterator())
 {
-  heap->phase_timings()->record_workers_start(_phase);
   _process_strong_tasks->set_n_threads(n_workers);
   heap->set_par_threads(n_workers);
 
@@ -60,7 +60,6 @@ ShenandoahRootProcessor::ShenandoahRootProcessor(ShenandoahHeap* heap, uint n_wo
 
 ShenandoahRootProcessor::~ShenandoahRootProcessor() {
   delete _process_strong_tasks;
-  ShenandoahHeap::heap()->phase_timings()->record_workers_end(_phase);
 }
 
 void ShenandoahRootProcessor::process_all_roots_slow(OopClosure* oops) {

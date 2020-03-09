@@ -181,7 +181,8 @@ public:
 #define GC_PHASE_DECLARE_ENUM(type, title)   type,
   enum Phase {
     SHENANDOAH_GC_PHASE_DO(GC_PHASE_DECLARE_ENUM)
-    _num_phases
+    _num_phases,
+    _invalid_phase = _num_phases
   };
 
   enum GCParPhases {

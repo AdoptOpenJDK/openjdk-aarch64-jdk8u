@@ -30,6 +30,7 @@
 #include "gc_implementation/shenandoah/shenandoahCodeRoots.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahSynchronizerIterator.hpp"
+#include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "memory/allocation.hpp"
 #include "utilities/workgroup.hpp"
 
@@ -55,6 +56,7 @@ class ShenandoahRootProcessor : public StackObj {
   SubTasksDone* _process_strong_tasks;
   SharedHeap::StrongRootsScope _srs;
   ShenandoahPhaseTimings::Phase _phase;
+  ShenandoahGCWorkerPhase       _worker_phase;
   ParallelCLDRootIterator   _cld_iterator;
   ShenandoahAllCodeRootsIterator _coderoots_all_iterator;
   ShenandoahSynchronizerIterator _om_iterator;
