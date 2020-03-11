@@ -56,11 +56,6 @@ void VM_ShenandoahFinalMarkStartEvac::doit() {
   ShenandoahHeap::heap()->entry_final_mark();
 }
 
-void VM_ShenandoahFinalEvac::doit() {
-  ShenandoahGCPauseMark mark(SvcGCMarker::OTHER);
-  ShenandoahHeap::heap()->entry_final_evac();
-}
-
 void VM_ShenandoahFullGC::doit() {
   ShenandoahGCPauseMark mark(SvcGCMarker::FULL);
   ShenandoahHeap::heap()->entry_full(_gc_cause);

@@ -96,7 +96,6 @@
   template(ShenandoahFullGC)                      \
   template(ShenandoahInitMark)                    \
   template(ShenandoahFinalMarkStartEvac)          \
-  template(ShenandoahFinalEvac)                   \
   template(ShenandoahInitTraversalGC)             \
   template(ShenandoahFinalTraversalGC)            \
   template(ShenandoahInitUpdateRefs)              \
