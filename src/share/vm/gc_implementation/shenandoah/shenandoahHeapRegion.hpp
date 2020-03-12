@@ -252,6 +252,8 @@ private:
   volatile jint _live_data;
   volatile jint _critical_pins;
 
+  HeapWord* _update_watermark;
+
   // Claim some space at the end to protect next region
   char _pad0[DEFAULT_CACHE_LINE_SIZE];
 
@@ -413,6 +415,16 @@ public:
 
   uint64_t seqnum_last_alloc_gc()  const {
     return _seqnum_last_alloc_gc;
+  }
+
+  HeapWord* get_update_watermark() const {
+    assert(bottom() <= _update_watermark && _update_watermark <= top(), "within bounds");
+    return _update_watermark;
+  }
+
+  void set_update_watermark(HeapWord* w) {
+    assert(bottom() <= w && w <= top(), "within bounds");
+    _update_watermark = w;
   }
 
 private:
