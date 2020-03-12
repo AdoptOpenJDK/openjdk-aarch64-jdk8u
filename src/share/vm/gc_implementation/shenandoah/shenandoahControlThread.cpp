@@ -210,6 +210,9 @@ void ShenandoahControlThread::run() {
 
       heap->reset_bytes_allocated_since_gc_start();
 
+      // Capture metaspace usage before GC.
+      const size_t metadata_prev_used = MetaspaceAux::used_bytes();
+
       // If GC was requested, we are sampling the counters even without actual triggers
       // from allocation machinery. This captures GC phases more accurately.
       set_forced_counters_update(true);
@@ -219,25 +222,23 @@ void ShenandoahControlThread::run() {
         ShenandoahHeapLocker locker(heap->lock());
         heap->free_set()->log_status();
       }
-    }
 
-    switch (mode) {
-      case none:
-        break;
-      case concurrent_normal:
-        service_concurrent_normal_cycle(cause);
-        break;
-      case stw_degenerated:
-        service_stw_degenerated_cycle(cause, degen_point);
-        break;
-      case stw_full:
-        service_stw_full_cycle(cause);
-        break;
-      default:
-        ShouldNotReachHere();
-    }
+      switch (mode) {
+        case none:
+          break;
+        case concurrent_normal:
+          service_concurrent_normal_cycle(cause);
+          break;
+        case stw_degenerated:
+          service_stw_degenerated_cycle(cause, degen_point);
+          break;
+        case stw_full:
+          service_stw_full_cycle(cause);
+          break;
+        default:
+          ShouldNotReachHere();
+      }
 
-    if (gc_requested) {
       // If this was the requested GC cycle, notify waiters about it
       if (explicit_gc_requested || implicit_gc_requested) {
         notify_gc_waiters();
@@ -271,6 +272,11 @@ void ShenandoahControlThread::run() {
       // Clear metaspace oom flag, if current cycle unloaded classes
       if (heap->unload_classes()) {
         heuristics->clear_metaspace_oom();
+      }
+
+      // Print Metaspace change following GC (if logging is enabled).
+      if (PrintGCDetails) {
+        MetaspaceAux::print_metaspace_change(metadata_prev_used);
       }
 
       // GC is over, we are at idle now
