@@ -169,13 +169,11 @@ class ShenandoahInitTraversalCollectionTask : public AbstractGangTask {
 private:
   ShenandoahRootProcessor* _rp;
   ShenandoahHeap* _heap;
-  ShenandoahCsetCodeRootsIterator _cset_coderoots;
 public:
   ShenandoahInitTraversalCollectionTask(ShenandoahRootProcessor* rp) :
     AbstractGangTask("Shenandoah Init Traversal Collection"),
     _rp(rp),
-    _heap(ShenandoahHeap::heap()),
-    _cset_coderoots(ShenandoahCodeRoots::cset_iterator()) {}
+    _heap(ShenandoahHeap::heap()) {}
 
   void work(uint worker_id) {
     ShenandoahParallelWorkerSession worker_session(worker_id);
