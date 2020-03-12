@@ -1351,6 +1351,7 @@ void ShenandoahHeap::op_init_mark() {
 
   assert(marking_context()->is_bitmap_clear(), "need clear marking bitmap");
   assert(!marking_context()->is_complete(), "should not be complete");
+  assert(!has_forwarded_objects(), "No forwarded objects on this path");
 
   if (ShenandoahVerify) {
     verifier()->verify_before_concmark();
@@ -1423,6 +1424,7 @@ public:
 
 void ShenandoahHeap::op_final_mark() {
   assert(ShenandoahSafepoint::is_at_shenandoah_safepoint(), "Should be at safepoint");
+  assert(!has_forwarded_objects(), "No forwarded objects on this path");
 
   // It is critical that we
   // evacuate roots right after finishing marking, so that we don't
@@ -1432,16 +1434,6 @@ void ShenandoahHeap::op_final_mark() {
     concurrent_mark()->finish_mark_from_roots(/* full_gc = */ false);
 
     TASKQUEUE_STATS_ONLY(concurrent_mark()->task_queues()->reset_taskqueue_stats());
-
-    if (has_forwarded_objects()) {
-      // Degen may be caused by failed evacuation of roots
-      if (is_degenerated_gc_in_progress()) {
-        concurrent_mark()->update_roots(ShenandoahPhaseTimings::degen_gc_update_roots);
-      } else {
-        concurrent_mark()->update_thread_roots(ShenandoahPhaseTimings::update_roots);
-      }
-    }
-
     TASKQUEUE_STATS_ONLY(concurrent_mark()->task_queues()->print_taskqueue_stats());
 
     stop_concurrent_marking();
