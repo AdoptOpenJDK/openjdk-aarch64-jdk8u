@@ -39,6 +39,7 @@ private:
   ShenandoahBarrierSetC1* const _bsc1;
   ShenandoahBarrierSetC2* const _bsc2;
 
+  inline bool skip_bulk_update(HeapWord* dst);
 public:
   ShenandoahBarrierSet(ShenandoahHeap* heap);
 

@@ -252,7 +252,7 @@ private:
   volatile jint _live_data;
   volatile jint _critical_pins;
 
-  HeapWord* _update_watermark;
+  HeapWord* volatile _update_watermark;
 
   // Claim some space at the end to protect next region
   char _pad0[DEFAULT_CACHE_LINE_SIZE];
@@ -419,12 +419,12 @@ public:
 
   HeapWord* get_update_watermark() const {
     assert(bottom() <= _update_watermark && _update_watermark <= top(), "within bounds");
-    return _update_watermark;
+    return (HeapWord*)OrderAccess::load_ptr_acquire(&_update_watermark);
   }
 
   void set_update_watermark(HeapWord* w) {
     assert(bottom() <= w && w <= top(), "within bounds");
-    _update_watermark = w;
+    OrderAccess::release_store_ptr(&_update_watermark, w);
   }
 
 private:
