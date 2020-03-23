@@ -26,15 +26,6 @@
 
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 
-class ShenandoahMetrics {
-private:
-  ShenandoahMetrics() {}
-
-public:
-  static double internal_fragmentation();
-  static double external_fragmentation();
-};
-
 class ShenandoahMetricsSnapshot : public StackObj {
 private:
   ShenandoahHeap* _heap;
