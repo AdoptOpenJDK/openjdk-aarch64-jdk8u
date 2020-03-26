@@ -495,9 +495,9 @@ public:
   // Used for native heap walkers: heap dumpers, mostly
   void object_iterate(ObjectClosure* cl);
   void safe_object_iterate(ObjectClosure* cl);
-  void space_iterate(SpaceClosure* scl);
+  void space_iterate(SpaceClosure* scl) shenandoah_not_implemented;
   void oop_iterate(ExtendedOopClosure* cl);
-  Space* space_containing(const void* oop) const;
+  Space* space_containing(const void* oop) const shenandoah_not_implemented_return(NULL);
 
   // Used by RMI
   jlong millis_since_last_gc();

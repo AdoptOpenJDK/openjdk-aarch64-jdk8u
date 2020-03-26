@@ -1059,22 +1059,21 @@ void ShenandoahHeap::accumulate_statistics_tlabs() {
 }
 
 HeapWord* ShenandoahHeap::block_start(const void* addr) const {
-  Space* sp = heap_region_containing(addr);
-  if (sp != NULL) {
-    return sp->block_start(addr);
+  ShenandoahHeapRegion* r = heap_region_containing(addr);
+  if (r != NULL) {
+    return r->block_start(addr);
   }
   return NULL;
 }
 
 size_t ShenandoahHeap::block_size(const HeapWord* addr) const {
-  Space* sp = heap_region_containing(addr);
-  assert(sp != NULL, "block_size of address outside of heap");
-  return sp->block_size(addr);
+  ShenandoahHeapRegion* r = heap_region_containing(addr);
+  return r->block_size(addr);
 }
 
 bool ShenandoahHeap::block_is_obj(const HeapWord* addr) const {
-  Space* sp = heap_region_containing(addr);
-  return sp->block_is_obj(addr);
+  ShenandoahHeapRegion* r = heap_region_containing(addr);
+  return r->block_is_obj(addr);
 }
 
 jlong ShenandoahHeap::millis_since_last_gc() {
@@ -1247,25 +1246,6 @@ void ShenandoahHeap::safe_object_iterate(ObjectClosure* cl) {
 void ShenandoahHeap::oop_iterate(ExtendedOopClosure* cl) {
   ObjectToOopClosure cl2(cl);
   object_iterate(&cl2);
-}
-
-class ShenandoahSpaceClosureRegionClosure: public ShenandoahHeapRegionClosure {
-  SpaceClosure* _cl;
-public:
-  ShenandoahSpaceClosureRegionClosure(SpaceClosure* cl) : _cl(cl) {}
-  void heap_region_do(ShenandoahHeapRegion* r) {
-    _cl->do_space(r);
-  }
-};
-
-void  ShenandoahHeap::space_iterate(SpaceClosure* cl) {
-  ShenandoahSpaceClosureRegionClosure blk(cl);
-  heap_region_iterate(&blk);
-}
-
-Space*  ShenandoahHeap::space_containing(const void* oop) const {
-  Space* res = heap_region_containing(oop);
-  return res;
 }
 
 void  ShenandoahHeap::gc_prologue(bool b) {

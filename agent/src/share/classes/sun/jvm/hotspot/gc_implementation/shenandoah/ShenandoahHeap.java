@@ -36,6 +36,8 @@ import sun.jvm.hotspot.types.AddressField;
 import sun.jvm.hotspot.types.CIntegerField;
 import sun.jvm.hotspot.types.JLongField;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -91,13 +93,6 @@ public class ShenandoahHeap extends CollectedHeap {
         super(addr);
     }
 
-    public void iterateHeapRegions(SpaceClosure scl) {
-        for (long index = 0; index < numOfRegions(); index ++) {
-            ShenandoahHeapRegion region = at(index);
-            scl.doSpace(region);
-        }
-    }
-
     private ShenandoahHeapRegion at(long index) {
         Address arrayAddr = regions.getValue(addr);
         // Offset of &_regions[index]
@@ -106,4 +101,14 @@ public class ShenandoahHeap extends CollectedHeap {
         return (ShenandoahHeapRegion) VMObjectFactory.newObject(ShenandoahHeapRegion.class,
                 regionAddr);
     }
+
+    public List/*<MemRegion>*/ getLiveRegions() {
+        List res = new ArrayList();
+        for (int i = 0; i < numOfRegions(); i++) {
+            ShenandoahHeapRegion r = at(i);
+            res.add(new MemRegion(r.bottom(), r.top()));
+        }
+        return res;
+    }
+
 }

@@ -24,7 +24,6 @@
 #ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEAPREGION_HPP
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEAPREGION_HPP
 
-#include "memory/space.hpp"
 #include "gc_implementation/shenandoah/shenandoahAllocRequest.hpp"
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
@@ -32,7 +31,7 @@
 
 class VMStructs;
 
-class ShenandoahHeapRegion : public ContiguousSpace {
+class ShenandoahHeapRegion : public CHeapObj<mtGC> {
   friend class VMStructs;
 private:
   /*
@@ -228,9 +227,11 @@ private:
   static PaddedAllocSeqNum _alloc_seq_num;
 
   // Never updated fields
-  ShenandoahHeap* _heap;
-  MemRegion _reserved;
-  size_t _region_number;
+  ShenandoahHeap* const _heap;
+  MemRegion const _reserved;
+  size_t const _region_number;
+  HeapWord* const _bottom;
+  HeapWord* const _end;
 
   // Rarely updated fields
   HeapWord* _new_top;
@@ -240,6 +241,8 @@ private:
   RegionState _state;
 
   // Frequently updated fields
+  HeapWord* _top;
+
   size_t _tlab_allocs;
   size_t _gclab_allocs;
   size_t _shared_allocs;
@@ -347,8 +350,6 @@ public:
   // Allocation (return NULL if full)
   inline HeapWord* allocate(size_t word_size, ShenandoahAllocRequest::Type type);
 
-  HeapWord* allocate(size_t word_size) shenandoah_not_implemented_return(NULL)
-
   void clear_live_data();
   void set_live_data(size_t s);
 
@@ -368,18 +369,25 @@ public:
 
   void recycle();
 
-  void oop_iterate_skip_unreachable(ExtendedOopClosure* cl, bool skip_unreachable_objects) shenandoah_not_implemented;
-  HeapWord* object_iterate_careful(ObjectClosureCareful* cl) shenandoah_not_implemented_return(NULL);
-
-  HeapWord* block_start_const(const void* p) const;
-
-  bool in_collection_set() const;
+  HeapWord* block_start(const void* p) const;
+  size_t block_size(const HeapWord* p) const;
+  bool block_is_obj(const HeapWord* p) const { return p < top(); }
 
   // Find humongous start region that this region belongs to
   ShenandoahHeapRegion* humongous_start_region() const;
 
-  void set_new_top(HeapWord* new_top) { _new_top = new_top; }
-  HeapWord* new_top() const { return _new_top; }
+  HeapWord* top() const         { return _top;     }
+  void set_top(HeapWord* v)     { _top = v;        }
+
+  HeapWord* new_top() const     { return _new_top; }
+  void set_new_top(HeapWord* v) { _new_top = v;    }
+
+  HeapWord* bottom() const      { return _bottom;  }
+  HeapWord* end() const         { return _end;     }
+
+  size_t capacity() const       { return byte_size(bottom(), end()); }
+  size_t used() const           { return byte_size(bottom(), top()); }
+  size_t free() const           { return byte_size(top(),    end()); }
 
   inline void adjust_alloc_metadata(ShenandoahAllocRequest::Type type, size_t);
   void reset_alloc_metadata_to_shared();
