@@ -24,6 +24,7 @@
 #ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEAPLOCK_HPP
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEAPLOCK_HPP
 
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/safepoint.hpp"
 #include "runtime/thread.hpp"
@@ -32,11 +33,11 @@ class ShenandoahLock  {
 private:
   enum LockState { unlocked = 0, locked = 1 };
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile int _state;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
   volatile Thread* _owner;
-  char _pad2[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(2);
 
 public:
   ShenandoahLock() : _state(unlocked), _owner(NULL) {};

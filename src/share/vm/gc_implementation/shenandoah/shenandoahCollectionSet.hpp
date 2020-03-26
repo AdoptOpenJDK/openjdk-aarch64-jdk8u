@@ -27,6 +27,7 @@
 #include "memory/allocation.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 
 class ShenandoahCollectionSet : public CHeapObj<mtGC> {
   friend class ShenandoahHeap;
@@ -45,9 +46,9 @@ private:
   size_t                _used;
   size_t                _region_count;
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile jint         _current_index;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
 
 public:
   ShenandoahCollectionSet(ShenandoahHeap* heap, char* heap_base, size_t size);

@@ -27,6 +27,7 @@
 #include "gc_interface/gcCause.hpp"
 #include "gc_implementation/shared/concurrentGCThread.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "gc_implementation/shenandoah/shenandoahSharedVariables.hpp"
 #include "runtime/task.hpp"
 #include "utilities/ostream.hpp"
@@ -89,9 +90,9 @@ private:
   GCCause::Cause       _requested_gc_cause;
   ShenandoahHeap::ShenandoahDegenPoint _degen_point;
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile intptr_t _allocs_seen;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
 
   bool check_cancellation_or_degen(ShenandoahHeap::ShenandoahDegenPoint point);
   void service_concurrent_normal_cycle(GCCause::Cause cause);

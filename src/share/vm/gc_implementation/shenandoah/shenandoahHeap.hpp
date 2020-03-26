@@ -29,6 +29,7 @@
 #include "gc_implementation/shenandoah/shenandoahAllocRequest.hpp"
 #include "gc_implementation/shenandoah/shenandoahLock.hpp"
 #include "gc_implementation/shenandoah/shenandoahEvacOOMHandler.hpp"
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "gc_implementation/shenandoah/shenandoahSharedVariables.hpp"
 
 class ConcurrentGCTimer;
@@ -58,9 +59,9 @@ class ShenandoahRegionIterator : public StackObj {
 private:
   ShenandoahHeap* _heap;
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile jint _index;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
 
   // No implicit copying: iterators should be passed by reference to capture the state
   ShenandoahRegionIterator(const ShenandoahRegionIterator& that);
@@ -153,11 +154,11 @@ public:
 private:
            size_t _initial_size;
            size_t _minimum_size;
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile jlong  _used;
   volatile size_t _committed;
   volatile jlong  _bytes_allocated_since_gc_start;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
 
 public:
   void increase_used(size_t bytes);
