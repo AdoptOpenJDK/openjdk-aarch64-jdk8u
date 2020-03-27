@@ -111,7 +111,6 @@ public:
   static inline oop resolve_forwarded(oop p);
 
   void storeval_barrier(oop obj);
-  void keep_alive_barrier(oop obj);
 
   oop load_reference_barrier(oop obj);
   oop load_reference_barrier_mutator(oop obj);

@@ -217,12 +217,6 @@ void ShenandoahBarrierSet::storeval_barrier(oop obj) {
   }
 }
 
-void ShenandoahBarrierSet::keep_alive_barrier(oop obj) {
-  if (ShenandoahKeepAliveBarrier && _heap->is_concurrent_mark_in_progress()) {
-    enqueue(obj);
-  }
-}
-
 void ShenandoahBarrierSet::enqueue(oop obj) {
   assert(JavaThread::satb_mark_queue_set().shared_satb_queue()->is_active(), "only get here when SATB active");
 

@@ -1733,7 +1733,6 @@ void Arguments::set_shenandoah_gc_flags() {
 
   FLAG_SET_DEFAULT(ShenandoahSATBBarrier,            false);
   FLAG_SET_DEFAULT(ShenandoahLoadRefBarrier,         false);
-  FLAG_SET_DEFAULT(ShenandoahKeepAliveBarrier,       false);
   FLAG_SET_DEFAULT(ShenandoahStoreValEnqueueBarrier, false);
   FLAG_SET_DEFAULT(ShenandoahCASBarrier,             false);
   FLAG_SET_DEFAULT(ShenandoahCloneBarrier,           false);
@@ -1846,7 +1845,6 @@ void Arguments::set_shenandoah_gc_flags() {
   if (ShenandoahVerifyOptoBarriers &&
           (!FLAG_IS_DEFAULT(ShenandoahSATBBarrier)    ||
            !FLAG_IS_DEFAULT(ShenandoahLoadRefBarrier) ||
-           !FLAG_IS_DEFAULT(ShenandoahKeepAliveBarrier)       ||
            !FLAG_IS_DEFAULT(ShenandoahStoreValEnqueueBarrier) ||
            !FLAG_IS_DEFAULT(ShenandoahCASBarrier)     ||
            !FLAG_IS_DEFAULT(ShenandoahCloneBarrier)
