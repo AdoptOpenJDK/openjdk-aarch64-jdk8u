@@ -63,6 +63,8 @@
 #include "runtime/vmThread.hpp"
 #include "services/mallocTracker.hpp"
 
+ShenandoahHeap* ShenandoahHeap::_heap = NULL;
+
 #ifdef ASSERT
 template <class T>
 void ShenandoahAssertToSpaceClosure::do_oop_nv(T* p) {
@@ -428,6 +430,8 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
   _gc_timer(new (ResourceObj::C_HEAP, mtGC) ConcurrentGCTimer()),
   _phase_timings(NULL)
 {
+  _heap = this;
+
   log_info(gc, init)("GC threads: " UINTX_FORMAT " parallel, " UINTX_FORMAT " concurrent", ParallelGCThreads, ConcGCThreads);
   log_info(gc, init)("Reference processing: %s", ParallelRefProcEnabled ? "parallel" : "serial");
 
@@ -729,18 +733,6 @@ HeapWord* ShenandoahHeap::allocate_new_gclab(size_t min_size,
     *actual_size = 0;
   }
   return res;
-}
-
-ShenandoahHeap* ShenandoahHeap::heap() {
-  CollectedHeap* heap = Universe::heap();
-  assert(heap != NULL, "Unitialized access to ShenandoahHeap::heap()");
-  assert(heap->kind() == CollectedHeap::ShenandoahHeap, "not a shenandoah heap");
-  return (ShenandoahHeap*) heap;
-}
-
-ShenandoahHeap* ShenandoahHeap::heap_no_check() {
-  CollectedHeap* heap = Universe::heap();
-  return (ShenandoahHeap*) heap;
 }
 
 HeapWord* ShenandoahHeap::allocate_memory(ShenandoahAllocRequest& req) {

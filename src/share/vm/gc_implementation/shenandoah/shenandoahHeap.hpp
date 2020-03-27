@@ -125,9 +125,11 @@ public:
 
 // ---------- Initialization, termination, identification, printing routines
 //
+private:
+  static ShenandoahHeap* _heap;
+
 public:
   static ShenandoahHeap* heap();
-  static ShenandoahHeap* heap_no_check();
   static size_t conservative_max_heap_alignment();
 
   const char* name()          const { return "Shenandoah"; }

@@ -23,7 +23,6 @@
 
 #include "precompiled.hpp"
 #include "gc_implementation/shared/markBitMap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.hpp"
