@@ -2459,7 +2459,7 @@ void ShenandoahHeap::entry_mark() {
   TraceCollectorStats tcs(monitoring_support()->concurrent_collection_counters());
 
   const char* msg = conc_mark_event_message();
-  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id(), true);
+  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id());
   EventMark em("%s", msg);
 
   ShenandoahWorkerScope scope(workers(),
@@ -2475,7 +2475,7 @@ void ShenandoahHeap::entry_evac() {
   TraceCollectorStats tcs(monitoring_support()->concurrent_collection_counters());
 
   static const char *msg = "Concurrent evacuation";
-  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id(), true);
+  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id());
   EventMark em("%s", msg);
 
   ShenandoahWorkerScope scope(workers(),
@@ -2490,7 +2490,7 @@ void ShenandoahHeap::entry_updaterefs() {
   ShenandoahGCPhase phase(ShenandoahPhaseTimings::conc_update_refs);
 
   static const char* msg = "Concurrent update references";
-  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id(), true);
+  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id());
   EventMark em("%s", msg);
 
   ShenandoahWorkerScope scope(workers(),
@@ -2518,7 +2518,7 @@ void ShenandoahHeap::entry_reset() {
   ShenandoahGCPhase phase(ShenandoahPhaseTimings::conc_reset);
 
   static const char* msg = "Concurrent reset";
-  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id(), true);
+  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id());
   EventMark em("%s", msg);
 
   ShenandoahWorkerScope scope(workers(),
@@ -2534,7 +2534,7 @@ void ShenandoahHeap::entry_preclean() {
     ShenandoahGCPhase conc_preclean(ShenandoahPhaseTimings::conc_preclean);
 
     static const char* msg = "Concurrent precleaning";
-    GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id(), true);
+    GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id());
     EventMark em("%s", msg);
 
     ShenandoahWorkerScope scope(workers(),
@@ -2549,7 +2549,7 @@ void ShenandoahHeap::entry_preclean() {
 
 void ShenandoahHeap::entry_traversal() {
   static const char* msg = conc_traversal_event_message();
-  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id(), true);
+  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id());
   EventMark em("%s", msg);
 
   TraceCollectorStats tcs(monitoring_support()->concurrent_collection_counters());
