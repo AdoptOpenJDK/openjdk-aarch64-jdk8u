@@ -36,7 +36,7 @@
                          manageable, \
                          product_rw) \
                                                                             \
-  experimental(uintx, ShenandoahHeapRegionSize, 0,                          \
+  experimental(uintx, ShenandoahRegionSize, 0,                              \
           "Static heap region size. Set zero to enable automatic sizing.")  \
                                                                             \
   experimental(uintx, ShenandoahTargetNumRegions, 2048,                     \
