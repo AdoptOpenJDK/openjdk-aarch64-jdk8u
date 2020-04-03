@@ -39,7 +39,6 @@
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
-#include "gc_implementation/shenandoah/shenandoahTraversalGC.hpp"
 #include "gc_implementation/shenandoah/shenandoahTaskqueue.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "gc_implementation/shenandoah/shenandoahVerifier.hpp"
@@ -101,12 +100,6 @@ void ShenandoahMarkCompact::do_it(GCCause::Cause gc_cause) {
       heap->set_update_refs_in_progress(false);
     }
     assert(!heap->is_update_refs_in_progress(), "sanity");
-
-    // a3. Cancel concurrent traversal GC, if in progress
-    if (heap->is_concurrent_traversal_in_progress()) {
-      heap->traversal_gc()->reset();
-      heap->set_concurrent_traversal_in_progress(false);
-    }
 
     // b. Cancel concurrent mark, if in progress
     if (heap->is_concurrent_mark_in_progress()) {

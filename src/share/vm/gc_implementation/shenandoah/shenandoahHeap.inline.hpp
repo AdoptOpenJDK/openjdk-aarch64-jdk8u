@@ -305,15 +305,11 @@ inline bool ShenandoahHeap::is_stable() const {
 }
 
 inline bool ShenandoahHeap::is_idle() const {
-  return _gc_state.is_unset(MARKING | EVACUATION | UPDATEREFS | TRAVERSAL);
+  return _gc_state.is_unset(MARKING | EVACUATION | UPDATEREFS);
 }
 
 inline bool ShenandoahHeap::is_concurrent_mark_in_progress() const {
   return _gc_state.is_set(MARKING);
-}
-
-inline bool ShenandoahHeap::is_concurrent_traversal_in_progress() const {
-  return _gc_state.is_set(TRAVERSAL);
 }
 
 inline bool ShenandoahHeap::is_evacuation_in_progress() const {

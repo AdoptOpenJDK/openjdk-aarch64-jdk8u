@@ -103,9 +103,6 @@ void ShenandoahBarrierSet::arraycopy_update_impl(T* src, size_t count) {
   if (_heap->is_evacuation_in_progress()) {
     ShenandoahEvacOOMScope oom_evac;
     arraycopy_work<T, true, true, false>(src, count);
-  } else if (_heap->is_concurrent_traversal_in_progress()){
-    ShenandoahEvacOOMScope oom_evac;
-    arraycopy_work<T, true, true, true>(src, count);
   } else if (_heap->has_forwarded_objects()) {
     arraycopy_work<T, true, false, false>(src, count);
   }

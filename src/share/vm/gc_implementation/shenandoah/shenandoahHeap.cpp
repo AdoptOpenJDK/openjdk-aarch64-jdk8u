@@ -51,7 +51,6 @@
 #include "gc_implementation/shenandoah/shenandoahPassiveMode.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
 #include "gc_implementation/shenandoah/shenandoahTaskqueue.hpp"
-#include "gc_implementation/shenandoah/shenandoahTraversalMode.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "gc_implementation/shenandoah/shenandoahVerifier.hpp"
 #include "gc_implementation/shenandoah/shenandoahCodeRoots.hpp"
@@ -368,10 +367,6 @@ jint ShenandoahHeap::initialize() {
     _pacer = NULL;
   }
 
-  _traversal_gc = strcmp(ShenandoahGCMode, "traversal") == 0 ?
-                  new ShenandoahTraversalGC(this, _num_regions) :
-                  NULL;
-
   _control_thread = new ShenandoahControlThread();
 
   log_info(gc, init)("Initialize Shenandoah heap: " SIZE_FORMAT "%s initial, " SIZE_FORMAT "%s min, " SIZE_FORMAT "%s max",
@@ -390,9 +385,7 @@ jint ShenandoahHeap::initialize() {
 
 void ShenandoahHeap::initialize_heuristics() {
   if (ShenandoahGCMode != NULL) {
-    if (strcmp(ShenandoahGCMode, "traversal") == 0) {
-      _gc_mode = new ShenandoahTraversalMode();
-    } else if (strcmp(ShenandoahGCMode, "normal") == 0) {
+    if (strcmp(ShenandoahGCMode, "normal") == 0) {
       _gc_mode = new ShenandoahNormalMode();
     } else if (strcmp(ShenandoahGCMode, "passive") == 0) {
       _gc_mode = new ShenandoahPassiveMode();
@@ -426,7 +419,6 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
   _regions(NULL),
   _free_set(NULL),
   _collection_set(NULL),
-  _traversal_gc(NULL),
   _update_refs_iterator(this),
   _bytes_allocated_since_gc_start(0),
   _max_workers((uint)MAX2(ConcGCThreads, ParallelGCThreads)),
@@ -518,7 +510,6 @@ void ShenandoahHeap::print_on(outputStream* st) const {
   if (is_concurrent_mark_in_progress())      st->print("marking, ");
   if (is_evacuation_in_progress())           st->print("evacuating, ");
   if (is_update_refs_in_progress())          st->print("updating refs, ");
-  if (is_concurrent_traversal_in_progress()) st->print("traversal, ");
   if (is_degenerated_gc_in_progress())       st->print("degenerated gc, ");
   if (is_full_gc_in_progress())              st->print("full gc, ");
   if (is_full_gc_move_in_progress())         st->print("full gc move, ");
@@ -1546,18 +1537,6 @@ void ShenandoahHeap::op_preclean() {
   concurrent_mark()->preclean_weak_refs();
 }
 
-void ShenandoahHeap::op_init_traversal() {
-  traversal_gc()->init_traversal_collection();
-}
-
-void ShenandoahHeap::op_traversal() {
-  traversal_gc()->concurrent_traversal_collection();
-}
-
-void ShenandoahHeap::op_final_traversal() {
-  traversal_gc()->final_traversal_collection();
-}
-
 void ShenandoahHeap::op_full(GCCause::Cause cause) {
   ShenandoahMetricsSnapshot metrics;
   metrics.snap_before();
@@ -1586,24 +1565,6 @@ void ShenandoahHeap::op_degenerated(ShenandoahDegenPoint point) {
   metrics.snap_before();
 
   switch (point) {
-    case _degenerated_traversal:
-      {
-        // Drop the collection set. Note: this leaves some already forwarded objects
-        // behind, which may be problematic, see comments for ShenandoahEvacAssist
-        // workarounds in ShenandoahTraversalHeuristics.
-
-        ShenandoahHeapLocker locker(lock());
-        collection_set()->clear_current_index();
-        for (size_t i = 0; i < collection_set()->count(); i++) {
-          ShenandoahHeapRegion* r = collection_set()->next();
-          r->make_regular_bypass();
-        }
-        collection_set()->clear();
-      }
-      op_final_traversal();
-      op_cleanup();
-      return;
-
     // The cases below form the Duff's-like device: it describes the actual GC cycle,
     // but enters it at different points, depending on which concurrent phase had
     // degenerated.
@@ -1619,13 +1580,6 @@ void ShenandoahHeap::op_degenerated(ShenandoahDegenPoint point) {
       // changing the cycle parameters mid-cycle during concurrent -> degenerated handover.
       set_process_references(heuristics()->can_process_references());
       set_unload_classes(heuristics()->can_unload_classes());
-
-      if (is_traversal_mode()) {
-        // Not possible to degenerate from here, upgrade to Full GC right away.
-        cancel_gc(GCCause::_shenandoah_upgrade_to_full_gc);
-        op_degenerated_fail();
-        return;
-      }
 
       op_reset();
 
@@ -1756,7 +1710,7 @@ void ShenandoahHeap::stop_concurrent_marking() {
 }
 
 void ShenandoahHeap::force_satb_flush_all_threads() {
-  if (!is_concurrent_mark_in_progress() && !is_concurrent_traversal_in_progress()) {
+  if (!is_concurrent_mark_in_progress()) {
     // No need to flush SATBs
     return;
   }
@@ -1791,11 +1745,6 @@ void ShenandoahHeap::set_concurrent_mark_in_progress(bool in_progress) {
   } else {
     set_gc_state_mask(MARKING, in_progress);
   }
-  JavaThread::satb_mark_queue_set().set_active_all_threads(in_progress, !in_progress);
-}
-
-void ShenandoahHeap::set_concurrent_traversal_in_progress(bool in_progress) {
-  set_gc_state_mask(TRAVERSAL | HAS_FORWARDED | UPDATEREFS, in_progress);
   JavaThread::satb_mark_queue_set().set_active_all_threads(in_progress, !in_progress);
 }
 
@@ -2298,26 +2247,6 @@ void ShenandoahHeap::vmop_entry_final_updaterefs() {
   VMThread::execute(&op);
 }
 
-void ShenandoahHeap::vmop_entry_init_traversal() {
-  TraceCollectorStats tcs(monitoring_support()->stw_collection_counters());
-  ShenandoahGCPhase total(ShenandoahPhaseTimings::total_pause_gross);
-  ShenandoahGCPhase phase(ShenandoahPhaseTimings::init_traversal_gc_gross);
-
-  try_inject_alloc_failure();
-  VM_ShenandoahInitTraversalGC op;
-  VMThread::execute(&op);
-}
-
-void ShenandoahHeap::vmop_entry_final_traversal() {
-  TraceCollectorStats tcs(monitoring_support()->stw_collection_counters());
-  ShenandoahGCPhase total(ShenandoahPhaseTimings::total_pause_gross);
-  ShenandoahGCPhase phase(ShenandoahPhaseTimings::final_traversal_gc_gross);
-
-  try_inject_alloc_failure();
-  VM_ShenandoahFinalTraversalGC op;
-  VMThread::execute(&op);
-}
-
 void ShenandoahHeap::vmop_entry_full(GCCause::Cause cause) {
   TraceCollectorStats tcs(monitoring_support()->full_stw_collection_counters());
   ShenandoahGCPhase total(ShenandoahPhaseTimings::total_pause_gross);
@@ -2393,36 +2322,6 @@ void ShenandoahHeap::entry_final_updaterefs() {
                               "final reference update");
 
   op_final_updaterefs();
-}
-
-void ShenandoahHeap::entry_init_traversal() {
-  ShenandoahGCPhase total_phase(ShenandoahPhaseTimings::total_pause);
-  ShenandoahGCPhase phase(ShenandoahPhaseTimings::init_traversal_gc);
-
-  static const char* msg = init_traversal_event_message();
-  GCTraceTime time(msg, PrintGC, _gc_timer, tracer()->gc_id());
-  EventMark em("%s", msg);
-
-  ShenandoahWorkerScope scope(workers(),
-                              ShenandoahWorkerPolicy::calc_workers_for_stw_traversal(),
-                              "init traversal");
-
-  op_init_traversal();
-}
-
-void ShenandoahHeap::entry_final_traversal() {
-  ShenandoahGCPhase total_phase(ShenandoahPhaseTimings::total_pause);
-  ShenandoahGCPhase phase(ShenandoahPhaseTimings::final_traversal_gc);
-
-  static const char* msg = final_traversal_event_message();
-  GCTraceTime time(msg, PrintGC, _gc_timer, tracer()->gc_id());
-  EventMark em("%s", msg);
-
-  ShenandoahWorkerScope scope(workers(),
-                              ShenandoahWorkerPolicy::calc_workers_for_stw_traversal(),
-                              "final traversal");
-
-  op_final_traversal();
 }
 
 void ShenandoahHeap::entry_full(GCCause::Cause cause) {
@@ -2550,21 +2449,6 @@ void ShenandoahHeap::entry_preclean() {
   }
 }
 
-void ShenandoahHeap::entry_traversal() {
-  static const char* msg = conc_traversal_event_message();
-  GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id());
-  EventMark em("%s", msg);
-
-  TraceCollectorStats tcs(monitoring_support()->concurrent_collection_counters());
-
-  ShenandoahWorkerScope scope(workers(),
-                              ShenandoahWorkerPolicy::calc_workers_for_conc_traversal(),
-                              "concurrent traversal");
-
-  try_inject_alloc_failure();
-  op_traversal();
-}
-
 void ShenandoahHeap::entry_uncommit(double shrink_before) {
   static const char *msg = "Concurrent uncommit";
   GCTraceTime time(msg, PrintGC, NULL, tracer()->gc_id(), true);
@@ -2668,57 +2552,10 @@ const char* ShenandoahHeap::conc_mark_event_message() const {
   }
 }
 
-const char* ShenandoahHeap::init_traversal_event_message() const {
-  bool proc_refs = process_references();
-  bool unload_cls = unload_classes();
-
-  if (proc_refs && unload_cls) {
-    return "Pause Init Traversal (process weakrefs) (unload classes)";
-  } else if (proc_refs) {
-    return "Pause Init Traversal (process weakrefs)";
-  } else if (unload_cls) {
-    return "Pause Init Traversal (unload classes)";
-  } else {
-    return "Pause Init Traversal";
-  }
-}
-
-const char* ShenandoahHeap::final_traversal_event_message() const {
-  bool proc_refs = process_references();
-  bool unload_cls = unload_classes();
-
-  if (proc_refs && unload_cls) {
-    return "Pause Final Traversal (process weakrefs) (unload classes)";
-  } else if (proc_refs) {
-    return "Pause Final Traversal (process weakrefs)";
-  } else if (unload_cls) {
-    return "Pause Final Traversal (unload classes)";
-  } else {
-    return "Pause Final Traversal";
-  }
-}
-
-const char* ShenandoahHeap::conc_traversal_event_message() const {
-  bool proc_refs = process_references();
-  bool unload_cls = unload_classes();
-
-  if (proc_refs && unload_cls) {
-    return "Concurrent Traversal (process weakrefs) (unload classes)";
-  } else if (proc_refs) {
-    return "Concurrent Traversal (process weakrefs)";
-  } else if (unload_cls) {
-    return "Concurrent Traversal (unload classes)";
-  } else {
-    return "Concurrent Traversal";
-  }
-}
-
 const char* ShenandoahHeap::degen_event_message(ShenandoahDegenPoint point) const {
   switch (point) {
     case _degenerated_unset:
       return "Pause Degenerated GC (<UNSET>)";
-    case _degenerated_traversal:
-      return "Pause Degenerated GC (Traversal)";
     case _degenerated_outside_cycle:
       return "Pause Degenerated GC (Outside of Cycle)";
     case _degenerated_mark:

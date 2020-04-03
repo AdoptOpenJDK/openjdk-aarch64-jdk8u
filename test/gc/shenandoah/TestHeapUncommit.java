@@ -81,25 +81,6 @@
 
 /*
  * @test TestHeapUncommit
- * @summary Acceptance tests: collector can withstand allocation
- * @key gc
- *
- * @run main/othervm -Xmx1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ShenandoahUncommit -XX:ShenandoahUncommitDelay=0
- *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal
- *      -XX:+ShenandoahVerify
- *      TestHeapUncommit
- *
- * @run main/othervm -Xmx1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ShenandoahUncommit -XX:ShenandoahUncommitDelay=0
- *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal
- *      TestHeapUncommit
- *
- * @run main/othervm -Xmx1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ShenandoahUncommit -XX:ShenandoahUncommitDelay=0
- *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal -XX:ShenandoahGCHeuristics=aggressive
- *      TestHeapUncommit
- */
-
-/*
- * @test TestHeapUncommit
  * @key gc
  * @requires (vm.bits == "64")
  *

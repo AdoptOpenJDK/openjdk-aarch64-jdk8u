@@ -53,17 +53,6 @@
  *      TestVerifyJCStress
  */
 
-/*
- * @test TestVerifyJCStress
- * @summary Tests that we pass at least one jcstress-like test with all verification turned on
- * @key gc
- *
- * @run main/othervm -Xmx1g -Xms1g -XX:+IgnoreUnrecognizedVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions
- *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=traversal
- *      -XX:+ShenandoahVerify -XX:+VerifyObjectEquals -XX:+ShenandoahVerifyOptoBarriers
- *      TestVerifyJCStress
- */
-
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
