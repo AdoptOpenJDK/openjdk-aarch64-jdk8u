@@ -87,6 +87,9 @@ void ShenandoahCollectionSet::add_region(ShenandoahHeapRegion* r) {
   _garbage += r->garbage();
   _live_data += r->get_live_data_bytes();
   _used += r->used();
+
+  // Update the region status too. State transition would be checked internally.
+  r->make_cset();
 }
 
 void ShenandoahCollectionSet::remove_region(ShenandoahHeapRegion* r) {
@@ -95,17 +98,6 @@ void ShenandoahCollectionSet::remove_region(ShenandoahHeapRegion* r) {
   assert(is_in(r), "Not in collection set");
   _cset_map[r->index()] = 0;
   _region_count --;
-}
-
-void ShenandoahCollectionSet::update_region_status() {
-  for (size_t index = 0; index < _heap->num_regions(); index ++) {
-    ShenandoahHeapRegion* r = _heap->get_region(index);
-    if (is_in(r)) {
-      r->make_cset();
-    } else {
-      assert (!r->is_cset(), "should not be cset");
-    }
-  }
 }
 
 void ShenandoahCollectionSet::clear() {
