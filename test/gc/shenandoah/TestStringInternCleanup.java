@@ -74,6 +74,26 @@
  *      TestStringInternCleanup
  */
 
+/*
+ * @test TestStringInternCleanup
+ * @summary Check that Shenandoah cleans up interned strings
+ * @key gc
+ *
+ * @run main/othervm -Xmx64m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ClassUnloadingWithConcurrentMark
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu
+ *      -XX:+ShenandoahVerify
+ *      TestStringInternCleanup
+ *
+ * @run main/othervm -Xmx64m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ClassUnloadingWithConcurrentMark
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:ShenandoahGCHeuristics=aggressive
+ *      -XX:+ShenandoahVerify
+ *      TestStringInternCleanup
+ *
+ * @run main/othervm -Xmx64m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ClassUnloadingWithConcurrentMark
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu
+ *      TestStringInternCleanup
+ */
+
 public class TestStringInternCleanup {
 
     static final int COUNT = 1_000_000;

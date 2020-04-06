@@ -65,5 +65,5 @@ IRT_END
 JRT_LEAF(void, ShenandoahRuntime::shenandoah_clone_barrier(oopDesc* src))
   oop s = oop(src);
   shenandoah_assert_correct(NULL, s);
-  ShenandoahBarrierSet::barrier_set()->clone_barrier(s);
+  ShenandoahBarrierSet::barrier_set()->clone_barrier_runtime(s);
 JRT_END

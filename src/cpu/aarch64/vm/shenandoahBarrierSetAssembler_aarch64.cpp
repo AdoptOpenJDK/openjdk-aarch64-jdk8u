@@ -42,7 +42,7 @@ ShenandoahBarrierSetAssembler* ShenandoahBarrierSetAssembler::bsasm() {
 
 void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, bool dest_uninitialized,
                                                        Register src, Register dst, Register count) {
-  if ((ShenandoahSATBBarrier && !dest_uninitialized) || ShenandoahLoadRefBarrier) {
+  if ((ShenandoahSATBBarrier && !dest_uninitialized) || ShenandoahStoreValEnqueueBarrier || ShenandoahLoadRefBarrier) {
 
     Label done;
 
@@ -52,7 +52,7 @@ void ShenandoahBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, boo
     // Is GC active?
     Address gc_state(rthread, in_bytes(JavaThread::gc_state_offset()));
     __ ldrb(rscratch1, gc_state);
-    if (dest_uninitialized) {
+    if (ShenandoahSATBBarrier && dest_uninitialized) {
       __ tbz(rscratch1, ShenandoahHeap::HAS_FORWARDED_BITPOS, done);
     } else {
       __ mov(rscratch2, ShenandoahHeap::HAS_FORWARDED | ShenandoahHeap::MARKING);

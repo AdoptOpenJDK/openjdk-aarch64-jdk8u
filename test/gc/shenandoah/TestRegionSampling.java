@@ -57,6 +57,19 @@
  *      TestRegionSampling
  */
 
+/*
+ * @test TestRegionSampling
+ *
+ * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ShenandoahRegionSampling
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:ShenandoahGCHeuristics=aggressive
+ *      TestRegionSampling
+ *
+ * @run main/othervm -Xmx1g -Xms1g -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+ShenandoahRegionSampling
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu
+ *      TestRegionSampling
+ *
+ */
+
 public class TestRegionSampling {
 
     static final long TARGET_MB = Long.getLong("target", 2_000); // 2 Gb allocation

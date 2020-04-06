@@ -218,12 +218,13 @@ public:
 class ShenandoahSATBAndRemarkCodeRootsThreadsClosure : public ThreadClosure {
 private:
   ShenandoahSATBBufferClosure* _satb_cl;
-  MarkingCodeBlobClosure*              _code_cl;
+  OopClosure*            const _cl;
+  MarkingCodeBlobClosure*      _code_cl;
   int _thread_parity;
 
 public:
-  ShenandoahSATBAndRemarkCodeRootsThreadsClosure(ShenandoahSATBBufferClosure* satb_cl, MarkingCodeBlobClosure* code_cl) :
-    _satb_cl(satb_cl), _code_cl(code_cl),
+  ShenandoahSATBAndRemarkCodeRootsThreadsClosure(ShenandoahSATBBufferClosure* satb_cl, OopClosure* cl, MarkingCodeBlobClosure* code_cl) :
+    _satb_cl(satb_cl), _cl(cl), _code_cl(code_cl),
     _thread_parity(SharedHeap::heap()->strong_roots_parity()) {}
 
   void do_thread(Thread* thread) {
@@ -231,7 +232,10 @@ public:
       if (thread->claim_oops_do(true, _thread_parity)) {
         JavaThread* jt = (JavaThread*)thread;
         jt->satb_mark_queue().apply_closure_and_empty(_satb_cl);
-        if (_code_cl != NULL) {
+        if (_cl != NULL) {
+          ResourceMark rm;
+          jt->oops_do(_cl, NULL, _code_cl);
+        } else if (_code_cl != NULL) {
           // In theory it should not be neccessary to explicitly walk the nmethods to find roots for concurrent marking
           // however the liveness of oops reachable from nmethods have very complex lifecycles:
           // * Alive if on the stack of an executing method
@@ -285,20 +289,20 @@ public:
       ShenandoahSATBBufferClosure cl(q, dq);
       SATBMarkQueueSet& satb_mq_set = JavaThread::satb_mark_queue_set();
       while (satb_mq_set.apply_closure_to_completed_buffer(&cl));
-      if (heap->unload_classes()) {
-        if (heap->has_forwarded_objects()) {
-          ShenandoahMarkResolveRefsClosure resolve_mark_cl(q, rp);
-          MarkingCodeBlobClosure blobsCl(&resolve_mark_cl, !CodeBlobToOopClosure::FixRelocations);
-          ShenandoahSATBAndRemarkCodeRootsThreadsClosure tc(&cl, &blobsCl);
-          Threads::threads_do(&tc);
-        } else {
-          ShenandoahMarkRefsClosure mark_cl(q, rp);
-          MarkingCodeBlobClosure blobsCl(&mark_cl, !CodeBlobToOopClosure::FixRelocations);
-          ShenandoahSATBAndRemarkCodeRootsThreadsClosure tc(&cl, &blobsCl);
-          Threads::threads_do(&tc);
-        }
+      bool do_nmethods = heap->unload_classes();
+      if (heap->has_forwarded_objects()) {
+        ShenandoahMarkResolveRefsClosure resolve_mark_cl(q, rp);
+        MarkingCodeBlobClosure blobsCl(&resolve_mark_cl, !CodeBlobToOopClosure::FixRelocations);
+        ShenandoahSATBAndRemarkCodeRootsThreadsClosure tc(&cl,
+                                                          ShenandoahStoreValEnqueueBarrier ? &resolve_mark_cl : NULL,
+                                                          do_nmethods ? &blobsCl : NULL);
+        Threads::threads_do(&tc);
       } else {
-        ShenandoahSATBAndRemarkCodeRootsThreadsClosure tc(&cl, NULL);
+        ShenandoahMarkRefsClosure mark_cl(q, rp);
+        MarkingCodeBlobClosure blobsCl(&mark_cl, !CodeBlobToOopClosure::FixRelocations);
+        ShenandoahSATBAndRemarkCodeRootsThreadsClosure tc(&cl,
+                                                          ShenandoahStoreValEnqueueBarrier ? &mark_cl : NULL,
+                                                          do_nmethods ? &blobsCl : NULL);
         Threads::threads_do(&tc);
       }
     }

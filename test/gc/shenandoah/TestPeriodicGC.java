@@ -96,6 +96,36 @@ public class TestPeriodicGC {
             );
         }
 
+        testWith("Zero interval with iu mode",
+                 false,
+                 "-verbose:gc",
+                 "-XX:+UnlockDiagnosticVMOptions",
+                 "-XX:+UnlockExperimentalVMOptions",
+                 "-XX:+UseShenandoahGC",
+                 "-XX:ShenandoahGCMode=iu",
+                 "-XX:ShenandoahGuaranteedGCInterval=0"
+        );
+
+        testWith("Short interval with iu mode",
+                 true,
+                 "-verbose:gc",
+                 "-XX:+UnlockDiagnosticVMOptions",
+                 "-XX:+UnlockExperimentalVMOptions",
+                 "-XX:+UseShenandoahGC",
+                 "-XX:ShenandoahGCMode=iu",
+                 "-XX:ShenandoahGuaranteedGCInterval=1000"
+        );
+
+        testWith("Long interval with iu mode",
+                 false,
+                 "-verbose:gc",
+                 "-XX:+UnlockDiagnosticVMOptions",
+                 "-XX:+UnlockExperimentalVMOptions",
+                 "-XX:+UseShenandoahGC",
+                 "-XX:ShenandoahGCMode=iu",
+                 "-XX:ShenandoahGuaranteedGCInterval=100000" // deliberately too long
+        );
+
         testWith("Short interval with aggressive",
                  false,
                  "-verbose:gc",

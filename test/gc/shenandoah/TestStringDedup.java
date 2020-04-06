@@ -58,6 +58,20 @@
  *      TestStringDedup
  */
 
+/*
+ * @test TestStringDedup
+ * @summary Test Shenandoah string deduplication implementation
+ * @key gc
+ *
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu
+ *      TestStringDedup
+ *
+ * @run main/othervm -Xmx256m -verbose:gc -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions -XX:+UseStringDeduplication
+ *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:ShenandoahGCHeuristics=aggressive
+ *      TestStringDedup
+ */
+
 import java.lang.reflect.*;
 import java.util.*;
 

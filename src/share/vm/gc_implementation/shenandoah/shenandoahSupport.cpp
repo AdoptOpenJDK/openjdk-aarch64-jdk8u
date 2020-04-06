@@ -827,8 +827,8 @@ void ShenandoahBarrierC2Support::follow_barrier_uses(Node* n, Node* ctrl, Unique
   }
 }
 
-void ShenandoahBarrierC2Support::test_heap_stable(Node*& ctrl, Node* raw_mem, Node*& heap_stable_ctrl,
-                                                  PhaseIdealLoop* phase) {
+void ShenandoahBarrierC2Support::test_heap_state(Node*& ctrl, Node* raw_mem, Node*& heap_stable_ctrl,
+                                                 PhaseIdealLoop* phase, int flags) {
   IdealLoopTree* loop = phase->get_loop(ctrl);
   Node* thread = new (phase->C) ThreadLocalNode();
   phase->register_new_node(thread, ctrl);
@@ -842,7 +842,7 @@ void ShenandoahBarrierC2Support::test_heap_stable(Node*& ctrl, Node* raw_mem, No
 
   Node* gc_state = new (phase->C) LoadBNode(ctrl, raw_mem, gc_state_addr, gc_state_adr_type, TypeInt::BYTE, MemNode::unordered);
   phase->register_new_node(gc_state, ctrl);
-  Node* heap_stable_and = new (phase->C) AndINode(gc_state, phase->igvn().intcon(ShenandoahHeap::HAS_FORWARDED));
+  Node* heap_stable_and = new (phase->C) AndINode(gc_state, phase->igvn().intcon(flags));
   phase->register_new_node(heap_stable_and, ctrl);
   Node* heap_stable_cmp = new (phase->C) CmpINode(heap_stable_and, phase->igvn().zerocon(T_INT));
   phase->register_new_node(heap_stable_cmp, ctrl);
@@ -856,7 +856,7 @@ void ShenandoahBarrierC2Support::test_heap_stable(Node*& ctrl, Node* raw_mem, No
   ctrl = new (phase->C) IfTrueNode(heap_stable_iff);
   phase->register_control(ctrl, loop, heap_stable_iff);
 
-  assert(is_heap_stable_test(heap_stable_iff), "Should match the shape");
+  assert(is_heap_state_test(heap_stable_iff, flags), "Should match the shape");
 }
 
 void ShenandoahBarrierC2Support::test_null(Node*& ctrl, Node* val, Node*& null_ctrl, PhaseIdealLoop* phase) {
@@ -1364,7 +1364,7 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
     Node* raw_mem_phi = PhiNode::make(region, raw_mem, Type::MEMORY, TypeRawPtr::BOTTOM);
 
     // Stable path.
-    test_heap_stable(ctrl, raw_mem, heap_stable_ctrl, phase);
+    test_heap_state(ctrl, raw_mem, heap_stable_ctrl, phase, ShenandoahHeap::HAS_FORWARDED);
     IfNode* heap_stable_iff = heap_stable_ctrl->in(0)->as_If();
 
     // Heap stable case

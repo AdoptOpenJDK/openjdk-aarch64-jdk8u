@@ -212,7 +212,7 @@ oop ShenandoahBarrierSet::load_reference_barrier_impl(oop obj) {
 }
 
 void ShenandoahBarrierSet::storeval_barrier(oop obj) {
-  if (ShenandoahStoreValEnqueueBarrier && !oopDesc::is_null(obj)) {
+  if (ShenandoahStoreValEnqueueBarrier && !oopDesc::is_null(obj) && _heap->is_concurrent_mark_in_progress()) {
     enqueue(obj);
   }
 }
@@ -271,5 +271,7 @@ oop ShenandoahBarrierSet::oop_atomic_cmpxchg_in_heap(oop new_value, volatile Hea
 }
 
 void ShenandoahBarrierSet::clone_barrier_runtime(oop src) {
-  clone_barrier(src);
+  if (_heap->has_forwarded_objects() || (ShenandoahStoreValEnqueueBarrier && _heap->is_concurrent_mark_in_progress())) {
+    clone_barrier(src);
+  }
 }

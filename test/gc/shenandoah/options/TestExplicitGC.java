@@ -122,5 +122,23 @@ public class TestExplicitGC {
                 output.shouldNotContain(p);
             }
         }
+
+        {
+            ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseShenandoahGC",
+                    "-verbose:gc",
+                    "-XX:+ExplicitGCInvokesConcurrent",
+                    "-XX:ShenandoahGCMode=iu",
+                    TestExplicitGC.class.getName(),
+                    "test");
+            OutputAnalyzer output = new OutputAnalyzer(pb.start());
+            for (String p : full) {
+                output.shouldNotContain(p);
+            }
+            for (String p : concNormal) {
+                output.shouldContain(p);
+            }
+         }
     }
 }

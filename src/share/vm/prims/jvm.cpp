@@ -648,7 +648,7 @@ JVM_ENTRY(jobject, JVM_Clone(JNIEnv* env, jobject handle))
 
 #if INCLUDE_ALL_GCS
   if (UseShenandoahGC && ShenandoahCloneBarrier) {
-    ShenandoahBarrierSet::barrier_set()->clone_barrier(obj());
+    ShenandoahBarrierSet::barrier_set()->clone_barrier_runtime(obj());
   }
 #endif
 
