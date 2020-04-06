@@ -27,7 +27,7 @@
 #include "gc_implementation/shenandoah/heuristics/shenandoahCompactHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahFreeSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 
 ShenandoahCompactHeuristics::ShenandoahCompactHeuristics() : ShenandoahHeuristics() {

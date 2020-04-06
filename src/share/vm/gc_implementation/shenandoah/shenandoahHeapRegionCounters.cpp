@@ -24,7 +24,7 @@
 #include "precompiled.hpp"
 
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionCounters.hpp"
 #include "memory/resourceArea.hpp"

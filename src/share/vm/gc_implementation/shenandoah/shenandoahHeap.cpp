@@ -37,7 +37,7 @@
 #include "gc_implementation/shenandoah/shenandoahFreeSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahIUMode.hpp"

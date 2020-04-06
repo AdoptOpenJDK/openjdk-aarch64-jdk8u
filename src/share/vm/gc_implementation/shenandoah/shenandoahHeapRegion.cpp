@@ -295,10 +295,6 @@ void ShenandoahHeapRegion::make_committed_bypass() {
   }
 }
 
-void ShenandoahHeapRegion::clear_live_data() {
-  OrderAccess::release_store_fence((volatile jint*)&_live_data, 0);
-}
-
 void ShenandoahHeapRegion::reset_alloc_metadata() {
   _tlab_allocs = 0;
   _gclab_allocs = 0;
@@ -321,27 +317,6 @@ void ShenandoahHeapRegion::set_live_data(size_t s) {
   size_t v = s >> LogHeapWordSize;
   assert(v < (size_t)max_jint, "sanity");
   _live_data = (jint)v;
-}
-
-size_t ShenandoahHeapRegion::get_live_data_words() const {
-  jint v = OrderAccess::load_acquire((volatile jint*)&_live_data);
-  assert(v >= 0, "sanity");
-  return (size_t)v;
-}
-
-size_t ShenandoahHeapRegion::get_live_data_bytes() const {
-  return get_live_data_words() * HeapWordSize;
-}
-
-bool ShenandoahHeapRegion::has_live() const {
-  return get_live_data_words() != 0;
-}
-
-size_t ShenandoahHeapRegion::garbage() const {
-  assert(used() >= get_live_data_bytes(), err_msg("Live Data must be a subset of used() live: " SIZE_FORMAT " used: " SIZE_FORMAT,
-         get_live_data_bytes(), used()));
-  size_t result = used() - get_live_data_bytes();
-  return result;
 }
 
 void ShenandoahHeapRegion::print_on(outputStream* st) const {

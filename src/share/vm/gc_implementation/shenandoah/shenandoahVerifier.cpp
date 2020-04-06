@@ -26,6 +26,7 @@
 #include "gc_implementation/shenandoah/shenandoahAsserts.hpp"
 #include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "gc_implementation/shenandoah/shenandoahVerifier.hpp"

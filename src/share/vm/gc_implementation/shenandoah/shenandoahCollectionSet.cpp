@@ -25,6 +25,7 @@
 
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "runtime/atomic.hpp"

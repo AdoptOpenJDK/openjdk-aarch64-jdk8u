@@ -26,7 +26,7 @@
 #include "gc_interface/gcCause.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"

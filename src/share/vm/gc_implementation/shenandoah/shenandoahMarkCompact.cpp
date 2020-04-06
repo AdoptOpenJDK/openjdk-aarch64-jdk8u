@@ -35,6 +35,7 @@
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkCompact.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionSet.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"

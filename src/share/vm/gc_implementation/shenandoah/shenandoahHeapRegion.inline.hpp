@@ -68,6 +68,10 @@ inline void ShenandoahHeapRegion::adjust_alloc_metadata(ShenandoahAllocRequest::
   }
 }
 
+void ShenandoahHeapRegion::clear_live_data() {
+  OrderAccess::release_store_fence((volatile jint*)&_live_data, 0);
+}
+
 inline void ShenandoahHeapRegion::increase_live_data_alloc_words(size_t s) {
   internal_increase_live_data(s);
 }
@@ -88,6 +92,27 @@ inline void ShenandoahHeapRegion::internal_increase_live_data(size_t s) {
   assert(live_bytes <= used_bytes,
          err_msg("can't have more live data than used: " SIZE_FORMAT ", " SIZE_FORMAT, live_bytes, used_bytes));
 #endif
+}
+
+size_t ShenandoahHeapRegion::get_live_data_words() const {
+  jint v = OrderAccess::load_acquire((volatile jint*)&_live_data);
+  assert(v >= 0, "sanity");
+  return (size_t)v;
+}
+
+size_t ShenandoahHeapRegion::get_live_data_bytes() const {
+  return get_live_data_words() * HeapWordSize;
+}
+
+bool ShenandoahHeapRegion::has_live() const {
+  return get_live_data_words() != 0;
+}
+
+size_t ShenandoahHeapRegion::garbage() const {
+  assert(used() >= get_live_data_bytes(), err_msg("Live Data must be a subset of used() live: " SIZE_FORMAT " used: " SIZE_FORMAT,
+          get_live_data_bytes(), used()));
+  size_t result = used() - get_live_data_bytes();
+  return result;
 }
 
 inline HeapWord* ShenandoahHeapRegion::get_update_watermark() const {
