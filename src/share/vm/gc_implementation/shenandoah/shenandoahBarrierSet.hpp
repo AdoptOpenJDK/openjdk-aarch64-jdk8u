@@ -39,7 +39,7 @@ private:
   ShenandoahBarrierSetC1* const _bsc1;
   ShenandoahBarrierSetC2* const _bsc2;
 
-  inline bool skip_bulk_update(HeapWord* dst);
+  inline bool need_bulk_update(HeapWord* dst);
 public:
   ShenandoahBarrierSet(ShenandoahHeap* heap);
 
@@ -85,13 +85,8 @@ public:
 
   void write_ref_array_work(MemRegion mr) {}
 
-  template <class T> void
-  write_ref_array_pre_work(T* src, T* dst, size_t count, bool dest_uninitialized);
-
-  inline void arraycopy_pre(oop* src, oop* dst, size_t count);
-  inline void arraycopy_pre(narrowOop* src, narrowOop* dst, size_t count);
-  inline void arraycopy_update(oop* src, size_t count);
-  inline void arraycopy_update(narrowOop* src, size_t count);
+  template <class T>
+  inline void arraycopy_barrier(T* src, T* dst, size_t count);
   inline void clone_barrier(oop src);
   void clone_barrier_runtime(oop src);
 
@@ -122,11 +117,14 @@ public:
 
 private:
   template <class T>
-  inline void arraycopy_pre_work(T* src, T* dst, size_t count);
+  inline void arraycopy_marking(T* ary, size_t count);
+  template <class T>
+  inline void arraycopy_evacuation(T* src, size_t count);
+  template <class T>
+  inline void arraycopy_update(T* src, size_t count);
+
   template <class T, bool HAS_FWD, bool EVAC, bool ENQUEUE>
   inline void arraycopy_work(T* src, size_t count);
-  template <class T>
-  inline void arraycopy_update_impl(T* src, size_t count);
 
   oop load_reference_barrier_impl(oop obj);
 
