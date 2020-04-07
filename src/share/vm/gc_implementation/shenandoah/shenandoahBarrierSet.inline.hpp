@@ -44,6 +44,21 @@ inline oop ShenandoahBarrierSet::resolve_forwarded(oop p) {
   }
 }
 
+inline oop ShenandoahBarrierSet::load_reference_barrier_mutator(oop obj) {
+  assert(ShenandoahLoadRefBarrier, "should be enabled");
+  shenandoah_assert_in_cset(NULL, obj);
+
+  oop fwd = resolve_forwarded_not_null(obj);
+  if (obj == fwd) {
+    assert(_heap->is_evacuation_in_progress(),
+           "evac should be in progress");
+    ShenandoahEvacOOMScope scope;
+    fwd = _heap->evacuate_object(obj, Thread::current());
+  }
+
+  return fwd;
+}
+
 template <class T, bool HAS_FWD, bool EVAC, bool ENQUEUE>
 void ShenandoahBarrierSet::arraycopy_work(T* src, size_t count) {
   assert(HAS_FWD == _heap->has_forwarded_objects(), "Forwarded object status is sane");

@@ -180,19 +180,6 @@ oop ShenandoahBarrierSet::load_reference_barrier(oop obj) {
 }
 
 
-oop ShenandoahBarrierSet::load_reference_barrier_mutator(oop obj) {
-  assert(ShenandoahLoadRefBarrier, "should be enabled");
-  assert(_heap->is_evacuation_in_progress(), "evac should be in progress");
-  shenandoah_assert_in_cset(NULL, obj);
-
-  oop fwd = resolve_forwarded_not_null(obj);
-  if (obj == fwd) {
-    ShenandoahEvacOOMScope scope;
-    return _heap->evacuate_object(obj, Thread::current());
-  }
-  return fwd;
-}
-
 oop ShenandoahBarrierSet::load_reference_barrier_impl(oop obj) {
   assert(ShenandoahLoadRefBarrier, "should be enabled");
   if (!oopDesc::is_null(obj)) {

@@ -108,8 +108,8 @@ public:
   void storeval_barrier(oop obj);
 
   oop load_reference_barrier(oop obj);
-  oop load_reference_barrier_mutator(oop obj);
   oop load_reference_barrier_not_null(oop obj);
+  inline oop load_reference_barrier_mutator(oop obj);
 
   oop oop_atomic_cmpxchg_in_heap(oop new_value, volatile HeapWord* dest, oop compare_value);
 
