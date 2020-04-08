@@ -87,13 +87,10 @@ ShenandoahGCPauseMark::ShenandoahGCPauseMark(SvcGCMarker::reason_type type) :
           /* recordGCEndTime = */         true,
           /* countCollection = */         true
   );
-
-  _heap->heuristics()->record_gc_start();
 }
 
 ShenandoahGCPauseMark::~ShenandoahGCPauseMark() {
   _heap->gc_timer()->register_gc_phase_end(Ticks::now());
-  _heap->heuristics()->record_gc_end();
 }
 
 ShenandoahGCPhase::ShenandoahGCPhase(const ShenandoahPhaseTimings::Phase phase) :
