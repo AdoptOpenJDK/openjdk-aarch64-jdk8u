@@ -456,7 +456,6 @@ ShenandoahHeap::ShenandoahHeap(ShenandoahCollectorPolicy* policy) :
   _heap = this;
 
   log_info(gc, init)("GC threads: " UINTX_FORMAT " parallel, " UINTX_FORMAT " concurrent", ParallelGCThreads, ConcGCThreads);
-  log_info(gc, init)("Reference processing: %s", ParallelRefProcEnabled ? "parallel" : "serial");
 
   _scm = new ShenandoahConcurrentMark();
 
@@ -1778,14 +1777,21 @@ void ShenandoahHeap::ref_processing_init() {
 
   assert(_max_workers > 0, "Sanity");
 
+  bool mt_processing = ParallelRefProcEnabled && (ParallelGCThreads > 1);
+  bool mt_discovery = _max_workers > 1;
+
   _ref_processor =
     new ReferenceProcessor(mr,    // span
-                           ParallelRefProcEnabled,  // MT processing
+                           mt_processing,           // MT processing
                            _max_workers,            // Degree of MT processing
-                           true,                    // MT discovery
+                           mt_discovery,            // MT discovery
                            _max_workers,            // Degree of MT discovery
                            false,                   // Reference discovery is not atomic
                            NULL);                   // No closure, should be installed before use
+
+  log_info(gc, init)("Reference processing: %s discovery, %s processing",
+          mt_discovery ? "parallel" : "serial",
+          mt_processing ? "parallel" : "serial");
 
   shenandoah_assert_rp_isalive_not_installed();
 }
