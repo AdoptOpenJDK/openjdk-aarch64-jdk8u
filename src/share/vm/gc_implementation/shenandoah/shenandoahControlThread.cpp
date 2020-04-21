@@ -54,6 +54,7 @@ ShenandoahControlThread::ShenandoahControlThread() :
   _degen_point(ShenandoahHeap::_degenerated_outside_cycle),
   _allocs_seen(0) {
 
+  reset_gc_id();
   if (os::create_thread(this, os::cgc_thread)) {
     int native_prio;
     if (ShenandoahCriticalControlThreadPriority) {
@@ -204,6 +205,9 @@ void ShenandoahControlThread::run() {
     assert (!gc_requested || cause != GCCause::_last_gc_cause, "GC cause should be set");
 
     if (gc_requested) {
+      // GC is starting, bump the internal ID
+      update_gc_id();
+
       heap->reset_bytes_allocated_since_gc_start();
 
       // If GC was requested, we are sampling the counters even without actual triggers
@@ -505,10 +509,20 @@ void ShenandoahControlThread::request_gc(GCCause::Cause cause) {
 }
 
 void ShenandoahControlThread::handle_requested_gc(GCCause::Cause cause) {
-  _requested_gc_cause = cause;
-  _gc_requested.set();
+  // Make sure we have at least one complete GC cycle before unblocking
+  // from the explicit GC request.
+  //
+  // This is especially important for weak references cleanup and/or native
+  // resources (e.g. DirectByteBuffers) machinery: when explicit GC request
+  // comes very late in the already running cycle, it would miss lots of new
+  // opportunities for cleanup that were made available before the caller
+  // requested the GC.
+  size_t required_gc_id = get_gc_id() + 1;
+
   MonitorLockerEx ml(&_gc_waiters_lock);
-  while (_gc_requested.is_set()) {
+  while (get_gc_id() < required_gc_id) {
+    _gc_requested.set();
+    _requested_gc_cause = cause;
     ml.wait();
   }
 }
@@ -603,6 +617,18 @@ void ShenandoahControlThread::pacing_notify_alloc(size_t words) {
 
 void ShenandoahControlThread::set_forced_counters_update(bool value) {
   _force_counters_update.set_cond(value);
+}
+
+void ShenandoahControlThread::reset_gc_id() {
+  OrderAccess::release_store_ptr_fence(&_gc_id, 0);
+}
+
+void ShenandoahControlThread::update_gc_id() {
+  Atomic::add(1, &_gc_id);
+}
+
+size_t ShenandoahControlThread::get_gc_id() {
+  return OrderAccess::load_acquire(&_gc_id);
 }
 
 void ShenandoahControlThread::print() const {
