@@ -824,13 +824,7 @@ HeapWord* ShenandoahHeap::allocate_memory_under_lock(ShenandoahAllocRequest& req
 HeapWord*  ShenandoahHeap::mem_allocate(size_t size,
                                         bool*  gc_overhead_limit_was_exceeded) {
   ShenandoahAllocRequest req = ShenandoahAllocRequest::for_shared(size);
-  HeapWord* result = allocate_memory(req);
-  if (result != NULL) {
-    assert(! in_collection_set(result), "never allocate in targetted region");
-    return result;
-  } else {
-    return NULL;
-  }
+  return allocate_memory(req);
 }
 
 class ShenandoahConcurrentEvacuateRegionObjectClosure : public ObjectClosure {
