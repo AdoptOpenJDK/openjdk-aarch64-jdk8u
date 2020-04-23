@@ -79,7 +79,7 @@ void ShenandoahMarkCompact::do_it(GCCause::Cause gc_cause) {
   assert(Thread::current()->is_VM_thread(), "Do full GC only while world is stopped");
 
   {
-    ShenandoahGCPhase phase(ShenandoahPhaseTimings::full_gc_heapdumps);
+    ShenandoahGCPhase phase(ShenandoahPhaseTimings::full_gc_heapdump_pre);
     heap->pre_full_gc_dump(_gc_timer);
   }
 
@@ -203,7 +203,7 @@ void ShenandoahMarkCompact::do_it(GCCause::Cause gc_cause) {
   }
 
   {
-    ShenandoahGCPhase phase(ShenandoahPhaseTimings::full_gc_heapdumps);
+    ShenandoahGCPhase phase(ShenandoahPhaseTimings::full_gc_heapdump_post);
     heap->post_full_gc_dump(_gc_timer);
   }
 
@@ -245,8 +245,8 @@ void ShenandoahMarkCompact::phase1_mark_heap() {
   rp->setup_policy(true); // forcefully purge all soft references
   rp->set_active_mt_degree(heap->workers()->active_workers());
 
-  cm->update_roots(ShenandoahPhaseTimings::full_gc_roots);
-  cm->mark_roots(ShenandoahPhaseTimings::full_gc_roots);
+  cm->update_roots(ShenandoahPhaseTimings::full_gc_update_roots);
+  cm->mark_roots(ShenandoahPhaseTimings::full_gc_scan_roots);
   cm->finish_mark_from_roots(/* full_gc = */ true);
 
   heap->mark_complete_marking_context();
@@ -767,7 +767,7 @@ void ShenandoahMarkCompact::phase3_update_references() {
   uint nworkers = workers->active_workers();
   {
     COMPILER2_PRESENT(DerivedPointerTable::clear());
-    ShenandoahRootAdjuster rp(ShenandoahPhaseTimings::full_gc_roots);
+    ShenandoahRootAdjuster rp(ShenandoahPhaseTimings::full_gc_adjust_roots);
     ShenandoahAdjustRootPointersTask task(&rp, _preserved_marks);
     workers->run_task(&task);
     COMPILER2_PRESENT(DerivedPointerTable::update_pointers());

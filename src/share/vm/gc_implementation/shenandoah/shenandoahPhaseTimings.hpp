@@ -119,10 +119,12 @@ class outputStream;
                                                                                        \
   f(full_gc_gross,                                  "Pause Full GC (G)")               \
   f(full_gc,                                        "Pause Full GC (N)")               \
-  f(full_gc_heapdumps,                              "  Heap Dumps")                    \
+  f(full_gc_heapdump_pre,                           "  Pre Heap Dump")                 \
   f(full_gc_prepare,                                "  Prepare")                       \
-  f(full_gc_roots,                                  "  Roots")                         \
-  SHENANDOAH_GC_PAR_PHASE_DO(full_gc_,              "    F: ", f)                      \
+  f(full_gc_scan_roots,                             "  Scan Roots")                    \
+  SHENANDOAH_GC_PAR_PHASE_DO(full_gc_scan_roots_,   "    FS: ", f)                     \
+  f(full_gc_update_roots,                           "  Update Roots")                  \
+  SHENANDOAH_GC_PAR_PHASE_DO(full_gc_update_roots_, "    FU: ", f)                     \
   f(full_gc_mark,                                   "  Mark")                          \
   f(full_gc_mark_finish_queues,                     "    Finish Queues")               \
   f(full_gc_weakrefs,                               "    Weak References")             \
@@ -137,12 +139,15 @@ class outputStream;
   f(full_gc_calculate_addresses_regular,            "    Regular Objects")             \
   f(full_gc_calculate_addresses_humong,             "    Humongous Objects")           \
   f(full_gc_adjust_pointers,                        "  Adjust Pointers")               \
+  f(full_gc_adjust_roots,                           "  Adjust Roots")                  \
+  SHENANDOAH_GC_PAR_PHASE_DO(full_gc_adjust_roots_, "    FA: ", f)                     \
   f(full_gc_copy_objects,                           "  Copy Objects")                  \
   f(full_gc_copy_objects_regular,                   "    Regular Objects")             \
   f(full_gc_copy_objects_humong,                    "    Humongous Objects")           \
   f(full_gc_copy_objects_reset_complete,            "    Reset Complete Bitmap")       \
   f(full_gc_copy_objects_rebuild,                   "    Rebuild Region Sets")         \
   f(full_gc_resize_tlabs,                           "  Resize TLABs")                  \
+  f(full_gc_heapdump_post,                          "  Post Heap Dump")                \
                                                                                        \
   /* Longer concurrent phases at the end */                                            \
                                                                                        \

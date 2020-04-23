@@ -76,7 +76,9 @@ void ShenandoahPhaseTimings::record_workers_end(Phase phase) {
          phase == scan_roots ||
          phase == update_roots ||
          phase == final_update_refs_roots ||
-         phase == full_gc_roots ||
+         phase == full_gc_scan_roots ||
+         phase == full_gc_update_roots ||
+         phase == full_gc_adjust_roots ||
          phase == degen_gc_update_roots ||
          phase == heap_iteration_roots ||
          phase == verifier_roots,
