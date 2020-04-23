@@ -147,10 +147,6 @@ class outputStream;
   /* Longer concurrent phases at the end */                                            \
                                                                                        \
   f(conc_uncommit,                                  "Concurrent Uncommit")             \
-                                                                                       \
-  /* Unclassified */                                                                   \
-  f(pause_other,                                    "Pause Other")                     \
-  f(conc_other,                                     "Concurrent Other")                \
   // end
 
 class ShenandoahPhaseTimings : public CHeapObj<mtGC> {
