@@ -147,6 +147,11 @@ class outputStream;
   /* Longer concurrent phases at the end */                                            \
                                                                                        \
   f(conc_uncommit,                                  "Concurrent Uncommit")             \
+                                                                                       \
+  f(heap_iteration_roots,                           "Heap Iteration")                  \
+  SHENANDOAH_GC_PAR_PHASE_DO(heap_iteration_roots_, "  HI: ", f)                       \
+  f(verifier_roots,                                 "Verifier")                        \
+  SHENANDOAH_GC_PAR_PHASE_DO(verifier_roots_,       "  V: ", f)                        \
   // end
 
 class ShenandoahPhaseTimings : public CHeapObj<mtGC> {

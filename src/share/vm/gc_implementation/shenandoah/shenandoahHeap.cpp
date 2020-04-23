@@ -1223,7 +1223,7 @@ void ShenandoahHeap::object_iterate(ObjectClosure* cl) {
   Stack<oop,mtGC> oop_stack;
 
   // First, we process all GC roots. This populates the work stack with initial objects.
-  ShenandoahRootProcessor rp(this, 1, ShenandoahPhaseTimings::_num_phases);
+  ShenandoahRootProcessor rp(this, 1, ShenandoahPhaseTimings::heap_iteration_roots);
   ObjectIterateScanRootClosure oops(&_aux_bit_map, &oop_stack);
   CLDToOopClosure clds(&oops, false);
   CodeBlobToOopClosure blobs(&oops, false);
