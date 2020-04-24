@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2013, 2020, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -274,6 +274,18 @@ void ShenandoahControlThread::run() {
         heuristics->clear_metaspace_oom();
       }
 
+      // Commit worker statistics to cycle data
+      heap->phase_timings()->flush_par_workers_to_cycle();
+
+      // Print GC stats for current cycle
+      if (PrintGC) {
+        ResourceMark rm;
+        heap->phase_timings()->print_cycle_on(gclog_or_tty);
+      }
+
+      // Commit statistics to globals
+      heap->phase_timings()->flush_cycle_to_global();
+
       // Print Metaspace change following GC (if logging is enabled).
       if (PrintGCDetails) {
         MetaspaceAux::print_metaspace_change(metadata_prev_used);
@@ -299,6 +311,7 @@ void ShenandoahControlThread::run() {
                              current :
                              current - (ShenandoahUncommitDelay / 1000.0);
       service_uncommit(shrink_before);
+      heap->phase_timings()->flush_cycle_to_global();
       last_shrink_time = current;
     }
 

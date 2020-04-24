@@ -1112,7 +1112,7 @@ void ShenandoahHeap::print_tracing_info() const {
   if (PrintGC || TraceGen0Time || TraceGen1Time) {
     ResourceMark rm;
     outputStream* out = gclog_or_tty;
-    phase_timings()->print_on(out);
+    phase_timings()->print_global_on(out);
 
     out->cr();
     out->cr();
