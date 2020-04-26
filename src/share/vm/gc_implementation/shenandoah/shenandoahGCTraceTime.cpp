@@ -33,7 +33,7 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/timer.hpp"
 #include "utilities/ostream.hpp"
-#include "utilities/ticks.inline.hpp"
+#include "utilities/ticks.hpp"
 
 ShenandoahGCTraceTime::ShenandoahGCTraceTime(const char* title, bool doit, GCTimer* timer, GCId gc_id, bool print_heap) :
     _title(title), _doit(doit), _timer(timer), _start_counter(), _heap(ShenandoahHeap::heap()), _print_heap(print_heap), _gc_id(gc_id) {
@@ -78,7 +78,7 @@ ShenandoahGCTraceTime::~ShenandoahGCTraceTime() {
 
   if (_doit) {
     const Tickspan duration = stop_counter - _start_counter;
-    double secs = TicksToTimeHelper::seconds(duration);
+    double secs = duration.seconds();
 
     size_t bytes_after = _heap->used();
     size_t capacity = _heap->capacity();
