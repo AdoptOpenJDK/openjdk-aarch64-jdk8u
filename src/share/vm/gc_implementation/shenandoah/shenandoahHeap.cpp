@@ -358,7 +358,7 @@ jint ShenandoahHeap::initialize() {
                                                Shared_SATB_Q_lock);
 
   _monitoring_support = new ShenandoahMonitoringSupport(this);
-  _phase_timings = new ShenandoahPhaseTimings();
+  _phase_timings = new ShenandoahPhaseTimings(max_workers());
   ShenandoahStringDedup::initialize();
   ShenandoahCodeRoots::initialize();
 
