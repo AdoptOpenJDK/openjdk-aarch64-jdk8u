@@ -31,15 +31,28 @@
 #include "runtime/safepoint.hpp"
 
 template <typename ITR>
+ShenandoahCodeCacheRoots<ITR>::ShenandoahCodeCacheRoots(ShenandoahPhaseTimings::Phase phase) :
+  _phase(phase)
+{}
+
+template <typename ITR>
 void ShenandoahCodeCacheRoots<ITR>::code_blobs_do(CodeBlobClosure* blob_cl, uint worker_id) {
-  ShenandoahWorkerTimingsTracker timer(ShenandoahPhaseTimings::CodeCacheRoots, worker_id);
+  ShenandoahWorkerTimingsTracker timer(_phase, ShenandoahPhaseTimings::CodeCacheRoots, worker_id);
   _coderoots_iterator.possibly_parallel_blobs_do(blob_cl);
 }
 
 template <typename ITR>
 ShenandoahRootScanner<ITR>::ShenandoahRootScanner(ShenandoahPhaseTimings::Phase phase) :
-  ShenandoahRootProcessor(phase) {
-}
+  ShenandoahRootProcessor(phase),
+  _serial_roots(phase),
+  _dict_roots(phase),
+  _cld_roots(phase),
+  _thread_roots(phase),
+  _weak_roots(phase),
+  _dedup_roots(phase),
+  _string_table_roots(phase),
+  _code_roots(phase)
+{ }
 
 template <typename ITR>
 void ShenandoahRootScanner<ITR>::roots_do(uint worker_id, OopClosure* oops) {

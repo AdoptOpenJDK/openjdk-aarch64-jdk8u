@@ -365,7 +365,7 @@ public:
 
   void work(uint worker_id) {
     ShenandoahUpdateRefsClosure cl;
-    ShenandoahWorkerTimingsTracker timer(ShenandoahPhaseTimings::ThreadRoots, worker_id);
+    ShenandoahWorkerTimingsTracker timer(_phase, ShenandoahPhaseTimings::ThreadRoots, worker_id);
     ResourceMark rm;
     Threads::possibly_parallel_oops_do(&cl, NULL, NULL);
   }
@@ -494,7 +494,7 @@ void ShenandoahConcurrentMark::finish_mark_from_roots(bool full_gc) {
   if (_heap->process_references()) {
     weak_refs_work(full_gc);
   } else {
-    weak_roots_work();
+    weak_roots_work(full_gc);
   }
 
   // And finally finish class unloading
@@ -768,10 +768,16 @@ public:
   void do_oop(oop* p)       { do_oop_work(p); }
 };
 
-void ShenandoahConcurrentMark::weak_roots_work() {
+void ShenandoahConcurrentMark::weak_roots_work(bool full_gc) {
+  ShenandoahPhaseTimings::Phase phase = full_gc ?
+                                        ShenandoahPhaseTimings::full_gc_weak_roots :
+                                        ShenandoahPhaseTimings::weak_roots;
+  ShenandoahGCPhase root_phase(phase);
+  ShenandoahGCWorkerPhase worker_phase(phase);
+
   ShenandoahIsAliveSelector is_alive;
   DoNothingClosure cl;
-  ShenandoahWeakRoots weak_roots;
+  ShenandoahWeakRoots weak_roots(phase);
   weak_roots.weak_oops_do(is_alive.is_alive_closure(), &cl, 0);
 }
 

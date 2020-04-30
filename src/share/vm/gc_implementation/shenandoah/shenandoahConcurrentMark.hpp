@@ -87,7 +87,7 @@ private:
   void weak_refs_work_doit(bool full_gc);
 
 public:
-  void weak_roots_work();
+  void weak_roots_work(bool full_gc);
   void preclean_weak_refs();
 
 // ---------- Concurrent code cache

@@ -79,6 +79,8 @@ class outputStream;
   f(weakrefs,                                       "  Weak References")               \
   f(weakrefs_process,                               "    Process")                     \
   f(weakrefs_enqueue,                               "    Enqueue")                     \
+  f(weak_roots,                                     "  Weak Roots")                    \
+  SHENANDOAH_PAR_PHASE_DO(weak_roots_,              "    WR: ", f)                     \
   f(purge,                                          "  System Purge")                  \
   f(purge_class_unload,                             "    Unload Classes")              \
   f(purge_par,                                      "    Parallel Cleanup")            \
@@ -130,6 +132,8 @@ class outputStream;
   f(full_gc_weakrefs,                               "    Weak References")             \
   f(full_gc_weakrefs_process,                       "      Process")                   \
   f(full_gc_weakrefs_enqueue,                       "      Enqueue")                   \
+  f(full_gc_weak_roots,                             "    Weak Roots")                  \
+  SHENANDOAH_PAR_PHASE_DO(full_gc_weak_roots_,      "      WR: ", f)                   \
   f(full_gc_purge,                                  "    System Purge")                \
   f(full_gc_purge_class_unload,                     "      Unload Classes")            \
   f(full_gc_purge_par,                              "    Parallel Cleanup")            \
@@ -185,12 +189,11 @@ private:
   HdrSeq              _global_data[_num_phases];
   static const char*  _phase_names[_num_phases];
 
-  Phase                 _current_worker_phase;
   ShenandoahWorkerData* _worker_data[_num_phases];
   ShenandoahCollectorPolicy* _policy;
 
   static bool is_worker_phase(Phase phase);
-  Phase current_worker_phase() { return _current_worker_phase; }
+  static bool is_root_work_phase(Phase phase);
 
   ShenandoahWorkerData* worker_data(Phase phase, ParPhase par_phase);
   Phase worker_par_phase(Phase phase, ParPhase par_phase);
@@ -226,7 +229,7 @@ private:
 
   double _start_time;
 public:
-  ShenandoahWorkerTimingsTracker(ShenandoahPhaseTimings::ParPhase par_phase, uint worker_id);
+  ShenandoahWorkerTimingsTracker(ShenandoahPhaseTimings::Phase phase, ShenandoahPhaseTimings::ParPhase par_phase, uint worker_id);
   ~ShenandoahWorkerTimingsTracker();
 };
 

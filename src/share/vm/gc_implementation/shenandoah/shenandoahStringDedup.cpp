@@ -103,7 +103,7 @@ void ShenandoahStringDedup::threads_do(ThreadClosure* tc) {
   tc->do_thread(_thread);
 }
 
-void ShenandoahStringDedup::parallel_oops_do(OopClosure* cl) {
+void ShenandoahStringDedup::parallel_oops_do(ShenandoahPhaseTimings::Phase phase, OopClosure* cl) {
   _queues->parallel_oops_do(cl);
   _table->parallel_oops_do(cl);
   _thread->parallel_oops_do(cl);

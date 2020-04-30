@@ -115,22 +115,6 @@ bool ShenandoahGCPhase::is_current_phase_valid() {
   return _current_phase < ShenandoahPhaseTimings::_num_phases;
 }
 
-bool ShenandoahGCPhase::is_root_work_phase() {
-  switch(current_phase()) {
-    case ShenandoahPhaseTimings::scan_roots:
-    case ShenandoahPhaseTimings::update_roots:
-    case ShenandoahPhaseTimings::init_evac:
-    case ShenandoahPhaseTimings::final_update_refs_roots:
-    case ShenandoahPhaseTimings::degen_gc_update_roots:
-    case ShenandoahPhaseTimings::full_gc_scan_roots:
-    case ShenandoahPhaseTimings::full_gc_update_roots:
-    case ShenandoahPhaseTimings::full_gc_adjust_roots:
-      return true;
-    default:
-      return false;
-  }
-}
-
 ShenandoahGCWorkerPhase::ShenandoahGCWorkerPhase(const ShenandoahPhaseTimings::Phase phase) :
     _timings(ShenandoahHeap::heap()->phase_timings()), _phase(phase) {
   _timings->record_workers_start(_phase);
