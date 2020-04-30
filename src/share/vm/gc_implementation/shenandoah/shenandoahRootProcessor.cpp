@@ -42,13 +42,13 @@
 #include "runtime/thread.hpp"
 #include "services/management.hpp"
 
-ShenandoahSerialRoot::ShenandoahSerialRoot(ShenandoahSerialRoot::OopsDo oops_do, ShenandoahPhaseTimings::GCParPhases phase) :
-  _claimed(0), _oops_do(oops_do), _phase(phase) {
+ShenandoahSerialRoot::ShenandoahSerialRoot(ShenandoahSerialRoot::OopsDo oops_do, ShenandoahPhaseTimings::ParPhase par_phase) :
+  _claimed(0), _oops_do(oops_do), _par_phase(par_phase) {
 }
 
 void ShenandoahSerialRoot::oops_do(OopClosure* cl, uint worker_id) {
   if (_claimed == 0 && Atomic::cmpxchg(1, &_claimed, 0) == 0) {
-    ShenandoahWorkerTimingsTracker timer(_phase, worker_id);
+    ShenandoahWorkerTimingsTracker timer(_par_phase, worker_id);
     _oops_do(cl);
   }
 }

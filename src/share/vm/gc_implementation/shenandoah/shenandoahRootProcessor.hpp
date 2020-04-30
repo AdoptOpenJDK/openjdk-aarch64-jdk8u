@@ -39,12 +39,12 @@ class ShenandoahSerialRoot {
 public:
   typedef void (*OopsDo)(OopClosure*);
 private:
-  volatile jint                             _claimed;
-  const OopsDo                              _oops_do;
-  const ShenandoahPhaseTimings::GCParPhases _phase;
+  volatile jint                          _claimed;
+  const OopsDo                           _oops_do;
+  const ShenandoahPhaseTimings::ParPhase _par_phase;
 
 public:
-  ShenandoahSerialRoot(OopsDo oops_do, ShenandoahPhaseTimings::GCParPhases);
+  ShenandoahSerialRoot(OopsDo oops_do, ShenandoahPhaseTimings::ParPhase par_phase);
   void oops_do(OopClosure* cl, uint worker_id);
 };
 
