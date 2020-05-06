@@ -657,6 +657,13 @@ class StubGenerator: public StubCodeGenerator {
   //  The ending address is inclusive.
   void gen_write_ref_array_post_barrier(Register start, Register end, Register scratch) {
     assert_different_registers(start, end, scratch);
+    Label L_done;
+
+    // "end" is inclusive end pointer == start + (count - 1) * array_element_size
+    // If count == 0, "end" is less than "start" and we need to skip card marking.
+    __ cmp(end, start);
+    __ br(__ LO, L_done);
+
     BarrierSet* bs = Universe::heap()->barrier_set();
     switch (bs->kind()) {
       case BarrierSet::G1SATBCT:
@@ -707,6 +714,7 @@ class StubGenerator: public StubCodeGenerator {
         ShouldNotReachHere();
 
     }
+    __ bind(L_done);
   }
 
   address generate_zero_longs(Register base, Register cnt) {
