@@ -90,4 +90,22 @@ inline void ShenandoahHeapRegion::internal_increase_live_data(size_t s) {
 #endif
 }
 
+inline HeapWord* ShenandoahHeapRegion::get_update_watermark() const {
+  HeapWord* watermark = (HeapWord*)OrderAccess::load_ptr_acquire(&_update_watermark);
+  assert(bottom() <= watermark && watermark <= top(), "within bounds");
+  return watermark;
+}
+
+inline void ShenandoahHeapRegion::set_update_watermark(HeapWord* w) {
+  assert(bottom() <= w && w <= top(), "within bounds");
+  OrderAccess::release_store_ptr(&_update_watermark, w);
+}
+
+// Fast version that avoids synchronization, only to be used at safepoints.
+inline void ShenandoahHeapRegion::set_update_watermark_at_safepoint(HeapWord* w) {
+  assert(bottom() <= w && w <= top(), "within bounds");
+  assert(SafepointSynchronize::is_at_safepoint(), "Should be at Shenandoah safepoint");
+  _update_watermark = w;
+}
+
 #endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEAPREGION_INLINE_HPP
