@@ -847,7 +847,7 @@ void ShenandoahBarrierC2Support::test_gc_state(Node*& ctrl, Node* raw_mem, Node*
   ctrl                  = new (phase->C) IfTrueNode(gc_state_iff);
   test_fail_ctrl        = new (phase->C) IfFalseNode(gc_state_iff);
 
-  IdealLoopTree* loop = phase->get_loop(ctrl);
+  IdealLoopTree* loop = phase->get_loop(old_ctrl);
   phase->register_control(gc_state_iff,   loop, old_ctrl);
   phase->register_control(ctrl,           loop, gc_state_iff);
   phase->register_control(test_fail_ctrl, loop, gc_state_iff);
