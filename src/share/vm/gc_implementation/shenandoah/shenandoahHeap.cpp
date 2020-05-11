@@ -56,8 +56,8 @@
 #include "gc_implementation/shenandoah/shenandoahWorkerPolicy.hpp"
 #include "gc_implementation/shenandoah/heuristics/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/mode/shenandoahIUMode.hpp"
-#include "gc_implementation/shenandoah/mode/shenandoahNormalMode.hpp"
 #include "gc_implementation/shenandoah/mode/shenandoahPassiveMode.hpp"
+#include "gc_implementation/shenandoah/mode/shenandoahSATBMode.hpp"
 
 #include "memory/metaspace.hpp"
 #include "runtime/vmThread.hpp"
@@ -387,8 +387,8 @@ jint ShenandoahHeap::initialize() {
 
 void ShenandoahHeap::initialize_heuristics() {
   if (ShenandoahGCMode != NULL) {
-    if (strcmp(ShenandoahGCMode, "normal") == 0) {
-      _gc_mode = new ShenandoahNormalMode();
+    if (strcmp(ShenandoahGCMode, "satb") == 0) {
+      _gc_mode = new ShenandoahSATBMode();
     } else if (strcmp(ShenandoahGCMode, "iu") == 0) {
       _gc_mode = new ShenandoahIUMode();
     } else if (strcmp(ShenandoahGCMode, "passive") == 0) {

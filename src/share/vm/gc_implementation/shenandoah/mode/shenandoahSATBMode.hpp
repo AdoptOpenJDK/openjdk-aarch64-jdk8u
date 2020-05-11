@@ -21,14 +21,14 @@
  *
  */
 
-#ifndef SHARE_GC_SHENANDOAH_MODE_SHENANDOAHNORMALMODE_HPP
-#define SHARE_GC_SHENANDOAH_MODE_SHENANDOAHNORMALMODE_HPP
+#ifndef SHARE_GC_SHENANDOAH_MODE_SHENANDOAHSATBMODE_HPP
+#define SHARE_GC_SHENANDOAH_MODE_SHENANDOAHSATBMODE_HPP
 
 #include "gc_implementation/shenandoah/mode/shenandoahMode.hpp"
 
 class ShenandoahHeuristics;
 
-class ShenandoahNormalMode : public ShenandoahMode {
+class ShenandoahSATBMode : public ShenandoahMode {
 public:
   virtual void initialize_flags() const;
   virtual ShenandoahHeuristics* initialize_heuristics() const;
@@ -37,4 +37,4 @@ public:
   virtual bool is_experimental() { return false; }
 };
 
-#endif // SHARE_GC_SHENANDOAH_MODE_SHENANDOAHNORMALMODE_HPP
+#endif // SHARE_GC_SHENANDOAH_MODE_SHENANDOAHSATBMODE_HPP
