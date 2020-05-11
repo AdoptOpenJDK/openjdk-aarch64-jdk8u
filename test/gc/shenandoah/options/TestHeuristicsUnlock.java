@@ -41,14 +41,10 @@ public class TestHeuristicsUnlock {
     }
 
     public static void main(String[] args) throws Exception {
-        testWith("-XX:ShenandoahGCHeuristics=adaptive", Mode.PRODUCT);
-        testWith("-XX:ShenandoahGCHeuristics=static", Mode.PRODUCT);
-        testWith("-XX:ShenandoahGCHeuristics=compact", Mode.PRODUCT);
-
-        testWith("-XX:ShenandoahGCMode=iu", Mode.EXPERIMENTAL);
-
+        testWith("-XX:ShenandoahGCHeuristics=adaptive",   Mode.PRODUCT);
+        testWith("-XX:ShenandoahGCHeuristics=static",     Mode.PRODUCT);
+        testWith("-XX:ShenandoahGCHeuristics=compact",    Mode.PRODUCT);
         testWith("-XX:ShenandoahGCHeuristics=aggressive", Mode.DIAGNOSTIC);
-        testWith("-XX:ShenandoahGCMode=passive", Mode.DIAGNOSTIC);
     }
 
     private static void testWith(String h, Mode mode) throws Exception {
