@@ -25,7 +25,6 @@
  */
 
 #include "precompiled.hpp"
-#include "asm/macroAssembler.hpp"
 #include "runtime/icache.hpp"
 
 extern void aarch64TestHook();
@@ -37,5 +36,7 @@ void ICacheStubGenerator::generate_icache_flush(
 }
 
 void ICache::initialize() {
+#ifdef ASSERT
   aarch64TestHook();
+#endif
 }
