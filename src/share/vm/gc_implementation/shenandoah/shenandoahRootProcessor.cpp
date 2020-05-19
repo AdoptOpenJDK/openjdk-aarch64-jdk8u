@@ -103,7 +103,7 @@ ShenandoahStringTableRoots::ShenandoahStringTableRoots(ShenandoahPhaseTimings::P
 
 void ShenandoahStringTableRoots::oops_do(OopClosure* oops, uint worker_id) {
   ShenandoahWorkerTimingsTracker timer(_phase, ShenandoahPhaseTimings::StringTableRoots, worker_id);
-  StringTable::possibly_parallel_oops_do(oops);
+  StringTable::possibly_parallel_oops_do_shenandoah(oops);
 }
 
 ShenandoahThreadRoots::ShenandoahThreadRoots(ShenandoahPhaseTimings::Phase phase) :
