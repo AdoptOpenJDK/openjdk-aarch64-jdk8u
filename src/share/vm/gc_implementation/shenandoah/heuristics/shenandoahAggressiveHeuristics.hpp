@@ -24,7 +24,7 @@
 #ifndef SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
 #define SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHAGGRESSIVEHEURISTICS_HPP
 
-#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahHeuristics.hpp"
 
 class ShenandoahAggressiveHeuristics : public ShenandoahHeuristics {
 public:

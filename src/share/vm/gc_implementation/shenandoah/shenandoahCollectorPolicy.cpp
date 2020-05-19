@@ -27,8 +27,8 @@
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahHeuristics.hpp"
 
 ShenandoahCollectorPolicy::ShenandoahCollectorPolicy() :
   _success_concurrent_gcs(0),

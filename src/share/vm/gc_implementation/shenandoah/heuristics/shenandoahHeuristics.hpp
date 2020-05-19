@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEURISTICS_HPP
-#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEURISTICS_HPP
+#ifndef SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHHEURISTICS_HPP
+#define SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHHEURISTICS_HPP
 
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
@@ -144,4 +144,4 @@ public:
   double time_since_last_gc() const;
 };
 
-#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEURISTICS_HPP
+#endif // SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHHEURISTICS_HPP

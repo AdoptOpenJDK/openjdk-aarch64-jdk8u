@@ -39,7 +39,6 @@
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionSet.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
 #include "gc_implementation/shenandoah/shenandoahIUMode.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkCompact.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
@@ -58,14 +57,15 @@
 #include "gc_implementation/shenandoah/shenandoahVMOperations.hpp"
 #include "gc_implementation/shenandoah/shenandoahWorkGroup.hpp"
 #include "gc_implementation/shenandoah/shenandoahWorkerPolicy.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahHeuristics.hpp"
 
 #include "memory/metaspace.hpp"
 #include "runtime/vmThread.hpp"
 #include "services/mallocTracker.hpp"
 
 ShenandoahHeap* ShenandoahHeap::_heap = NULL;
-
 #ifdef ASSERT
+
 template <class T>
 void ShenandoahAssertToSpaceClosure::do_oop_nv(T* p) {
   T o = oopDesc::load_heap_oop(p);

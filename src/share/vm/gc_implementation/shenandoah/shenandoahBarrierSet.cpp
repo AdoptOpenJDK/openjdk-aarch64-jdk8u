@@ -28,7 +28,7 @@
 #include "gc_implementation/shenandoah/shenandoahBarrierSetClone.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahHeuristics.hpp"
 #include "runtime/interfaceSupport.hpp"
 #include "utilities/macros.hpp"
 
