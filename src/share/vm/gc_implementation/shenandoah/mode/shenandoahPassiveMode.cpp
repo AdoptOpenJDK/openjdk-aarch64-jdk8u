@@ -22,8 +22,8 @@
  */
 
 #include "precompiled.hpp"
-#include "gc_implementation/shenandoah/shenandoahPassiveMode.hpp"
 #include "gc_implementation/shenandoah/heuristics/shenandoahPassiveHeuristics.hpp"
+#include "gc_implementation/shenandoah/mode/shenandoahPassiveMode.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 
 void ShenandoahPassiveMode::initialize_flags() const {
