@@ -103,10 +103,21 @@ void ShenandoahStringDedup::threads_do(ThreadClosure* tc) {
   tc->do_thread(_thread);
 }
 
-void ShenandoahStringDedup::parallel_oops_do(ShenandoahPhaseTimings::Phase phase, OopClosure* cl) {
-  _queues->parallel_oops_do(cl);
-  _table->parallel_oops_do(cl);
-  _thread->parallel_oops_do(cl);
+void ShenandoahStringDedup::parallel_oops_do(ShenandoahPhaseTimings::Phase phase, OopClosure* cl, uint worker_id) {
+  {
+    ShenandoahWorkerTimingsTracker x(phase, ShenandoahPhaseTimings::StringDedupQueueRoots, worker_id);
+    _queues->parallel_oops_do(cl);
+  }
+
+  {
+    ShenandoahWorkerTimingsTracker x(phase, ShenandoahPhaseTimings::StringDedupTableRoots, worker_id);
+    _table->parallel_oops_do(cl);
+  }
+
+  {
+    ShenandoahWorkerTimingsTracker x(phase, ShenandoahPhaseTimings::StringDedupThreadRoots, worker_id);
+    _thread->parallel_oops_do(cl);
+  }
 }
 
 void ShenandoahStringDedup::oops_do_slow(OopClosure* cl) {

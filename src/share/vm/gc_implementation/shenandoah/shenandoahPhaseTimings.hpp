@@ -52,7 +52,9 @@ class outputStream;
   f(CNT_PREFIX ## SystemDictionaryRoots,    DESC_PREFIX "System Dict Roots")           \
   f(CNT_PREFIX ## CLDGRoots,                DESC_PREFIX "CLDG Roots")                  \
   f(CNT_PREFIX ## JVMTIRoots,               DESC_PREFIX "JVMTI Roots")                 \
-  f(CNT_PREFIX ## StringDedupRoots,         DESC_PREFIX "Dedup Roots")                 \
+  f(CNT_PREFIX ## StringDedupTableRoots,    DESC_PREFIX "Dedup Table Roots")           \
+  f(CNT_PREFIX ## StringDedupQueueRoots,    DESC_PREFIX "Dedup Queue Roots")           \
+  f(CNT_PREFIX ## StringDedupThreadRoots,   DESC_PREFIX "Dedup Thread Roots")          \
   f(CNT_PREFIX ## FinishQueues,             DESC_PREFIX "Finish Queues")               \
   // end
 

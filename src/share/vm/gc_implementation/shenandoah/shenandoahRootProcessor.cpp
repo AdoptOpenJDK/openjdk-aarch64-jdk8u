@@ -154,7 +154,7 @@ ShenandoahStringDedupRoots::ShenandoahStringDedupRoots(ShenandoahPhaseTimings::P
 
 void ShenandoahStringDedupRoots::oops_do(OopClosure* oops, uint worker_id) {
   if (ShenandoahStringDedup::is_enabled()) {
-    ShenandoahStringDedup::parallel_oops_do(_phase, oops);
+    ShenandoahStringDedup::parallel_oops_do(_phase, oops, worker_id);
   }
 }
 

@@ -123,7 +123,7 @@ public:
   // Parallel scan string dedup queues/table
   static void clear_claimed();
 
-  static void parallel_oops_do(ShenandoahPhaseTimings::Phase phase, OopClosure* cl);
+  static void parallel_oops_do(ShenandoahPhaseTimings::Phase phase, OopClosure* cl, uint worker_id);
 
   // For verification only
   static void oops_do_slow(OopClosure* cl);
