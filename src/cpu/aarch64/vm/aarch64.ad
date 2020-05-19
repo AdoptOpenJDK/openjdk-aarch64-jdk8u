@@ -3332,19 +3332,20 @@ encode %{
       __ tbnz(disp_hdr, exact_log2(markOopDesc::monitor_value), object_has_monitor);
     }
 
-    // Set displaced_header to be (markOop of object | UNLOCK_VALUE).
-    __ orr(disp_hdr, disp_hdr, markOopDesc::unlocked_value);
+    // Set tmp to be (markOop of object | UNLOCK_VALUE).
+    __ orr(tmp, disp_hdr, markOopDesc::unlocked_value);
 
     // Load Compare Value application register.
 
     // Initialize the box. (Must happen before we update the object mark!)
-    __ str(disp_hdr, Address(box, BasicLock::displaced_header_offset_in_bytes()));
+    __ str(tmp, Address(box, BasicLock::displaced_header_offset_in_bytes()));
 
-    // Compare object markOop with mark and if equal exchange scratch1
-    // with object markOop.
+    // Compare object markOop with an unlocked value (tmp) and if
+    // equal exchange the stack address of our box with object markOop.
+    // On failure disp_hdr contains the possibly locked markOop.
     if (UseLSE) {
-      __ mov(tmp, disp_hdr);
-      __ casal(Assembler::xword, tmp, box, oop);
+      __ mov(disp_hdr, tmp);
+      __ casal(Assembler::xword, disp_hdr, box, oop);  // Updates disp_hdr
       __ cmp(tmp, disp_hdr);
       __ br(Assembler::EQ, cont);
     } else {
@@ -3352,12 +3353,12 @@ encode %{
       if ((VM_Version::cpu_cpuFeatures() & VM_Version::CPU_STXR_PREFETCH))
         __ prfm(Address(oop), PSTL1STRM);
       __ bind(retry_load);
-      __ ldaxr(tmp, oop);
+      __ ldaxr(disp_hdr, oop);
       __ cmp(tmp, disp_hdr);
       __ br(Assembler::NE, cas_failed);
       // use stlxr to ensure update is immediately visible
-      __ stlxr(tmp, box, oop);
-      __ cbzw(tmp, cont);
+      __ stlxr(disp_hdr, box, oop);
+      __ cbzw(disp_hdr, cont);
       __ b(retry_load);
     }
 
