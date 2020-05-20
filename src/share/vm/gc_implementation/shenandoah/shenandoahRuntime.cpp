@@ -28,32 +28,19 @@
 #include "runtime/interfaceSupport.hpp"
 #include "oops/oop.inline.hpp"
 
-void ShenandoahRuntime::write_ref_array_pre_oop_entry(oop* src, oop* dst, size_t length) {
+void ShenandoahRuntime::arraycopy_barrier_oop_entry(oop* src, oop* dst, size_t length) {
   ShenandoahBarrierSet *bs = ShenandoahBarrierSet::barrier_set();
-  bs->arraycopy_pre(src, dst, length);
+  bs->arraycopy_barrier(src, dst, length);
 }
 
-void ShenandoahRuntime::write_ref_array_pre_narrow_oop_entry(narrowOop* src, narrowOop* dst, size_t length) {
+void ShenandoahRuntime::arraycopy_barrier_narrow_oop_entry(narrowOop* src, narrowOop* dst, size_t length) {
   ShenandoahBarrierSet *bs = ShenandoahBarrierSet::barrier_set();
-  bs->arraycopy_pre(src, dst, length);
-}
-
-void ShenandoahRuntime::write_ref_array_pre_duinit_oop_entry(oop* src, oop* dst, size_t length) {
-  ShenandoahBarrierSet *bs = ShenandoahBarrierSet::barrier_set();
-  bs->arraycopy_update(src, length);
-}
-
-void ShenandoahRuntime::write_ref_array_pre_duinit_narrow_oop_entry(narrowOop* src, narrowOop* dst, size_t length) {
-  ShenandoahBarrierSet *bs = ShenandoahBarrierSet::barrier_set();
-  bs->arraycopy_update(src, length);
+  bs->arraycopy_barrier(src, dst, length);
 }
 
 // Shenandoah pre write barrier slowpath
 JRT_LEAF(void, ShenandoahRuntime::write_ref_field_pre_entry(oopDesc* orig, JavaThread *thread))
-  if (orig == NULL) {
-    assert(false, "should be optimized out");
-    return;
-  }
+  assert(orig != NULL, "should be optimized out");
   shenandoah_assert_correct(NULL, orig);
   // store the original value that was in the field reference
   assert(thread->satb_mark_queue().is_active(), "Shouldn't be here otherwise");
@@ -75,5 +62,5 @@ IRT_END
 JRT_LEAF(void, ShenandoahRuntime::shenandoah_clone_barrier(oopDesc* src))
   oop s = oop(src);
   shenandoah_assert_correct(NULL, s);
-  ShenandoahBarrierSet::barrier_set()->clone_barrier(s);
+  ShenandoahBarrierSet::barrier_set()->clone_barrier_runtime(s);
 JRT_END

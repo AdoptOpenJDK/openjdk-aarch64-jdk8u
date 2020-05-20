@@ -25,108 +25,236 @@
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHROOTPROCESSOR_HPP
 
 #include "code/codeCache.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
-#include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahCodeRoots.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahSynchronizerIterator.hpp"
 #include "memory/allocation.hpp"
+#include "memory/iterator.hpp"
+#include "memory/sharedHeap.hpp"
 #include "utilities/workgroup.hpp"
 
-class ParallelCLDRootIterator VALUE_OBJ_CLASS_SPEC {
+
+class ShenandoahSerialRoot {
 public:
-  ParallelCLDRootIterator();
-  void root_cld_do(CLDClosure* strong, CLDClosure* weak);
+  typedef void (*OopsDo)(OopClosure*);
+private:
+  volatile jint                          _claimed;
+  const OopsDo                           _oops_do;
+  const ShenandoahPhaseTimings::Phase    _phase;
+  const ShenandoahPhaseTimings::ParPhase _par_phase;
+
+public:
+  ShenandoahSerialRoot(OopsDo oops_do,
+          ShenandoahPhaseTimings::Phase phase, ShenandoahPhaseTimings::ParPhase par_phase);
+  void oops_do(OopClosure* cl, uint worker_id);
 };
 
-enum Shenandoah_process_roots_tasks {
-  SHENANDOAH_RP_PS_Universe_oops_do,
-  SHENANDOAH_RP_PS_JNIHandles_oops_do,
-  SHENANDOAH_RP_PS_JNIHandles_weak_oops_do,
-  SHENANDOAH_RP_PS_FlatProfiler_oops_do,
-  SHENANDOAH_RP_PS_Management_oops_do,
-  SHENANDOAH_RP_PS_SystemDictionary_oops_do,
-  SHENANDOAH_RP_PS_jvmti_oops_do,
-  // Leave this one last.
-  SHENANDOAH_RP_PS_NumElements
+class ShenandoahSerialRoots {
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+  ShenandoahSerialRoot            _universe_roots;
+  ShenandoahSerialRoot            _management_roots;
+  ShenandoahSerialRoot            _jvmti_roots;
+  ShenandoahSerialRoot            _jni_handle_roots;
+  ShenandoahSerialRoot            _flat_profiler_roots;
+  ShenandoahSynchronizerIterator  _om_iterator;
+public:
+  ShenandoahSerialRoots(ShenandoahPhaseTimings::Phase phase);
+  void oops_do(OopClosure* cl, uint worker_id);
+};
+
+class ShenandoahSystemDictionaryRoots {
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+  volatile int _claimed;
+public:
+  ShenandoahSystemDictionaryRoots(ShenandoahPhaseTimings::Phase phase);
+  void strong_oops_do(OopClosure* oops, uint worker_id);
+  void oops_do(OopClosure* oops, uint worker_id);
+};
+
+class ShenandoahStringTableRoots {
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+public:
+  ShenandoahStringTableRoots(ShenandoahPhaseTimings::Phase phase);
+  void oops_do(OopClosure* oops, uint worker_id);
+};
+
+class ShenandoahThreadRoots {
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+public:
+  ShenandoahThreadRoots(ShenandoahPhaseTimings::Phase phase);
+  void oops_do(OopClosure* oops_cl, CLDClosure* cld_cl, CodeBlobClosure* code_cl, uint worker_id);
+};
+
+class ShenandoahWeakRoot {
+public:
+  typedef void (*WeakOopsDo)(BoolObjectClosure*, OopClosure*);
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+  const ShenandoahPhaseTimings::ParPhase _par_phase;
+  volatile int      _claimed;
+  const WeakOopsDo  _weak_oops_do;
+
+public:
+  ShenandoahWeakRoot(ShenandoahPhaseTimings::Phase phase, ShenandoahPhaseTimings::ParPhase par_phase, WeakOopsDo oops_do);
+  void oops_do(OopClosure* keep_alive, uint worker_id);
+  void weak_oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive, uint worker_id);
+};
+
+class ShenandoahWeakRoots {
+private:
+  ShenandoahWeakRoot  _jni_weak_roots;
+public:
+  ShenandoahWeakRoots(ShenandoahPhaseTimings::Phase phase);
+  void oops_do(OopClosure* keep_alive, uint worker_id);
+  void weak_oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive, uint worker_id);
+};
+
+class ShenandoahStringDedupRoots {
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+public:
+  ShenandoahStringDedupRoots(ShenandoahPhaseTimings::Phase phase);
+  void oops_do(OopClosure* oops, uint worker_id);
+};
+
+template <typename ITR>
+class ShenandoahCodeCacheRoots {
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+  ITR _coderoots_iterator;
+public:
+  ShenandoahCodeCacheRoots(ShenandoahPhaseTimings::Phase phase);
+  void code_blobs_do(CodeBlobClosure* blob_cl, uint worker_id);
+};
+
+class ShenandoahClassLoaderDataRoots {
+private:
+  const ShenandoahPhaseTimings::Phase _phase;
+public:
+  ShenandoahClassLoaderDataRoots(ShenandoahPhaseTimings::Phase phase);
+
+  void always_strong_cld_do(CLDClosure* clds, uint worker_id);
+  void cld_do(CLDClosure* clds, uint worker_id);
 };
 
 class ShenandoahRootProcessor : public StackObj {
-  SubTasksDone* _process_strong_tasks;
+private:
   SharedHeap::StrongRootsScope _srs;
-  ShenandoahPhaseTimings::Phase _phase;
-  ParallelCLDRootIterator   _cld_iterator;
-  ShenandoahAllCodeRootsIterator _coderoots_all_iterator;
-  ShenandoahSynchronizerIterator _om_iterator;
-
-  void process_java_roots(OopClosure* scan_non_heap_roots,
-                          CLDClosure* thread_clds,
-                          CLDClosure* scan_strong_clds,
-                          CLDClosure* scan_weak_clds,
-                          CodeBlobClosure* scan_strong_code,
-                          uint worker_i);
-
-  void process_vm_roots(OopClosure* scan_non_heap_roots,
-                        OopClosure* scan_non_heap_weak_roots,
-                        OopClosure* weak_jni_roots,
-                        uint worker_i);
-
+  ShenandoahHeap* const               _heap;
+  const ShenandoahPhaseTimings::Phase _phase;
 public:
-  ShenandoahRootProcessor(ShenandoahHeap* heap, uint n_workers,
-                          ShenandoahPhaseTimings::Phase phase);
+  ShenandoahRootProcessor(ShenandoahPhaseTimings::Phase phase);
   ~ShenandoahRootProcessor();
 
-  // Apply oops, clds and blobs to all strongly reachable roots in the system
-  void process_strong_roots(OopClosure* oops,
-                            CLDClosure* clds,
-                            CLDClosure* weak_clds,
-                            CodeBlobClosure* blobs,
-                            ThreadClosure* thread_cl,
-                            uint worker_id);
-
-  // Apply oops, clds and blobs to strongly and weakly reachable roots in the system
-  void process_all_roots(OopClosure* oops,
-                         CLDClosure* clds,
-                         CodeBlobClosure* blobs,
-                         ThreadClosure* thread_cl,
-                         uint worker_id);
-
-  // For slow debug/verification code
-  void process_all_roots_slow(OopClosure* oops);
-
-  // Number of worker threads used by the root processor.
-  uint n_workers() const;
+  ShenandoahHeap* heap() const { return _heap; }
 };
 
-class ShenandoahRootEvacuator : public StackObj {
-  SubTasksDone* _evacuation_tasks;
-  SharedHeap::StrongRootsScope _srs;
-  ShenandoahPhaseTimings::Phase _phase;
-  ParallelCLDRootIterator   _cld_iterator;
-  ShenandoahCsetCodeRootsIterator _coderoots_cset_iterator;
-  ShenandoahSynchronizerIterator _om_iterator;
-
-  enum Shenandoah_evacuate_roots_tasks {
-    SHENANDOAH_EVAC_Universe_oops_do,
-    SHENANDOAH_EVAC_JNIHandles_oops_do,
-    SHENANDOAH_EVAC_JNIHandles_weak_oops_do,
-    SHENANDOAH_EVAC_FlatProfiler_oops_do,
-    SHENANDOAH_EVAC_Management_oops_do,
-    SHENANDOAH_EVAC_SystemDictionary_oops_do,
-    SHENANDOAH_EVAC_jvmti_oops_do,
-    // Leave this one last.
-    SHENANDOAH_EVAC_NumElements
-  };
+template <typename ITR>
+class ShenandoahRootScanner : public ShenandoahRootProcessor {
+private:
+  ShenandoahSerialRoots           _serial_roots;
+  ShenandoahSystemDictionaryRoots _dict_roots;
+  ShenandoahClassLoaderDataRoots  _cld_roots;
+  ShenandoahThreadRoots           _thread_roots;
+  ShenandoahWeakRoots             _weak_roots;
+  ShenandoahStringDedupRoots      _dedup_roots;
+  ShenandoahStringTableRoots      _string_table_roots;
+  ShenandoahCodeCacheRoots<ITR>   _code_roots;
 public:
-  ShenandoahRootEvacuator(ShenandoahHeap* heap, uint n_workers,
-                          ShenandoahPhaseTimings::Phase phase);
-  ~ShenandoahRootEvacuator();
+  ShenandoahRootScanner(ShenandoahPhaseTimings::Phase phase);
 
-  void process_evacuate_roots(OopClosure* oops,
-                              CodeBlobClosure* blobs,
-                              uint worker_id);
+  // Apply oops, clds and blobs to all strongly reachable roots in the system,
+  // during class unloading cycle
+  void strong_roots_do(uint worker_id, OopClosure* cl);
+  void strong_roots_do(uint worker_id, OopClosure* oops, CLDClosure* clds, CodeBlobClosure* code);
 
-  // Number of worker threads used by the root processor.
-  uint n_workers() const;
+  // Apply oops, clds and blobs to all strongly reachable roots and weakly reachable
+  // roots when class unloading is disabled during this cycle
+  void roots_do(uint worker_id, OopClosure* cl);
+  void roots_do(uint worker_id, OopClosure* oops, CLDClosure* clds, CodeBlobClosure* code);
 };
+
+typedef ShenandoahRootScanner<ShenandoahAllCodeRootsIterator> ShenandoahAllRootScanner;
+typedef ShenandoahRootScanner<ShenandoahCsetCodeRootsIterator> ShenandoahCSetRootScanner;
+
+// This scanner is only for SH::object_iteration() and only supports single-threaded
+// root scanning
+class ShenandoahHeapIterationRootScanner : public ShenandoahRootProcessor {
+private:
+  ShenandoahSerialRoots                                    _serial_roots;
+  ShenandoahThreadRoots                                    _thread_roots;
+  ShenandoahClassLoaderDataRoots                           _cld_roots;
+  ShenandoahWeakRoots                                      _weak_roots;
+  ShenandoahStringDedupRoots                               _dedup_roots;
+  ShenandoahStringTableRoots                               _string_table_roots;
+  ShenandoahCodeCacheRoots<ShenandoahAllCodeRootsIterator> _code_roots;
+
+public:
+  ShenandoahHeapIterationRootScanner();
+
+  void roots_do(OopClosure* cl);
+};
+
+// Evacuate all roots at a safepoint
+class ShenandoahRootEvacuator : public ShenandoahRootProcessor {
+private:
+  ShenandoahSerialRoots           _serial_roots;
+  ShenandoahSystemDictionaryRoots _dict_roots;
+  ShenandoahClassLoaderDataRoots  _cld_roots;
+  ShenandoahThreadRoots           _thread_roots;
+  ShenandoahWeakRoots             _weak_roots;
+  ShenandoahStringDedupRoots      _dedup_roots;
+  ShenandoahStringTableRoots      _string_table_roots;
+  ShenandoahCodeCacheRoots<ShenandoahCsetCodeRootsIterator>
+                                  _code_roots;
+
+public:
+  ShenandoahRootEvacuator(ShenandoahPhaseTimings::Phase phase);
+
+  void roots_do(uint worker_id, OopClosure* oops);
+};
+
+// Update all roots at a safepoint
+class ShenandoahRootUpdater : public ShenandoahRootProcessor {
+private:
+  ShenandoahSerialRoots           _serial_roots;
+  ShenandoahSystemDictionaryRoots _dict_roots;
+  ShenandoahClassLoaderDataRoots  _cld_roots;
+  ShenandoahThreadRoots           _thread_roots;
+  ShenandoahWeakRoots             _weak_roots;
+  ShenandoahStringDedupRoots      _dedup_roots;
+  ShenandoahStringTableRoots      _string_table_roots;
+  ShenandoahCodeCacheRoots<ShenandoahCsetCodeRootsIterator>
+                                  _code_roots;
+  const bool                      _update_code_cache;
+
+public:
+  ShenandoahRootUpdater(ShenandoahPhaseTimings::Phase phase, bool update_code_cache);
+  void roots_do(uint worker_id, BoolObjectClosure* is_alive, OopClosure* keep_alive);
+};
+
+// Adjuster all roots at a safepoint during full gc
+class ShenandoahRootAdjuster : public ShenandoahRootProcessor {
+private:
+  ShenandoahSerialRoots           _serial_roots;
+  ShenandoahSystemDictionaryRoots _dict_roots;
+  ShenandoahClassLoaderDataRoots  _cld_roots;
+  ShenandoahThreadRoots           _thread_roots;
+  ShenandoahWeakRoots             _weak_roots;
+  ShenandoahStringDedupRoots      _dedup_roots;
+  ShenandoahStringTableRoots      _string_table_roots;
+  ShenandoahCodeCacheRoots<ShenandoahAllCodeRootsIterator>
+                                  _code_roots;
+
+public:
+  ShenandoahRootAdjuster(ShenandoahPhaseTimings::Phase phase);
+
+  void roots_do(uint worker_id, OopClosure* oops);
+};
+
 #endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHROOTPROCESSOR_HPP

@@ -27,11 +27,11 @@
 #include "gc_implementation/shenandoah/shenandoahCollectionSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahMarkingContext.inline.hpp"
+#include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
 #include "gc_implementation/shenandoah/shenandoahStrDedupQueue.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahStrDedupTable.hpp"
 #include "gc_implementation/shenandoah/shenandoahStrDedupThread.hpp"
 #include "gc_implementation/shenandoah/shenandoahStringDedup.hpp"
-#include "gc_implementation/shenandoah/shenandoahTimingTracker.hpp"
 #include "gc_implementation/shenandoah/shenandoahWorkGroup.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "runtime/os.hpp"
@@ -103,10 +103,21 @@ void ShenandoahStringDedup::threads_do(ThreadClosure* tc) {
   tc->do_thread(_thread);
 }
 
-void ShenandoahStringDedup::parallel_oops_do(OopClosure* cl) {
-  _queues->parallel_oops_do(cl);
-  _table->parallel_oops_do(cl);
-  _thread->parallel_oops_do(cl);
+void ShenandoahStringDedup::parallel_oops_do(ShenandoahPhaseTimings::Phase phase, OopClosure* cl, uint worker_id) {
+  {
+    ShenandoahWorkerTimingsTracker x(phase, ShenandoahPhaseTimings::StringDedupQueueRoots, worker_id);
+    _queues->parallel_oops_do(cl);
+  }
+
+  {
+    ShenandoahWorkerTimingsTracker x(phase, ShenandoahPhaseTimings::StringDedupTableRoots, worker_id);
+    _table->parallel_oops_do(cl);
+  }
+
+  {
+    ShenandoahWorkerTimingsTracker x(phase, ShenandoahPhaseTimings::StringDedupThreadRoots, worker_id);
+    _thread->parallel_oops_do(cl);
+  }
 }
 
 void ShenandoahStringDedup::oops_do_slow(OopClosure* cl) {

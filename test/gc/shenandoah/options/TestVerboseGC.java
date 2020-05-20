@@ -52,7 +52,7 @@ public class TestVerboseGC {
                                                                       "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             output.shouldNotContain("Concurrent marking");
-            output.shouldNotContain("Immediate Garbage");
+            output.shouldNotContain("Collectable Garbage");
             output.shouldNotContain("GC STATISTICS");
             output.shouldHaveExitValue(0);
         }
@@ -66,7 +66,7 @@ public class TestVerboseGC {
                                                                       "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             output.shouldContain("Concurrent marking");
-            output.shouldNotContain("Immediate Garbage");
+            output.shouldNotContain("Collectable Garbage");
             output.shouldContain("GC STATISTICS");
             output.shouldHaveExitValue(0);
         }
@@ -80,7 +80,7 @@ public class TestVerboseGC {
                                                                       "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             output.shouldContain("Concurrent marking");
-            output.shouldNotContain("Immediate Garbage");
+            output.shouldNotContain("Collectable Garbage");
             output.shouldContain("GC STATISTICS");
             output.shouldHaveExitValue(0);
         }
@@ -94,7 +94,7 @@ public class TestVerboseGC {
                                                                       "test");
             OutputAnalyzer output = new OutputAnalyzer(pb.start());
             output.shouldContain("Concurrent marking");
-            output.shouldContain("Immediate Garbage");
+            output.shouldContain("Collectable Garbage");
             output.shouldContain("GC STATISTICS");
             output.shouldHaveExitValue(0);
         }

@@ -26,7 +26,7 @@
 #include "gc_implementation/shared/collectorCounters.hpp"
 #include "gc_implementation/shared/generationCounters.hpp"
 #include "gc_implementation/shenandoah/shenandoahMonitoringSupport.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegionCounters.hpp"
 
 class ShenandoahYoungGenerationCounters : public GenerationCounters {

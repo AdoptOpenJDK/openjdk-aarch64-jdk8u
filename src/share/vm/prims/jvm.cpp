@@ -599,7 +599,7 @@ static void fixup_cloned_reference(ReferenceType ref_type, oop src, oop clone) {
   // If G1 is enabled then we need to register a non-null referent
   // with the SATB barrier.
 #if INCLUDE_ALL_GCS
-  if (UseG1GC || (UseShenandoahGC && ShenandoahKeepAliveBarrier)) {
+  if (UseG1GC || (UseShenandoahGC && ShenandoahSATBBarrier)) {
     oop referent = java_lang_ref_Reference::referent(clone);
     if (referent != NULL) {
       G1SATBCardTableModRefBS::enqueue(referent);
@@ -658,7 +658,7 @@ JVM_ENTRY(jobject, JVM_Clone(JNIEnv* env, jobject handle))
 
 #if INCLUDE_ALL_GCS
   if (UseShenandoahGC && ShenandoahCloneBarrier) {
-    ShenandoahBarrierSet::barrier_set()->clone_barrier(obj());
+    ShenandoahBarrierSet::barrier_set()->clone_barrier_runtime(obj());
   }
 #endif
 

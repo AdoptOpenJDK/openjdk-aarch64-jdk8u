@@ -37,9 +37,7 @@ bool ShenandoahForwardedIsAliveClosure::do_object_b(oop obj) {
     return false;
   }
   obj = ShenandoahBarrierSet::resolve_forwarded_not_null(obj);
-  shenandoah_assert_not_forwarded_if(NULL, obj,
-                                     (ShenandoahHeap::heap()->is_concurrent_mark_in_progress() ||
-                                     ShenandoahHeap::heap()->is_concurrent_traversal_in_progress()));
+  shenandoah_assert_not_forwarded_if(NULL, obj, ShenandoahHeap::heap()->is_concurrent_mark_in_progress());
   return _mark_context->is_marked(obj);
 }
 
@@ -106,5 +104,19 @@ void ShenandoahEvacuateUpdateRootsClosure::do_oop(oop* p) {
 void ShenandoahEvacuateUpdateRootsClosure::do_oop(narrowOop* p) {
   do_oop_work(p);
 }
+
+#ifdef ASSERT
+template <class T>
+void ShenandoahAssertNotForwardedClosure::do_oop_work(T* p) {
+  T o = oopDesc::load_heap_oop(p);
+  if (!oopDesc::is_null(o)) {
+    oop obj = oopDesc::decode_heap_oop_not_null(o);
+    shenandoah_assert_not_forwarded(p, obj);
+  }
+}
+
+void ShenandoahAssertNotForwardedClosure::do_oop(narrowOop* p) { do_oop_work(p); }
+void ShenandoahAssertNotForwardedClosure::do_oop(oop* p)       { do_oop_work(p); }
+#endif
 
 #endif // SHARE_GC_SHENANDOAH_SHENANDOAHCLOSURES_HPP

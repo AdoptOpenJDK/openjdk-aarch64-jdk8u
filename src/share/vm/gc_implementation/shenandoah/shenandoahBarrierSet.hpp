@@ -39,6 +39,7 @@ private:
   ShenandoahBarrierSetC1* const _bsc1;
   ShenandoahBarrierSetC2* const _bsc2;
 
+  inline bool need_bulk_update(HeapWord* dst);
 public:
   ShenandoahBarrierSet(ShenandoahHeap* heap);
 
@@ -84,13 +85,8 @@ public:
 
   void write_ref_array_work(MemRegion mr) {}
 
-  template <class T> void
-  write_ref_array_pre_work(T* src, T* dst, size_t count, bool dest_uninitialized);
-
-  inline void arraycopy_pre(oop* src, oop* dst, size_t count);
-  inline void arraycopy_pre(narrowOop* src, narrowOop* dst, size_t count);
-  inline void arraycopy_update(oop* src, size_t count);
-  inline void arraycopy_update(narrowOop* src, size_t count);
+  template <class T>
+  inline void arraycopy_barrier(T* src, T* dst, size_t count);
   inline void clone_barrier(oop src);
   void clone_barrier_runtime(oop src);
 
@@ -107,26 +103,34 @@ public:
   void write_region_work(MemRegion mr) {};
 
   static inline oop resolve_forwarded_not_null(oop p);
+  static inline oop resolve_forwarded_not_null_mutator(oop p);
   static inline oop resolve_forwarded(oop p);
 
   void storeval_barrier(oop obj);
-  void keep_alive_barrier(oop obj);
 
   oop load_reference_barrier(oop obj);
-  oop load_reference_barrier_mutator(oop obj);
   oop load_reference_barrier_not_null(oop obj);
+  inline oop load_reference_barrier_mutator(oop obj);
 
   oop oop_atomic_cmpxchg_in_heap(oop new_value, volatile HeapWord* dest, oop compare_value);
 
   void enqueue(oop obj);
+  void keep_alive_barrier(oop obj);
 
 private:
   template <class T>
-  inline void arraycopy_pre_work(T* src, T* dst, size_t count);
+  inline void arraycopy_marking(T* src, T* dst, size_t count);
+  template <class T>
+  inline void arraycopy_evacuation(T* src, size_t count);
+  template <class T>
+  inline void arraycopy_update(T* src, size_t count);
+
+  inline void clone_marking(oop src);
+  inline void clone_evacuation(oop src);
+  inline void clone_update(oop src);
+
   template <class T, bool HAS_FWD, bool EVAC, bool ENQUEUE>
   inline void arraycopy_work(T* src, size_t count);
-  template <class T>
-  inline void arraycopy_update_impl(T* src, size_t count);
 
   oop load_reference_barrier_impl(oop obj);
 

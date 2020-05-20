@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License version
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
@@ -22,33 +21,35 @@
  */
 
 #include "precompiled.hpp"
-#include "gc_implementation/shenandoah/shenandoahTraversalMode.hpp"
-#include "gc_implementation/shenandoah/heuristics/shenandoahTraversalAggressiveHeuristics.hpp"
-#include "gc_implementation/shenandoah/heuristics/shenandoahTraversalHeuristics.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahAdaptiveHeuristics.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahAggressiveHeuristics.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahCompactHeuristics.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahStaticHeuristics.hpp"
+#include "gc_implementation/shenandoah/mode/shenandoahSATBMode.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 
-void ShenandoahTraversalMode::initialize_flags() const {
-  FLAG_SET_DEFAULT(ShenandoahSATBBarrier,            false);
-  FLAG_SET_DEFAULT(ShenandoahStoreValEnqueueBarrier, true);
-  FLAG_SET_DEFAULT(ShenandoahKeepAliveBarrier,       false);
-  FLAG_SET_DEFAULT(ShenandoahAllowMixedAllocs,       false);
-
+void ShenandoahSATBMode::initialize_flags() const {
   SHENANDOAH_ERGO_ENABLE_FLAG(ExplicitGCInvokesConcurrent);
   SHENANDOAH_ERGO_ENABLE_FLAG(ShenandoahImplicitGCInvokesConcurrent);
 
   // Final configuration checks
   SHENANDOAH_CHECK_FLAG_SET(ShenandoahLoadRefBarrier);
-  SHENANDOAH_CHECK_FLAG_SET(ShenandoahStoreValEnqueueBarrier);
+  SHENANDOAH_CHECK_FLAG_UNSET(ShenandoahStoreValEnqueueBarrier);
+  SHENANDOAH_CHECK_FLAG_SET(ShenandoahSATBBarrier);
   SHENANDOAH_CHECK_FLAG_SET(ShenandoahCASBarrier);
   SHENANDOAH_CHECK_FLAG_SET(ShenandoahCloneBarrier);
 }
 
-ShenandoahHeuristics* ShenandoahTraversalMode::initialize_heuristics() const {
+ShenandoahHeuristics* ShenandoahSATBMode::initialize_heuristics() const {
   if (ShenandoahGCHeuristics != NULL) {
-    if (strcmp(ShenandoahGCHeuristics, "adaptive") == 0) {
-      return new ShenandoahTraversalHeuristics();
-    } else if (strcmp(ShenandoahGCHeuristics, "aggressive") == 0) {
-      return new ShenandoahTraversalAggressiveHeuristics();
+    if (strcmp(ShenandoahGCHeuristics, "aggressive") == 0) {
+      return new ShenandoahAggressiveHeuristics();
+    } else if (strcmp(ShenandoahGCHeuristics, "static") == 0) {
+      return new ShenandoahStaticHeuristics();
+    } else if (strcmp(ShenandoahGCHeuristics, "adaptive") == 0) {
+      return new ShenandoahAdaptiveHeuristics();
+    } else if (strcmp(ShenandoahGCHeuristics, "compact") == 0) {
+      return new ShenandoahCompactHeuristics();
     } else {
       vm_exit_during_initialization("Unknown -XX:ShenandoahGCHeuristics option");
     }

@@ -25,6 +25,7 @@
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHPACER_HPP
 
 #include "gc_implementation/shenandoah/shenandoahNumberSeq.hpp"
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "memory/allocation.hpp"
 
 class ShenandoahHeap;
@@ -47,11 +48,11 @@ private:
   volatile intptr_t _epoch;
   volatile jdouble _tax_rate;
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile intptr_t _budget;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
   volatile intptr_t _progress;
-  char _pad2[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(2);
 
 public:
   ShenandoahPacer(ShenandoahHeap* heap) :
@@ -67,7 +68,6 @@ public:
   void setup_for_mark();
   void setup_for_evac();
   void setup_for_updaterefs();
-  void setup_for_traversal();
 
   void setup_for_reset();
   void setup_for_preclean();

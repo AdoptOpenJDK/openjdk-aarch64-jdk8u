@@ -24,6 +24,7 @@
 #ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHSHAREDFLAG_HPP
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHSHAREDFLAG_HPP
 
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/orderAccess.hpp"
 
@@ -35,9 +36,9 @@ typedef struct ShenandoahSharedFlag {
     SET = 1
   };
 
-  char _pad_0[128];
+  shenandoah_padding(0);
   volatile ShenandoahSharedValue value;
-  char _pad_1[128];
+  shenandoah_padding(1);
 
   ShenandoahSharedFlag() {
     // Needed for cooperation with generated code.
@@ -106,9 +107,9 @@ private:
 } ShenandoahSharedFlag;
 
 typedef struct ShenandoahSharedBitmap {
-  char _pad_0[128];
+  shenandoah_padding(0);
   volatile ShenandoahSharedValue value;
-  char _pad_1[128];
+  shenandoah_padding(1);
 
   ShenandoahSharedBitmap() {
     clear();
@@ -200,9 +201,9 @@ private:
 
 template<class T>
 struct ShenandoahSharedEnumFlag {
-  char _pad_0[128];
+  shenandoah_padding(0);
   volatile ShenandoahSharedValue value;
-  char _pad_1[128];
+  shenandoah_padding(1);
 
   ShenandoahSharedEnumFlag() {
     value = 0;

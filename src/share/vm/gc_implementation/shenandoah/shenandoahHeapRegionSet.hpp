@@ -27,6 +27,7 @@
 #include "memory/allocation.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 
 class ShenandoahHeapRegionSet;
 
@@ -35,9 +36,9 @@ private:
   const ShenandoahHeapRegionSet* _set;
   ShenandoahHeap* const _heap;
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile jint _current_index;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
 
   // No implicit copying: iterators should be passed by reference to capture the state
   ShenandoahHeapRegionSetIterator(const ShenandoahHeapRegionSetIterator& that);
@@ -82,8 +83,8 @@ public:
   bool is_empty() const { return _region_count == 0; }
 
   inline bool is_in(ShenandoahHeapRegion* r) const;
-  inline bool is_in(size_t region_number)    const;
-  inline bool is_in(HeapWord* p)             const;
+  inline bool is_in(size_t region_idx)       const;
+  inline bool is_in(oop p)                   const;
 
   void print_on(outputStream* out) const;
 

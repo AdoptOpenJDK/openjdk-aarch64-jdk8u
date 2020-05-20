@@ -24,6 +24,7 @@
 #ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHTASKQUEUE_HPP
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHTASKQUEUE_HPP
 
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "memory/padded.hpp"
 #include "utilities/taskqueue.hpp"
 #include "runtime/mutex.hpp"
@@ -277,9 +278,9 @@ typedef Padded<ShenandoahBufferedOverflowTaskQueue> ShenandoahObjToScanQueue;
 template <class T, MEMFLAGS F>
 class ParallelClaimableQueueSet: public GenericTaskQueueSet<T, F> {
 private:
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile jint     _claimed_index;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
 
   debug_only(uint   _reserved;  )
 

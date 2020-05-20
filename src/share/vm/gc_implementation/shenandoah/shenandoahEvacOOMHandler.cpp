@@ -23,7 +23,7 @@
 
 #include "precompiled.hpp"
 
-#include "gc_implementation/shenandoah/shenandoahHeap.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
 #include "gc_implementation/shenandoah/shenandoahEvacOOMHandler.hpp"
 

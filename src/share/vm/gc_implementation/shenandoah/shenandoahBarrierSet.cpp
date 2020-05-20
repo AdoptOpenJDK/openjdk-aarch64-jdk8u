@@ -28,7 +28,7 @@
 #include "gc_implementation/shenandoah/shenandoahBarrierSetClone.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahCollectorPolicy.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
-#include "gc_implementation/shenandoah/shenandoahHeuristics.hpp"
+#include "gc_implementation/shenandoah/heuristics/shenandoahHeuristics.hpp"
 #include "runtime/interfaceSupport.hpp"
 #include "utilities/macros.hpp"
 
@@ -180,25 +180,11 @@ oop ShenandoahBarrierSet::load_reference_barrier(oop obj) {
 }
 
 
-oop ShenandoahBarrierSet::load_reference_barrier_mutator(oop obj) {
-  assert(ShenandoahLoadRefBarrier, "should be enabled");
-  assert(_heap->is_gc_in_progress_mask(ShenandoahHeap::EVACUATION | ShenandoahHeap::TRAVERSAL), "evac should be in progress");
-  shenandoah_assert_in_cset(NULL, obj);
-
-  oop fwd = resolve_forwarded_not_null(obj);
-  if (obj == fwd) {
-    ShenandoahEvacOOMScope scope;
-    return _heap->evacuate_object(obj, Thread::current());
-  }
-  return fwd;
-}
-
 oop ShenandoahBarrierSet::load_reference_barrier_impl(oop obj) {
   assert(ShenandoahLoadRefBarrier, "should be enabled");
   if (!oopDesc::is_null(obj)) {
-    bool evac_in_progress = _heap->is_gc_in_progress_mask(ShenandoahHeap::EVACUATION | ShenandoahHeap::TRAVERSAL);
     oop fwd = resolve_forwarded_not_null(obj);
-    if (evac_in_progress &&
+    if (_heap->is_evacuation_in_progress() &&
         _heap->in_collection_set(obj) &&
         obj == fwd) {
       Thread *t = Thread::current();
@@ -213,19 +199,18 @@ oop ShenandoahBarrierSet::load_reference_barrier_impl(oop obj) {
 }
 
 void ShenandoahBarrierSet::storeval_barrier(oop obj) {
-  if (ShenandoahStoreValEnqueueBarrier && !oopDesc::is_null(obj) && _heap->is_concurrent_traversal_in_progress()) {
+  if (ShenandoahStoreValEnqueueBarrier && !oopDesc::is_null(obj) && _heap->is_concurrent_mark_in_progress()) {
     enqueue(obj);
   }
 }
 
 void ShenandoahBarrierSet::keep_alive_barrier(oop obj) {
-  if (ShenandoahKeepAliveBarrier && _heap->is_concurrent_mark_in_progress()) {
+  if (_heap->is_concurrent_mark_in_progress()) {
     enqueue(obj);
   }
 }
 
 void ShenandoahBarrierSet::enqueue(oop obj) {
-  shenandoah_assert_not_forwarded_if(NULL, obj, _heap->is_concurrent_traversal_in_progress());
   assert(JavaThread::satb_mark_queue_set().shared_satb_queue()->is_active(), "only get here when SATB active");
 
   // Filter marked objects before hitting the SATB queues. The same predicate would
@@ -279,5 +264,7 @@ oop ShenandoahBarrierSet::oop_atomic_cmpxchg_in_heap(oop new_value, volatile Hea
 }
 
 void ShenandoahBarrierSet::clone_barrier_runtime(oop src) {
-  clone_barrier(src);
+  if (_heap->has_forwarded_objects() || (ShenandoahStoreValEnqueueBarrier && _heap->is_concurrent_mark_in_progress())) {
+    clone_barrier(src);
+  }
 }

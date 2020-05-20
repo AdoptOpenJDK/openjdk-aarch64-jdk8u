@@ -25,6 +25,7 @@
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHVERIFIER_HPP
 
 #include "gc_implementation/shared/markBitMap.hpp"
+#include "gc_implementation/shenandoah/shenandoahRootVerifier.hpp"
 #include "oops/oopsHierarchy.hpp"
 #include "memory/allocation.hpp"
 #include "utilities/stack.hpp"
@@ -178,10 +179,13 @@ public:
   void verify_after_updaterefs();
   void verify_before_fullgc();
   void verify_after_fullgc();
-  void verify_before_traversal();
-  void verify_after_traversal();
   void verify_after_degenerated();
   void verify_generic(VerifyOption option);
+
+  // Roots should only contain to-space oops
+  void verify_roots_in_to_space();
+  void verify_roots_no_forwarded();
+  void verify_roots_no_forwarded_except(ShenandoahRootVerifier::RootTypes types);
 };
 
 #endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHVERIFIER_HPP

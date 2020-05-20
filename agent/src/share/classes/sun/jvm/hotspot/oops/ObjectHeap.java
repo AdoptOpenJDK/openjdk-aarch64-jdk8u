@@ -439,8 +439,8 @@ public class ObjectHeap {
         G1CollectedHeap g1h = (G1CollectedHeap) heap;
         g1h.heapRegionIterate(lrc);
     } else if (heap instanceof ShenandoahHeap) {
-        ShenandoahHeap sh = (ShenandoahHeap) heap;
-        sh.iterateHeapRegions(lrc);
+       ShenandoahHeap sh = (ShenandoahHeap) heap;
+       addLiveRegions("heap", sh.getLiveRegions(), liveRegions);
     } else {
        if (Assert.ASSERTS_ENABLED) {
           Assert.that(false, "Expecting GenCollectedHeap, G1CollectedHeap, " +

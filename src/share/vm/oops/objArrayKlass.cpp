@@ -247,7 +247,7 @@ template <class T> void ObjArrayKlass::do_copy(arrayOop s, T* src,
 
 #if INCLUDE_ALL_GCS
   if (UseShenandoahGC) {
-    ShenandoahBarrierSet::barrier_set()->arraycopy_pre(src, dst, length);
+    ShenandoahBarrierSet::barrier_set()->arraycopy_barrier(src, dst, length);
   }
 #endif
 

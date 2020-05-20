@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2020, Red Hat, Inc. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,23 +22,21 @@
  *
  */
 
-#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHTIMINGTRACKER_HPP
-#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHTIMINGTRACKER_HPP
+#ifndef SHARE_GC_SHENANDOAH_MODE_SHENANDOAHIUMODE_HPP
+#define SHARE_GC_SHENANDOAH_MODE_SHENANDOAHIUMODE_HPP
 
-#include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
-#include "memory/allocation.hpp"
+#include "gc_implementation/shenandoah/mode/shenandoahMode.hpp"
 
-class ShenandoahWorkerTimingsTracker : public StackObj {
-private:
-  double _start_time;
-  ShenandoahPhaseTimings::GCParPhases _phase;
-  ShenandoahWorkerTimings* _worker_times;
-  uint _worker_id;
+class ShenandoahHeuristics;
 
+class ShenandoahIUMode : public ShenandoahMode {
 public:
-    ShenandoahWorkerTimingsTracker(ShenandoahWorkerTimings* worker_times, ShenandoahPhaseTimings::GCParPhases phase, uint worker_id);
-    ~ShenandoahWorkerTimingsTracker();
+  virtual void initialize_flags() const;
+  virtual ShenandoahHeuristics* initialize_heuristics() const;
+
+  virtual const char* name()     { return "Incremental-Update"; }
+  virtual bool is_diagnostic()   { return false; }
+  virtual bool is_experimental() { return true; }
 };
 
-#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHTIMINGTRACKER_HPP
-
+#endif // SHARE_GC_SHENANDOAH_MODE_SHENANDOAHIUMODE_HPP
