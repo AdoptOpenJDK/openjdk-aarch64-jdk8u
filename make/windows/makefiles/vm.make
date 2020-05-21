@@ -155,6 +155,7 @@ VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/concurrentMarkSwe
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/g1
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah/heuristics
+VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah/mode
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_interface
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/asm
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/memory
@@ -254,6 +255,9 @@ arguments.obj: $(WorkSpace)\src\share\vm\runtime\arguments.cpp
         $(CXX) $(CXX_FLAGS) $(CXX_USE_PCH) /c $<
 
 {$(COMMONSRC)\share\vm\gc_implementation\shenandoah\heuristics}.cpp.obj::
+        $(CXX) $(CXX_FLAGS) $(CXX_USE_PCH) /c $<
+
+{$(COMMONSRC)\share\vm\gc_implementation\shenandoah\mode}.cpp.obj::
         $(CXX) $(CXX_FLAGS) $(CXX_USE_PCH) /c $<
 
 {$(COMMONSRC)\share\vm\gc_interface}.cpp.obj::
