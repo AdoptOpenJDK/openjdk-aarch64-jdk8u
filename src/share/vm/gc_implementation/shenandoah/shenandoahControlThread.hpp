@@ -27,6 +27,7 @@
 #include "gc_interface/gcCause.hpp"
 #include "gc_implementation/shared/concurrentGCThread.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "gc_implementation/shenandoah/shenandoahSharedVariables.hpp"
 #include "runtime/task.hpp"
 #include "utilities/ostream.hpp"
@@ -58,7 +59,6 @@ class ShenandoahControlThread: public ConcurrentGCThread {
 private:
   typedef enum {
     none,
-    concurrent_traversal,
     concurrent_normal,
     stw_degenerated,
     stw_full
@@ -89,20 +89,25 @@ private:
   GCCause::Cause       _requested_gc_cause;
   ShenandoahHeap::ShenandoahDegenPoint _degen_point;
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile intptr_t _allocs_seen;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
+  volatile intptr_t _gc_id;
+  shenandoah_padding(2);
 
   bool check_cancellation_or_degen(ShenandoahHeap::ShenandoahDegenPoint point);
   void service_concurrent_normal_cycle(GCCause::Cause cause);
   void service_stw_full_cycle(GCCause::Cause cause);
   void service_stw_degenerated_cycle(GCCause::Cause cause, ShenandoahHeap::ShenandoahDegenPoint point);
-  void service_concurrent_traversal_cycle(GCCause::Cause cause);
   void service_uncommit(double shrink_before);
 
   bool try_set_alloc_failure_gc();
   void notify_alloc_failure_waiters();
   bool is_alloc_failure_gc();
+
+  void reset_gc_id();
+  void update_gc_id();
+  size_t get_gc_id();
 
   void notify_gc_waiters();
 
@@ -121,7 +126,7 @@ public:
 
   // Handle allocation failure from normal allocation.
   // Blocks until memory is available.
-  void handle_alloc_failure(size_t words);
+  void handle_alloc_failure(ShenandoahAllocRequest& req);
 
   // Handle allocation failure from evacuation path.
   // Optionally blocks while collector is handling the failure.

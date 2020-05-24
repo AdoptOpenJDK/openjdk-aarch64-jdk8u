@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2020, Red Hat, Inc. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,17 +22,17 @@
  *
  */
 
-#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHNORMALMODE_HPP
-#define SHARE_GC_SHENANDOAH_SHENANDOAHNORMALMODE_HPP
+#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHPADDING_INLINE_HPP
+#define SHARE_GC_SHENANDOAH_SHENANDOAHPADDING_INLINE_HPP
 
-#include "gc_implementation/shenandoah/shenandoahMode.hpp"
+// 64 bytes is enough to cover all existing architectures. If we have some
+// other platforms, we would need to provide the architecture-specific
+// versions here. Shared code provides DEFAULT_CACHE_LINE_SIZE, which is
+// inconveniently large by default.
 
-class ShenandoahHeuristics;
+#define SHENANDOAH_CACHE_LINE_SIZE 64
 
-class ShenandoahNormalMode : public ShenandoahMode {
-public:
-  virtual void initialize_flags() const;
-  virtual ShenandoahHeuristics* initialize_heuristics() const;
-};
+#define shenandoah_padding(id) \
+  char _pad##id[SHENANDOAH_CACHE_LINE_SIZE]
 
-#endif // SHARE_GC_SHENANDOAH_SHENANDOAHNORMALMODE_HPP
+#endif // SHARE_GC_SHENANDOAH_SHENANDOAHPADDING_INLINE_HPP

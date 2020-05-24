@@ -24,6 +24,8 @@
 #ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHEVACOOMHANDLER_HPP
 #define SHARE_VM_GC_SHENANDOAH_SHENANDOAHEVACOOMHANDLER_HPP
 
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
+
 /**
  * Provides safe handling of out-of-memory situations during evacuation.
  *
@@ -77,9 +79,9 @@ class ShenandoahEvacOOMHandler {
 private:
   static const jint OOM_MARKER_MASK;
 
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile jint _threads_in_evac;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
 
   void wait_for_no_evac_threads();
 

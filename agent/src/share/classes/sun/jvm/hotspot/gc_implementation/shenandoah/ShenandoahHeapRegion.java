@@ -24,8 +24,10 @@
 package sun.jvm.hotspot.gc_implementation.shenandoah;
 
 import sun.jvm.hotspot.memory.ContiguousSpace;
+import sun.jvm.hotspot.types.AddressField;
 import sun.jvm.hotspot.types.CIntegerField;
 import sun.jvm.hotspot.runtime.VM;
+import sun.jvm.hotspot.runtime.VMObject;
 import sun.jvm.hotspot.types.Type;
 import sun.jvm.hotspot.types.TypeDataBase;
 import sun.jvm.hotspot.debugger.Address;
@@ -34,8 +36,13 @@ import java.util.Observable;
 import java.util.Observer;
 
 
-public class ShenandoahHeapRegion extends ContiguousSpace {
+public class ShenandoahHeapRegion extends VMObject {
     private static CIntegerField RegionSizeBytes;
+
+    private static AddressField BottomField;
+    private static AddressField TopField;
+    private static AddressField EndField;
+
     static {
         VM.registerVMInitializedObserver(new Observer() {
             public void update(Observable o, Object data) {
@@ -47,11 +54,27 @@ public class ShenandoahHeapRegion extends ContiguousSpace {
     static private synchronized void initialize(TypeDataBase db) {
         Type type = db.lookupType("ShenandoahHeapRegion");
         RegionSizeBytes = type.getCIntegerField("RegionSizeBytes");
+
+        BottomField = type.getAddressField("_bottom");
+        TopField = type.getAddressField("_top");
+        EndField = type.getAddressField("_end");
     }
 
     public static long regionSizeBytes() { return RegionSizeBytes.getValue(); }
 
     public ShenandoahHeapRegion(Address addr) {
         super(addr);
+    }
+
+    public Address bottom() {
+        return BottomField.getValue(addr);
+    }
+
+    public Address top() {
+        return TopField.getValue(addr);
+    }
+
+    public Address end() {
+        return EndField.getValue(addr);
     }
 }

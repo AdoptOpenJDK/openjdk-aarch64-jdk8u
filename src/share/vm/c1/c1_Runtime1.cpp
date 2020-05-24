@@ -1314,7 +1314,7 @@ template <class T> int obj_arraycopy_work(oopDesc* src, T* src_addr,
 
 #if INCLUDE_ALL_GCS
   if (UseShenandoahGC) {
-    ShenandoahBarrierSet::barrier_set()->arraycopy_pre(src_addr, dst_addr, length);
+    ShenandoahBarrierSet::barrier_set()->arraycopy_barrier(src_addr, dst_addr, length);
   }
 #endif
 

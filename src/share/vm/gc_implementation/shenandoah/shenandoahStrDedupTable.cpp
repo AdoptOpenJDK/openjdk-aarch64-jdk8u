@@ -25,7 +25,7 @@
 
 #include "classfile/altHashing.hpp"
 #include "classfile/javaClasses.hpp"
-#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#include "gc_implementation/shenandoah/shenandoahBarrierSet.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahLogging.hpp"
 #include "gc_implementation/shenandoah/shenandoahStrDedupTable.hpp"
@@ -157,7 +157,8 @@ bool ShenandoahStrDedupTable::deduplicate(oop java_string) {
 
   // Enqueue the reference to make sure it is kept alive. Concurrent mark might
   // otherwise declare it dead if there are no other strong references to this object.
-  G1SATBCardTableModRefBS::enqueue(existing_value);
+  ShenandoahBarrierSet* bs = ShenandoahBarrierSet::barrier_set();
+  bs->keep_alive_barrier(existing_value);
 
   // Existing value found, deduplicate string
   java_lang_String::set_value(java_string, typeArrayOop(existing_value));

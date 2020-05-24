@@ -3954,7 +3954,7 @@ void GraphKit::g1_write_barrier_pre(bool do_load,
   if (UseShenandoahGC) {
     Node* gc_state = __ AddP(no_base, tls, __ ConX(in_bytes(JavaThread::gc_state_offset())));
     Node* ld = __ load(__ ctrl(), gc_state, TypeInt::BYTE, T_BYTE, Compile::AliasIdxRaw);
-    marking = __ AndI(ld, __ ConI(ShenandoahHeap::MARKING | ShenandoahHeap::TRAVERSAL));
+    marking = __ AndI(ld, __ ConI(ShenandoahHeap::MARKING));
     assert(ShenandoahBarrierC2Support::is_gc_state_load(ld), "Should match the shape");
   } else {
     assert(UseG1GC, "should be");

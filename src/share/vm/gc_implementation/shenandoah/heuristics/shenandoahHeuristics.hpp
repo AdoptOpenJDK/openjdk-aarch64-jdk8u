@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEURISTICS_HPP
-#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEURISTICS_HPP
+#ifndef SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHHEURISTICS_HPP
+#define SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHHEURISTICS_HPP
 
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahPhaseTimings.hpp"
@@ -55,14 +55,6 @@
     }                                                                       \
   } while (0)
 
-#define SHENANDOAH_CHECK_FLAG_SET(name)                                     \
-  do {                                                                      \
-    if (!name) {                                                            \
-      err_msg message("Heuristics needs -XX:+" #name " to work correctly"); \
-      vm_exit_during_initialization("Error", message);                      \
-    }                                                                       \
-  } while (0)
-
 class ShenandoahCollectionSet;
 class ShenandoahHeapRegion;
 
@@ -75,19 +67,12 @@ protected:
   typedef struct {
     ShenandoahHeapRegion* _region;
     size_t _garbage;
-    uint64_t _seqnum_last_alloc;
   } RegionData;
 
-  bool _update_refs_early;
-  bool _update_refs_adaptive;
-
   RegionData* _region_data;
-  size_t _region_data_size;
 
   uint _degenerated_cycles_in_a_row;
   uint _successful_cycles_in_a_row;
-
-  size_t _bytes_in_cset;
 
   double _cycle_start;
   double _last_cycle_end;
@@ -100,11 +85,6 @@ protected:
   ShenandoahSharedFlag _metaspace_oom;
 
   static int compare_by_garbage(RegionData a, RegionData b);
-  static int compare_by_garbage_then_alloc_seq_ascending(RegionData a, RegionData b);
-  static int compare_by_alloc_seq_ascending(RegionData a, RegionData b);
-  static int compare_by_alloc_seq_descending(RegionData a, RegionData b);
-
-  RegionData* get_region_data_cache(size_t num);
 
   virtual void choose_collection_set_from_regiondata(ShenandoahCollectionSet* set,
                                                      RegionData* data, size_t data_size,
@@ -128,11 +108,7 @@ public:
 
   virtual void record_cycle_end();
 
-  virtual void record_phase_time(ShenandoahPhaseTimings::Phase phase, double secs);
-
   virtual bool should_start_gc() const;
-
-  virtual bool should_start_update_refs();
 
   virtual bool should_degenerate_cycle();
 
@@ -168,4 +144,4 @@ public:
   double time_since_last_gc() const;
 };
 
-#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHHEURISTICS_HPP
+#endif // SHARE_VM_GC_SHENANDOAH_HEURISTICS_SHENANDOAHHEURISTICS_HPP

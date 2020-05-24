@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,28 +21,38 @@
  *
  */
 
-#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHALLOCTRACKER_HPP
-#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHALLOCTRACKER_HPP
+#ifndef SHARE_GC_SHENANDOAH_SHENANDOAHROOTVERIFIER_HPP
+#define SHARE_GC_SHENANDOAH_SHENANDOAHROOTVERIFIER_HPP
 
-#include "gc_implementation/shenandoah/shenandoahAllocRequest.hpp"
-#include "gc_implementation/shenandoah/shenandoahNumberSeq.hpp"
 #include "memory/allocation.hpp"
-#include "utilities/ostream.hpp"
+#include "memory/iterator.hpp"
 
-class ShenandoahAllocTracker : public CHeapObj<mtGC> {
+class ShenandoahRootVerifier : public StackObj {
+public:
+  enum RootTypes {
+    SerialRoots         = 1 << 0,
+    ThreadRoots         = 1 << 1,
+    CodeRoots           = 1 << 2,
+    CLDGRoots           = 1 << 3,
+    WeakRoots           = 1 << 4,
+    StringDedupRoots    = 1 << 5,
+    AllRoots            = (SerialRoots | ThreadRoots | CodeRoots | CLDGRoots | WeakRoots | StringDedupRoots)
+  };
+
 private:
-  BinaryMagnitudeSeq _alloc_size[ShenandoahAllocRequest::_ALLOC_LIMIT];
-  BinaryMagnitudeSeq _alloc_latency[ShenandoahAllocRequest::_ALLOC_LIMIT];
+  RootTypes _types;
 
 public:
-  void record_alloc_latency(size_t words_size,
-                            ShenandoahAllocRequest::Type _alloc_type,
-                            double latency_us) {
-    _alloc_size[_alloc_type].add(words_size);
-    _alloc_latency[_alloc_type].add((size_t)latency_us);
-  }
+  ShenandoahRootVerifier();
 
-  void print_on(outputStream* out) const;
+  void excludes(RootTypes types);
+  void oops_do(OopClosure* cl);
+
+  // Used to seed ShenandoahVerifier, do not honor root type filter
+  void roots_do(OopClosure* cl);
+  void strong_roots_do(OopClosure* cl);
+private:
+  bool verify(RootTypes type) const;
 };
 
-#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHALLOCTRACKER_HPP
+#endif // SHARE_GC_SHENANDOAH_SHENANDOAHROOTVERIFIER_HPP

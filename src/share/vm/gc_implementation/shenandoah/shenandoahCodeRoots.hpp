@@ -26,6 +26,7 @@
 
 #include "code/codeCache.hpp"
 #include "gc_implementation/shenandoah/shenandoahSharedVariables.hpp"
+#include "gc_implementation/shenandoah/shenandoahPadding.hpp"
 #include "memory/allocation.hpp"
 #include "memory/iterator.hpp"
 
@@ -36,10 +37,14 @@ class ShenandoahCodeRootsLock;
 class ShenandoahParallelCodeCacheIterator VALUE_OBJ_CLASS_SPEC {
   friend class CodeCache;
 private:
-  char _pad0[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(0);
   volatile int  _claimed_idx;
   volatile bool _finished;
-  char _pad1[DEFAULT_CACHE_LINE_SIZE];
+  shenandoah_padding(1);
+
+  // Noncopyable.
+  ShenandoahParallelCodeCacheIterator(const ShenandoahParallelCodeCacheIterator& o);
+  ShenandoahParallelCodeCacheIterator& operator=(const ShenandoahParallelCodeCacheIterator& o);
 public:
   ShenandoahParallelCodeCacheIterator();
   void parallel_blobs_do(CodeBlobClosure* f);
@@ -114,18 +119,6 @@ public:
   static void initialize();
   static void add_nmethod(nmethod* nm);
   static void remove_nmethod(nmethod* nm);
-
-  /**
-   * Provides the iterator over all nmethods in the code cache that have oops.
-   * @return
-   */
-  static ShenandoahAllCodeRootsIterator iterator();
-
-  /**
-   * Provides the iterator over nmethods that have at least one oop in collection set.
-   * @return
-   */
-  static ShenandoahCsetCodeRootsIterator cset_iterator();
 
 private:
   struct PaddedLock {
