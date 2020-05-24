@@ -1212,5 +1212,6 @@ c56eceecec71d0b7f8af742ba33b50a3128de58f jdk8u252-b08
 ec5a9cff3f55d534fe4cf469ea4f329c5644c684 aarch64-shenandoah-jdk8u262-b01
 910ec7999bd5c01dc979ea99604d5122e465ad34 jdk8u262-b02
 9dea89bb6d52d855fb87cf3ded4ccbfb4350b766 aarch64-shenandoah-jdk8u262-b02
+321ac97143cbb2ecec5b358c0ad193632ea78f28 aarch64-shenandoah-jdk8u262-b02-shenandoah-merge-2020-05-20
 6df22f7cfdf1154526a79982cb99fbd7684b0bbd jdk8u262-b03
 2fe1067e3d93211fd88920cf71492bc7bfebf05d aarch64-shenandoah-jdk8u262-b03
