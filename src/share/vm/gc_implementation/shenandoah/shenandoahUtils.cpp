@@ -142,3 +142,13 @@ ShenandoahWorkerSession::~ShenandoahWorkerSession() {
   thr->set_worker_id(INVALID_WORKER_ID);
 #endif
 }
+
+size_t ShenandoahUtils::round_up_power_of_2(size_t value) {
+  assert(value != 0, "Invalid value");
+
+  if (is_power_of_2(value)) {
+    return value;
+  }
+
+  return (size_t)1 << (log2_intptr(value) + 1);
+}
