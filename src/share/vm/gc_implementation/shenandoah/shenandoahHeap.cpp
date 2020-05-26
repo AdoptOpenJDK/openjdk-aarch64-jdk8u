@@ -26,7 +26,6 @@
 
 #include "gc_implementation/shared/gcTimer.hpp"
 #include "gc_implementation/shenandoah/shenandoahGCTraceTime.hpp"
-#include "gc_implementation/shared/parallelCleaning.hpp"
 
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahClosures.inline.hpp"
@@ -46,6 +45,7 @@
 #include "gc_implementation/shenandoah/shenandoahOopClosures.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahPacer.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahPadding.hpp"
+#include "gc_implementation/shenandoah/shenandoahParallelCleaning.hpp"
 #include "gc_implementation/shenandoah/shenandoahRootProcessor.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahTaskqueue.hpp"
 #include "gc_implementation/shenandoah/shenandoahUtils.hpp"
@@ -1888,7 +1888,7 @@ void ShenandoahHeap::unload_classes_and_cleanup_tables(bool full_gc) {
                             ShenandoahPhaseTimings::full_gc_purge_par :
                             ShenandoahPhaseTimings::purge_par);
     uint active = _workers->active_workers();
-    ParallelCleaningTask unlink_task(is_alive, true, true, active, purged_class);
+    ShenandoahParallelCleaningTask unlink_task(is_alive, true, true, active, purged_class);
     _workers->run_task(&unlink_task);
   }
 
