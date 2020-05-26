@@ -67,16 +67,16 @@ public:
 
   ~ShenandoahStringSymbolTableUnlinkTask() {
     guarantee(!_process_strings || !_do_in_parallel || StringTable::parallel_claimed_index() >= _initial_string_table_size,
-              err_msg("claim value "INT32_FORMAT" after unlink less than initial string table size "INT32_FORMAT,
+              err_msg("claim value " INT32_FORMAT " after unlink less than initial string table size " INT32_FORMAT,
                       StringTable::parallel_claimed_index(), _initial_string_table_size));
     guarantee(!_process_symbols || !_do_in_parallel || SymbolTable::parallel_claimed_index() >= _initial_symbol_table_size,
-              err_msg("claim value "INT32_FORMAT" after unlink less than initial symbol table size "INT32_FORMAT,
+              err_msg("claim value " INT32_FORMAT " after unlink less than initial symbol table size " INT32_FORMAT,
                       SymbolTable::parallel_claimed_index(), _initial_symbol_table_size));
 
     if (G1TraceStringSymbolTableScrubbing) {
       gclog_or_tty->print_cr("Cleaned string and symbol table, "
-                             "strings: "SIZE_FORMAT" processed, "SIZE_FORMAT" removed, "
-                             "symbols: "SIZE_FORMAT" processed, "SIZE_FORMAT" removed",
+                             "strings: " SIZE_FORMAT " processed, " SIZE_FORMAT " removed, "
+                             "symbols: " SIZE_FORMAT " processed, " SIZE_FORMAT " removed",
                              strings_processed(), strings_removed(),
                              symbols_processed(), symbols_removed());
     }
