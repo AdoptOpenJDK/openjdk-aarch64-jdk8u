@@ -1875,13 +1875,6 @@ void Arguments::set_shenandoah_gc_flags() {
 #endif // COMPILER2
 
 #if INCLUDE_ALL_GCS
-  if (AlwaysPreTouch) {
-    if (!FLAG_IS_DEFAULT(ShenandoahUncommit)) {
-      warning("AlwaysPreTouch is enabled, disabling ShenandoahUncommit");
-    }
-    FLAG_SET_DEFAULT(ShenandoahUncommit, false);
-  }
-
   if ((InitialHeapSize == MaxHeapSize) && ShenandoahUncommit) {
     if (PrintGC) {
       tty->print_cr("Min heap equals to max heap, disabling ShenandoahUncommit");

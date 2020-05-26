@@ -570,6 +570,9 @@ private:
   size_t _bitmap_regions_per_slice;
   size_t _bitmap_bytes_per_slice;
 
+  size_t _pretouch_heap_page_size;
+  size_t _pretouch_bitmap_page_size;
+
   bool _bitmap_region_special;
   bool _aux_bitmap_region_special;
 
@@ -604,6 +607,8 @@ public:
   // Liveness caching support
   ShenandoahLiveData* get_liveness_cache(uint worker_id);
   void flush_liveness_cache(uint worker_id);
+
+  size_t pretouch_heap_page_size() { return _pretouch_heap_page_size; }
 
 // ---------- Evacuation support
 //
