@@ -71,15 +71,3 @@ bool ShenandoahAggressiveHeuristics::should_unload_classes() {
   // Randomly unload classes with 50% chance.
   return (os::random() & 1) == 1;
 }
-
-const char* ShenandoahAggressiveHeuristics::name() {
-  return "aggressive";
-}
-
-bool ShenandoahAggressiveHeuristics::is_diagnostic() {
-  return true;
-}
-
-bool ShenandoahAggressiveHeuristics::is_experimental() {
-  return false;
-}
