@@ -77,14 +77,6 @@ void ShenandoahRootScanner<ITR>::roots_do(uint worker_id, OopClosure* oops, CLDC
   _dict_roots.oops_do(oops, worker_id);
   _thread_roots.oops_do(oops, clds, code, worker_id);
   _cld_roots.cld_do(clds, worker_id);
-
-  // With ShenandoahConcurrentScanCodeRoots, we avoid scanning the entire code cache here,
-  // and instead do that in concurrent phase under the relevant lock. This saves init mark
-  // pause time.
-  if (code != NULL && !ShenandoahConcurrentScanCodeRoots) {
-    _code_roots.code_blobs_do(code, worker_id);
-  }
-
   _weak_roots.oops_do(oops, worker_id);
   _string_table_roots.oops_do(oops, worker_id);
   _dedup_roots.oops_do(oops, worker_id);
