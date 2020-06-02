@@ -27,10 +27,10 @@
 #include "macroAssembler_aarch64.hpp"
 #include "shenandoahBarrierSetAssembler_aarch64.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
 #include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
+#include "gc_implementation/shenandoah/c1/shenandoahBarrierSetC1.hpp"
 #include "runtime/stubCodeGenerator.hpp"
 #include "runtime/thread.hpp"
 

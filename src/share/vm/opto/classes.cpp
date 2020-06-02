@@ -40,7 +40,7 @@
 #include "opto/subnode.hpp"
 #include "opto/vectornode.hpp"
 #if INCLUDE_ALL_GCS
-#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahSupport.hpp"
 #endif
 
 // ----------------------------------------------------------------------------

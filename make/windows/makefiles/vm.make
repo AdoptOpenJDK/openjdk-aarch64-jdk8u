@@ -154,6 +154,8 @@ VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/parNew
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/concurrentMarkSweep
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/g1
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah
+VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah/c1
+VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah/c2
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah/heuristics
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_implementation/shenandoah/mode
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/gc_interface
@@ -252,6 +254,12 @@ arguments.obj: $(WorkSpace)\src\share\vm\runtime\arguments.cpp
         $(CXX) $(CXX_FLAGS) $(CXX_USE_PCH) /c $<
 
 {$(COMMONSRC)\share\vm\gc_implementation\shenandoah}.cpp.obj::
+        $(CXX) $(CXX_FLAGS) $(CXX_USE_PCH) /c $<
+
+{$(COMMONSRC)\share\vm\gc_implementation\shenandoah\c1}.cpp.obj::
+        $(CXX) $(CXX_FLAGS) $(CXX_USE_PCH) /c $<
+
+{$(COMMONSRC)\share\vm\gc_implementation\shenandoah\c2}.cpp.obj::
         $(CXX) $(CXX_FLAGS) $(CXX_USE_PCH) /c $<
 
 {$(COMMONSRC)\share\vm\gc_implementation\shenandoah\heuristics}.cpp.obj::

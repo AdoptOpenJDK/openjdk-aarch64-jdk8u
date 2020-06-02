@@ -28,7 +28,7 @@
 #include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.inline.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
+#include "gc_implementation/shenandoah/c1/shenandoahBarrierSetC1.hpp"
 
 #ifdef TARGET_ARCH_aarch64
 #include "shenandoahBarrierSetAssembler_aarch64.hpp"

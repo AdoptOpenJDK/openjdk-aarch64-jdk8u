@@ -37,8 +37,8 @@
 #include "opto/runtime.hpp"
 #include "opto/subnode.hpp"
 #if INCLUDE_ALL_GCS
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
-#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahSupport.hpp"
 #endif
 
 // Portions of code courtesy of Clifford Click
