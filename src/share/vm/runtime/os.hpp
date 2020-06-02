@@ -54,6 +54,7 @@
 
 class AgentLibrary;
 class methodHandle;
+class instanceKlassHandle;
 
 // os defines the interface to operating system; this includes traditional
 // OS services (time, I/O) as well as other functionality with system-
