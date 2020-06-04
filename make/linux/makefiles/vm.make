@@ -168,6 +168,7 @@ CORE_PATHS+=$(GENERATED)/jvmtifiles $(GENERATED)/jfrfiles
 
 COMPILER1_PATHS := $(call altsrc,$(HS_COMMON_SRC)/share/vm/c1)
 COMPILER1_PATHS += $(HS_COMMON_SRC)/share/vm/c1
+COMPILER1_PATHS += $(HS_COMMON_SRC)/share/vm/gc_implementation/shenandoah/c1
 
 COMPILER2_PATHS := $(call altsrc,$(HS_COMMON_SRC)/share/vm/opto)
 COMPILER2_PATHS += $(call altsrc,$(HS_COMMON_SRC)/share/vm/libadt)

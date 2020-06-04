@@ -54,7 +54,7 @@
 # include "adfiles/ad_ppc_64.hpp"
 #endif
 #if INCLUDE_ALL_GCS
-#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahSupport.hpp"
 #endif
 
 OptoReg::Name OptoReg::c_frame_pointer;

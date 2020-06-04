@@ -43,9 +43,9 @@
 #include "runtime/sharedRuntime.hpp"
 #include "utilities/macros.hpp"
 #if INCLUDE_ALL_GCS
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
-#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahSupport.hpp"
 #endif
 
 class LibraryIntrinsic : public InlineCallGenerator {

@@ -33,10 +33,10 @@
 #include "utilities/macros.hpp"
 
 #ifdef COMPILER1
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
+#include "gc_implementation/shenandoah/c1/shenandoahBarrierSetC1.hpp"
 #endif
 #ifdef COMPILER2
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahBarrierSetC2.hpp"
 #endif
 
 #if defined(TARGET_ARCH_aarch64)

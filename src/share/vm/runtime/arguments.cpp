@@ -1875,21 +1875,6 @@ void Arguments::set_shenandoah_gc_flags() {
 #endif // COMPILER2
 
 #if INCLUDE_ALL_GCS
-  if (AlwaysPreTouch) {
-    // Shenandoah handles pre-touch on its own. It does not let the
-    // generic storage code to do the pre-touch before Shenandoah has
-    // a chance to do it on its own.
-    FLAG_SET_DEFAULT(AlwaysPreTouch, false);
-    FLAG_SET_DEFAULT(ShenandoahAlwaysPreTouch, true);
-  }
-
-  if (ShenandoahAlwaysPreTouch) {
-    if (!FLAG_IS_DEFAULT(ShenandoahUncommit)) {
-      warning("AlwaysPreTouch is enabled, disabling ShenandoahUncommit");
-    }
-    FLAG_SET_DEFAULT(ShenandoahUncommit, false);
-  }
-
   if ((InitialHeapSize == MaxHeapSize) && ShenandoahUncommit) {
     if (PrintGC) {
       tty->print_cr("Min heap equals to max heap, disabling ShenandoahUncommit");
@@ -2348,15 +2333,6 @@ void check_gclog_consistency() {
   if (FLAG_IS_DEFAULT(LogEventsBufferEntries)) {
     FLAG_SET_DEFAULT(LogEventsBufferEntries, 250);
   }
-
-#if INCLUDE_ALL_GCS
-  if (AlwaysPreTouch || ShenandoahAlwaysPreTouch) {
-    if (!FLAG_IS_DEFAULT(ShenandoahUncommitDelay)) {
-      warning("AlwaysPreTouch is enabled, disabling ShenandoahUncommitDelay");
-    }
-    FLAG_SET_DEFAULT(ShenandoahUncommitDelay, max_uintx);
-  }
-#endif
 }
 
 // This function is called for -Xloggc:<filename>, it can be used

@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef SHARE_VM_GC_IMPLEMENTATION_SHARED_PARALLELCLEANING_HPP
-#define SHARE_VM_GC_IMPLEMENTATION_SHARED_PARALLELCLEANING_HPP
+#ifndef SHARE_VM_GC_IMPLEMENTATION_SHENANDOAH_SHENANDOAHPARALLELCLEANING_HPP
+#define SHARE_VM_GC_IMPLEMENTATION_SHENANDOAH_SHENANDOAHPARALLELCLEANING_HPP
 
 #include "classfile/metadataOnStackMark.hpp"
 #include "classfile/symbolTable.hpp"
@@ -32,7 +32,7 @@
 #include "memory/resourceArea.hpp"
 #include "utilities/workgroup.hpp"
 
-class StringSymbolTableUnlinkTask : public AbstractGangTask {
+class ShenandoahStringSymbolTableUnlinkTask : public AbstractGangTask {
 private:
   BoolObjectClosure* _is_alive;
   int _initial_string_table_size;
@@ -48,7 +48,7 @@ private:
 
   bool _do_in_parallel;
 public:
-  StringSymbolTableUnlinkTask(BoolObjectClosure* is_alive, bool process_strings, bool process_symbols) :
+  ShenandoahStringSymbolTableUnlinkTask(BoolObjectClosure* is_alive, bool process_strings, bool process_symbols) :
     AbstractGangTask("String/Symbol Unlinking"),
     _is_alive(is_alive),
     _do_in_parallel(Universe::heap()->use_parallel_gc_threads()),
@@ -65,18 +65,18 @@ public:
     }
   }
 
-  ~StringSymbolTableUnlinkTask() {
+  ~ShenandoahStringSymbolTableUnlinkTask() {
     guarantee(!_process_strings || !_do_in_parallel || StringTable::parallel_claimed_index() >= _initial_string_table_size,
-              err_msg("claim value "INT32_FORMAT" after unlink less than initial string table size "INT32_FORMAT,
+              err_msg("claim value " INT32_FORMAT " after unlink less than initial string table size " INT32_FORMAT,
                       StringTable::parallel_claimed_index(), _initial_string_table_size));
     guarantee(!_process_symbols || !_do_in_parallel || SymbolTable::parallel_claimed_index() >= _initial_symbol_table_size,
-              err_msg("claim value "INT32_FORMAT" after unlink less than initial symbol table size "INT32_FORMAT,
+              err_msg("claim value " INT32_FORMAT " after unlink less than initial symbol table size " INT32_FORMAT,
                       SymbolTable::parallel_claimed_index(), _initial_symbol_table_size));
 
     if (G1TraceStringSymbolTableScrubbing) {
       gclog_or_tty->print_cr("Cleaned string and symbol table, "
-                             "strings: "SIZE_FORMAT" processed, "SIZE_FORMAT" removed, "
-                             "symbols: "SIZE_FORMAT" processed, "SIZE_FORMAT" removed",
+                             "strings: " SIZE_FORMAT " processed, " SIZE_FORMAT " removed, "
+                             "symbols: " SIZE_FORMAT " processed, " SIZE_FORMAT " removed",
                              strings_processed(), strings_removed(),
                              symbols_processed(), symbols_removed());
     }
@@ -115,7 +115,7 @@ public:
   size_t symbols_removed()   const { return (size_t)_symbols_removed; }
 };
 
-class CodeCacheUnloadingTask VALUE_OBJ_CLASS_SPEC {
+class ShenandoahCodeCacheUnloadingTask VALUE_OBJ_CLASS_SPEC {
 private:
   static Monitor* _lock;
 
@@ -132,7 +132,7 @@ private:
   volatile uint     _num_entered_barrier;
 
  public:
-  CodeCacheUnloadingTask(uint num_workers, BoolObjectClosure* is_alive, bool unloading_occurred) :
+  ShenandoahCodeCacheUnloadingTask(uint num_workers, BoolObjectClosure* is_alive, bool unloading_occurred) :
       _is_alive(is_alive),
       _unloading_occurred(unloading_occurred),
       _num_workers(num_workers),
@@ -146,7 +146,7 @@ private:
     _claimed_nmethod = (volatile nmethod*)_first_nmethod;
   }
 
-  ~CodeCacheUnloadingTask() {
+  ~ShenandoahCodeCacheUnloadingTask() {
     CodeCache::verify_clean_inline_caches();
 
     CodeCache::set_needs_cache_clean(false);
@@ -284,13 +284,13 @@ private:
   }
 };
 
-class KlassCleaningTask : public StackObj {
+class ShenandoahKlassCleaningTask : public StackObj {
   BoolObjectClosure*                      _is_alive;
   volatile jint                           _clean_klass_tree_claimed;
   ClassLoaderDataGraphKlassIteratorAtomic _klass_iterator;
 
  public:
-  KlassCleaningTask(BoolObjectClosure* is_alive) :
+  ShenandoahKlassCleaningTask(BoolObjectClosure* is_alive) :
       _is_alive(is_alive),
       _clean_klass_tree_claimed(0),
       _klass_iterator() {
@@ -341,15 +341,15 @@ public:
 };
 
 // To minimize the remark pause times, the tasks below are done in parallel.
-class ParallelCleaningTask : public AbstractGangTask {
+class ShenandoahParallelCleaningTask : public AbstractGangTask {
 private:
-  StringSymbolTableUnlinkTask _string_symbol_task;
-  CodeCacheUnloadingTask      _code_cache_task;
-  KlassCleaningTask           _klass_cleaning_task;
+  ShenandoahStringSymbolTableUnlinkTask _string_symbol_task;
+  ShenandoahCodeCacheUnloadingTask      _code_cache_task;
+  ShenandoahKlassCleaningTask           _klass_cleaning_task;
 
 public:
   // The constructor is run in the VMThread.
-  ParallelCleaningTask(BoolObjectClosure* is_alive, bool process_strings, bool process_symbols, uint num_workers, bool unloading_occurred) :
+  ShenandoahParallelCleaningTask(BoolObjectClosure* is_alive, bool process_strings, bool process_symbols, uint num_workers, bool unloading_occurred) :
       AbstractGangTask("Parallel Cleaning"),
       _string_symbol_task(is_alive, process_strings, process_symbols),
       _code_cache_task(num_workers, is_alive, unloading_occurred),
@@ -390,4 +390,4 @@ public:
 
 };
 
-#endif // SHARE_VM_GC_IMPLEMENTATION_SHARED_PARALLELCLEANING_HPP
+#endif // SHARE_VM_GC_IMPLEMENTATION_SHENANDOAH_SHENANDOAHPARALLELCLEANING_HPP

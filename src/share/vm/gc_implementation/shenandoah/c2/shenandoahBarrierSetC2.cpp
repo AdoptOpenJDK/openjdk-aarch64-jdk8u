@@ -23,9 +23,9 @@
 
 #include "precompiled.hpp"
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
-#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahSupport.hpp"
 #include "opto/type.hpp"
 #include "runtime/thread.hpp"
 

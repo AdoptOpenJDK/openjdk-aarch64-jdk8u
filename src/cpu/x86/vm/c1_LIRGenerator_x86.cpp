@@ -44,7 +44,7 @@
 #endif
 
 #if INCLUDE_ALL_GCS
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC1.hpp"
+#include "gc_implementation/shenandoah/c1/shenandoahBarrierSetC1.hpp"
 #endif
 
 // Item will be loaded into a byte register; Intel only

@@ -23,6 +23,6 @@
  */
 
 #include "precompiled.hpp"
-#include "gc_implementation/shared/parallelCleaning.hpp"
+#include "gc_implementation/shenandoah/shenandoahParallelCleaning.hpp"
 
-Monitor* CodeCacheUnloadingTask::_lock = new Monitor(Mutex::leaf, "Code Cache Unload lock");
+Monitor* ShenandoahCodeCacheUnloadingTask::_lock = new Monitor(Mutex::leaf, "Code Cache Unload lock");

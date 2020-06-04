@@ -23,12 +23,12 @@
 
 #include "precompiled.hpp"
 
-#include "gc_implementation/shenandoah/shenandoahSupport.hpp"
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
 #include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahSupport.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahBarrierSetC2.hpp"
 #include "opto/block.hpp"
 #include "opto/callnode.hpp"
 #include "opto/phaseX.hpp"

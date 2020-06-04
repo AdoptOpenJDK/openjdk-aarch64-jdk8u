@@ -41,7 +41,7 @@
 #include "runtime/sharedRuntime.hpp"
 
 #if INCLUDE_ALL_GCS
-#include "gc_implementation/shenandoah/shenandoahBarrierSetC2.hpp"
+#include "gc_implementation/shenandoah/c2/shenandoahBarrierSetC2.hpp"
 #endif
 
 extern int explicit_null_checks_inserted,
