@@ -201,6 +201,7 @@ ShenandoahRootEvacuator::ShenandoahRootEvacuator(ShenandoahPhaseTimings::Phase p
 ShenandoahHeapIterationRootScanner::ShenandoahHeapIterationRootScanner() :
   ShenandoahRootProcessor(ShenandoahPhaseTimings::heap_iteration_roots),
   _serial_roots(ShenandoahPhaseTimings::heap_iteration_roots),
+  _dict_roots(ShenandoahPhaseTimings::heap_iteration_roots),
   _thread_roots(ShenandoahPhaseTimings::heap_iteration_roots),
   _cld_roots(ShenandoahPhaseTimings::heap_iteration_roots),
   _weak_roots(ShenandoahPhaseTimings::heap_iteration_roots),
@@ -217,6 +218,7 @@ ShenandoahHeapIterationRootScanner::ShenandoahHeapIterationRootScanner() :
    ResourceMark rm;
 
    _serial_roots.oops_do(oops, 0);
+   _dict_roots.oops_do(oops, 0);
    _cld_roots.cld_do(&clds, 0);
    _thread_roots.oops_do(oops, NULL, NULL, 0);
    _code_roots.code_blobs_do(&code, 0);

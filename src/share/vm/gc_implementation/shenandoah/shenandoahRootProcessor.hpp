@@ -187,6 +187,7 @@ typedef ShenandoahRootScanner<ShenandoahCsetCodeRootsIterator> ShenandoahCSetRoo
 class ShenandoahHeapIterationRootScanner : public ShenandoahRootProcessor {
 private:
   ShenandoahSerialRoots                                    _serial_roots;
+  ShenandoahSystemDictionaryRoots                          _dict_roots;
   ShenandoahThreadRoots                                    _thread_roots;
   ShenandoahClassLoaderDataRoots                           _cld_roots;
   ShenandoahWeakRoots                                      _weak_roots;
