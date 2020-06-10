@@ -44,6 +44,7 @@ private:
   ShenandoahHeap* _heap;
   BinaryMagnitudeSeq _delays;
   TruncatedSeq* _progress_history;
+  Monitor* _wait_monitor;
 
   volatile intptr_t _epoch;
   volatile jdouble _tax_rate;
@@ -58,6 +59,7 @@ public:
   ShenandoahPacer(ShenandoahHeap* heap) :
           _heap(heap),
           _progress_history(new TruncatedSeq(5)),
+          _wait_monitor(new Monitor(Mutex::leaf, "_wait_monitor", true)),
           _epoch(0),
           _tax_rate(1),
           _budget(0),
@@ -93,6 +95,9 @@ private:
   void restart_with(jlong non_taxable_bytes, jdouble tax_rate);
 
   size_t update_and_get_progress_history();
+
+  void wait(long time_ms);
+  void notify_waiters();
 };
 
 #endif //SHARE_VM_GC_SHENANDOAH_SHENANDOAHPACER_HPP
