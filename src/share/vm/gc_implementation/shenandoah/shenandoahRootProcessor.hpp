@@ -32,6 +32,7 @@
 #include "memory/allocation.hpp"
 #include "memory/iterator.hpp"
 #include "memory/sharedHeap.hpp"
+#include "utilities/macros.hpp"
 #include "utilities/workgroup.hpp"
 
 
@@ -107,7 +108,8 @@ public:
 
 class ShenandoahWeakRoots {
 private:
-  ShenandoahWeakRoot  _jni_weak_roots;
+  JFR_ONLY(ShenandoahWeakRoot _jfr_weak_roots;)
+  ShenandoahWeakRoot          _jni_weak_roots;
 public:
   ShenandoahWeakRoots(ShenandoahPhaseTimings::Phase phase);
   void oops_do(OopClosure* keep_alive, uint worker_id);
