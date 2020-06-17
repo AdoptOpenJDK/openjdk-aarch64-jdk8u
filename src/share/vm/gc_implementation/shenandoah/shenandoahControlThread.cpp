@@ -70,6 +70,9 @@ ShenandoahControlThread::ShenandoahControlThread() :
 
   _periodic_task.enroll();
   _periodic_satb_flush_task.enroll();
+  if (ShenandoahPacing) {
+    _periodic_pacer_notify_task.enroll();
+  }
 }
 
 ShenandoahControlThread::~ShenandoahControlThread() {
@@ -83,6 +86,11 @@ void ShenandoahPeriodicTask::task() {
 
 void ShenandoahPeriodicSATBFlushTask::task() {
   ShenandoahHeap::heap()->force_satb_flush_all_threads();
+}
+
+void ShenandoahPeriodicPacerNotify::task() {
+  assert(ShenandoahPacing, "Should not be here otherwise");
+  ShenandoahHeap::heap()->pacer()->notify_waiters();
 }
 
 void ShenandoahControlThread::run() {
