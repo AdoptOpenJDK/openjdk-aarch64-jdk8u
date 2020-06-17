@@ -40,21 +40,40 @@
 /*
  * @test TestChurnNotifications
  * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive
  *      -Dprecise=false
  *      TestChurnNotifications
+ */
+
+/*
+ * @test TestChurnNotifications
+ * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=adaptive
  *      -Dprecise=false
  *      TestChurnNotifications
+ */
+
+/*
+ * @test TestChurnNotifications
+ * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=static
  *      -Dprecise=false
  *      TestChurnNotifications
+ */
+
+/*
+ * @test TestChurnNotifications
+ * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=compact
@@ -65,6 +84,7 @@
 /*
  * @test TestChurnNotifications
  * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCMode=iu -XX:ShenandoahGCHeuristics=aggressive

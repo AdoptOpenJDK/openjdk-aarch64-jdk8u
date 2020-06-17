@@ -45,14 +45,32 @@
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=aggressive
  *      TestPauseNotifications
+ */
+
+/*
+ * @test TestPauseNotifications
+ * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=adaptive
  *      TestPauseNotifications
+ */
+
+/*
+ * @test TestPauseNotifications
+ * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=static
  *      TestPauseNotifications
+ */
+
+/*
+ * @test TestPauseNotifications
+ * @summary Check that MX notifications are reported for all cycles
+ * @key gc
  *
  * @run main/othervm -Xmx128m -XX:+UnlockDiagnosticVMOptions -XX:+UnlockExperimentalVMOptions
  *      -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=compact
