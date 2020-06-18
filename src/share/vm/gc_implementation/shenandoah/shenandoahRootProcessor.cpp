@@ -42,6 +42,10 @@
 #include "runtime/thread.hpp"
 #include "services/management.hpp"
 
+#if INCLUDE_JFR
+#include "jfr/leakprofiler/leakProfiler.hpp"
+#endif
+
 ShenandoahSerialRoot::ShenandoahSerialRoot(ShenandoahSerialRoot::OopsDo oops_do, ShenandoahPhaseTimings::Phase phase, ShenandoahPhaseTimings::ParPhase par_phase) :
   _claimed(0), _oops_do(oops_do), _phase(phase), _par_phase(par_phase) {
 }
@@ -135,14 +139,19 @@ void ShenandoahWeakRoot::weak_oops_do(BoolObjectClosure* is_alive, OopClosure* k
 }
 
 ShenandoahWeakRoots::ShenandoahWeakRoots(ShenandoahPhaseTimings::Phase phase) :
+#if INCLUDE_JFR
+  _jfr_weak_roots(phase, ShenandoahPhaseTimings::JFRWeakRoots, &LeakProfiler::oops_do),
+#endif // INCLUDE_JFR
   _jni_weak_roots(phase, ShenandoahPhaseTimings::JNIWeakRoots, &JNIHandles::weak_oops_do) {
 }
 
 void ShenandoahWeakRoots::oops_do(OopClosure* keep_alive, uint worker_id) {
+  JFR_ONLY(_jfr_weak_roots.oops_do(keep_alive, worker_id);)
   _jni_weak_roots.oops_do(keep_alive, worker_id);
 }
 
 void ShenandoahWeakRoots::weak_oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive, uint worker_id) {
+  JFR_ONLY(_jfr_weak_roots.weak_oops_do(is_alive, keep_alive, worker_id);)
   _jni_weak_roots.weak_oops_do(is_alive, keep_alive, worker_id);
 }
 
@@ -201,6 +210,7 @@ ShenandoahRootEvacuator::ShenandoahRootEvacuator(ShenandoahPhaseTimings::Phase p
 ShenandoahHeapIterationRootScanner::ShenandoahHeapIterationRootScanner() :
   ShenandoahRootProcessor(ShenandoahPhaseTimings::heap_iteration_roots),
   _serial_roots(ShenandoahPhaseTimings::heap_iteration_roots),
+  _dict_roots(ShenandoahPhaseTimings::heap_iteration_roots),
   _thread_roots(ShenandoahPhaseTimings::heap_iteration_roots),
   _cld_roots(ShenandoahPhaseTimings::heap_iteration_roots),
   _weak_roots(ShenandoahPhaseTimings::heap_iteration_roots),
@@ -217,6 +227,7 @@ ShenandoahHeapIterationRootScanner::ShenandoahHeapIterationRootScanner() :
    ResourceMark rm;
 
    _serial_roots.oops_do(oops, 0);
+   _dict_roots.oops_do(oops, 0);
    _cld_roots.cld_do(&clds, 0);
    _thread_roots.oops_do(oops, NULL, NULL, 0);
    _code_roots.code_blobs_do(&code, 0);
