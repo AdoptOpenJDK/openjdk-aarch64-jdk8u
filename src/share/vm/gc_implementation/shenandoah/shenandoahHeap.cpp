@@ -1873,6 +1873,11 @@ void ShenandoahHeap::unload_classes_and_cleanup_tables(bool full_gc) {
   ShenandoahIsAliveSelector alive;
   BoolObjectClosure* is_alive = alive.is_alive_closure();
 
+  // Cleaning of klasses depends on correct information from MetadataMarkOnStack. The CodeCache::mark_on_stack
+  // part is too slow to be done serially, so it is handled during the ShenandoahParallelCleaning phase.
+  // Defer the cleaning until we have complete on_stack data.
+  MetadataOnStackMark md_on_stack(false /* Don't visit the code cache at this point */);
+
   bool purged_class;
 
   // Unload classes and purge SystemDictionary.
@@ -1881,7 +1886,7 @@ void ShenandoahHeap::unload_classes_and_cleanup_tables(bool full_gc) {
                             ShenandoahPhaseTimings::full_gc_purge_class_unload :
                             ShenandoahPhaseTimings::purge_class_unload);
     purged_class = SystemDictionary::do_unloading(is_alive,
-                                                  full_gc /* do_cleaning*/ );
+                                                  false /* Defer klass cleaning */);
   }
   {
     ShenandoahGCPhase phase(full_gc ?
@@ -1890,6 +1895,13 @@ void ShenandoahHeap::unload_classes_and_cleanup_tables(bool full_gc) {
     uint active = _workers->active_workers();
     ShenandoahParallelCleaningTask unlink_task(is_alive, true, true, active, purged_class);
     _workers->run_task(&unlink_task);
+  }
+
+  {
+    ShenandoahGCPhase phase(full_gc ?
+                            ShenandoahPhaseTimings::full_gc_purge_metadata :
+                            ShenandoahPhaseTimings::purge_metadata);
+    ClassLoaderDataGraph::free_deallocate_lists();
   }
 
   if (ShenandoahStringDedup::is_enabled()) {

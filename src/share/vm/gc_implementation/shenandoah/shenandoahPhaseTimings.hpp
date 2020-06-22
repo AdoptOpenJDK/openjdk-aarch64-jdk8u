@@ -86,6 +86,7 @@ class outputStream;
   f(purge,                                          "  System Purge")                  \
   f(purge_class_unload,                             "    Unload Classes")              \
   f(purge_par,                                      "    Parallel Cleanup")            \
+  f(purge_metadata,                                 "    Deallocate Metadata")         \
   f(purge_cldg,                                     "    CLDG")                        \
   f(purge_string_dedup,                             "    String Dedup")                \
   f(final_update_region_states,                     "  Update Region States")          \
@@ -139,6 +140,7 @@ class outputStream;
   f(full_gc_purge,                                  "    System Purge")                \
   f(full_gc_purge_class_unload,                     "      Unload Classes")            \
   f(full_gc_purge_par,                              "    Parallel Cleanup")            \
+  f(full_gc_purge_metadata,                         "    Deallocate Metadata")         \
   f(full_gc_purge_cldg,                             "    CLDG")                        \
   f(full_gc_purge_string_dedup,                      "    String Dedup")               \
   f(full_gc_calculate_addresses,                    "  Calculate Addresses")           \
