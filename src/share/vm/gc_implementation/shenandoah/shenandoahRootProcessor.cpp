@@ -311,7 +311,18 @@ void ShenandoahRootUpdater::roots_do(uint worker_id, BoolObjectClosure* is_alive
     _code_roots.code_blobs_do(&update_blobs, worker_id);
   }
 
-  _weak_roots.weak_oops_do(is_alive, keep_alive, worker_id);
+  if (ShenandoahHeap::heap()->is_full_gc_in_progress()) {
+    // In JDK 8, the JNI weak oops processor skips applying keep_alive to the roots and
+    // even clears them if is_alive replies "false". This is the case for pre-Full-GC
+    // root updates. Work that around by pretending the weak roots are always alive for
+    // this kind of fixup. This is symptom of a larger problem (see JDK-8248041), but
+    // for 8u it is catastrophic due to clearing of the weak roots.
+    AlwaysTrueClosure always_true;
+    _weak_roots.weak_oops_do(&always_true, keep_alive, worker_id);
+  } else {
+    _weak_roots.weak_oops_do(is_alive, keep_alive, worker_id);
+  }
+
   _dedup_roots.oops_do(keep_alive, worker_id);
   _string_table_roots.oops_do(keep_alive, worker_id);
 }
