@@ -1114,13 +1114,6 @@ void ShenandoahHeap::print_tracing_info() const {
 
     out->cr();
     out->cr();
-
-    if (ShenandoahPacing) {
-      pacer()->print_on(out);
-    }
-
-    out->cr();
-    out->cr();
   }
 }
 
