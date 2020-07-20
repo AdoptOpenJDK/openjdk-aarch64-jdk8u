@@ -81,7 +81,7 @@ public class TestClassUnloadingArguments {
 
     public static void testShenandoah() throws Exception {
         testWith("Shenandoah GC should have class unloading enabled",
-                true, false,
+                true, true,
                 "-XX:+UnlockExperimentalVMOptions",
                 "-XX:+UseShenandoahGC");
 
