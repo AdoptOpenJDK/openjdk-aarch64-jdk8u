@@ -213,7 +213,7 @@ bool ShenandoahPacer::claim_for_alloc(size_t words, bool force) {
   intptr_t new_val = 0;
   do {
     cur = OrderAccess::load_acquire(&_budget);
-    if (cur < tax) {
+    if (cur < tax && !force) {
       // Progress depleted, alas.
       return false;
     }
