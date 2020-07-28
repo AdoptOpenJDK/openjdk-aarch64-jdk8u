@@ -174,12 +174,12 @@ void ShenandoahPacer::setup_for_reset() {
 size_t ShenandoahPacer::update_and_get_progress_history() {
   if (_progress == -1) {
     // First initialization, report some prior
-    Atomic::store((intptr_t)PACING_PROGRESS_ZERO, &_progress);
+    Atomic::store_ptr((intptr_t)PACING_PROGRESS_ZERO, &_progress);
     return (size_t) (_heap->max_capacity() * 0.1);
   } else {
     // Record history, and reply historical data
     _progress_history->add(_progress);
-    Atomic::store((intptr_t)PACING_PROGRESS_ZERO, &_progress);
+    Atomic::store_ptr((intptr_t)PACING_PROGRESS_ZERO, &_progress);
     return (size_t) (_progress_history->avg() * HeapWordSize);
   }
 }
@@ -191,7 +191,7 @@ void ShenandoahPacer::restart_with(jlong non_taxable_bytes, jdouble tax_rate) {
     intptr_t cur;
     do {
       cur = OrderAccess::load_acquire(&_budget);
-    } while (Atomic::cmpxchg(initial, &_budget, cur) != cur);
+    } while (Atomic::cmpxchg_ptr(initial, &_budget, cur) != cur);
   }
 
   OrderAccess::release_store(&_tax_rate, tax_rate);
@@ -201,7 +201,7 @@ void ShenandoahPacer::restart_with(jlong non_taxable_bytes, jdouble tax_rate) {
     do {
       cur = OrderAccess::load_acquire(&_epoch);
       val = cur + 1;
-    } while (Atomic::cmpxchg(val, &_epoch, cur) != cur);
+    } while (Atomic::cmpxchg_ptr(val, &_epoch, cur) != cur);
   }
 
   // Shake up stalled waiters after budget update.
@@ -222,7 +222,7 @@ bool ShenandoahPacer::claim_for_alloc(size_t words, bool force) {
       return false;
     }
     new_val = cur - tax;
-  } while (Atomic::cmpxchg(new_val, &_budget, cur) != cur);
+  } while (Atomic::cmpxchg_ptr(new_val, &_budget, cur) != cur);
   return true;
 }
 
@@ -278,7 +278,7 @@ void ShenandoahPacer::pace_for_alloc(size_t words) {
     double end = os::elapsedTime();
     total_ms = (size_t)((end - start) * 1000);
 
-    if (total_ms > max_ms || Atomic::load(&_budget) >= 0) {
+    if (total_ms > max_ms || OrderAccess::load_ptr_acquire(&_budget) >= 0) {
       // Exiting if either:
       //  a) Spent local time budget to wait for enough GC progress.
       //     Breaking out and allocating anyway, which may mean we outpace GC,
