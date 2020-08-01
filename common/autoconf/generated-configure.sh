@@ -1013,7 +1013,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -1256,7 +1255,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1509,15 +1507,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1655,7 +1644,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1808,7 +1797,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1857,7 +1845,7 @@ Optional Features:
                           run the Queens test after Hotspot build [disabled]
   --enable-unlimited-crypto
                           Enable unlimited crypto policy [disabled]
-  --enable-jfr            Enable Java Flight Recorder support [disabled]
+  --disable-jfr           Disable Java Flight Recorder support [enabled]
   --disable-debug-symbols disable generation of debug symbols [enabled]
   --disable-zip-debug-info
                           disable zipping of debug-info files [enabled]
@@ -4394,7 +4382,7 @@ VS_SDK_PLATFORM_NAME_2017=
 #CUSTOM_AUTOCONF_INCLUDE
 
 # Do not change or remove the following line, it is needed for consistency checks:
-DATE_WHEN_GENERATED=1589212500
+DATE_WHEN_GENERATED=1596229451
 
 ###############################################################################
 #
@@ -19819,8 +19807,8 @@ fi
   #
   # Enable or disable JFR
   #
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build jfr" >&5
-$as_echo_n "checking whether to build jfr... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build JFR" >&5
+$as_echo_n "checking whether to build JFR... " >&6; }
   # Check whether --enable-jfr was given.
 if test "${enable_jfr+set}" = set; then :
   enableval=$enable_jfr;
@@ -19828,18 +19816,26 @@ else
   enable_jfr=auto
 fi
 
-  if test "x$enable_jfr" = "xno" -o "x$enable_jfr" = "xauto"; then
+  if test "x$enable_jfr" = "xno"; then
     ENABLE_JFR=false
-  elif test "x$enable_jfr" = "xyes" ; then
+  elif test "x$enable_jfr" = "xyes" -o "x$enable_jfr" = "xauto"; then
     if test "x$JVM_VARIANT_MINIMAL1" = "xtrue" -o "x$JVM_VARIANT_ZERO" = "xtrue"; then
-      as_fn_error $? "cannot enable JFR on minimal1 VM or zero build" "$LINENO" 5
+      if test "x$enable_jfr" = "xyes"; then
+        as_fn_error $? "cannot enable JFR on minimal1 VM or zero build" "$LINENO" 5
+      else
+        ENABLE_JFR=false
+      fi
     elif test "x$OPENJDK_TARGET_OS" = xaix; then
-      as_fn_error $? "AIX does not support JFR" "$LINENO" 5
+      if test "x$enable_jfr" = "xyes"; then
+        as_fn_error $? "AIX does not support JFR" "$LINENO" 5
+      else
+        ENABLE_JFR=false
+      fi
     else
       ENABLE_JFR=true
     fi
   else
-    as_fn_error $? "--enable-jfr must either be set to yes or no" "$LINENO" 5
+    as_fn_error $? "--enable-jfr must be set to either yes or no" "$LINENO" 5
   fi
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ENABLE_JFR" >&5
 $as_echo "$ENABLE_JFR" >&6; }
