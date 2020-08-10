@@ -56,13 +56,7 @@ ShenandoahControlThread::ShenandoahControlThread() :
 
   reset_gc_id();
   if (os::create_thread(this, os::cgc_thread)) {
-    int native_prio;
-    if (ShenandoahCriticalControlThreadPriority) {
-      native_prio = os::java_to_os_priority[CriticalPriority];
-    } else {
-      native_prio = os::java_to_os_priority[NearMaxPriority];
-    }
-    os::set_native_priority(this, native_prio);
+    os::set_native_priority(this, os::java_to_os_priority[NearMaxPriority]);
     if (!_should_terminate && !DisableStartThread) {
       os::start_thread(this);
     }
