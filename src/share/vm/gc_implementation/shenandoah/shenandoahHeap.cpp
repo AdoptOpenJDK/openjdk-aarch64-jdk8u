@@ -64,20 +64,6 @@
 #include "services/mallocTracker.hpp"
 
 ShenandoahHeap* ShenandoahHeap::_heap = NULL;
-#ifdef ASSERT
-
-template <class T>
-void ShenandoahAssertToSpaceClosure::do_oop_nv(T* p) {
-  T o = oopDesc::load_heap_oop(p);
-  if (! oopDesc::is_null(o)) {
-    oop obj = oopDesc::decode_heap_oop_not_null(o);
-    shenandoah_assert_not_forwarded(p, obj);
-  }
-}
-
-void ShenandoahAssertToSpaceClosure::do_oop(narrowOop* p) { do_oop_nv(p); }
-void ShenandoahAssertToSpaceClosure::do_oop(oop* p)       { do_oop_nv(p); }
-#endif
 
 class ShenandoahPretouchHeapTask : public AbstractGangTask {
 private:
