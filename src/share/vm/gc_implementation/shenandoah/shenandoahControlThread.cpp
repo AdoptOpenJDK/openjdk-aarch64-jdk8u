@@ -283,7 +283,7 @@ void ShenandoahControlThread::run() {
       }
 
       // Print GC stats for current cycle
-      if (PrintGC) {
+      if (PrintGCDetails) {
         ResourceMark rm;
         heap->phase_timings()->print_cycle_on(gclog_or_tty);
         if (ShenandoahPacing) {
