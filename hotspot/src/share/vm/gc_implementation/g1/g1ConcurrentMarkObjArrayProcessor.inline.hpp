@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,20 +22,15 @@
  *
  */
 
-/*
- * @test TestCriticalControlThreadPriority
- * @summary Check that ShenandoahCriticalControlThreadPriority works
- * @bug 8217343
- * @key gc
- *
- * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:-ShenandoahCriticalControlThreadPriority -Xmx1g TestCriticalControlThreadPriority
- * @run main/othervm -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:+ShenandoahCriticalControlThreadPriority -Xmx1g TestCriticalControlThreadPriority
- */
+#ifndef SHARE_VM_GC_G1_G1CONCURRENTMARKOBJARRAYPROCESSOR_INLINE_HPP
+#define SHARE_VM_GC_G1_G1CONCURRENTMARKOBJARRAYPROCESSOR_INLINE_HPP
 
-public class TestCriticalControlThreadPriority {
+#include "oops/oop.inline.hpp"
+#include "oops/oopsHierarchy.hpp"
+#include "runtime/globals.hpp"
 
-    public static void main(String[] args) throws Exception {
-        // checking the initialization before entering main()
-    }
-
+inline bool G1CMObjArrayProcessor::should_be_sliced(oop obj) {
+  return obj->is_objArray() && ((size_t)((objArrayOop)obj)->size()) >= 2 * ObjArrayMarkingStride;
 }
+
+#endif /* SHARE_VM_GC_G1_G1CONCURRENTMARKOBJARRAYPROCESSOR_INLINE_HPP */

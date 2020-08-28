@@ -310,6 +310,7 @@ Thread::Thread() {
   _gc_state = _gc_state_global;
   _worker_id = (uint)(-1); // Actually, ShenandoahWorkerSession::INVALID_WORKER_ID, but avoid dependencies.
   _force_satb_flush = false;
+  _paced_time = 0;
 #endif
 }
 
@@ -3509,7 +3510,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     return status;
   }
 
-  JFR_ONLY(Jfr::on_create_vm_1();)
+  JFR_ONLY(Jfr::on_vm_init();)
 
   // Should be done after the heap is fully created
   main_thread->cache_global_variables();
@@ -3560,16 +3561,11 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     ShouldNotReachHere();
   }
 
-#if !INCLUDE_JFR
-  // if JFR is not enabled at the build time keep the original JvmtiExport location
-
   // Always call even when there are not JVMTI environments yet, since environments
   // may be attached late and JVMTI must track phases of VM execution
   JvmtiExport::enter_start_phase();
 
   // Notify JVMTI agents that VM has started (JNI is up) - nop if no agents.
-  JvmtiExport::post_vm_start();
-#endif
 
   {
     TraceTime timer("Initialize java.lang classes", TraceStartupTime);
@@ -3615,19 +3611,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     initialize_class(vmSymbols::java_lang_IllegalMonitorStateException(), CHECK_0);
     initialize_class(vmSymbols::java_lang_IllegalArgumentException(), CHECK_0);
   }
-
-  JFR_ONLY(
-    Jfr::on_create_vm_2();
-
-    // if JFR is enabled at build time the JVMTI needs to be handled only after on_create_vm_2() call
-
-    // Always call even when there are not JVMTI environments yet, since environments
-    // may be attached late and JVMTI must track phases of VM execution
-    JvmtiExport::enter_start_phase();
-
-    // Notify JVMTI agents that VM has started (JNI is up) - nop if no agents.
-    JvmtiExport::post_vm_start();
-  )
 
   // See        : bugid 4211085.
   // Background : the static initializer of java.lang.Compiler tries to read
@@ -3725,7 +3708,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // Notify JVMTI agents that VM initialization is complete - nop if no agents.
   JvmtiExport::post_vm_initialized();
 
-  JFR_ONLY(Jfr::on_create_vm_3();)
+  JFR_ONLY(Jfr::on_vm_start();)
 
   if (CleanChunkPoolAsync) {
     Chunk::start_chunk_pool_cleaner_task();

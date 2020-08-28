@@ -1721,8 +1721,12 @@ Node* GraphKit::load_array_element(Node* ctl, Node* ary, Node* idx, const TypeAr
   if (elembt == T_NARROWOOP) {
     elembt = T_OBJECT; // To satisfy switch in LoadNode::make()
   }
-  assert(elembt != T_OBJECT && elembt != T_ARRAY, "sanity");
   Node* ld = make_load(ctl, adr, elemtype, elembt, arytype, MemNode::unordered);
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC && (elembt == T_OBJECT || elembt == T_ARRAY)) {
+    ld = ShenandoahBarrierSetC2::bsc2()->load_reference_barrier(this, ld);
+  }
+#endif
   return ld;
 }
 
@@ -3884,15 +3888,6 @@ void GraphKit::write_barrier_post(Node* oop_store,
   final_sync(ideal);
 }
 
-static void g1_write_barrier_pre_helper(const GraphKit& kit, Node* adr) {
-  if (UseShenandoahGC && adr != NULL) {
-    Node* c = kit.control();
-    Node* call = c->in(1)->in(1)->in(1)->in(0);
-    assert(call->is_g1_wb_pre_call(), "g1_wb_pre call expected");
-    call->add_req(adr);
-  }
-}
-
 // G1 pre/post barriers
 void GraphKit::g1_write_barrier_pre(bool do_load,
                                     Node* obj,
@@ -4000,7 +3995,15 @@ void GraphKit::g1_write_barrier_pre(bool do_load,
 
   // Final sync IdealKit and GraphKit.
   final_sync(ideal);
-  g1_write_barrier_pre_helper(*this, adr);
+
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC && adr != NULL) {
+    Node* c = control();
+    Node* call = c->in(1)->in(1)->in(1)->in(0);
+    assert(call->is_g1_wb_pre_call(), "g1_wb_pre call expected");
+    call->add_req(adr);
+  }
+#endif
 }
 
 //

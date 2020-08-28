@@ -1240,6 +1240,9 @@ class Compile : public Phase {
 
   // Auxiliary method for randomized fuzzing/stressing
   static bool randomized_select(int count);
+#ifdef ASSERT
+  bool _type_verify_symmetry;
+#endif
 
   void shenandoah_eliminate_g1_wb_pre(Node* call, PhaseIterGVN* igvn);
 };
