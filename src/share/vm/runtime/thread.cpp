@@ -310,6 +310,7 @@ Thread::Thread() {
   _gc_state = _gc_state_global;
   _worker_id = (uint)(-1); // Actually, ShenandoahWorkerSession::INVALID_WORKER_ID, but avoid dependencies.
   _force_satb_flush = false;
+  _paced_time = 0;
 #endif
 }
 
