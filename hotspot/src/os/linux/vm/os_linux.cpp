@@ -95,7 +95,10 @@
 # include <string.h>
 # include <syscall.h>
 # include <sys/sysinfo.h>
-#if !defined(__UCLIBC__) && !defined(__ANDROID__)
+#ifdef __ANDROID__
+// Our own impl
+# include "gnu/libc-version.h"
+#elif !defined(__UCLIBC__)
 # include <gnu/libc-version.h>
 #endif
 # include <sys/ipc.h>
@@ -108,6 +111,12 @@
 # include <sys/ioctl.h>
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
+
+#ifdef __ANDROID__
+# define lseek lseek64
+# define open open64
+# define off_t off64_t
+#endif
 
 #ifndef _GNU_SOURCE
   #define _GNU_SOURCE
@@ -1790,6 +1799,9 @@ bool os::dll_address_to_library_name(address addr, char* buf,
   assert(buf != NULL, "sanity check");
 
   Dl_info dlinfo;
+
+  // Android bionic libc does not have the bug below.
+#ifndef __ANDROID__
   struct _address_to_library_name data;
 
   // There is a bug in old glibc dladdr() implementation that it could resolve
@@ -1808,6 +1820,7 @@ bool os::dll_address_to_library_name(address addr, char* buf,
      if (offset) *offset = addr - data.base;
      return true;
   }
+#endif // !__ANDROID__
   if (dladdr((void*)addr, &dlinfo) != 0) {
     if (dlinfo.dli_fname != NULL) {
       jio_snprintf(buf, buflen, "%s", dlinfo.dli_fname);
@@ -2441,7 +2454,10 @@ void os::jvm_path(char *buf, jint buflen) {
   if (rp == NULL)
     return;
 
+// Try to locate libjvm.so on Android by use available method as below.
+#ifndef __ANDROID__
   if (Arguments::created_by_gamma_launcher()) {
+#endif // !__ANDROID__
     // Support for the gamma launcher.  Typical value for buf is
     // "<JAVA_HOME>/jre/lib/<arch>/<vmtype>/libjvm.so".  If "/jre/lib/" appears at
     // the right place in the string, then assume we are installed in a JDK and
@@ -2491,7 +2507,9 @@ void os::jvm_path(char *buf, jint buflen) {
         }
       }
     }
+#ifndef __ANDROID__
   }
+#endif // !__ANDROID__
 
   strncpy(saved_jvm_path, buf, MAXPATHLEN);
 }
@@ -2987,17 +3005,25 @@ extern "C" JNIEXPORT int fork1() { return fork(); }
 // Handle request to load libnuma symbol version 1.1 (API v1). If it fails
 // load symbol from base version instead.
 void* os::Linux::libnuma_dlsym(void* handle, const char *name) {
+#ifndef __ANDROID__
   void *f = dlvsym(handle, name, "libnuma_1.1");
   if (f == NULL) {
     f = dlsym(handle, name);
   }
   return f;
+#else // __ANDROID__
+  return NULL;
+#endif // !__ANDROID__
 }
 
 // Handle request to load libnuma symbol version 1.2 (API v2) only.
 // Return NULL if the symbol is not defined in this particular version.
 void* os::Linux::libnuma_v2_dlsym(void* handle, const char* name) {
+#ifndef __ANDROID__
   return dlvsym(handle, name, "libnuma_1.2");
+#else // __ANDROID__
+  return NULL;
+#endif // !__ANDROID__
 }
 
 bool os::Linux::libnuma_init() {
@@ -3011,6 +3037,11 @@ bool os::Linux::libnuma_init() {
 
   if (sched_getcpu() != -1) { // Does it work?
     void *handle = dlopen("libnuma.so.1", RTLD_LAZY);
+
+    if (handle == NULL) {
+      handle = dlopen("libnuma.so", RTLD_LAZY);
+    }
+
     if (handle != NULL) {
       set_numa_node_to_cpus(CAST_TO_FN_PTR(numa_node_to_cpus_func_t,
                                            libnuma_dlsym(handle, "numa_node_to_cpus")));
@@ -5895,7 +5926,11 @@ bool os::is_thread_cpu_time_supported() {
 // Linux doesn't yet have a (official) notion of processor sets,
 // so just return the system wide load average.
 int os::loadavg(double loadavg[], int nelem) {
+#ifdef __ANDROID__
+  return -1;
+#else
   return ::getloadavg(loadavg, nelem);
+#endif // !__ANDROID__
 }
 
 void os::pause() {
