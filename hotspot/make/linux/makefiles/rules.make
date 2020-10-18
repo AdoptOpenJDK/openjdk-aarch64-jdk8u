@@ -136,15 +136,23 @@ ifeq    ($(findstring j,$(MFLAGS)),j)
 COMPILE_DONE    = && { echo Done with $<; }
 endif
 
+ifdef LP64
+GENPIC = yes
+endif
+
+ifeq ($(BUILDARCH), aarch32)
+GENPIC = yes
+endif
+
 # Include $(NONPIC_OBJ_FILES) definition
-ifndef LP64
+ifndef GENPIC
 include $(GAMMADIR)/make/pic.make
 endif
 
 include $(GAMMADIR)/make/altsrc.make
 
 # The non-PIC object files are only generated for 32 bit platforms.
-ifdef LP64
+ifdef GENPIC
 %.o: %.cpp
 	@echo Compiling $<
 	$(QUIETLY) $(REMOVE_TARGET)
@@ -163,10 +171,10 @@ endif
 	$(QUIETLY) $(REMOVE_TARGET)
 	$(QUIETLY) $(AS.S) $(DEPFLAGS) -o $@ $< $(COMPILE_DONE)
 
-%.o: %.S
-	@echo Assembling $<
-	$(QUIETLY) $(REMOVE_TARGET)
-	$(COMPILE.CC) -o $@ $< $(COMPILE_DONE)
+# %.o: %.S
+#	@echo Assembling $<
+#	$(QUIETLY) $(REMOVE_TARGET)
+#	$(COMPILE.CC) -o $@ $< $(COMPILE_DONE)
 
 %.s: %.cpp
 	@echo Generating assembly for $<
