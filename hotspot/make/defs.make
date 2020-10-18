@@ -336,7 +336,7 @@ ifneq ($(OSNAME),windows)
   LIBARCH/ppc64   = ppc64
   LIBARCH/zero    = $(ZERO_LIBARCH)
 
-  LP64_ARCH += sparcv9 amd64 ia64 ppc64 aarch32 aarch64 zero
+  LP64_ARCH += sparcv9 amd64 ia64 ppc64 aarch64 zero
 endif
 
 # Required make macro settings for all platforms
