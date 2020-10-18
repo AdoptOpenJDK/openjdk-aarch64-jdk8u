@@ -68,7 +68,7 @@ endif
 # also, we don't build SA on Itanium or zero.
 
 ifneq ($(wildcard $(AGENT_DIR)),)
-ifneq ($(filter-out ia64 zero,$(SRCARCH)),)
+ifneq ($(filter-out aarch32 ia64 zero,$(SRCARCH)),)
   BUILDLIBSAPROC = $(LIBSAPROC)
 endif
 endif
