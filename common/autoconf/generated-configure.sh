@@ -13652,8 +13652,14 @@ test -n "$target_alias" &&
       VAR_CPU_ENDIAN=little
       ;;
     arm*)
-      VAR_CPU=arm
-      VAR_CPU_ARCH=arm
+      VAR_CPU=aarch32
+      VAR_CPU_ARCH=aarch32
+      VAR_CPU_BITS=32
+      VAR_CPU_ENDIAN=little
+      ;;
+    aarch32)
+      VAR_CPU=aarch32
+      VAR_CPU_ARCH=aarch32
       VAR_CPU_BITS=32
       VAR_CPU_ENDIAN=little
       ;;
@@ -13743,6 +13749,11 @@ $as_echo "$OPENJDK_BUILD_OS-$OPENJDK_BUILD_CPU" >&6; }
       VAR_OS=solaris
       VAR_OS_API=posix
       VAR_OS_ENV=solaris
+      ;;
+    *android*)
+      VAR_OS=linux
+      VAR_OS_API=posix
+      VAR_OS_ENV=linux
       ;;
     *darwin*)
       VAR_OS=macosx
