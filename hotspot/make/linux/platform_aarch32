@@ -1,0 +1,22 @@
+os_family = linux
+
+arch = aarch32
+
+arch_model = aarch32
+
+os_arch = linux_aarch32
+
+os_arch_model = linux_aarch32
+
+lib_arch = arm
+
+compiler = gcc
+
+# __STDC_LIMIT_MACROS and __STDC_CONSTANT_MACROS required
+# for pre-C++11 toolchains, in order to stdint.h define
+# UINT_MAX, ...
+sysdefs = -DLINUX -D_GNU_SOURCE -DAARCH32 -DARM -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
+
+# NOTE!! The existing codebase contians some code which uses ARM32, I'm not sure about this and have left this off
+# ARM has been defined as this is also used in the shared code (but much more widely).
+# The zero interpreter also depends on ARM having been defined to include the relevant code.
