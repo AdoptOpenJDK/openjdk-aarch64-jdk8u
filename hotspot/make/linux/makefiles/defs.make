@@ -114,6 +114,14 @@ ifneq (,$(findstring $(ARCH), ppc ppc64))
   HS_ARCH = ppc
 endif
 
+# AArch32
+ifeq ($(ARCH), aarch32)
+  ARCH_DATA_MODEL  = 32
+  PLATFORM         = linux-aarch32
+  VM_PLATFORM      = linux_aarch32
+  HS_ARCH          = aarch32
+endif
+
 # AARCH64
 ifeq ($(ARCH), aarch64)
   ARCH_DATA_MODEL  = 64
