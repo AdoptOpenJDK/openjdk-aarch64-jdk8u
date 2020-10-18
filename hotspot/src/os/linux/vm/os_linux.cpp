@@ -95,9 +95,13 @@
 # include <string.h>
 # include <syscall.h>
 # include <sys/sysinfo.h>
+#if !defined(__UCLIBC__) && !defined(__ANDROID__)
 # include <gnu/libc-version.h>
+#endif
 # include <sys/ipc.h>
+#if !defined(__ANDROID__)
 # include <sys/shm.h>
+#endif
 # include <link.h>
 # include <stdint.h>
 # include <inttypes.h>
@@ -267,11 +271,12 @@ bool os::have_special_privileges() {
 
 
 #ifndef SYS_gettid
-// i386: 224, ia64: 1105, amd64: 186, sparc 143
+// ref: https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md
+// i386 & arm: 224, ia64: 1105, amd64: 186, sparc: 143, aarch64: 178
   #ifdef __ia64__
     #define SYS_gettid 1105
   #else
-    #ifdef __i386__
+    #if defined(__i386__) || defined(__arm__)
       #define SYS_gettid 224
     #else
       #ifdef __amd64__
@@ -280,7 +285,11 @@ bool os::have_special_privileges() {
         #ifdef __sparc__
           #define SYS_gettid 143
         #else
-          #error define gettid for the arch
+          #if defined(__arm64__) || defined(__aarch64__)
+            #define SYS_gettid 178
+          #else
+            #error define gettid for the arch
+          #endif
         #endif
       #endif
     #endif
