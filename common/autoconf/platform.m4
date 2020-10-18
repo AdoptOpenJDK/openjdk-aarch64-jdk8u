@@ -43,8 +43,14 @@ AC_DEFUN([PLATFORM_EXTRACT_VARS_FROM_CPU],
       VAR_CPU_ENDIAN=little
       ;;
     arm*)
-      VAR_CPU=arm
-      VAR_CPU_ARCH=arm
+      VAR_CPU=aarch32
+      VAR_CPU_ARCH=aarch32
+      VAR_CPU_BITS=32
+      VAR_CPU_ENDIAN=little
+      ;;
+    aarch32)
+      VAR_CPU=aarch32
+      VAR_CPU_ARCH=aarch32
       VAR_CPU_BITS=32
       VAR_CPU_ENDIAN=little
       ;;
@@ -117,6 +123,11 @@ AC_DEFUN([PLATFORM_EXTRACT_VARS_FROM_OS],
       VAR_OS=solaris
       VAR_OS_API=posix
       VAR_OS_ENV=solaris
+      ;;
+    *android*)
+      VAR_OS=linux
+      VAR_OS_API=posix
+      VAR_OS_ENV=linux
       ;;
     *darwin*)
       VAR_OS=macosx
@@ -316,6 +327,8 @@ AC_DEFUN([PLATFORM_SETUP_LEGACY_VARS],
   elif test "x$OPENJDK_TARGET_OS" != xmacosx && test "x$OPENJDK_TARGET_CPU" = xx86_64; then
     # On all platforms except macosx, we replace x86_64 with amd64.
     OPENJDK_TARGET_CPU_OSARCH="amd64"
+  elif test "x$OPENJDK_TARGET_CPU" = xaarch32; then
+    OPENJDK_TARGET_CPU_OSARCH="arm"
   fi
   AC_SUBST(OPENJDK_TARGET_CPU_OSARCH)
 
