@@ -64,7 +64,12 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <limits.h>
-#include <ifaddrs.h>
+
+#ifdef __ANDROID__
+# include "ifaddrs/ifaddrs.h"
+#else
+# include <ifaddrs.h>
+#endif
 #include <fcntl.h>
 
 /**
