@@ -22,6 +22,10 @@
  *
  */
 
+#ifdef __ANDROID__
+# define _GNU_SOURCE
+#endif
+
 #include <unistd.h>
 #include <sys/procfs.h>
 #include <search.h>
@@ -543,3 +547,7 @@ const char* nearest_symbol(struct symtab* symtab, uintptr_t offset,
   }
   return NULL;
 }
+
+#ifdef __ANDROID__
+# undef _GNU_SOURCE
+#endif
