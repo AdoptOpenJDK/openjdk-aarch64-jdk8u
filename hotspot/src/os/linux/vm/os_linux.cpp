@@ -93,7 +93,6 @@
 # include <semaphore.h>
 # include <fcntl.h>
 # include <string.h>
-# include <syscall.h>
 # include <sys/sysinfo.h>
 #ifdef __ANDROID__
 // Our own impl
@@ -103,7 +102,10 @@
 #endif
 # include <sys/ipc.h>
 #if !defined(__ANDROID__)
+# include <syscall.h>
 # include <sys/shm.h>
+#else
+# include <sys/syscall.h>
 #endif
 # include <link.h>
 # include <stdint.h>
