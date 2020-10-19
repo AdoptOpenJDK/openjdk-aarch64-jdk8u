@@ -43,6 +43,12 @@
 # include <signal.h>
 # include <pwd.h>
 
+#ifdef __ANDROID__
+# define S_IREAD S_IRUSR
+# define S_IWRITE S_IWUSR
+# define S_IEXEC S_IXUSR
+#endif // __ANDROID__
+
 static char* backing_store_file_name = NULL;  // name of the backing store
                                               // file, if successfully created.
 
