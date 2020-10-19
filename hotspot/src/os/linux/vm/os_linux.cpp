@@ -22,6 +22,8 @@
  *
  */
 
+// Android SHM todo: use https://github.com/pelya/android-shmem
+
 // no precompiled headers
 #include "classfile/classLoader.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -115,6 +117,8 @@ PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 # define lseek lseek64
 # define open open64
 # define off_t off64_t
+
+# define DISABLE_SHM
 #endif
 
 #ifndef _GNU_SOURCE
@@ -3641,6 +3645,13 @@ bool os::Linux::setup_large_page_type(size_t page_size) {
     UseHugeTLBFS = false;
   }
 
+#ifdef DISABLE_SHM
+  if (UseSHM) {
+    warning("UseSHM is disabled");
+    UseSHM = false;
+  }
+#endif  //DISABLE_SHM
+
   return UseSHM;
 }
 
@@ -3672,6 +3683,7 @@ void os::large_page_init() {
 #define SHM_HUGETLB 04000
 #endif
 
+#ifndef DISABLE_SHM
 #define shm_warning_format(format, ...)              \
   do {                                               \
     if (UseLargePages &&                             \
@@ -3763,8 +3775,10 @@ static char* shmat_large_pages(int shmid, size_t bytes, size_t alignment, char* 
     return shmat_at_address(shmid, NULL);
   }
 }
+#endif // !DISABLE_SHM
 
 char* os::Linux::reserve_memory_special_shm(size_t bytes, size_t alignment, char* req_addr, bool exec) {
+#ifndef DISABLE_SHM
   // "exec" is passed in but not used.  Creating the shared image for
   // the code cache doesn't have an SHM_X executable permission to check.
   assert(UseLargePages && UseSHM, "only for SHM large pages");
@@ -3807,6 +3821,10 @@ char* os::Linux::reserve_memory_special_shm(size_t bytes, size_t alignment, char
   shmctl(shmid, IPC_RMID, NULL);
 
   return addr;
+#else
+  assert(0, "SHM was disabled on compile time");
+  return NULL;
+#endif
 }
 
 static void warn_on_large_pages_failure(char* req_addr, size_t bytes, int error) {
@@ -5678,7 +5696,10 @@ int os::open(const char *path, int oflag, int mode) {
   return fd;
 }
 
-
+#ifdef __ANDROID__
+#define S_IREAD S_IRUSR
+#define S_IWRITE S_IWUSR
+#endif
 // create binary file, rewriting existing file if required
 int os::create_binary_file(const char* path, bool rewrite_existing) {
   int oflags = O_WRONLY | O_CREAT;
