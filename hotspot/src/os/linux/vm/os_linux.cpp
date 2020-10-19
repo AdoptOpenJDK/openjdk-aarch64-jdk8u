@@ -3988,8 +3988,12 @@ char* os::reserve_memory_special(size_t bytes, size_t alignment, char* req_addr,
 }
 
 bool os::Linux::release_memory_special_shm(char* base, size_t bytes) {
+#ifndef DISABLE_SHM
   // detaching the SHM segment will also delete it, see reserve_memory_special_shm()
   return shmdt(base) == 0;
+#else
+  assert(0, "SHM was disabled on compile time");
+#endif
 }
 
 bool os::Linux::release_memory_special_huge_tlbfs(char* base, size_t bytes) {
@@ -5638,8 +5642,11 @@ int os::open(const char *path, int oflag, int mode) {
   int fd;
   int o_delete = (oflag & O_DELETE);
   oflag = oflag & ~O_DELETE;
-
+#ifndef __ANDROID__
   fd = ::open64(path, oflag, mode);
+#else
+  fd = open64(path, oflag, mode);
+#endif
   if (fd == -1) return -1;
 
   //If the open succeeded, the file might still be a directory
