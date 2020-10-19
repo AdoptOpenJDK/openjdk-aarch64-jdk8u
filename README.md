@@ -1,3 +1,14 @@
+OpenJDK-jdk8u modified to enable Android cross-compilation.
+
+This repo is merge from [AdoptOpenJDK/openjdk-aarch64-jdk8u:aarch64-shenandoah-jdk8u265-b01](https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u/tree/aarch64-shenandoah-jdk8u265-b01) and [AdoptOpenJDK/openjdk-aarch32-jdk8u:jdk8u265-ga-aarch32-20200729](https://github.com/AdoptOpenJDK/openjdk-aarch32-jdk8u/tree/jdk8u265-ga-aarch32-20200729).
+
+**Warning:** merge of aarch32 is unfinished yet, so it is not possible to cross-compile for aarch32 at the moment.
+
+The original README contents is at below.
+
+---
+
+```
 README:
   This file should be located at the top of the OpenJDK Mercurial root
   repository. A full OpenJDK repository set (forest) should also include
@@ -38,3 +49,4 @@ is 3.81 or newer. Note that on Solaris, GNU make is called "gmake".
 
 Complete details are available in the file:
      http://hg.openjdk.java.net/jdk8/jdk8/raw-file/tip/README-builds.html
+```
