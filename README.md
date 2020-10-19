@@ -1,10 +1,9 @@
-OpenJDK-jdk8u modified to enable Android cross-compilation.
-
-This repo is merge from [AdoptOpenJDK/openjdk-aarch64-jdk8u:aarch64-shenandoah-jdk8u265-b01](https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u/tree/aarch64-shenandoah-jdk8u265-b01) and [AdoptOpenJDK/openjdk-aarch32-jdk8u:jdk8u265-ga-aarch32-20200729](https://github.com/AdoptOpenJDK/openjdk-aarch32-jdk8u/tree/jdk8u265-ga-aarch32-20200729).
-
-**Warning:** merge of aarch32 is unfinished yet, so it is not possible to cross-compile for aarch32 at the moment.
-
-The original README contents is at below.
+## openjdk-multiarch-jdk8u
+- OpenJDK-jdk8u modified to enable Android cross-compilation.
+- This repo is merge from [AdoptOpenJDK/openjdk-aarch64-jdk8u:aarch64-shenandoah-jdk8u265-b01](https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u/tree/aarch64-shenandoah-jdk8u265-b01) and [AdoptOpenJDK/openjdk-aarch32-jdk8u:jdk8u265-ga-aarch32-20200729](https://github.com/AdoptOpenJDK/openjdk-aarch32-jdk8u/tree/jdk8u265-ga-aarch32-20200729).
+- The build script is at [PojavLauncherTeam/android-openjdk-build-multiarch:buildjre8](https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch/tree/buildjre8).
+- **Warning:** merge of aarch32 is unfinished yet, so it is not possible to cross-compile for aarch32 at the moment.
+- The original README contents is at below.
 
 ---
 
