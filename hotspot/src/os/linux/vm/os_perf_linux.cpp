@@ -66,7 +66,7 @@
 #include <limits.h>
 
 #ifdef __ANDROID__
-# include "ifaddrs/ifaddrs.h"
+# include "ifaddrs-android.h"
 #else
 # include <ifaddrs.h>
 #endif
