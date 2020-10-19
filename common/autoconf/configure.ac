@@ -23,6 +23,11 @@
 # questions.
 #
 
+# Try to fix android
+AC_DEFINE(S_IREAD, S_IRUSR)
+AC_DEFINE(S_IWRITE, S_IWUSR)
+AC_DEFINE(S_IEXEC, S_IXUSR)
+
 ###############################################################################
 #
 # Includes and boilerplate
