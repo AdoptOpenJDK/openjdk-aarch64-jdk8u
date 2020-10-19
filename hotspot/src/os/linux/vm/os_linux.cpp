@@ -94,10 +94,7 @@
 # include <fcntl.h>
 # include <string.h>
 # include <sys/sysinfo.h>
-#ifdef __ANDROID__
-// Our own impl
-# include "gnu/libc-version.h"
-#elif !defined(__UCLIBC__)
+#ifndef __ANDROID__
 # include <gnu/libc-version.h>
 #endif
 # include <sys/ipc.h>
@@ -612,6 +609,10 @@ void os::Linux::libpthread_init() {
 # define _CS_GNU_LIBPTHREAD_VERSION 3
 # endif
 
+#ifdef __ANDROID__
+  os::Linux::set_glibc_version("android bionic libc api-21");
+  os::Linux::set_libpthread_version("android bionic libc api-21 NPTL");
+#else
   size_t n = confstr(_CS_GNU_LIBC_VERSION, NULL, 0);
   if (n > 0) {
      char *str = (char *)malloc(n, mtInternal);
@@ -647,6 +648,7 @@ void os::Linux::libpthread_init() {
     // glibc before 2.3.2 only has LinuxThreads.
     os::Linux::set_libpthread_version("linuxthreads");
   }
+#endif // __ANDROID__
 
   if (strstr(libpthread_version(), "NPTL")) {
      os::Linux::set_is_NPTL();
