@@ -24,6 +24,11 @@
 
 #ifdef __ANDROID__
 # define _GNU_SOURCE
+
+struct ENTRY {
+  char *key;
+  void *data;
+};
 #endif
 
 #include <unistd.h>
