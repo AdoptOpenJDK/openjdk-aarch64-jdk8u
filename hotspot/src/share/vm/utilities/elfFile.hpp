@@ -46,7 +46,7 @@ typedef Elf64_Shdr      Elf_Shdr;
 typedef Elf64_Phdr      Elf_Phdr;
 typedef Elf64_Sym       Elf_Sym;
 
-#if !defined(_ALLBSD_SOURCE) || defined(__APPLE__)
+#if !defined(ELF_ST_TYPE) || !defined(_ALLBSD_SOURCE) || defined(__APPLE__)
 #define ELF_ST_TYPE ELF64_ST_TYPE
 #endif
 
