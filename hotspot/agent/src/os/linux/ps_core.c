@@ -33,6 +33,10 @@
 #include "libproc_impl.h"
 #include "salibelf.h"
 
+#ifdef __ANDROID__
+# include <sys/procfs.h>
+#endif
+
 // This file has the libproc implementation to read core files.
 // For live processes, refer to ps_proc.c. Portions of this is adapted
 // /modelled after Solaris libproc.so (in particular Pcore.c)
