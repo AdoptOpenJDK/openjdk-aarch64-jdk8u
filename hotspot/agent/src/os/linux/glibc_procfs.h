@@ -29,6 +29,8 @@
 #include <sys/types.h>
 #include <sys/user.h>
 
+#include <sys/procfs.h>
+
 __BEGIN_DECLS
 /* And the whole bunch of them.  We could have used `struct
    user_regs_struct' directly in the typedef, but tradition says that
