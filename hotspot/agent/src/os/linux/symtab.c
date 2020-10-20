@@ -23,7 +23,6 @@
  */
 
 #ifdef __ANDROID__
-# define _GNU_SOURCE
 // The full search.h implementation is on Android API 28, so we backport it.
 # include "hsearch/search.h"
 #else
