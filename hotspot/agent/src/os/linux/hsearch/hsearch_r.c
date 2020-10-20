@@ -28,7 +28,7 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/hsearch_r.c 292767 2015-12-27 07:50:11Z
 
 #include <errno.h>
 #include <limits.h>
-#include <search.h>
+#include "search.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
