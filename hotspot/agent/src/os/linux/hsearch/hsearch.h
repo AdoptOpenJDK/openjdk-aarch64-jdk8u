@@ -28,7 +28,7 @@
 #ifndef HSEARCH_H
 #define HSEARCH_H
 
-#include <search.h>
+#include "search.h"
 
 struct __hsearch {
 	size_t offset_basis;	/* Initial value for FNV-1a hashing. */
