@@ -401,7 +401,11 @@ static struct symtab* build_symtab_internal(int fd, const char *filename, bool t
 
       // create hash table, we use hcreate_r, hsearch_r and hdestroy_r to
       // manipulate the hash table.
+#ifndef __ANDROID__
       symtab->hash_table = (struct hsearch_data*) calloc(1, sizeof(struct hsearch_data));
+#else // __ANDROID__
+      *symtab->hash_table = (struct hsearch_data){0};
+#endif // !__ANDROID__
       rslt = hcreate_r(n, symtab->hash_table);
       // guarantee(rslt, "unexpected failure: hcreate_r");
 
