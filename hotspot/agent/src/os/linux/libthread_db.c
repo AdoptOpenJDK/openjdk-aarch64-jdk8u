@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifdef __ANDROID__
+
 #include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -119,3 +122,5 @@ td_err_e td_ta_clear_event(const td_thragent_t* ta_arg, td_thr_events_t* event) 
 td_err_e td_ta_event_addr(td_thragent_t const* agent, td_event_e event, td_notify_t* notify_out) {
     abort();
 }
+
+#endif // __ANDROID__
