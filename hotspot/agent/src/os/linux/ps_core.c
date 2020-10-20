@@ -553,6 +553,7 @@ static bool core_handle_prstatus(struct ps_prochandle* ph, const char* buf, size
    // assert(nbytes == sizeof(prstaus_t), "size mismatch on prstatus_t");
    prstatus_t* prstat = (prstatus_t*) buf;
    thread_info* newthr;
+#ifndef __ANDROID__
    print_debug("got integer regset for lwp %d\n", prstat->pr_pid);
    // we set pthread_t to -1 for core dump
    if((newthr = add_thread_info(ph, (pthread_t) -1,  prstat->pr_pid)) == NULL)
@@ -560,6 +561,15 @@ static bool core_handle_prstatus(struct ps_prochandle* ph, const char* buf, size
 
    // copy regs
    memcpy(&newthr->regs, prstat->pr_reg, sizeof(struct user_regs_struct));
+#else // __ANDROID__
+   print_debug("got integer regset for lwp %d\n", prstat.pr_pid);
+   // we set pthread_t to -1 for core dump
+   if((newthr = add_thread_info(ph, (pthread_t) -1,  prstat.pr_pid)) == NULL)
+      return false;
+
+   // copy regs
+   memcpy(&newthr->regs, prstat.pr_reg, sizeof(struct user_regs_struct));
+#endif // !__ANDROID__
 
    if (is_debug()) {
       print_debug("integer regset\n");
