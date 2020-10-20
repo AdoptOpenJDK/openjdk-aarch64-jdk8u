@@ -89,6 +89,8 @@ char* nl_langinfo(nl_item item) {
   }
   return result;
 }
+/*
 char* nl_langinfo_l(nl_item item, locale_t) {
   return nl_langinfo(item);
 }
+*/
