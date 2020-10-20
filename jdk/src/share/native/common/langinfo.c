@@ -25,6 +25,9 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+#ifdef __ANDROID__
+
 #include "langinfo.h"
 #include <stdlib.h>
 char* nl_langinfo(nl_item item) {
@@ -94,3 +97,5 @@ char* nl_langinfo_l(nl_item item, locale_t) {
   return nl_langinfo(item);
 }
 */
+
+#endif // __ANDROID__
