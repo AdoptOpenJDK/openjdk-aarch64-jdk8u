@@ -62,7 +62,7 @@ $(ARCH)/sadis.o:  ../../share/native/sadis.c
                 sun.jvm.hotspot.asm.Disassembler
         $(GCC) $(CFLAGS) $< -o $@
 
-$(ARCH)/libthread_db.o: thread_db/libthread_db.c
+$(ARCH)/libthread_db.o: libthread_db.c
         $(GCC) $(CFLAGS) $< -o $@
 
 $(ARCH)/%.o: %.c
