@@ -29,7 +29,7 @@
 #define _LANGINFO_H_
 #include <sys/cdefs.h>
 #include "nl_types.h"
-#include <xlocale.h>
+#include "xlocale.h"
 __BEGIN_DECLS
 #define CODESET 1
 #define D_T_FMT 2
