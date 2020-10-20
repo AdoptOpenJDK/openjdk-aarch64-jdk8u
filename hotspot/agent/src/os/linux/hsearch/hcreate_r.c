@@ -1,4 +1,4 @@
-/*-
+I/*-
  * Copyright (c) 2015 Nuxi, https://nuxi.nl/
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/lib/libc/stdlib/hcreate_r.c 292767 2015-12-27 07:50:11Z ed $");
 
-#include <search.h>
+#include "search.h"
 #include <stdlib.h>
 
 #include "hsearch.h"
