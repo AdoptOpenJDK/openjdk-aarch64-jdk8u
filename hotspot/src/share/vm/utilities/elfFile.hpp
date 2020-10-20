@@ -63,7 +63,7 @@ typedef Elf32_Shdr      Elf_Shdr;
 typedef Elf32_Phdr      Elf_Phdr;
 typedef Elf32_Sym       Elf_Sym;
 
-#if !defined(_ALLBSD_SOURCE) || defined(__APPLE__)
+#if !defined(__ANDROID__) && (!defined(_ALLBSD_SOURCE) || defined(__APPLE__))
 #define ELF_ST_TYPE ELF32_ST_TYPE
 #endif
 #endif
