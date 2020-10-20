@@ -33,7 +33,11 @@
 #error "The macro ARCHPROPNAME has not been defined"
 #endif
 #include <sys/utsname.h>        /* For os_name and os_version */
-#include <langinfo.h>           /* For nl_langinfo */
+#ifndef __ANDROID__
+# include <langinfo.h>           /* For nl_langinfo */
+#else
+# include "langinfo.h"
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
