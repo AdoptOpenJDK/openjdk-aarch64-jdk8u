@@ -28,7 +28,7 @@
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/lib/libc/stdlib/hcreate.c 326193 2017-11-25 17:12:48Z pfg $");
 
-#include <search.h>
+#include "search.h"
 #include <stdbool.h>
 #include <stddef.h>
 
