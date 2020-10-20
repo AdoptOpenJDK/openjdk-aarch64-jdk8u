@@ -29,10 +29,11 @@
 #include <locale.h>
 #ifndef __ANDROID__
 # include <langinfo.h>
+# include <iconv.h>
 #else
 # include "langinfo.h"
+# include "iconv.h"
 #endif
-#include <iconv.h>
 
 #include "utf.h"
 
