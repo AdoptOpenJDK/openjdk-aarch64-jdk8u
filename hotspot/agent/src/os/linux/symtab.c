@@ -24,16 +24,14 @@
 
 #ifdef __ANDROID__
 # define _GNU_SOURCE
-
-struct ENTRY {
-  char *key;
-  void *data;
-};
+// The full search.h implementation is on Android API 28, so we backport it.
+# include "hsearch/search.h"
+#else
+# include <search.h>
 #endif
 
 #include <unistd.h>
 #include <sys/procfs.h>
-#include <search.h>
 #include <stdlib.h>
 #include <string.h>
 #include "symtab.h"
