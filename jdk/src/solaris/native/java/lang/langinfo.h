@@ -28,7 +28,7 @@
 #ifndef _LANGINFO_H_
 #define _LANGINFO_H_
 #include <sys/cdefs.h>
-#include <nl_types.h>
+#include "nl_types.h"
 #include <xlocale.h>
 __BEGIN_DECLS
 #define CODESET 1
