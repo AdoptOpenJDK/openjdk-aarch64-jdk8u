@@ -67,7 +67,11 @@ ProgramExists(char *name)
     struct stat sb;
     if (stat(name, &sb) != 0) return 0;
     if (S_ISDIR(sb.st_mode)) return 0;
+#ifndef __ANDROID__
     return (sb.st_mode & S_IEXEC) != 0;
+#else
+    return (sb.st_mode & S_IXUSR) != 0;
+#endif
 }
 
 /*
