@@ -36,7 +36,8 @@
 #include <string.h>
 #include <uchar.h>
 #include "bionic_mbstate.h"
-#define INVALID_ICONV_T (iconv_t)-1
+#define INVALID_ICONV_T reinterpret_cast<iconv_t>(-1)
+
 // Ideally we'd use icu4c but the API mismatch seems too great. So we just offer something
 // equivalent to (but slightly easier to use for runs of text than) <uchar.h>. If you're
 // here to add more encodings, consider working on finishing the icu4c NDK wrappers instead.
@@ -49,11 +50,13 @@ enum Encoding {
   UTF_32_BE,
   WCHAR_T,
 };
+
 enum Mode {
   ERROR,
   IGNORE,
   TRANSLIT,
 };
+
 // This matching is strange but true.
 // See http://www.unicode.org/reports/tr22/#Charset_Alias_Matching.
 static bool __match_encoding(const char* lhs, const char* rhs) {
@@ -72,6 +75,7 @@ static bool __match_encoding(const char* lhs, const char* rhs) {
   if ((*lhs == '\0' || strstr(lhs, "//") == lhs) && *rhs == '\0') return true;
   return false;
 }
+
 static bool __parse_encoding(const char* s, Encoding* encoding, Mode* mode) {
   const char* suffix = strstr(s, "//");
   if (suffix) {
@@ -103,6 +107,7 @@ static bool __parse_encoding(const char* s, Encoding* encoding, Mode* mode) {
   }
   return true;
 }
+
 struct __iconv_t {
   Encoding src_encoding;
   Encoding dst_encoding;
@@ -259,6 +264,7 @@ struct __iconv_t {
     }
     return Emit();
   }
+
   uint16_t In16(const char* buf, bool swap) {
     const uint8_t* src = reinterpret_cast<const uint8_t*>(buf);
     uint16_t wc = (src[0]) | (src[1] << 8);
@@ -266,6 +272,7 @@ struct __iconv_t {
     src_bytes_used = 2;
     return wc;
   }
+
   uint32_t In32(const char* buf, bool swap) {
     const uint8_t* src = reinterpret_cast<const uint8_t*>(buf);
     uint32_t wc = (src[0]) | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
@@ -273,12 +280,14 @@ struct __iconv_t {
     src_bytes_used = 4;
     return wc;
   }
+
   void Out16(char* dst, char16_t ch, bool swap) {
     if (swap) ch = __swap16(ch);
     dst[0] = ch;
     dst[1] = ch >> 8;
     dst_bytes_used = 2;
   }
+
   void Out32(char32_t ch, bool swap) {
     if (swap) ch = __swap32(ch);
     buf[0] = ch;
@@ -287,6 +296,7 @@ struct __iconv_t {
     buf[3] = ch >> 24;
     dst_bytes_used = 4;
   }
+
   bool Emit() {
     if (dst_bytes_used > *dst_bytes_left) {
       errno = E2BIG;
@@ -299,6 +309,7 @@ struct __iconv_t {
     *dst_bytes_left -= dst_bytes_used;
     return true;
   }
+
   int Done() {
     if (mode == TRANSLIT) return replacement_count;
     if (ignored) {
@@ -308,6 +319,7 @@ struct __iconv_t {
     return 0;
   }
 };
+
 iconv_t iconv_open(const char* __dst_encoding, const char* __src_encoding) {
   iconv_t result = new __iconv_t;
   if (!__parse_encoding(__src_encoding, &result->src_encoding, nullptr) ||
@@ -318,6 +330,7 @@ iconv_t iconv_open(const char* __dst_encoding, const char* __src_encoding) {
   }
   return result;
 }
+
 size_t iconv(iconv_t __converter,
              char** __src_buf, size_t* __src_bytes_left,
              char** __dst_buf, size_t* __dst_bytes_left) {
@@ -327,6 +340,7 @@ size_t iconv(iconv_t __converter,
   }
   return __converter->Convert(__src_buf, __src_bytes_left, __dst_buf, __dst_bytes_left);
 }
+
 int iconv_close(iconv_t __converter) {
   if (__converter == INVALID_ICONV_T) {
     errno = EBADF;
