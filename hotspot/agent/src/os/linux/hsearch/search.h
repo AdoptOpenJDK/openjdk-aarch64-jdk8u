@@ -47,12 +47,12 @@ typedef enum {
   /** If this is the first and only visit to a leaf node. */
   leaf
 } VISIT;
-#if defined(__USE_BSD) || defined(__USE_GNU)
+// #if defined(__USE_BSD) || defined(__USE_GNU)
 /** The hash table type for hcreate_r()/hdestroy_r()/hsearch_r(). */
 struct hsearch_data {
   struct __hsearch* __hsearch;
 };
-#endif
+//#endif
 __BEGIN_DECLS
 /**
  * [insque(3)](http://man7.org/linux/man-pages/man3/insque.3.html) inserts
@@ -100,7 +100,7 @@ void hdestroy(void); // __INTRODUCED_IN(28);
  * Available since API level 28.
  */
 ENTRY* hsearch(ENTRY __entry, ACTION __action); // __INTRODUCED_IN(28);
-#if defined(__USE_BSD) || defined(__USE_GNU)
+// #if defined(__USE_BSD) || defined(__USE_GNU)
 /**
  * [hcreate_r(3)](http://man7.org/linux/man-pages/man3/hcreate_r.3.html)
  * initializes a hash table `__table` with space for at least `__n` elements.
@@ -127,7 +127,7 @@ void hdestroy_r(struct hsearch_data* __table); // __INTRODUCED_IN(28);
  * Available since API level 28.
  */
 int hsearch_r(ENTRY __entry, ACTION __action, ENTRY** __result, struct hsearch_data* __table); // __INTRODUCED_IN(28);
-#endif
+// #endif
 /**
  * [lfind(3)](http://man7.org/linux/man-pages/man3/lfind.3.html) brute-force
  * searches the unsorted array `__array` (of `__count` items each of size `__size`)
