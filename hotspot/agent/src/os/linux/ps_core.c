@@ -35,6 +35,10 @@
 
 #ifdef __ANDROID__
 # include <sys/procfs.h>
+
+// Try to fix it anyways...
+typedef struct elf_prstatus prstatus_t;
+typedef struct elf_prpsinfo prpsinfo_t;
 #endif
 
 // This file has the libproc implementation to read core files.
