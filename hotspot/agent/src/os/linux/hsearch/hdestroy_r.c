@@ -26,7 +26,7 @@
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: head/lib/libc/stdlib/hdestroy_r.c 292767 2015-12-27 07:50:11Z ed $");
 
-#include <search.h>
+#include "search.h"
 #include <stdlib.h>
 
 #include "hsearch.h"
