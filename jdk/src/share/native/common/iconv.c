@@ -47,8 +47,11 @@
 // equivalent to (but slightly easier to use for runs of text than) <uchar.h>. If you're
 // here to add more encodings, consider working on finishing the icu4c NDK wrappers instead.
 
-// enum Encoding
-typedef enum
+#ifdef __cplusplus
+ enum Encoding
+#else
+ typedef enum
+#endif // __cplusplus
 {
   US_ASCII,
   UTF_8,
@@ -57,17 +60,26 @@ typedef enum
   UTF_32_LE,
   UTF_32_BE,
   WCHAR_T,
-// };
-} Encoding;
+#ifdef __cplusplus
+ };
+#else
+ } Encoding;
+#endif // __cplusplus
 
-// enum Mode
-typedef enum
+#ifdef __cplusplus
+ enum Mode
+#else
+ typedef enum
+#endif // __cplusplus
 {
   ERROR,
   IGNORE,
   TRANSLIT,
-// };
-} Mode;
+#ifdef __cplusplus
+ };
+#else
+ } Mode;
+#endif // __cplusplus
 
 // This matching is strange but true.
 // See http://www.unicode.org/reports/tr22/#Charset_Alias_Matching.
