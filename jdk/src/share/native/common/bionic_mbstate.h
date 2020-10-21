@@ -34,8 +34,14 @@ __BEGIN_DECLS
  * These return values are specified by POSIX for multibyte conversion
  * functions.
  */
+
+#ifdef __cplusplus
 #define __MB_ERR_ILLEGAL_SEQUENCE static_cast<size_t>(-1)
 #define __MB_ERR_INCOMPLETE_SEQUENCE static_cast<size_t>(-2)
+#else
+#define __MB_ERR_ILLEGAL_SEQUENCE (size_t)(-1)
+#define __MB_ERR_INCOMPLETE_SEQUENCE (size_t)(-2)
+#endif // __cplusplus
 #define __MB_IS_ERR(rv) (rv == __MB_ERR_ILLEGAL_SEQUENCE || \
                          rv == __MB_ERR_INCOMPLETE_SEQUENCE)
 static inline __wur size_t mbstate_bytes_so_far(const mbstate_t* ps) {
