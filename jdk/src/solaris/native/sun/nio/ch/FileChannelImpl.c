@@ -41,6 +41,11 @@
 #define mmap64 mmap
 #endif
 
+#ifdef __ANDROID__
+#include <sys/syscall.h>
+#define sendfile64(a,b,c,d) syscall(__NR_sendfile64, a, b, c, d)
+#endif
+
 #include "jni.h"
 #include "jni_util.h"
 #include "jlong.h"
