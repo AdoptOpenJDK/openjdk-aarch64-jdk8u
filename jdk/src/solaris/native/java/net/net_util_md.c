@@ -56,7 +56,7 @@
 #include <inet/nd.h>
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__ANDROID__)
 #include <arpa/inet.h>
 #include <net/route.h>
 #include <sys/utsname.h>
