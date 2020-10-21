@@ -32,6 +32,10 @@
 #include "sun_nio_ch_NativeThread.h"
 #include "nio_util.h"
 
+#ifdef __ANDROID__
+# define __SIGRTMAX SIGRTMAX
+#endif
+
 #ifdef __linux__
   #include <pthread.h>
   #include <sys/signal.h>
