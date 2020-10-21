@@ -45,18 +45,18 @@ static inline __wur size_t mbstate_bytes_so_far(const mbstate_t* ps) {
       (ps->__seq[0] != 0) ? 1 : 0;
 }
 static inline void mbstate_set_byte(mbstate_t* ps, int i, char byte) {
-  ps->__seq[i] = static_cast<uint8_t>(byte);
+  ps->__seq[i] = (uint8_t)(byte);
 }
 static inline __wur uint8_t mbstate_get_byte(const mbstate_t* ps, int n) {
   return ps->__seq[n];
 }
 static inline __wur size_t mbstate_reset_and_return_illegal(int _errno, mbstate_t* ps) {
   errno = _errno;
-  *(reinterpret_cast<uint32_t*>(ps->__seq)) = 0;
+  *(uint32_t*)(ps->__seq) = 0;
   return __MB_ERR_ILLEGAL_SEQUENCE;
 }
 static inline __wur size_t mbstate_reset_and_return(int _return, mbstate_t* ps) {
-  *(reinterpret_cast<uint32_t*>(ps->__seq)) = 0;
+  *(uint32_t*)(ps->__seq) = 0;
   return _return;
 }
 __END_DECLS
