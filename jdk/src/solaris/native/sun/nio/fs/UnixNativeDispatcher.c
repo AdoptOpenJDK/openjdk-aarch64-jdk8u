@@ -35,7 +35,11 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/statvfs.h>
+#ifndef __ANDROID__ 
+# include <sys/statvfs.h>
+#else
+# include <sys/vfs.h>
+#endif
 #include <sys/time.h>
 
 #ifdef __solaris__
@@ -46,11 +50,15 @@
 #include <string.h>
 #endif
 
-#ifdef _ALLBSD_SOURCE
+#if defined(_ALLBSD_SOURCE) || defined(__ANDROID__)
 #include <string.h>
 
 #define stat64 stat
-#define statvfs64 statvfs
+#ifdef __ANDROID__
+# define statvfs64 statfs
+#else
+# define statvfs64 statvfs
+#endif
 
 #define open64 open
 #define fstat64 fstat
@@ -169,6 +177,30 @@ static void throwUnixException(JNIEnv* env, int errnum) {
     }
 }
 
+#ifdef __ANDROID__
+// futimesat is available since Android 6.0, so we backport it.
+
+bool timespec_from_timeval(timespec& ts, const timeval& tv) {
+  // Whole seconds can just be copied.
+  ts.tv_sec = tv.tv_sec;
+  // But we might overflow when converting microseconds to nanoseconds.
+  if (tv.tv_usec >= 1000000 || tv.tv_usec < 0) {
+    return false;
+  }
+  ts.tv_nsec = tv.tv_usec * 1000;
+  return true;
+}
+
+static int futimesat_android_backport(int fd, const char* path, const timeval tv[2], int flags) {
+  timespec ts[2];
+  if (tv && (!timespec_from_timeval(ts[0], tv[0]) || !timespec_from_timeval(ts[1], tv[1]))) {
+    errno = EINVAL;
+    return -1;
+  }
+  return utimensat(fd, path, tv ? ts : nullptr, flags);
+}
+#endif
+
 /**
  * Initialization
  */
@@ -251,6 +283,11 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
     my_unlinkat_func = (unlinkat_func*) dlsym(RTLD_DEFAULT, "unlinkat");
     my_renameat_func = (renameat_func*) dlsym(RTLD_DEFAULT, "renameat");
     my_futimesat_func = (futimesat_func*) dlsym(RTLD_DEFAULT, "futimesat");
+#ifdef __ANDROID__
+    if (my_futimesat_func == NULL) {
+      my_futimesat_func = (futimesat_func*) dlsym(RTLD_DEFAULT, "futimesat_android_backport");
+    }
+#endif
     my_fdopendir_func = (fdopendir_func*) dlsym(RTLD_DEFAULT, "fdopendir");
 
 #if defined(FSTATAT64_SYSCALL_AVAILABLE)
