@@ -39,6 +39,10 @@
 #include "nio_util.h"
 #include <limits.h>
 
+#ifdef __ANDROID__
+#define IOV_MAX 1024
+#endif
+
 JNIEXPORT jint JNICALL
 Java_sun_nio_ch_DatagramDispatcher_read0(JNIEnv *env, jclass clazz,
                          jobject fdo, jlong address, jint len)
