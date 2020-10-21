@@ -28,16 +28,23 @@
 
 #ifdef __ANDROID__
 
-#include "iconv.h"
+#include <stdint.h>
+// for char16_t and char32_t
+#if defined __cplusplus // && __cplusplus < 201103L
+typedef uint32_t char32_t;
+typedef uint16_t char16_t;
+#endif
 #include <ctype.h>
+
+#include "iconv.h"
 #include <endian.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <uchar.h>
+
 #include "bionic_mbstate.h"
 
-#include "utils/Unicode.h" // for char16_t and char32_t
 
 #ifdef __cplusplus
 # define INVALID_ICONV_T reinterpret_cast<iconv_t>(-1)
