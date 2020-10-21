@@ -36,12 +36,20 @@
 #include <string.h>
 #include <uchar.h>
 #include "bionic_mbstate.h"
-#define INVALID_ICONV_T reinterpret_cast<iconv_t>(-1)
+
+#ifdef __cplusplus
+# define INVALID_ICONV_T reinterpret_cast<iconv_t>(-1)
+#else // !__cplusplus
+# define INVALID_ICONV_T (iconv_t)(-1)
+#endif // __cplusplus
 
 // Ideally we'd use icu4c but the API mismatch seems too great. So we just offer something
 // equivalent to (but slightly easier to use for runs of text than) <uchar.h>. If you're
 // here to add more encodings, consider working on finishing the icu4c NDK wrappers instead.
-enum Encoding {
+
+// enum Encoding
+typedef enum
+{
   US_ASCII,
   UTF_8,
   UTF_16_LE,
@@ -49,13 +57,17 @@ enum Encoding {
   UTF_32_LE,
   UTF_32_BE,
   WCHAR_T,
-};
+// };
+} Encoding;
 
-enum Mode {
+// enum Mode
+typedef enum
+{
   ERROR,
   IGNORE,
   TRANSLIT,
-};
+// };
+} Mode;
 
 // This matching is strange but true.
 // See http://www.unicode.org/reports/tr22/#Charset_Alias_Matching.
@@ -266,7 +278,11 @@ struct __iconv_t {
   }
 
   uint16_t In16(const char* buf, bool swap) {
+#ifdef __cplusplus
     const uint8_t* src = reinterpret_cast<const uint8_t*>(buf);
+#else // !__cplusplus
+    const uint8_t* src = (const uint8_t*)(buf);
+#endif // __cplusplus
     uint16_t wc = (src[0]) | (src[1] << 8);
     if (swap) wc = __swap16(wc);
     src_bytes_used = 2;
@@ -274,7 +290,11 @@ struct __iconv_t {
   }
 
   uint32_t In32(const char* buf, bool swap) {
+#ifdef __cplusplus
     const uint8_t* src = reinterpret_cast<const uint8_t*>(buf);
+#else // !__cplusplus
+    const uint8_t* src = (const uint8_t*)(buf);
+#endif // __cplusplus
     uint32_t wc = (src[0]) | (src[1] << 8) | (src[2] << 16) | (src[3] << 24);
     if (swap) wc = __swap32(wc);
     src_bytes_used = 4;
