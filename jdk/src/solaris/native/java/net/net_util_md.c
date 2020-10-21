@@ -40,6 +40,9 @@
 #  include <values.h>
 # else
 #  include "values.h"
+
+#  define RTF_FLOW 0x02000000
+#  define RTF_POLICY 0x04000000
 # endif
 #else
 #include <limits.h>
