@@ -29,21 +29,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#if defined(__linux__) || defined(__solaris__)
-#include <sys/sendfile.h>
+#if defined(__ANDROID__) || defined(__linux__) || defined(__solaris__)
+# include <sys/sendfile.h>
 #elif defined(_AIX)
-#include <sys/socket.h>
-#elif defined(_ALLBSD_SOURCE)
-#include <sys/socket.h>
-#include <sys/uio.h>
-
-#define lseek64 lseek
-#define mmap64 mmap
-#endif
-
-#ifdef __ANDROID__
-#include <sys/syscall.h>
-#define sendfile64(a,b,c,d) syscall(__NR_sendfile64, a, b, c, d)
+# include <sys/socket.h>
+#elif defined(_ALLBSD_SOURCE) || defined(__ANDROID__)
+# if defined(_ALLBSD_SOURCE)
+#  include <sys/socket.h>
+#  include <sys/uio.h>
+# endif
+# define lseek64 lseek
+# define mmap64 mmap
 #endif
 
 #include "jni.h"
