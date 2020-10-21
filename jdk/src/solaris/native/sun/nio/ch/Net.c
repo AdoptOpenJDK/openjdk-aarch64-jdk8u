@@ -55,7 +55,7 @@
   #endif
 #endif
 
-#if defined(_ALLBSD_SOURCE) || defined(_AIX)
+#if defined(_ALLBSD_SOURCE) || defined(_AIX) || defined(__ANDROID__)
 
 #ifndef IP_BLOCK_SOURCE
 
