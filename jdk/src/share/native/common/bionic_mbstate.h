@@ -58,11 +58,19 @@ static inline __wur uint8_t mbstate_get_byte(const mbstate_t* ps, int n) {
 }
 static inline __wur size_t mbstate_reset_and_return_illegal(int _errno, mbstate_t* ps) {
   errno = _errno;
+#ifdef __cplusplus
+  *(reinterpret_cast<uint32_t*>(ps->__seq)) = 0;
+#else
   *(uint32_t*)(ps->__seq) = 0;
+#endif // __cplusplus
   return __MB_ERR_ILLEGAL_SEQUENCE;
 }
 static inline __wur size_t mbstate_reset_and_return(int _return, mbstate_t* ps) {
+#ifdef __cplusplus
+  *(reinterpret_cast<uint32_t*>(ps->__seq)) = 0;
+#else
   *(uint32_t*)(ps->__seq) = 0;
+#endif // __cplusplus
   return _return;
 }
 __END_DECLS
