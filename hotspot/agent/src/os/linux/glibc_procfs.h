@@ -13,7 +13,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#ifndef _SYS_PROCFS_H
+#if !defined(_SYS_PROCFS_H) && !defined(__x86_64__) && !defined(__i386__)
 #define _SYS_PROCFS_H	1
 
 /* This is somewhat modelled after the file of the same name on SVR4
