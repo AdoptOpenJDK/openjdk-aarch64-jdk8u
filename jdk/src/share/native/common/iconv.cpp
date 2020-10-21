@@ -37,6 +37,8 @@
 #include <uchar.h>
 #include "bionic_mbstate.h"
 
+#include "utils/Unicode.h" // for char16_t and char32_t
+
 #ifdef __cplusplus
 # define INVALID_ICONV_T reinterpret_cast<iconv_t>(-1)
 #else // !__cplusplus
