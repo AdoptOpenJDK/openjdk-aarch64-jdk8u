@@ -36,7 +36,11 @@
 #include <sys/time.h>
 
 #ifndef _ALLBSD_SOURCE
-#include <values.h>
+# ifndef __ANDROID__
+#  include <values.h>
+# else
+#  include "values.h"
+# endif
 #else
 #include <limits.h>
 #include <sys/param.h>
