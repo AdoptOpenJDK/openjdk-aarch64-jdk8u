@@ -314,6 +314,18 @@ static jboolean InitSimpleTypes
     (JNIEnv *env, jclass SimpleClass, char *SimpleSig,
      SurfCompHdr *pStart, SurfCompHdr *pEnd, jsize size)
 {
+/* ANDROID port: FIXME, this cause a strange error, as below:
+ *
+ * openjdk/jdk/src/share/native/sun/java2d/loops/GraphicsPrimitiveMgr.c: In function 'InitSimpleTypes.constprop':
+ * openjdk/jdk/src/share/native/sun/java2d/loops/GraphicsPrimitiveMgr.c:313:17: internal compiler error: in build2_stat, at tree.c:4159
+ * static jboolean InitSimpleTypes
+ *                 ^
+ * lib/Awt2dLibraries.gmk:466: recipe for target 'openjdk/build/linux-aarch64-normal-server-release/jdk/objs/libawt/GraphicsPrimitiveMgr.o' failed
+ * Please submit a full bug report,
+ * with preprocessed source if appropriate.
+ * See <http://source.android.com/source/report-bugs.html> for instructions.
+ */
+#ifndef __ANDROID__
     jboolean ok = JNI_TRUE;
     SurfCompHdr *pHdr;
     jfieldID field;
@@ -351,6 +363,7 @@ static jboolean InitSimpleTypes
     }
 
     return ok;
+#endif
 }
 
 static jboolean InitSurfaceTypes(JNIEnv *env, jclass ST)
