@@ -43,7 +43,6 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBTINYICONV, \
     MAPFILE := $(JDK_TOPDIR)/make/mapfiles/libtinyiconv/mapfile-vers, \
     LDFLAGS := $(LDFLAGS_JDKLIB) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
-#    LDFLAGS_linux := -liconv, \
     OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libtinyiconv, \
     DEBUG_SYMBOLS := true))
 
