@@ -158,7 +158,16 @@ JNIEXPORT void JNICALL Java_sun_tools_attach_LinuxVirtualMachine_connect
         int err = 0;
 
         addr.sun_family = AF_UNIX;
-        strcpy(addr.sun_path, p);
+        addr.sun_family = AF_UNIX;
+        /* strncpy is safe because addr.sun_path was zero-initialized before. */
+#ifndef __ANDROID__
+        strncpy(addr.sun_path, p, sizeof(addr.sun_path) - 1);
+#else
+        /* Abstract namespace, first char is '\0', don't use strcpy */
+        jint len = (*env)->GetStringLength(env, path);
+        sockLen = offsetof(struct sockaddr_un, sun_path) + len;
+        memcpy(addr.sun_path, p, len);
+#endif
 
         if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
             err = errno;
@@ -306,7 +315,12 @@ static void SendQuitCallback(const pid_t pid, void* user_data) {
     SendQuitContext* context = (SendQuitContext*)user_data;
     pid_t parent = getParent(pid);
     if (parent == context->ppid) {
+#ifndef __ANDROID__
         kill(pid, SIGQUIT);
+#else
+        /* Dalvik intercepts SIGQUIT so use SIGTERM */
+        kill(pid, SIGTERM);
+#endif
     }
 }
 
@@ -348,6 +362,7 @@ JNIEXPORT void JNICALL Java_sun_tools_attach_LinuxVirtualMachine_sendQuitTo
 JNIEXPORT void JNICALL Java_sun_tools_attach_LinuxVirtualMachine_checkPermissions
   (JNIEnv *env, jclass cls, jstring path)
 {
+#ifndef __ANDROID__
     jboolean isCopy;
     const char* p = GetStringPlatformChars(env, path, &isCopy);
     if (p != NULL) {
@@ -401,6 +416,7 @@ JNIEXPORT void JNICALL Java_sun_tools_attach_LinuxVirtualMachine_checkPermission
             JNU_ReleaseStringPlatformChars(env, path, p);
         }
     }
+#endif
 }
 
 /*
