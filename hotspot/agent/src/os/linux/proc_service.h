@@ -29,9 +29,9 @@
 #include <thread_db.h>
 
 #ifdef __ANDROID__
-// # include "glibc_procfs.h"
+# include "glibc_procfs.h"
 
-# include <linux/elfcore.h>
+// # include <linux/elfcore.h>
 #endif
 
 // Linux does not have the proc service library, though it does provide the
