@@ -558,7 +558,10 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
       LIBAWT_XAWT_CFLAGS += -DINTERNAL_BUILD
     endif
 
-    LIBAWT_XAWT_FILES := \
+    # fake
+    LIBAWT_XAWT_FILES := list.c
+
+    LIBAWT_XAWT_FILES_Z := \
         XlibWrapper.c \
         XWindow.c \
         XToolkit.c \
@@ -651,7 +654,7 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
 
     $(BUILD_LIBAWT_XAWT): $(BUILD_LIBAWT)
 
-    # BUILD_LIBRARIES += $(BUILD_LIBAWT_XAWT)
+    BUILD_LIBRARIES += $(BUILD_LIBAWT_XAWT)
 
   endif
 endif
