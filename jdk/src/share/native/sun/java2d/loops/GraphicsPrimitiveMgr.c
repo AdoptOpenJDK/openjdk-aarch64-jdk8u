@@ -363,6 +363,8 @@ static jboolean InitSimpleTypes
     }
 
     return ok;
+#else
+    return JNI_FALSE;
 #endif
 }
 
