@@ -211,6 +211,7 @@ JNIEXPORT jboolean JNICALL Java_sun_tools_attach_LinuxVirtualMachine_isLinuxThre
     char* s;
     jboolean res;
 
+#ifndef __ANDROID__
     n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, 0);
     if (n <= 0) {
        /* glibc before 2.3.2 only has LinuxThreads */
@@ -223,6 +224,9 @@ JNIEXPORT jboolean JNICALL Java_sun_tools_attach_LinuxVirtualMachine_isLinuxThre
         return JNI_TRUE;
     }
     confstr(_CS_GNU_LIBPTHREAD_VERSION, s, n);
+#else
+    s = "Android NPTL";
+#endif
 
     /*
      * If the LIBPTHREAD version include "NPTL" then we know we
