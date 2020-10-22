@@ -41,8 +41,9 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBTINYICONV, \
     OPTIMIZATION := LOW, \
     CFLAGS := $(CXXFLAGS_JDKLIB) \
         -I$(JDK_TOPDIR)/src/share/tinyiconv, \
-    LDFLAGS := $(LDFLAGS_JDKLIB) \
+    LDFLAGS := $(LDFLAGS_JDKLIB) $(LDFLAGS_CXX_JDK) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LDFLAGS_SUFFIX_posix := $(LIBCXX) -lc, \
     OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libtinyiconv, \
     DEBUG_SYMBOLS := true))
 
