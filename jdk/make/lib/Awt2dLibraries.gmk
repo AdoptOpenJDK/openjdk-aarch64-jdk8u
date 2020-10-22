@@ -558,12 +558,7 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
       LIBAWT_XAWT_CFLAGS += -DINTERNAL_BUILD
     endif
 
-    # fake
     LIBAWT_XAWT_FILES := \
-        list.c \
-        initIDs.c
-
-    LIBAWT_XAWT_FILES_Z := \
         XlibWrapper.c \
         XWindow.c \
         XToolkit.c \
@@ -622,7 +617,7 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
         XRSurfaceData.c \
         XRBackendNative.c
     # -lXext -lX11 -lXrender -lXtst -lXi
-    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt $(LIBDL) -ljava -ljvm -lc -lawt_headless
+    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt $(LIBDL) -ljava -ljvm -lc
 
     ifeq ($(OPENJDK_TARGET_OS), linux)
       # To match old build, add this to LDFLAGS instead of suffix.
@@ -656,7 +651,7 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
 
     $(BUILD_LIBAWT_XAWT): $(BUILD_LIBAWT)
 
-    BUILD_LIBRARIES += $(BUILD_LIBAWT_XAWT)
+    # BUILD_LIBRARIES += $(BUILD_LIBAWT_XAWT)
 
   endif
 endif
