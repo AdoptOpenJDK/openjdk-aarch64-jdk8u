@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include "jni.h"
 #include "sys.h"
 #include "util.h"
 
