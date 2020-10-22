@@ -30,10 +30,10 @@ WIN_VERIFY_LIB := $(JDK_OUTPUTDIR)/objs/libverify/verify.lib
 
 ##########################################################################################
 
-ifeq ($(OPENJDK_TARGET_OS), linux)
+ifeq ($(OPENJDK_TARGET_OS), android)
 BUILD_LIBTINYICONV_SRC := iconv.cpp
 $(eval $(call SetupNativeCompilation,BUILD_LIBTINYICONV, \
-    LIBRARY := tinyiconv, \
+    LIBRARY := iconv, \
     OUTPUT_DIR := $(INSTALL_LIBRARIES_HERE), \
     SRC := $(JDK_TOPDIR)/src/share/tinyiconv, \
     LANG := C++, \
@@ -566,7 +566,6 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBNPT, \
     MAPFILE := $(JDK_TOPDIR)/make/mapfiles/libnpt/mapfile-vers, \
     LDFLAGS := $(LDFLAGS_JDKLIB) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
-    LDFLAGS_linux := -ltinyiconv, \
     LDFLAGS_macosx := -liconv, \
     LDFLAGS_SUFFIX_windows := -export:nptInitialize -export:nptTerminate, \
     LDFLAGS_SUFFIX_solaris := -lc, \
