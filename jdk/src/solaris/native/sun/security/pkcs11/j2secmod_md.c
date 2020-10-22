@@ -48,6 +48,7 @@ void *findFunction(JNIEnv *env, jlong jHandle, const char *functionName) {
 JNIEXPORT jlong JNICALL Java_sun_security_pkcs11_Secmod_nssGetLibraryHandle
   (JNIEnv *env, jclass thisClass, jstring jLibName)
 {
+    void *hModule;
     const char *libName = (*env)->GetStringUTFChars(env, jLibName, NULL);
     if (libName == NULL) {
         return 0L;
