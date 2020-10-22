@@ -512,6 +512,10 @@ BUILD_LIBRARIES += $(BUILD_LIBAWT)
 
 ##########################################################################################
 
+ifeq ($(OPENJDK_TARGET_OS), android)
+  BUILD_HEADLESS_ONLY := 1
+endif
+
 ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
   ifndef BUILD_HEADLESS_ONLY
 
