@@ -56,10 +56,12 @@ JNIEXPORT jlong JNICALL Java_sun_security_pkcs11_Secmod_nssGetLibraryHandle
     // look up existing handle only, do not load
 #if defined(AIX)
     hModule = dlopen(libName, RTLD_LAZY);
-#elif defined(__ANDROID__)
+#else
+#ifdef __ANDROID__
     hModule = (void*)dlopen(libName, RTLD_LOCAL);
 #else
     hModule = dlopen(libName, RTLD_NOLOAD);
+#endif
 #endif
     dprintf2("-handle for %s: %u\n", libName, hModule);
     (*env)->ReleaseStringUTFChars(env, jLibName, libName);
