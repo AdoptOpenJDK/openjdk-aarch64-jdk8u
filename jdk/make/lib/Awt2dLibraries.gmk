@@ -512,10 +512,6 @@ BUILD_LIBRARIES += $(BUILD_LIBAWT)
 
 ##########################################################################################
 
-ifeq ($(OPENJDK_TARGET_OS), android)
-  BUILD_HEADLESS_ONLY := 1
-endif
-
 ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
   ifndef BUILD_HEADLESS_ONLY
 
@@ -562,7 +558,12 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
       LIBAWT_XAWT_CFLAGS += -DINTERNAL_BUILD
     endif
 
+    # fake
     LIBAWT_XAWT_FILES := \
+        list.c \
+        initIDs.c
+
+    LIBAWT_XAWT_FILES_Z := \
         XlibWrapper.c \
         XWindow.c \
         XToolkit.c \
@@ -620,8 +621,8 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
         sun_awt_X11_GtkFileDialogPeer.c \
         XRSurfaceData.c \
         XRBackendNative.c
-
-    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt -lXext -lX11 -lXrender $(LIBDL) -lXtst -lXi -ljava -ljvm -lc
+    # -lXext -lX11 -lXrender -lXtst -lXi
+    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt $(LIBDL) -ljava -ljvm -lc
 
     ifeq ($(OPENJDK_TARGET_OS), linux)
       # To match old build, add this to LDFLAGS instead of suffix.
@@ -1223,7 +1224,7 @@ ifndef BUILD_HEADLESS_ONLY
       OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libsplashscreen, \
       DEBUG_SYMBOLS := $(DEBUG_ALL_BINARIES)))
 
-  BUILD_LIBRARIES += $(LIBSPLASHSCREEN)
+  # BUILD_LIBRARIES += $(LIBSPLASHSCREEN)
 
   ifeq ($(OPENJDK_TARGET_OS), macosx)
     $(LIBSPLASHSCREEN): $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)osxapp$(SHARED_LIBRARY_SUFFIX)
