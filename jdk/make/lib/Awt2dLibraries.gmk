@@ -23,6 +23,8 @@
 # questions.
 #
 
+X_LIBS :=
+
 WIN_AWT_LIB := $(JDK_OUTPUTDIR)/objs/libawt/awt.lib
 
 ##########################################################################################
@@ -558,10 +560,7 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
       LIBAWT_XAWT_CFLAGS += -DINTERNAL_BUILD
     endif
 
-    # fake
-    LIBAWT_XAWT_FILES := list.c
-
-    LIBAWT_XAWT_FILES_Z := \
+    LIBAWT_XAWT_FILES := \
         XlibWrapper.c \
         XWindow.c \
         XToolkit.c \
@@ -1198,7 +1197,8 @@ ifndef BUILD_HEADLESS_ONLY
   else ifeq ($(OPENJDK_TARGET_OS), windows)
     LIBSPLASHSCREEN_LDFLAGS_SUFFIX += kernel32.lib user32.lib gdi32.lib delayimp.lib -DELAYLOAD:user32.dll
   else
-    LIBSPLASHSCREEN_LDFLAGS_SUFFIX += $(X_LIBS) -lX11 -lXext $(LIBM) -lpthread
+    # $(X_LIBS) -lX11 -lXext
+    LIBSPLASHSCREEN_LDFLAGS_SUFFIX += $(LIBM) -lpthread
   endif
 
   $(eval $(call SetupNativeCompilation,LIBSPLASHSCREEN, \
@@ -1222,7 +1222,7 @@ ifndef BUILD_HEADLESS_ONLY
       OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libsplashscreen, \
       DEBUG_SYMBOLS := $(DEBUG_ALL_BINARIES)))
 
-  # BUILD_LIBRARIES += $(LIBSPLASHSCREEN)
+  BUILD_LIBRARIES += $(LIBSPLASHSCREEN)
 
   ifeq ($(OPENJDK_TARGET_OS), macosx)
     $(LIBSPLASHSCREEN): $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)osxapp$(SHARED_LIBRARY_SUFFIX)
