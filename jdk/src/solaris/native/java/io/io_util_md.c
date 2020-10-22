@@ -43,6 +43,10 @@
 #include <sys/ioctl.h>
 #endif
 
+#ifdef __ANDROID__
+#define open64 open
+#endif
+
 #ifdef MACOSX
 
 #include <CoreFoundation/CoreFoundation.h>
