@@ -565,7 +565,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBNPT, \
     MAPFILE := $(JDK_TOPDIR)/make/mapfiles/libnpt/mapfile-vers, \
     LDFLAGS := $(LDFLAGS_JDKLIB) \
         $(call SET_SHARED_LIBRARY_ORIGIN) -ltinyiconv, \
-    # LDFLAGS_macosx := -liconv, \
+    LDFLAGS_macosx := -liconv, \
     LDFLAGS_SUFFIX_windows := -export:nptInitialize -export:nptTerminate, \
     LDFLAGS_SUFFIX_solaris := -lc, \
     VERSIONINFO_RESOURCE := $(JDK_TOPDIR)/src/windows/resource/version.rc, \
