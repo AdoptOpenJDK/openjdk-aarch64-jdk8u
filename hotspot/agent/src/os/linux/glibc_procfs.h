@@ -13,7 +13,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#if !defined(_SYS_PROCFS_H) && !defined(__x86_64__) && !defined(__i386__)
+#ifndef _SYS_PROCFS_H
 #define _SYS_PROCFS_H	1
 
 /* This is somewhat modelled after the file of the same name on SVR4
@@ -42,6 +42,7 @@ __BEGIN_DECLS
 typedef struct user_fpregs_struct elf_fpregset_t;
 #endif
 
+if !defined(__x86_64__) && !defined(__i386__)
 /* Signal info.  */
 struct elf_siginfo
   {
@@ -102,13 +103,15 @@ struct elf_prpsinfo
 /* Addresses.  */
 typedef void *psaddr_t;
 
-/* Register sets.  Linux has different names.  */
-typedef elf_gregset_t prgregset_t;
-typedef elf_fpregset_t prfpregset_t;
-
 /* We don't have any differences between processes and threads,
    therefore have only one PID type.  */
 typedef __pid_t lwpid_t;
+
+#endif // !__x86_64__ && !__i386__
+
+/* Register sets.  Linux has different names.  */
+typedef elf_gregset_t prgregset_t;
+typedef elf_fpregset_t prfpregset_t;
 
 /* Process status and info.  In the end we do provide typedefs for them.  */
 typedef struct elf_prstatus prstatus_t;
