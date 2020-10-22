@@ -30,6 +30,28 @@ WIN_VERIFY_LIB := $(JDK_OUTPUTDIR)/objs/libverify/verify.lib
 
 ##########################################################################################
 
+ifeq ($(OPENJDK_TARGET_OS), linux)
+BUILD_LIBTINYICONV_SRC := iconv.cpp
+$(eval $(call SetupNativeCompilation,BUILD_LIBTINYICONV, \
+    LIBRARY := tinyiconv, \
+    OUTPUT_DIR := $(INSTALL_LIBRARIES_HERE), \
+    SRC := $(JDK_TOPDIR)/src/share/tinyiconv, \
+    LANG := C++, \
+    OPTIMIZATION := LOW, \
+    CFLAGS := $(CXXFLAGS_JDKLIB) \
+        -I$(JDK_TOPDIR)/src/share/tinyiconv, \
+    MAPFILE := $(JDK_TOPDIR)/make/mapfiles/libtinyiconv/mapfile-vers, \
+    LDFLAGS := $(LDFLAGS_JDKLIB) \
+        $(call SET_SHARED_LIBRARY_ORIGIN), \
+#    LDFLAGS_linux := -liconv, \
+    OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libtinyiconv, \
+    DEBUG_SYMBOLS := true))
+
+BUILD_LIBRARIES += $(BUILD_LIBTINYICONV)
+endif
+
+##########################################################################################
+
 BUILD_LIBFDLIBM_OPTIMIZATION := NONE
 
 ifeq ($(OPENJDK_TARGET_OS), solaris)
@@ -544,6 +566,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBNPT, \
     MAPFILE := $(JDK_TOPDIR)/make/mapfiles/libnpt/mapfile-vers, \
     LDFLAGS := $(LDFLAGS_JDKLIB) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
+    LDFLAGS_linux := -ltinyiconv, \
     LDFLAGS_macosx := -liconv, \
     LDFLAGS_SUFFIX_windows := -export:nptInitialize -export:nptTerminate, \
     LDFLAGS_SUFFIX_solaris := -lc, \
