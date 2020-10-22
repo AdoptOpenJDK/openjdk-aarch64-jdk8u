@@ -155,9 +155,10 @@ JNIEXPORT void JNICALL Java_sun_tools_attach_LinuxVirtualMachine_connect
     const char* p = GetStringPlatformChars(env, path, &isCopy);
     if (p != NULL) {
         struct sockaddr_un addr;
+        socklen_t sockLen = sizeof(addr);
         int err = 0;
 
-        addr.sun_family = AF_UNIX;
+        memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
         /* strncpy is safe because addr.sun_path was zero-initialized before. */
 #ifndef __ANDROID__
@@ -169,7 +170,7 @@ JNIEXPORT void JNICALL Java_sun_tools_attach_LinuxVirtualMachine_connect
         memcpy(addr.sun_path, p, len);
 #endif
 
-        if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        if (connect(fd, (struct sockaddr*)&addr, sockLen) == -1) {
             err = errno;
         }
 
