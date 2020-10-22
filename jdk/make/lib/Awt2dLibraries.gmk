@@ -560,7 +560,8 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
       LIBAWT_XAWT_CFLAGS += -DINTERNAL_BUILD
     endif
 
-    LIBAWT_XAWT_FILES := \
+    LIBAWT_XAWT_FILES := list.c
+    LIBAWT_XAWT_FILES_Z := \
         XlibWrapper.c \
         XWindow.c \
         XToolkit.c \
@@ -1054,12 +1055,12 @@ else # OPENJDK_TARGET_OS not windows
     ifneq ($(OPENJDK_TARGET_OS), solaris)
       JAWT_LIBS += -lawt
     endif
-    ifndef BUILD_HEADLESS_ONLY
-      JAWT_LIBS += -lawt_xawt
-    else
+    # ifndef BUILD_HEADLESS_ONLY
+      # JAWT_LIBS += -lawt_xawt
+    # else
       JAWT_LIBS += -lawt_headless
       HEADLESS_CFLAG += -DHEADLESS
-    endif
+    # endif
   endif
 
   $(eval $(call SetupNativeCompilation,BUILD_LIBJAWT, \
@@ -1085,11 +1086,11 @@ else # OPENJDK_TARGET_OS not windows
       OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libjawt, \
       DEBUG_SYMBOLS := $(DEBUG_ALL_BINARIES)))
 
-  ifndef BUILD_HEADLESS_ONLY
-    $(BUILD_LIBJAWT): $(BUILD_LIBAWT_XAWT)
-  else
+  # ifndef BUILD_HEADLESS_ONLY
+    # $(BUILD_LIBJAWT): $(BUILD_LIBAWT_XAWT)
+  # else
     $(BUILD_LIBJAWT): $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)awt_headless$(SHARED_LIBRARY_SUFFIX)
-  endif
+  # endif
 
   ifeq ($(OPENJDK_TARGET_OS), macosx)
     $(BUILD_LIBJAWT): $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)awt_lwawt$(SHARED_LIBRARY_SUFFIX)
@@ -1222,7 +1223,7 @@ ifndef BUILD_HEADLESS_ONLY
       OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libsplashscreen, \
       DEBUG_SYMBOLS := $(DEBUG_ALL_BINARIES)))
 
-  BUILD_LIBRARIES += $(LIBSPLASHSCREEN)
+  # BUILD_LIBRARIES += $(LIBSPLASHSCREEN)
 
   ifeq ($(OPENJDK_TARGET_OS), macosx)
     $(LIBSPLASHSCREEN): $(INSTALL_LIBRARIES_HERE)/$(LIBRARY_PREFIX)osxapp$(SHARED_LIBRARY_SUFFIX)
