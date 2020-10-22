@@ -31,6 +31,7 @@ WIN_VERIFY_LIB := $(JDK_OUTPUTDIR)/objs/libverify/verify.lib
 ##########################################################################################
 
 ifeq ($(OPENJDK_TARGET_OS), linux)
+#    MAPFILE := $(JDK_TOPDIR)/make/mapfiles/libtinyiconv/mapfile-vers, \
 BUILD_LIBTINYICONV_SRC := iconv.cpp
 $(eval $(call SetupNativeCompilation,BUILD_LIBTINYICONV, \
     LIBRARY := tinyiconv, \
@@ -40,7 +41,6 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBTINYICONV, \
     OPTIMIZATION := LOW, \
     CFLAGS := $(CXXFLAGS_JDKLIB) \
         -I$(JDK_TOPDIR)/src/share/tinyiconv, \
-    MAPFILE := $(JDK_TOPDIR)/make/mapfiles/libtinyiconv/mapfile-vers, \
     LDFLAGS := $(LDFLAGS_JDKLIB) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
     OBJECT_DIR := $(JDK_OUTPUTDIR)/objs/libtinyiconv, \
