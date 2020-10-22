@@ -622,7 +622,7 @@ ifeq ($(findstring $(OPENJDK_TARGET_OS),windows macosx),)
         XRSurfaceData.c \
         XRBackendNative.c
     # -lXext -lX11 -lXrender -lXtst -lXi
-    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt $(LIBDL) -ljava -ljvm -lc
+    LIBAWT_XAWT_LDFLAGS_SUFFIX := $(LIBM) -lawt $(LIBDL) -ljava -ljvm -lc -lawt_headless
 
     ifeq ($(OPENJDK_TARGET_OS), linux)
       # To match old build, add this to LDFLAGS instead of suffix.
