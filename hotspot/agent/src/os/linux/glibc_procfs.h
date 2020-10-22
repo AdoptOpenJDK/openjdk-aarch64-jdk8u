@@ -38,11 +38,7 @@ __BEGIN_DECLS
    semantics, so leave it that way.  */
 #define ELF_NGREG (sizeof (struct user_regs_struct) / sizeof(elf_greg_t))
 
-#ifdef __x86_64__
-typedef struct user_fpregs_struct elf_fpregset_t;
-#endif
-
-if !defined(__x86_64__) && !defined(__i386__)
+#if !defined(__x86_64__) && !defined(__i386__)
 /* Signal info.  */
 struct elf_siginfo
   {
@@ -107,11 +103,11 @@ typedef void *psaddr_t;
    therefore have only one PID type.  */
 typedef __pid_t lwpid_t;
 
-#endif // !__x86_64__ && !__i386__
-
 /* Register sets.  Linux has different names.  */
 typedef elf_gregset_t prgregset_t;
 typedef elf_fpregset_t prfpregset_t;
+
+#endif // !__x86_64__ && !__i386__
 
 /* Process status and info.  In the end we do provide typedefs for them.  */
 typedef struct elf_prstatus prstatus_t;
