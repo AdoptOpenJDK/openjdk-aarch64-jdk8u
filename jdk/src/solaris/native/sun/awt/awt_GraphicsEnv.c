@@ -72,10 +72,10 @@ static jboolean glxRequested = JNI_FALSE;
 #endif /* !HEADLESS */
 
 #ifdef HEADLESS
-#define Display void
+#define Display long
 #endif /* HEADLESS */
 
-Display *awt_display;
+Display *awt_display = 1;
 
 jclass tkClass = NULL;
 jmethodID awtLockMID = NULL;
@@ -1035,7 +1035,7 @@ Java_sun_awt_X11GraphicsEnvironment_getDisplayString
   (JNIEnv *env, jobject this)
 {
 #ifdef HEADLESS
-    return (jstring)NULL;
+    return (*env)->NewStringUTF(env, ":0");
 #else
     return (*env)->NewStringUTF(env, DisplayString(awt_display));
 #endif /* HEADLESS */
@@ -1163,7 +1163,7 @@ JNIEXPORT void JNICALL
 Java_sun_awt_X11GraphicsConfig_dispose
     (JNIEnv *env, jclass x11gc, jlong configData)
 {
-#ifndef HEADLESS
+#if defined(__ANDROID__) || !defined(HEADLESS)
     AwtGraphicsConfigDataPtr aData = (AwtGraphicsConfigDataPtr)
         jlong_to_ptr(configData);
 
@@ -1179,13 +1179,25 @@ Java_sun_awt_X11GraphicsConfig_dispose
         free(aData->awtImage);
     }
     if (aData->monoImage) {
+#ifndef __ANDROID__
         XFree(aData->monoImage);
+#else
+        free(aData->monoImage);
+#endif
     }
     if (aData->monoPixmap) {
+#ifndef __ANDROID__
         XFreePixmap(awt_display, aData->monoPixmap);
+#else
+        free(aData->monoPixmap);
+#endif
     }
     if (aData->monoPixmapGC) {
+#ifndef __ANDROID__
         XFreeGC(awt_display, aData->monoPixmapGC);
+#else
+        free(aData->monoPixmapGC);
+#endif
     }
     if (aData->color_data) {
         free(aData->color_data);
@@ -1205,7 +1217,7 @@ Java_sun_awt_X11GraphicsConfig_dispose
     }
 
     free(aData);
-#endif /* !HEADLESS */
+#endif /* __ANDROID__ || !HEADLESS */
 }
 
 /*
@@ -1218,7 +1230,7 @@ Java_sun_awt_X11GraphicsConfig_getXResolution(
 JNIEnv *env, jobject this, jint screen)
 {
 #ifdef HEADLESS
-    return (jdouble)0;
+    return (jdouble)1;
 #else
     return ((DisplayWidth(awt_display, screen) * 25.4) /
             DisplayWidthMM(awt_display, screen));
@@ -1235,7 +1247,7 @@ Java_sun_awt_X11GraphicsConfig_getYResolution(
 JNIEnv *env, jobject this, jint screen)
 {
 #ifdef HEADLESS
-    return (jdouble)0;
+    return (jdouble)1;
 #else
     return ((DisplayHeight(awt_display, screen) * 25.4) /
             DisplayHeightMM(awt_display, screen));
@@ -1253,7 +1265,7 @@ Java_sun_awt_X11GraphicsConfig_getNumColors(
 JNIEnv *env, jobject this)
 {
 #ifdef HEADLESS
-    return (jint)0;
+    return (jint)256; // FIXME!
 #else
     AwtGraphicsConfigData *adata;
 
@@ -1314,6 +1326,12 @@ JNIEnv *env, jobject this, jint visualNum, jint screen)
     (*env)->SetIntField(env, this, x11GraphicsConfigIDs.bitsPerPixel,
                         (jint)tempImage->bits_per_pixel);
     XDestroyImage(tempImage);
+#else
+    // TODO!!!!
+    // JNU_SetLongFieldFromPtr(env, this, x11GraphicsConfigIDs.aData, adata);
+
+    (*env)->SetIntField(env, this, x11GraphicsConfigIDs.bitsPerPixel,
+                        (jint) 16);
 #endif /* !HEADLESS */
 }
 
