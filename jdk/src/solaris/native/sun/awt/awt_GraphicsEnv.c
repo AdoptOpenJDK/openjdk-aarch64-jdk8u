@@ -726,7 +726,7 @@ static void xineramaInit(void) {
     xinerama_init_solaris();
 #endif /* __linux__ || MACOSX */
 }
-// #endif // HEADLESS
+#endif /* HEADLESS */
 
 Display *
 awt_init_Display(JNIEnv *env, jobject this)
@@ -821,7 +821,7 @@ awt_init_Display(JNIEnv *env, jobject this)
 
     return dpy;
 }
-#endif /* !HEADLESS */
+// #endif /* !HEADLESS */
 
 /*
  * Class:     sun_awt_X11GraphicsEnvironment
