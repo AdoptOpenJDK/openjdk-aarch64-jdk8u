@@ -192,6 +192,8 @@ static int xioerror_handler(Display *disp)
     return 0;
 }
 
+#endif
+
 static AwtGraphicsConfigDataPtr
 findWithTemplate(XVisualInfo *vinfo,
                  long mask)
@@ -201,9 +203,13 @@ findWithTemplate(XVisualInfo *vinfo,
     XColor color;
     AwtGraphicsConfigDataPtr defaultConfig;
     int visualsMatched, i;
-
+#ifndef __ANDROID__
     visualList = XGetVisualInfo(awt_display,
                                 mask, vinfo, &visualsMatched);
+#else
+    visualList = calloc(1, sizeof(XVisualInfo));
+    visualList[0].screen = 0;
+#endif
     if (visualList) {
         defaultConfig = ZALLOC(_AwtGraphicsConfigData);
         for (i = 0; i < visualsMatched; i++) {
@@ -216,18 +222,29 @@ findWithTemplate(XVisualInfo *vinfo,
                 /* Allocate white and black pixels for this visual */
                 color.flags = DoRed | DoGreen | DoBlue;
                 color.red = color.green = color.blue = 0x0000;
+#ifndef __ANDROID__
                 XAllocColor(awt_display, defaultConfig->awt_cmap, &color);
+#else
+                color.pixel =  (0<<16) | (0<<8) | 0;
+#endif
                 x11Screens[visualList[i].screen].blackpixel = color.pixel;
                 color.flags = DoRed | DoGreen | DoBlue;
                 color.red = color.green = color.blue = 0xffff;
+#ifndef __ANDROID__
                 XAllocColor(awt_display, defaultConfig->awt_cmap, &color);
+#else
+                color.pixel =  (255<<16) | (255<<8) | 255;
+#endif
                 x11Screens[visualList[i].screen].whitepixel = color.pixel;
-
+#ifndef __ANDROID__
                 XFree(visualList);
+#endif
                 return defaultConfig;
             }
         }
+#ifndef __ANDROID__
         XFree(visualList);
+#endif
         free((void *)defaultConfig);
     }
     return NULL;
@@ -249,7 +266,11 @@ makeDefaultConfig(JNIEnv *env, int screen) {
 
     xinawareScreen = usingXinerama ? 0 : screen;
     defaultVisualID =
+#ifndef __ANDROID__
         XVisualIDFromVisual(DefaultVisual(awt_display, xinawareScreen));
+#else
+        TrueColor;
+#endif
 
     memset(&vinfo, 0, sizeof(XVisualInfo));
     vinfo.screen = xinawareScreen;
@@ -320,14 +341,16 @@ makeDefaultConfig(JNIEnv *env, int screen) {
 
     /* we tried everything, give up */
     JNU_ThrowInternalError(env, "Can't find supported visual");
+#ifndef __ANDROID__
     XCloseDisplay(awt_display);
+#endif
     awt_display = NULL;
     return NULL;
 }
 
 static void
 getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
-
+#ifndef __ANDROID__
     int i;
     int n8p=0, n12p=0, n8s=0, n8gs=0, n8sg=0, n1sg=0, nTrue=0;
     int nConfig;
@@ -576,7 +599,9 @@ getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
        XFree (pVI8sg);
     if (n1sg != 0)
        XFree (pVI1sg);
-
+#else // __ANDROID__
+    // IMPORTANT TODO
+#endif
     screenDataPtr->numConfigs = nConfig;
     screenDataPtr->configs = graphicsConfigs;
 
@@ -701,7 +726,7 @@ static void xineramaInit(void) {
     xinerama_init_solaris();
 #endif /* __linux__ || MACOSX */
 }
-#endif /* HEADLESS */
+// #endif // HEADLESS
 
 Display *
 awt_init_Display(JNIEnv *env, jobject this)
