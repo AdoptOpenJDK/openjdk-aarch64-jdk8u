@@ -873,6 +873,8 @@ Java_sun_awt_X11GraphicsEnvironment_initGLX(JNIEnv *env, jclass x11ge)
     AWT_UNLOCK();
 
     return glxAvailable;
+#elif defined(__ANDROID)
+    return JNI_TRUE;
 #else
     return JNI_FALSE;
 #endif /* !HEADLESS */
@@ -887,7 +889,7 @@ JNIEXPORT jint JNICALL
 Java_sun_awt_X11GraphicsEnvironment_getNumScreens(JNIEnv *env, jobject this)
 {
 #ifdef HEADLESS
-    return (jint)0;
+    return (jint)1;
 #else
     return awt_numScreens;
 #endif /* !HEADLESS */
