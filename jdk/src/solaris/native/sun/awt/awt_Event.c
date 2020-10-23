@@ -28,9 +28,12 @@
  *** awt_AWTEvent.[ch] FOR THE NEWER EVENT CLASSES.
  ***
  ***/
+
+/*
 #ifdef HEADLESS
     #error This file should not be included in headless library
 #endif
+*/
 
 #include "java_awt_Event.h"
 #include "jni_util.h"
