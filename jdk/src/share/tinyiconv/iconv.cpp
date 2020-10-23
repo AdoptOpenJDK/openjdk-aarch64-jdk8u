@@ -29,11 +29,15 @@
 #ifdef __ANDROID__
 
 #include <stdint.h>
+
 // for char16_t and char32_t
+/*
 #if defined __cplusplus // && __cplusplus < 201103L
 typedef uint32_t char32_t;
 typedef uint16_t char16_t;
 #endif
+*/
+
 #include <ctype.h>
 
 #include "iconv.h"
