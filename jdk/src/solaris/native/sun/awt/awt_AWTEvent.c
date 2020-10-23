@@ -29,11 +29,11 @@
  * THIS FILE DOES NOT IMPLEMENT ANY OF THE OBSOLETE java.awt.Event
  * CLASS. SEE awt_Event.[ch] FOR THAT CLASS' IMPLEMENTATION.
  */
-
+/*
 #ifdef HEADLESS
     #error This file should not be included in headless library
 #endif
-
+*/
 #include "awt_p.h"
 #include "java_awt_AWTEvent.h"
 #include "java_awt_event_InputEvent.h"
