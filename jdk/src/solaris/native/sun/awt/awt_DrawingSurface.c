@@ -241,7 +241,7 @@ awt_DrawingSurface_GetDrawingSurfaceInfo(JAWT_DrawingSurface* ds)
     px->visualID = XVisualIDFromVisual(attrs.visual);
 #else
     px->visualID = TrueColor;
-    attrs.colormapID = 1; // FIXME!
+    attrs.colormap = 1; // FIXME!
     attrs.depth = 24;
 #endif
 
