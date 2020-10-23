@@ -296,6 +296,7 @@ ifneq ($(OSNAME),windows)
   ARCH/ppc64le= ppc
   ARCH/ppc    = ppc
   ARCH/zero   = zero
+  ARCH_arm     = aarch32
   ARCH/aarch32 = aarch32
   ARCH/aarch64 = aarch64
 
@@ -328,6 +329,7 @@ ifneq ($(OSNAME),windows)
   LIBARCH        ?= $(LIBARCH/$(BUILDARCH))
   LIBARCH/i486    = i386
   LIBARCH/amd64   = amd64
+  LIBARCH/arm     = aarch32
   LIBARCH/aarch32 = aarch32
   LIBARCH/aarch64 = aarch64
   LIBARCH/sparc   = sparc
