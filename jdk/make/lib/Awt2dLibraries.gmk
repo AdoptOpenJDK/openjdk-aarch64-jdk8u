@@ -800,6 +800,7 @@ ifeq ($(BUILD_HEADLESS), true)
         awt_DrawingSurface.c \
         awt_Event.c \
         awt_Font.c \
+        awt_GraphicsEnv.c \
         HeadlessToolkit.c \
         fontpath.c \
         VDrawingArea.c \
