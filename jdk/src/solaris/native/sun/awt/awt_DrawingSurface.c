@@ -235,7 +235,7 @@ awt_DrawingSurface_GetDrawingSurfaceInfo(JAWT_DrawingSurface* ds)
     px->display = awt_display;
 
     /* Get window attributes to set other values */
-#ifndef __ANDROID__
+#if !defined(__ANDROID__) && !defined(HEADLESS)
     XGetWindowAttributes(awt_display, (Window)(px->drawable), &attrs);
 
     px->visualID = XVisualIDFromVisual(attrs.visual);
