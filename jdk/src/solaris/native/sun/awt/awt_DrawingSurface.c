@@ -235,10 +235,17 @@ awt_DrawingSurface_GetDrawingSurfaceInfo(JAWT_DrawingSurface* ds)
     px->display = awt_display;
 
     /* Get window attributes to set other values */
+#ifndef __ANDROID__
     XGetWindowAttributes(awt_display, (Window)(px->drawable), &attrs);
 
-    /* Set the other values */
     px->visualID = XVisualIDFromVisual(attrs.visual);
+#else
+    px->visualID = TrueColor;
+    attrs.colormapID = 1; // FIXME!
+    attrs.depth = 24;
+#endif
+
+    /* Set the other values */
     px->colormapID = attrs.colormap;
     px->depth = attrs.depth;
     px->GetAWTColor = awt_GetColor;
