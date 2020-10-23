@@ -718,6 +718,9 @@ class CommandLineFlags {
   product(bool, CriticalJNINatives, true,                                   \
           "Check for critical JNI entry points")                            \
                                                                             \
+  product(bool, UseLegacyJNINameEscaping, false,                            \
+          "Use the original JNI name escaping scheme")                      \
+                                                                            \
   notproduct(bool, StressCriticalJNINatives, false,                         \
           "Exercise register saving code in critical natives")              \
                                                                             \
@@ -1351,7 +1354,7 @@ class CommandLineFlags {
   develop(bool, TraceClassInitialization, false,                            \
           "Trace class initialization")                                     \
                                                                             \
-  develop(bool, TraceExceptions, false,                                     \
+  product(bool, TraceExceptions, false,                                     \
           "Trace exceptions")                                               \
                                                                             \
   develop(bool, TraceICs, false,                                            \
@@ -2034,7 +2037,7 @@ class CommandLineFlags {
   experimental(uintx, WorkStealingSpinToYieldRatio, 10,                     \
           "Ratio of hard spins to calls to yield")                          \
                                                                             \
-  develop(uintx, ObjArrayMarkingStride, 512,                                \
+  develop(uintx, ObjArrayMarkingStride, 2048,                               \
           "Number of object array elements to push onto the marking stack " \
           "before pushing a continuation entry")                            \
                                                                             \

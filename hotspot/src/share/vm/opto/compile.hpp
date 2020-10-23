@@ -975,6 +975,7 @@ class Compile : public Phase {
   void inline_incrementally(PhaseIterGVN& igvn);
   void inline_string_calls(bool parse_time);
   void inline_boxing_calls(PhaseIterGVN& igvn);
+  void remove_root_to_sfpts_edges();
 
   // Matching, CFG layout, allocation, code generation
   PhaseCFG*         cfg()                       { return _cfg; }
@@ -1239,6 +1240,9 @@ class Compile : public Phase {
 
   // Auxiliary method for randomized fuzzing/stressing
   static bool randomized_select(int count);
+#ifdef ASSERT
+  bool _type_verify_symmetry;
+#endif
 
   void shenandoah_eliminate_g1_wb_pre(Node* call, PhaseIterGVN* igvn);
 };
