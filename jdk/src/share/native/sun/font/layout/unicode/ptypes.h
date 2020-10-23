@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
@@ -83,7 +81,6 @@ typedef unsigned char uint8_t;
 
 #else /* neither U_HAVE_STDINT_H nor U_HAVE_INTTYPES_H */
 
-/// \cond
 #if ! U_HAVE_INT8_T
 typedef signed char int8_t;
 #endif
@@ -123,7 +120,6 @@ typedef unsigned int uint32_t;
     typedef unsigned long long uint64_t;
 #endif
 #endif
-/// \endcond
 
 #endif /* U_HAVE_STDINT_H / U_HAVE_INTTYPES_H */
 

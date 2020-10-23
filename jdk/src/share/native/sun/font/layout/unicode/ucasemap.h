@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
@@ -8,7 +6,7 @@
 *
 *******************************************************************************
 *   file name:  ucasemap.h
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -22,12 +20,8 @@
 #define __UCASEMAP_H__
 
 #include "unicode/utypes.h"
-#include "unicode/stringoptions.h"
 #include "unicode/ustring.h"
-
-#if U_SHOW_CPLUSPLUS_API
 #include "unicode/localpointer.h"
-#endif   // U_SHOW_CPLUSPLUS_API
 
 /**
  * \file
@@ -148,6 +142,47 @@ ucasemap_setLocale(UCaseMap *csm, const char *locale, UErrorCode *pErrorCode);
 U_STABLE void U_EXPORT2
 ucasemap_setOptions(UCaseMap *csm, uint32_t options, UErrorCode *pErrorCode);
 
+/**
+ * Do not lowercase non-initial parts of words when titlecasing.
+ * Option bit for titlecasing APIs that take an options bit set.
+ *
+ * By default, titlecasing will titlecase the first cased character
+ * of a word and lowercase all other characters.
+ * With this option, the other characters will not be modified.
+ *
+ * @see ucasemap_setOptions
+ * @see ucasemap_toTitle
+ * @see ucasemap_utf8ToTitle
+ * @see UnicodeString::toTitle
+ * @stable ICU 3.8
+ */
+#define U_TITLECASE_NO_LOWERCASE 0x100
+
+/**
+ * Do not adjust the titlecasing indexes from BreakIterator::next() indexes;
+ * titlecase exactly the characters at breaks from the iterator.
+ * Option bit for titlecasing APIs that take an options bit set.
+ *
+ * By default, titlecasing will take each break iterator index,
+ * adjust it by looking for the next cased character, and titlecase that one.
+ * Other characters are lowercased.
+ *
+ * This follows Unicode 4 & 5 section 3.13 Default Case Operations:
+ *
+ * R3  toTitlecase(X): Find the word boundaries based on Unicode Standard Annex
+ * #29, "Text Boundaries." Between each pair of word boundaries, find the first
+ * cased character F. If F exists, map F to default_title(F); then map each
+ * subsequent character C to default_lower(C).
+ *
+ * @see ucasemap_setOptions
+ * @see ucasemap_toTitle
+ * @see ucasemap_utf8ToTitle
+ * @see UnicodeString::toTitle
+ * @see U_TITLECASE_NO_LOWERCASE
+ * @stable ICU 3.8
+ */
+#define U_TITLECASE_NO_BREAK_ADJUSTMENT 0x200
+
 #if !UCONFIG_NO_BREAK_ITERATION
 
 /**
@@ -205,7 +240,7 @@ ucasemap_setBreakIterator(UCaseMap *csm, UBreakIterator *iterToAdopt, UErrorCode
  * The standard titlecase iterator for the root locale implements the
  * algorithm of Unicode TR 21.
  *
- * This function uses only the setText(), first() and next() methods of the
+ * This function uses only the setUText(), first(), next() and close() methods of the
  * provided break iterator.
  *
  * The result may be longer or shorter than the original.
@@ -216,7 +251,7 @@ ucasemap_setBreakIterator(UCaseMap *csm, UBreakIterator *iterToAdopt, UErrorCode
  * @param dest      A buffer for the result string. The result will be NUL-terminated if
  *                  the buffer is large enough.
  *                  The contents is undefined in case of failure.
- * @param destCapacity The size of the buffer (number of UChars). If it is 0, then
+ * @param destCapacity The size of the buffer (number of bytes). If it is 0, then
  *                  dest may be NULL and the function will only return the length of the result
  *                  without writing any of the result string.
  * @param src       The original string.
@@ -235,7 +270,7 @@ ucasemap_toTitle(UCaseMap *csm,
                  const UChar *src, int32_t srcLength,
                  UErrorCode *pErrorCode);
 
-#endif  // UCONFIG_NO_BREAK_ITERATION
+#endif
 
 /**
  * Lowercase the characters in a UTF-8 string.

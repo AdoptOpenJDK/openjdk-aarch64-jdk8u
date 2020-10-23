@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
 *   Copyright (C) 1997-2016, International Business Machines
@@ -16,7 +14,7 @@
 *   04/04/99    helena      Fixed internal header inclusion.
 *   04/15/99    Madhu       Updated Javadoc
 *   06/14/99    stephen     Removed functions taking a filename suffix.
-*   07/20/99    stephen     Language-independent typedef to void*
+*   07/20/99    stephen     Language-independent ypedef to void*
 *   11/09/99    weiv        Added ures_getLocale()
 *   06/24/02    weiv        Added support for resource sharing
 ******************************************************************************
@@ -27,10 +25,7 @@
 
 #include "unicode/utypes.h"
 #include "unicode/uloc.h"
-
-#if U_SHOW_CPLUSPLUS_API
 #include "unicode/localpointer.h"
-#endif   // U_SHOW_CPLUSPLUS_API
 
 /**
  * \file
@@ -125,13 +120,9 @@ typedef enum {
     RES_INT_VECTOR=URES_INT_VECTOR,
     /** @deprecated ICU 2.6 Not used. */
     RES_RESERVED=15,
+#endif /* U_HIDE_DEPRECATED_API */
 
-    /**
-     * One more than the highest normal UResType value.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
     URES_LIMIT = 16
-#endif  // U_HIDE_DEPRECATED_API
 } UResType;
 
 /*
@@ -141,7 +132,7 @@ typedef enum {
 /**
  * Opens a UResourceBundle, from which users can extract strings by using
  * their corresponding keys.
- * Note that the caller is responsible of calling <TT>ures_close</TT> on each successfully
+ * Note that the caller is responsible of calling <TT>ures_close</TT> on each succesfully
  * opened resource bundle.
  * @param packageName   The packageName and locale together point to an ICU udata object,
  *                      as defined by <code> udata_open( packageName, "res", locale, err) </code>
@@ -304,7 +295,7 @@ ures_getVersion(const UResourceBundle* resB,
  * you to query for the real locale of the resource. For example, if you requested
  * "en_US_CALIFORNIA" and only "en_US" bundle exists, "en_US" will be returned.
  * For subresources, the locale where this resource comes from will be returned.
- * If fallback has occurred, getLocale will reflect this.
+ * If fallback has occured, getLocale will reflect this.
  *
  * @param resourceBundle resource bundle in question
  * @param status just for catching illegal arguments
@@ -336,19 +327,19 @@ ures_getLocaleByType(const UResourceBundle* resourceBundle,
 
 #ifndef U_HIDE_INTERNAL_API
 /**
- * Same as ures_open() but uses the fill-in parameter instead of allocating a new bundle.
- *
+ * Same as ures_open() but uses the fill-in parameter instead of allocating
+ * a bundle, if r!=NULL.
  * TODO need to revisit usefulness of this function
  *      and usage model for fillIn parameters without knowing sizeof(UResourceBundle)
- * @param r The existing UResourceBundle to fill in. If NULL then status will be
- *               set to U_ILLEGAL_ARGUMENT_ERROR.
+ * @param r The resourcebundle to open
  * @param packageName   The packageName and locale together point to an ICU udata object,
  *                      as defined by <code> udata_open( packageName, "res", locale, err) </code>
  *                      or equivalent.  Typically, packageName will refer to a (.dat) file, or to
  *                      a package registered with udata_setAppData(). Using a full file or directory
  *                      pathname for packageName is deprecated. If NULL, ICU data will be used.
  * @param localeID specifies the locale for which we want to open the resource
- * @param status The error code.
+ * @param status The error code
+ * @return a newly allocated resource bundle or NULL if it doesn't exist.
  * @internal
  */
 U_INTERNAL void U_EXPORT2
@@ -583,7 +574,7 @@ ures_hasNext(const UResourceBundle *resourceBundle);
  * @param fillIn            if NULL a new UResourceBundle struct is allocated and must be closed by the caller.
  *                          Alternatively, you can supply a struct to be filled by this function.
  * @param status            fills in the outgoing error code. You may still get a non NULL result even if an
- *                          error occurred. Check status instead.
+ *                          error occured. Check status instead.
  * @return                  a pointer to a UResourceBundle struct. If fill in param was NULL, caller must close it
  * @stable ICU 2.0
  */
@@ -599,7 +590,7 @@ ures_getNextResource(UResourceBundle *resourceBundle,
  * @param resourceBundle    a resource
  * @param len               fill in length of the string
  * @param key               fill in for key associated with this string. NULL if no key
- * @param status            fills in the outgoing error code. If an error occurred, we may return NULL, but don't
+ * @param status            fills in the outgoing error code. If an error occured, we may return NULL, but don't
  *                          count on it. Check status instead!
  * @return a pointer to a zero-terminated UChar array which lives in a memory mapped/DLL file.
  * @stable ICU 2.0
@@ -618,7 +609,7 @@ ures_getNextString(UResourceBundle *resourceBundle,
  * @param fillIn            if NULL a new UResourceBundle struct is allocated and must be closed by the caller.
  *                          Alternatively, you can supply a struct to be filled by this function.
  * @param status            fills in the outgoing error code. Don't count on NULL being returned if an error has
- *                          occurred. Check status instead.
+ *                          occured. Check status instead.
  * @return                  a pointer to a UResourceBundle struct. If fill in param was NULL, caller must close it
  * @stable ICU 2.0
  */
@@ -634,7 +625,7 @@ ures_getByIndex(const UResourceBundle *resourceBundle,
  * @param resourceBundle    a resource
  * @param indexS            an index to the wanted string.
  * @param len               fill in length of the string
- * @param status            fills in the outgoing error code. If an error occurred, we may return NULL, but don't
+ * @param status            fills in the outgoing error code. If an error occured, we may return NULL, but don't
  *                          count on it. Check status instead!
  * @return                  a pointer to a zero-terminated UChar array which lives in a memory mapped/DLL file.
  * @stable ICU 2.0
@@ -725,7 +716,7 @@ ures_getByKey(const UResourceBundle *resourceBundle,
  * @param resB              a resource
  * @param key               a key associated with the wanted string
  * @param len               fill in length of the string
- * @param status            fills in the outgoing error code. If an error occurred, we may return NULL, but don't
+ * @param status            fills in the outgoing error code. If an error occured, we may return NULL, but don't
  *                          count on it. Check status instead!
  * @return                  a pointer to a zero-terminated UChar array which lives in a memory mapped/DLL file.
  * @stable ICU 2.0

@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
 *   Copyright (C) 1999-2014, International Business Machines
@@ -29,7 +27,7 @@
  * converter, you can get its properties, set options, convert your data and
  * close the converter.</p>
  *
- * <p>Since many software programs recognize different converter names for
+ * <p>Since many software programs recogize different converter names for
  * different types of converters, there are other functions in this API to
  * iterate over the converter aliases. The functions {@link ucnv_getAvailableName() },
  * {@link ucnv_getAlias() } and {@link ucnv_getStandardName() } are some of the
@@ -51,23 +49,21 @@
 
 #include "unicode/ucnv_err.h"
 #include "unicode/uenum.h"
-
-#if U_SHOW_CPLUSPLUS_API
 #include "unicode/localpointer.h"
-#endif   // U_SHOW_CPLUSPLUS_API
 
-#if !defined(USET_DEFINED) && !defined(U_IN_DOXYGEN)
-
-#define USET_DEFINED
+#ifndef __USET_H__
 
 /**
- * USet is the C API type corresponding to C++ class UnicodeSet.
- * It is forward-declared here to avoid including unicode/uset.h file if related
+ * USet is the C API type for Unicode sets.
+ * It is forward-declared here to avoid including the header file if related
  * conversion APIs are not used.
+ * See unicode/uset.h
  *
  * @see ucnv_getUnicodeSet
- * @stable ICU 2.4
+ * @stable ICU 2.6
  */
+struct USet;
+/** @stable ICU 2.6 */
 typedef struct USet USet;
 
 #endif
@@ -186,7 +182,7 @@ typedef enum {
 
 /**
  * Function pointer for error callback in the codepage to unicode direction.
- * Called when an error has occurred in conversion to unicode, or on open/close of the callback (see reason).
+ * Called when an error has occured in conversion to unicode, or on open/close of the callback (see reason).
  * @param context Pointer to the callback's private data
  * @param args Information about the conversion in progress
  * @param codeUnits Points to 'length' bytes of the concerned codepage sequence
@@ -209,7 +205,7 @@ typedef void (U_EXPORT2 *UConverterToUCallback) (
 
 /**
  * Function pointer for error callback in the unicode to codepage direction.
- * Called when an error has occurred in conversion from unicode, or on open/close of the callback (see reason).
+ * Called when an error has occured in conversion from unicode, or on open/close of the callback (see reason).
  * @param context Pointer to the callback's private data
  * @param args Information about the conversion in progress
  * @param codeUnits Points to 'length' UChars of the concerned Unicode sequence
@@ -355,7 +351,7 @@ ucnv_compareNames(const char *name1, const char *name2);
  *          ucnv_getAlias for a complete list that is available.
  *          If this parameter is NULL, the default converter will be used.
  * @param err outgoing error status <TT>U_MEMORY_ALLOCATION_ERROR, U_FILE_ACCESS_ERROR</TT>
- * @return the created Unicode converter object, or <TT>NULL</TT> if an error occurred
+ * @return the created Unicode converter object, or <TT>NULL</TT> if an error occured
  * @see ucnv_openU
  * @see ucnv_openCCSID
  * @see ucnv_getAvailableName
@@ -388,7 +384,7 @@ ucnv_open(const char *converterName, UErrorCode *err);
  * @param err outgoing error status <TT>U_MEMORY_ALLOCATION_ERROR,
  *        U_FILE_ACCESS_ERROR</TT>
  * @return the created Unicode converter object, or <TT>NULL</TT> if an
- *        error occurred
+ *        error occured
  * @see ucnv_open
  * @see ucnv_openCCSID
  * @see ucnv_close
@@ -454,7 +450,7 @@ ucnv_openU(const UChar *name,
  * @param platform the platform in which the codepage number exists
  * @param err error status <TT>U_MEMORY_ALLOCATION_ERROR, U_FILE_ACCESS_ERROR</TT>
  * @return the created Unicode converter object, or <TT>NULL</TT> if an error
- *   occurred.
+ *   occured.
  * @see ucnv_open
  * @see ucnv_openU
  * @see ucnv_close
@@ -491,7 +487,7 @@ ucnv_openCCSID(int32_t codepage,
  * @param packageName name of the package (equivalent to 'path' in udata_open() call)
  * @param converterName name of the data item to be used, without suffix.
  * @param err outgoing error status <TT>U_MEMORY_ALLOCATION_ERROR, U_FILE_ACCESS_ERROR</TT>
- * @return the created Unicode converter object, or <TT>NULL</TT> if an error occurred
+ * @return the created Unicode converter object, or <TT>NULL</TT> if an error occured
  * @see udata_open
  * @see ucnv_open
  * @see ucnv_safeClone
@@ -598,7 +594,7 @@ U_NAMESPACE_END
  * stateful, then subChars will be an empty string.
  *
  * @param converter the Unicode converter
- * @param subChars the substitution characters
+ * @param subChars the subsitution characters
  * @param len on input the capacity of subChars, on output the number
  * of bytes copied to it
  * @param  err the outgoing error status code.
@@ -834,7 +830,7 @@ ucnv_getMinCharSize(const UConverter *converter);
  * name will be filled in.
  *
  * @param converter the Unicode converter.
- * @param displayLocale is the specific Locale we want to localized for
+ * @param displayLocale is the specific Locale we want to localised for
  * @param displayName user provided buffer to be filled in
  * @param displayNameCapacity size of displayName Buffer
  * @param err error status code
@@ -879,7 +875,7 @@ ucnv_getName(const UConverter *converter, UErrorCode *err);
  *
  * @param converter the Unicode converter
  * @param err the error status code.
- * @return If any error occurs, -1 will be returned otherwise, the codepage number
+ * @return If any error occurrs, -1 will be returned otherwise, the codepage number
  * will be returned
  * @see ucnv_openCCSID
  * @see ucnv_getPlatform
@@ -945,13 +941,8 @@ typedef enum UConverterUnicodeSet {
     UCNV_ROUNDTRIP_SET,
     /** Select the set of Unicode code points with roundtrip or fallback mappings. @stable ICU 4.0 */
     UCNV_ROUNDTRIP_AND_FALLBACK_SET,
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * Number of UConverterUnicodeSet selectors.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
+    /** Number of UConverterUnicodeSet selectors. @stable ICU 2.6 */
     UCNV_SET_COUNT
-#endif  // U_HIDE_DEPRECATED_API
 } UConverterUnicodeSet;
 
 

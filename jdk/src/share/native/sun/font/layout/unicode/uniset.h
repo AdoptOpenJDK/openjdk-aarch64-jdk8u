@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ***************************************************************************
 * Copyright (C) 1999-2016, International Business Machines Corporation
@@ -13,11 +11,6 @@
 #ifndef UNICODESET_H
 #define UNICODESET_H
 
-#include "unicode/utypes.h"
-
-#if U_SHOW_CPLUSPLUS_API
-
-#include "unicode/ucpmap.h"
 #include "unicode/unifilt.h"
 #include "unicode/unistr.h"
 #include "unicode/uset.h"
@@ -30,6 +23,8 @@
 U_NAMESPACE_BEGIN
 
 // Forward Declarations.
+void U_CALLCONV UnicodeSet_initInclusion(int32_t src, UErrorCode &status); /**< @internal */
+
 class BMPSet;
 class ParsePosition;
 class RBBIRuleScanner;
@@ -279,23 +274,14 @@ class RuleCharacterIterator;
  * @stable ICU 2.0
  */
 class U_COMMON_API UnicodeSet U_FINAL : public UnicodeFilter {
-private:
-    /**
-     * Enough for sets with few ranges.
-     * For example, White_Space has 10 ranges, list length 21.
-     */
-    static constexpr int32_t INITIAL_CAPACITY = 25;
-    // fFlags constant
-    static constexpr uint8_t kIsBogus = 1;  // This set is bogus (i.e. not valid)
 
-    UChar32* list = stackList; // MUST be terminated with HIGH
-    int32_t capacity = INITIAL_CAPACITY; // capacity of list
-    int32_t len = 1; // length of list used; 1 <= len <= capacity
-    uint8_t fFlags = 0;         // Bit flag (see constants above)
-
-    BMPSet *bmpSet = nullptr; // The set is frozen iff either bmpSet or stringSpan is not NULL.
-    UChar32* buffer = nullptr; // internal buffer, may be NULL
-    int32_t bufferCapacity = 0; // capacity of buffer
+    int32_t len; // length of list used; 0 <= len <= capacity
+    int32_t capacity; // capacity of list
+    UChar32* list; // MUST be terminated with HIGH
+    BMPSet *bmpSet; // The set is frozen iff either bmpSet or stringSpan is not NULL.
+    UChar32* buffer; // internal buffer, may be NULL
+    int32_t bufferCapacity; // capacity of buffer
+    int32_t patLen;
 
     /**
      * The pattern representation of this set.  This may not be the
@@ -306,19 +292,15 @@ private:
      * indicating that toPattern() must generate a pattern
      * representation from the inversion list.
      */
-    char16_t *pat = nullptr;
-    int32_t patLen = 0;
+    UChar *pat;
+    UVector* strings; // maintained in sorted order
+    UnicodeSetStringSpan *stringSpan;
 
-    UVector* strings = nullptr; // maintained in sorted order
-    UnicodeSetStringSpan *stringSpan = nullptr;
-
-    /**
-     * Initial list array.
-     * Avoids some heap allocations, and list is never nullptr.
-     * Increases the object size a bit.
-     */
-    UChar32 stackList[INITIAL_CAPACITY];
-
+private:
+    enum { // constants
+        kIsBogus = 1       // This set is bogus (i.e. not valid)
+    };
+    uint8_t fFlags;         // Bit flag (see constants above)
 public:
     /**
      * Determine if this object contains a valid set.
@@ -378,7 +360,7 @@ public:
     UnicodeSet();
 
     /**
-     * Constructs a set containing the given range. If <code>end <
+     * Constructs a set containing the given range. If <code>end >
      * start</code> then an empty set is created.
      *
      * @param start first character, inclusive, of range
@@ -494,7 +476,7 @@ public:
      * <tt>true</tt> if the specified set is not equal to this set.
      * @stable ICU 2.0
      */
-    inline UBool operator!=(const UnicodeSet& o) const;
+    UBool operator!=(const UnicodeSet& o) const;
 
     /**
      * Returns a copy of this object.  All UnicodeFunctor objects have
@@ -505,7 +487,7 @@ public:
      * @see cloneAsThawed
      * @stable ICU 2.0
      */
-    virtual UnicodeSet* clone() const;
+    virtual UnicodeFunctor* clone() const;
 
     /**
      * Returns the hash code value for this set.
@@ -583,7 +565,7 @@ public:
      * @see cloneAsThawed
      * @stable ICU 3.8
      */
-    UnicodeSet *freeze();
+    UnicodeFunctor *freeze();
 
     /**
      * Clone the set and make the clone mutable.
@@ -593,15 +575,16 @@ public:
      * @see isFrozen
      * @stable ICU 3.8
      */
-    UnicodeSet *cloneAsThawed() const;
+    UnicodeFunctor *cloneAsThawed() const;
 
     //----------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------
 
     /**
-     * Make this object represent the range `start - end`.
-     * If `end > start` then this object is set to an empty range.
+     * Make this object represent the range <code>start - end</code>.
+     * If <code>end > start</code> then this object is set to an
+     * an empty range.
      * A frozen set will not be modified.
      *
      * @param start first character in the set, inclusive
@@ -906,7 +889,7 @@ public:
      * @stable ICU 3.8
      * @see USetSpanCondition
      */
-    int32_t span(const char16_t *s, int32_t length, USetSpanCondition spanCondition) const;
+    int32_t span(const UChar *s, int32_t length, USetSpanCondition spanCondition) const;
 
     /**
      * Returns the end of the substring of the input string according to the USetSpanCondition.
@@ -939,7 +922,7 @@ public:
      * @stable ICU 3.8
      * @see USetSpanCondition
      */
-    int32_t spanBack(const char16_t *s, int32_t length, USetSpanCondition spanCondition) const;
+    int32_t spanBack(const UChar *s, int32_t length, USetSpanCondition spanCondition) const;
 
     /**
      * Returns the start of the substring of the input string according to the USetSpanCondition.
@@ -1496,6 +1479,8 @@ private:
 
     friend class USetAccess;
 
+    int32_t getStringCount() const;
+
     const UnicodeString* getString(int32_t index) const;
 
     //----------------------------------------------------------------
@@ -1519,7 +1504,6 @@ private:
     //----------------------------------------------------------------
 
     UnicodeSet(const UnicodeSet& o, UBool /* asThawed */);
-    UnicodeSet& copyFrom(const UnicodeSet& o, UBool asThawed);
 
     //----------------------------------------------------------------
     // Implementation: Pattern parsing
@@ -1535,25 +1519,19 @@ private:
                       UnicodeString& rebuiltPat,
                       uint32_t options,
                       UnicodeSet& (UnicodeSet::*caseClosure)(int32_t attribute),
-                      int32_t depth,
                       UErrorCode& ec);
 
     //----------------------------------------------------------------
     // Implementation: Utility methods
     //----------------------------------------------------------------
 
-    static int32_t nextCapacity(int32_t minCapacity);
+    void ensureCapacity(int32_t newLen, UErrorCode& ec);
 
-    bool ensureCapacity(int32_t newLen);
-
-    bool ensureBufferCapacity(int32_t newLen);
+    void ensureBufferCapacity(int32_t newLen, UErrorCode& ec);
 
     void swapBuffers(void);
 
     UBool allocateStrings(UErrorCode &status);
-    UBool hasStrings() const;
-    int32_t stringsSize() const;
-    UBool stringsContains(const UnicodeString &s) const;
 
     UnicodeString& _toPattern(UnicodeString& result,
                               UBool escapeUnprintable) const;
@@ -1633,6 +1611,7 @@ private:
                               UnicodeString& rebuiltPat,
                               UErrorCode& ec);
 
+    friend void U_CALLCONV UnicodeSet_initInclusion(int32_t src, UErrorCode &status);
     static const UnicodeSet* getInclusions(int32_t src, UErrorCode &status);
 
     /**
@@ -1652,21 +1631,13 @@ private:
      */
     void applyFilter(Filter filter,
                      void* context,
-                     const UnicodeSet* inclusions,
+                     int32_t src,
                      UErrorCode &status);
-
-    // UCPMap is now stable ICU 63
-    void applyIntPropertyValue(const UCPMap *map,
-                               UCPMapValueFilter *filter, const void *context,
-                               UErrorCode &errorCode);
 
     /**
      * Set the new pattern to cache.
      */
-    void setPattern(const UnicodeString& newPat) {
-        setPattern(newPat.getBuffer(), newPat.length());
-    }
-    void setPattern(const char16_t *newPat, int32_t newPatLen);
+    void setPattern(const UnicodeString& newPat);
     /**
      * Release existing cached pattern.
      */
@@ -1738,7 +1709,5 @@ inline int32_t UnicodeSet::spanBack(const UnicodeString &s, int32_t limit, USetS
 }
 
 U_NAMESPACE_END
-
-#endif /* U_SHOW_CPLUSPLUS_API */
 
 #endif

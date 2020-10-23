@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
@@ -29,10 +27,7 @@
 #include "unicode/utf16.h"
 #include "unicode/uenum.h"
 #include "unicode/ucnv.h"
-
-#if U_SHOW_CPLUSPLUS_API
 #include "unicode/localpointer.h"
-#endif   // U_SHOW_CPLUSPLUS_API
 
 /**
  * \file

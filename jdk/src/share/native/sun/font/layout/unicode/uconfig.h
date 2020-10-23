@@ -1,12 +1,10 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*  
 **********************************************************************
 *   Copyright (C) 2002-2016, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  uconfig.h
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -17,19 +15,6 @@
 #ifndef __UCONFIG_H__
 #define __UCONFIG_H__
 
-// Android patch: Hard code UCONFIG_USE_LOCAL=1 so that ICU will use
-// uconfig_local.h, which allows us to disable use of non-stable and
-// internal APIs in libicu and Android's libandroidicu shim. For more
-// information on this pre-processor variable see the comments below.
-// Also, see http://b/117094880
-
-// To keep updateicudata.py (which uses the ICU make process) working,
-// uconfig_local.h is only included when ANDROID is defined in the
-// platform build system(s), or __ANDROID__ is defined when targeting
-// Android, e.g. NDK build.
-#if defined(ANDROID) || defined(__ANDROID__)
-#define UCONFIG_USE_LOCAL 1
-#endif
 
 /*!
  * \file
@@ -89,7 +74,7 @@
 #endif
 
 /**
- * Determines whether to enable auto cleanup of libraries. 
+ * Determines wheter to enable auto cleanup of libraries. 
  * @internal
  */
 #ifndef UCLN_NO_AUTO_CLEANUP
@@ -196,7 +181,7 @@
  */
 #ifdef U_HAVE_LIB_SUFFIX
     /* Use the predefined value. */
-#elif defined(U_LIB_SUFFIX_C_NAME) || defined(U_IN_DOXYGEN)
+#elif defined(U_LIB_SUFFIX_C_NAME)
 #   define U_HAVE_LIB_SUFFIX 1
 #endif
 
@@ -275,8 +260,7 @@
 
 /**
  * \def UCONFIG_NO_CONVERSION
- * ICU will not completely build (compiling the tools fails) with this
- * switch turned on.
+ * ICU will not completely build with this switch turned on.
  * This switch turns off all converters.
  *
  * You may want to use this together with U_CHARSET_IS_UTF8 defined to 1
@@ -334,9 +318,7 @@
  */
 #ifndef UCONFIG_NO_NORMALIZATION
 #   define UCONFIG_NO_NORMALIZATION 0
-#endif
-
-#if UCONFIG_NO_NORMALIZATION
+#elif UCONFIG_NO_NORMALIZATION
     /* common library */
     /* ICU 50 CJK dictionary BreakIterator uses normalization */
 #   define UCONFIG_NO_BREAK_ITERATION 1
@@ -380,18 +362,6 @@
  */
 #ifndef UCONFIG_MSGPAT_DEFAULT_APOSTROPHE_MODE
 #   define UCONFIG_MSGPAT_DEFAULT_APOSTROPHE_MODE UMSGPAT_APOS_DOUBLE_OPTIONAL
-#endif
-
-/**
- * \def UCONFIG_USE_WINDOWS_LCID_MAPPING_API
- * On platforms where U_PLATFORM_HAS_WIN32_API is true, this switch determines
- * if the Windows platform APIs are used for LCID<->Locale Name conversions.
- * Otherwise, only the built-in ICU tables are used.
- * 
- * @internal ICU 64
- */
-#ifndef UCONFIG_USE_WINDOWS_LCID_MAPPING_API
-#   define UCONFIG_USE_WINDOWS_LCID_MAPPING_API 1
 #endif
 
 /* i18n library switches ---------------------------------------------------- */
@@ -456,6 +426,17 @@
 #   define UCONFIG_HAVE_PARSEALLINPUT 1
 #endif
 
+
+/**
+ * \def UCONFIG_FORMAT_FASTPATHS_49
+ * This switch turns on other formatting fastpaths. Binary incompatible in object DecimalFormat and DecimalFormatSymbols
+ *
+ * @internal
+ */
+#ifndef UCONFIG_FORMAT_FASTPATHS_49
+#   define UCONFIG_FORMAT_FASTPATHS_49 1
+#endif
+
 /**
  * \def UCONFIG_NO_FILTERED_BREAK_ITERATION
  * This switch turns off filtered break iteration code.
@@ -466,4 +447,4 @@
 #   define UCONFIG_NO_FILTERED_BREAK_ITERATION 0
 #endif
 
-#endif  // __UCONFIG_H__
+#endif

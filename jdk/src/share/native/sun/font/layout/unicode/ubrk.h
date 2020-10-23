@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 * Copyright (C) 1996-2015, International Business Machines Corporation and others.
@@ -13,10 +11,7 @@
 #include "unicode/utypes.h"
 #include "unicode/uloc.h"
 #include "unicode/utext.h"
-
-#if U_SHOW_CPLUSPLUS_API
 #include "unicode/localpointer.h"
-#endif   // U_SHOW_CPLUSPLUS_API
 
 /**
  * A text-break iterator.
@@ -75,7 +70,7 @@
  * "Extended Grapheme Clusters", which are groupings of codepoints
  * that should be treated as character-like units for many text operations.
  * Please see Unicode Standard Annex #29, Unicode Text Segmentation,
- * http://www.unicode.org/reports/tr29/ for additional information
+ * http://www.unicode.org/reports/tr29/ for additional information 
  * on grapheme clusters and guidelines on their use.
  * <p>
  * Title boundary analysis locates all positions,
@@ -119,12 +114,8 @@ typedef enum UBreakIteratorType {
    * @deprecated ICU 2.8 Use the word break iterator for titlecasing for Unicode 4 and later.
    */
   UBRK_TITLE = 4,
-    /**
-     * One more than the highest normal UBreakIteratorType value.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    UBRK_COUNT = 5
-#endif  // U_HIDE_DEPRECATED_API
+#endif /* U_HIDE_DEPRECATED_API */
+  UBRK_COUNT = 5
 } UBreakIteratorType;
 
 /** Value indicating all text boundaries have been returned.
@@ -139,10 +130,7 @@ typedef enum UBreakIteratorType {
  *  word, to allow for further subdivisions of a category in future releases.
  *  Applications should check for tag values falling within the range, rather
  *  than for single individual values.
- *
- * The numeric values of all of these constants are stable (will not change).
- *
- * @stable ICU 2.2
+ *  @stable ICU 2.2
 */
 typedef enum UWordBreak {
     /** Tag value for "words" that do not fit into any of other categories.
@@ -175,10 +163,7 @@ typedef enum UWordBreak {
  *  word, to allow for further subdivisions of a category in future releases.
  *  Applications should check for tag values falling within the range, rather
  *  than for single individual values.
- *
- * The numeric values of all of these constants are stable (will not change).
- *
- * @stable ICU 2.8
+ *  @stable ICU 2.8
 */
 typedef enum ULineBreakTag {
     /** Tag value for soft line breaks, positions at which a line break
@@ -200,10 +185,7 @@ typedef enum ULineBreakTag {
  *  sentence, to allow for further subdivisions of a category in future releases.
  *  Applications should check for tag values falling within the range, rather
  *  than for single individual values.
- *
- * The numeric values of all of these constants are stable (will not change).
- *
- * @stable ICU 2.8
+ *  @stable ICU 2.8
 */
 typedef enum USentenceBreakTag {
     /** Tag value for for sentences  ending with a sentence terminator
@@ -233,8 +215,7 @@ typedef enum USentenceBreakTag {
  * @param locale The locale specifying the text-breaking conventions. Note that
  * locale keys such as "lb" and "ss" may be used to modify text break behavior,
  * see general discussion of BreakIterator C API.
- * @param text The text to be iterated over. May be null, in which case ubrk_setText() is
- *        used to specify the text to be iterated.
+ * @param text The text to be iterated over.
  * @param textLength The number of characters in text, or -1 if null-terminated.
  * @param status A UErrorCode to receive any errors.
  * @return A UBreakIterator for the specified locale.
@@ -270,31 +251,6 @@ ubrk_openRules(const UChar     *rules,
                int32_t          textLength,
                UParseError     *parseErr,
                UErrorCode      *status);
-
-/**
- * Open a new UBreakIterator for locating text boundaries using precompiled binary rules.
- * Opening a UBreakIterator this way is substantially faster than using ubrk_openRules.
- * Binary rules may be obtained using ubrk_getBinaryRules. The compiled rules are not
- * compatible across different major versions of ICU, nor across platforms of different
- * endianness or different base character set family (ASCII vs EBCDIC).
- * @param binaryRules A set of compiled binary rules specifying the text breaking
- *                    conventions. Ownership of the storage containing the compiled
- *                    rules remains with the caller of this function. The compiled
- *                    rules must not be modified or deleted during the life of the
- *                    break iterator.
- * @param rulesLength The length of binaryRules in bytes; must be >= 0.
- * @param text        The text to be iterated over.  May be null, in which case
- *                    ubrk_setText() is used to specify the text to be iterated.
- * @param textLength  The number of characters in text, or -1 if null-terminated.
- * @param status      Pointer to UErrorCode to receive any errors.
- * @return            UBreakIterator for the specified rules.
- * @see ubrk_getBinaryRules
- * @stable ICU 59
- */
-U_STABLE UBreakIterator* U_EXPORT2
-ubrk_openBinaryRules(const uint8_t *binaryRules, int32_t rulesLength,
-                     const UChar *  text, int32_t textLength,
-                     UErrorCode *   status);
 
 /**
  * Thread safe cloning operation
@@ -360,11 +316,7 @@ U_NAMESPACE_END
 #endif
 
 /**
- * Sets an existing iterator to point to a new piece of text.
- * The break iterator retains a pointer to the supplied text.
- * The caller must not modify or delete the text while the BreakIterator
- * retains the reference.
- *
+ * Sets an existing iterator to point to a new piece of text
  * @param bi The iterator to use
  * @param text The text to be set
  * @param textLength The length of the text
@@ -510,7 +462,7 @@ ubrk_countAvailable(void);
 
 
 /**
-* Returns true if the specified position is a boundary position.  As a side
+* Returns true if the specfied position is a boundary position.  As a side
 * effect, leaves the iterator pointing to the first boundary position at
 * or after "offset".
 * @param bi The break iterator to use.
@@ -544,7 +496,7 @@ ubrk_getRuleStatus(UBreakIterator *bi);
  * @param fillInVec an array to be filled in with the status values.
  * @param capacity  the length of the supplied vector.  A length of zero causes
  *                  the function to return the number of status values, in the
- *                  normal way, without attempting to store any values.
+ *                  normal way, without attemtping to store any values.
  * @param status    receives error codes.
  * @return          The number of rule status values from rules that determined
  *                  the most recent boundary returned by the break iterator.
@@ -594,37 +546,6 @@ U_STABLE void U_EXPORT2
 ubrk_refreshUText(UBreakIterator *bi,
                        UText          *text,
                        UErrorCode     *status);
-
-
-/**
- * Get a compiled binary version of the rules specifying the behavior of a UBreakIterator.
- * The binary rules may be used with ubrk_openBinaryRules to open a new UBreakIterator
- * more quickly than using ubrk_openRules. The compiled rules are not compatible across
- * different major versions of ICU, nor across platforms of different endianness or
- * different base character set family (ASCII vs EBCDIC). Supports preflighting (with
- * binaryRules=NULL and rulesCapacity=0) to get the rules length without copying them to
- * the binaryRules buffer. However, whether preflighting or not, if the actual length
- * is greater than INT32_MAX, then the function returns 0 and sets *status to
- * U_INDEX_OUTOFBOUNDS_ERROR.
-
- * @param bi            The break iterator to use.
- * @param binaryRules   Buffer to receive the compiled binary rules; set to NULL for
- *                      preflighting.
- * @param rulesCapacity Capacity (in bytes) of the binaryRules buffer; set to 0 for
- *                      preflighting. Must be >= 0.
- * @param status        Pointer to UErrorCode to receive any errors, such as
- *                      U_BUFFER_OVERFLOW_ERROR, U_INDEX_OUTOFBOUNDS_ERROR, or
- *                      U_ILLEGAL_ARGUMENT_ERROR.
- * @return              The actual byte length of the binary rules, if <= INT32_MAX;
- *                      otherwise 0. If not preflighting and this is larger than
- *                      rulesCapacity, *status will be set to an error.
- * @see ubrk_openBinaryRules
- * @stable ICU 59
- */
-U_STABLE int32_t U_EXPORT2
-ubrk_getBinaryRules(UBreakIterator *bi,
-                    uint8_t *       binaryRules, int32_t rulesCapacity,
-                    UErrorCode *    status);
 
 #endif /* #if !UCONFIG_NO_BREAK_ITERATION */
 

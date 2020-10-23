@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
  *******************************************************************************
  *
@@ -8,7 +6,7 @@
  *
  *******************************************************************************
  *   file name:  uidna.h
- *   encoding:   UTF-8
+ *   encoding:   US-ASCII
  *   tab size:   8 (not used)
  *   indentation:4
  *
@@ -23,11 +21,8 @@
 
 #if !UCONFIG_NO_IDNA
 
-#include "unicode/parseerr.h"
-
-#if U_SHOW_CPLUSPLUS_API
 #include "unicode/localpointer.h"
-#endif   // U_SHOW_CPLUSPLUS_API
+#include "unicode/parseerr.h"
 
 /**
  * \file

@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 // Copyright (C) 2009-2012, International Business Machines
 // Corporation and others. All Rights Reserved.
 //
@@ -38,9 +36,6 @@
  */
 
 #include "unicode/utypes.h"
-
-#if U_SHOW_CPLUSPLUS_API
-
 #include "unicode/uobject.h"
 #include "unicode/std_string.h"
 
@@ -129,8 +124,8 @@ public:
   virtual void Flush();
 
 private:
-  ByteSink(const ByteSink &) = delete;
-  ByteSink &operator=(const ByteSink &) = delete;
+  ByteSink(const ByteSink &); // copy constructor not implemented
+  ByteSink &operator=(const ByteSink &); // assignment operator not implemented
 };
 
 // -------------------------------------------------------------
@@ -220,11 +215,12 @@ private:
   int32_t size_;
   int32_t appended_;
   UBool overflowed_;
-
-  CheckedArrayByteSink() = delete;
-  CheckedArrayByteSink(const CheckedArrayByteSink &) = delete;
-  CheckedArrayByteSink &operator=(const CheckedArrayByteSink &) = delete;
+  CheckedArrayByteSink(); ///< default constructor not implemented 
+  CheckedArrayByteSink(const CheckedArrayByteSink &); ///< copy constructor not implemented
+  CheckedArrayByteSink &operator=(const CheckedArrayByteSink &); ///< assignment operator not implemented
 };
+
+#if U_HAVE_STD_STRING
 
 /** 
  * Implementation of ByteSink that writes to a "string".
@@ -241,19 +237,6 @@ class StringByteSink : public ByteSink {
    */
   StringByteSink(StringClass* dest) : dest_(dest) { }
   /**
-   * Constructs a ByteSink that reserves append capacity and will append bytes to the dest string.
-   * 
-   * @param dest pointer to string object to append to
-   * @param initialAppendCapacity capacity beyond dest->length() to be reserve()d
-   * @stable ICU 60
-   */
-  StringByteSink(StringClass* dest, int32_t initialAppendCapacity) : dest_(dest) {
-    if (initialAppendCapacity > 0 &&
-        (uint32_t)initialAppendCapacity > (dest->capacity() - dest->length())) {
-      dest->reserve(dest->length() + initialAppendCapacity);
-    }
-  }
-  /**
    * Append "bytes[0,n-1]" to this.
    * @param data the pointer to the bytes
    * @param n the number of bytes; must be non-negative
@@ -262,14 +245,13 @@ class StringByteSink : public ByteSink {
   virtual void Append(const char* data, int32_t n) { dest_->append(data, n); }
  private:
   StringClass* dest_;
-
-  StringByteSink() = delete;
-  StringByteSink(const StringByteSink &) = delete;
-  StringByteSink &operator=(const StringByteSink &) = delete;
+  StringByteSink(); ///< default constructor not implemented 
+  StringByteSink(const StringByteSink &); ///< copy constructor not implemented
+  StringByteSink &operator=(const StringByteSink &); ///< assignment operator not implemented
 };
 
-U_NAMESPACE_END
+#endif
 
-#endif /* U_SHOW_CPLUSPLUS_API */
+U_NAMESPACE_END
 
 #endif  // __BYTESTREAM_H__

@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2012, International Business Machines Corporation and
@@ -33,7 +31,7 @@
  * then detailed member descriptions.</p>
  * 
  * <h3>C Programmers:</h3>
- * <p>Use <a href="#Module">Module List</a> or <a href="globals_u.html">File Members</a>
+ * <p>Use <a href="#Module">Module List</a> or <a href="globals.html">File Members</a>
  * to find a list of all the functions and constants.
  * For example, to find BreakIterator functions you would click on
  * <a href="files.html"> File List</a>,
@@ -88,23 +86,13 @@
  *     <td>icu::UnicodeSet</td>
  *   </tr>
  *   <tr>
- *     <td>Maps from Unicode Code Points to Integer Values</td>
- *     <td>ucptrie.h, umutablecptrie.h</td>
- *     <td>C API</td>
- *   </tr>
- *   <tr>
  *     <td>Maps from Strings to Integer Values</td>
  *     <td>(no C API)</td>
  *     <td>icu::BytesTrie, icu::UCharsTrie</td>
  *   </tr>
  *   <tr>
  *     <td>Codepage Conversion</td>
- *     <td>ucnv.h, ucnvsel.h</td>
- *     <td>C API</td>
- *   </tr>
- *   <tr>
- *     <td>Codepage Detection</td>
- *     <td>ucsdet.h</td>
+ *     <td>ucnv.h, ucnvsel.hb</td>
  *     <td>C API</td>
  *   </tr>
  *   <tr>
@@ -115,7 +103,7 @@
  *   <tr>
  *     <td>Locales </td>
  *     <td>uloc.h</a></td>
- *     <td>icu::Locale, icu::LocaleBuilder, icu::LocaleMatcher</td>
+ *     <td>icu::Locale</td>
  *   </tr>
  *   <tr>
  *     <td>Resource Bundles</td>
@@ -143,14 +131,9 @@
  *     <td>icu::MessageFormat</td>
  *   </tr>
  *   <tr>
- *     <td>Number Formatting<br/>(includes currency and unit formatting)</td>
- *     <td>unumberformatter.h, unum.h</td>
- *     <td>icu::number::NumberFormatter (ICU 60+) or icu::NumberFormat (older versions)</td>
- *   </tr>
- *   <tr>
- *     <td>Number Range Formatting<br />(includes currency and unit ranges)</td>
- *     <td>(no C API)</td>
- *     <td>icu::number::NumberRangeFormatter</td>
+ *     <td>Number Formatting</td>
+ *     <td>unum.h</td>
+ *     <td>icu::NumberFormat</td>
  *   </tr>
  *   <tr>
  *     <td>Number Spellout<br/>(Rule Based Number Formatting)</td>
@@ -164,7 +147,7 @@
  *   </tr>
  *   <tr>
  *     <td>Bidirectional Algorithm</td>
- *     <td>ubidi.h, ubiditransform.h</td>
+ *     <td>ubidi.h</td>
  *     <td>C API</td>
  *   </tr>
  *   <tr>
@@ -218,9 +201,9 @@
  *     <td>C API</td>
  *   </tr>
  *   <tr>
- *     <td>Paragraph Layout / Complex Text Layout</td>
- *     <td>playout.h</td>
- *     <td>icu::ParagraphLayout</td>
+ *     <td>Layout Engine/Complex Text Layout</td>
+ *     <td>loengine.h</td>
+ *     <td>icu::LayoutEngine,icu::ParagraphLayout</td>
  *   </tr>
  *   <tr>
  *     <td>ICU I/O</td>

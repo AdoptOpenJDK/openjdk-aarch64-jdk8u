@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *   Copyright (C) 2010-2016, International Business Machines Corporation and
@@ -16,12 +14,9 @@
  */
 
 #include "unicode/utypes.h"
+#include "unicode/localpointer.h"
 #include "unicode/uscript.h"
 #include "unicode/udisplaycontext.h"
-
-#if U_SHOW_CPLUSPLUS_API
-#include "unicode/localpointer.h"
-#endif   // U_SHOW_CPLUSPLUS_API
 
 /**
  * Enum used in LocaleDisplayNames::createInstance.
