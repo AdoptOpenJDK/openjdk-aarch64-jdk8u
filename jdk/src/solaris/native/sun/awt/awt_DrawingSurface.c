@@ -162,7 +162,11 @@ JNIEXPORT int32_t JNICALL
             JNU_GetLongFieldAsPtr(env, gc_object,
                                   x11GraphicsConfigIDs.aData);
     } else {
+#ifndef __ANDROID__
         adata = getDefaultConfig(DefaultScreen(awt_display));
+#else
+        adata = getDefaultConfig(0);
+#endif
     }
 
     result = adata->AwtColorMatch(r, g, b, adata);
@@ -234,6 +238,13 @@ awt_DrawingSurface_GetDrawingSurfaceInfo(JAWT_DrawingSurface* ds)
 
     /* Set drawable and display */
     px->drawable = (*env)->GetLongField(env, peer, windowID);
+#ifdef __ANDROID__
+    Display fake_awt_display;
+    awt_display = &fake_awt_display;
+    awt_display->proto_major_version = 11;
+    awt_display->proto_minor_version = 7;
+    awt_display->vendor = "Android Xlib";
+#endif
     px->display = awt_display;
 
     /* Get window attributes to set other values */
