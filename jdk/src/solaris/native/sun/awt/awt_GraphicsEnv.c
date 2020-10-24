@@ -350,7 +350,6 @@ makeDefaultConfig(JNIEnv *env, int screen) {
 
 static void
 getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
-#ifndef __ANDROID__
     int i;
     int n8p=0, n12p=0, n8s=0, n8gs=0, n8sg=0, n1sg=0, nTrue=0;
     int nConfig;
@@ -373,7 +372,7 @@ getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
     }
 
     AWT_LOCK ();
-
+#ifndef __ANDROID__
     viTmp.screen = xinawareScreen;
 
     viTmp.depth = 8;
@@ -425,6 +424,9 @@ getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
 /*                              viTmp, &n1sg); */
 
     nConfig = n8p + n12p + n8s + n8gs + n8sg  + n1sg + nTrue + 1;
+#else
+    nConfig = 1;
+#endif // !__ANDROID__
     graphicsConfigs = (AwtGraphicsConfigDataPtr *)
         calloc(nConfig, sizeof(AwtGraphicsConfigDataPtr));
     if (graphicsConfigs == NULL) {
@@ -446,6 +448,7 @@ getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
     graphicsConfigs[0] = defaultConfig;
     nConfig = 1; /* reserve index 0 for default config */
 
+#ifndef __ANDROID__
     // Only use the RENDER extension if it is available on the X server
     if (XQueryExtension(awt_display, "RENDER",
                         &major_opcode, &first_event, &first_error))
@@ -599,9 +602,8 @@ getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
        XFree (pVI8sg);
     if (n1sg != 0)
        XFree (pVI1sg);
-#else // __ANDROID__
-    // IMPORTANT TODO
 #endif
+
     screenDataPtr->numConfigs = nConfig;
     screenDataPtr->configs = graphicsConfigs;
 
@@ -707,10 +709,10 @@ static void xinerama_init_solaris()
  * platform dependent initialization.
  */
 static void xineramaInit(void) {
+#ifndef __ANDROID__
     char* XinExtName = "XINERAMA";
     int32_t major_opcode, first_event, first_error;
     Bool gotXinExt = False;
-
     gotXinExt = XQueryExtension(awt_display, XinExtName, &major_opcode,
                                 &first_event, &first_error);
 
@@ -725,6 +727,7 @@ static void xineramaInit(void) {
 #else /* Solaris */
     xinerama_init_solaris();
 #endif /* __linux__ || MACOSX */
+#endif // !__ANDROID__
 }
 #endif /* HEADLESS */
 
@@ -772,8 +775,12 @@ awt_init_Display(JNIEnv *env, jobject this)
             printf("Ignoring XKB.\n");
         }
     }
-
+#ifndef __ANDROID__
     dpy = awt_display = XOpenDisplay(NULL);
+#else
+    dpy = awt_display = ZALLOC(Display);
+#endif
+
 #ifdef NETSCAPE
     sigprocmask(SIG_SETMASK, &oldset, NULL);
 #endif
@@ -785,18 +792,22 @@ awt_init_Display(JNIEnv *env, jobject this)
         JNU_ThrowByName(env, "java/awt/AWTError", errmsg);
         return NULL;
     }
-
+#ifndef __ANDROID__
     XSetIOErrorHandler(xioerror_handler);
+#endif
     JNU_CallStaticMethodByName(env, NULL, "sun/awt/X11/XErrorHandlerUtil", "init", "(J)V",
         ptr_to_jlong(awt_display));
     JNU_CHECK_EXCEPTION_RETURN(env, NULL);
 
     /* set awt_numScreens, and whether or not we're using Xinerama */
     xineramaInit();
-
+#ifndef __ANDROID__
     if (!usingXinerama) {
         awt_numScreens =  XScreenCount(awt_display);
     }
+#else
+    awt_numScreens = 1;
+#endif
 
     DTRACE_PRINTLN1("allocating %i screens\n", awt_numScreens);
     /* Allocate screen data structure array */
@@ -808,6 +819,7 @@ awt_init_Display(JNIEnv *env, jobject this)
     }
 
     for (i = 0; i < awt_numScreens; i++) {
+#ifndef __ANDROID__
         if (usingXinerama) {
             /* All Xinerama screens use the same X11 root for now */
             x11Screens[i].root = RootWindow(awt_display, 0);
@@ -815,6 +827,9 @@ awt_init_Display(JNIEnv *env, jobject this)
         else {
             x11Screens[i].root = RootWindow(awt_display, i);
         }
+#else
+        x11Screens[i].root = 1; // prevent NULL check
+#endif
         x11Screens[i].defaultConfig = makeDefaultConfig(env, i);
         JNU_CHECK_EXCEPTION_RETURN(env, NULL);
     }
@@ -1162,7 +1177,7 @@ JNIEXPORT void JNICALL
 Java_sun_awt_X11GraphicsDevice_resetNativeData
     (JNIEnv *env, jclass x11gd, jint screen)
 {
-#ifndef HEADLESS
+#if defined(__ANDROID__) || !defined(HEADLESS)
     /*
      * Reset references to the various configs; the actual native config data
      * will be free'd later by the Disposer mechanism when the Java-level
@@ -1176,7 +1191,7 @@ Java_sun_awt_X11GraphicsDevice_resetNativeData
     }
     x11Screens[screen].defaultConfig = NULL;
     x11Screens[screen].numConfigs = 0;
-#endif /* !HEADLESS */
+#endif /* __ANDROID__ || !HEADLESS */
 }
 
 /*
