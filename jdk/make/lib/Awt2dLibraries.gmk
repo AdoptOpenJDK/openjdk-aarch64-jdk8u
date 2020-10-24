@@ -795,7 +795,6 @@ ifeq ($(BUILD_HEADLESS), true)
         -I$(JDK_TOPDIR)/src/$(OPENJDK_TARGET_OS_API_DIR)/native/sun/jdga \
         $(foreach dir, $(LIBAWT_HEADLESS_DIRS), -I$(dir))
 
-        # awt_GraphicsEnv.c \
 #        X11Renderer.c \
 #        X11PMBlitLoops.c \
 #        X11SurfaceData.c \
@@ -809,6 +808,7 @@ ifeq ($(BUILD_HEADLESS), true)
         awt_DrawingSurface.c \
         awt_Event.c \
         awt_Font.c \
+        awt_GraphicsEnv.c \
         HeadlessToolkit.c \
         fontpath.c \
         VDrawingArea.c \
