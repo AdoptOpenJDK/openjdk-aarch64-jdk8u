@@ -29,6 +29,9 @@
 #endif
 */
 
+#ifdef __ANDROID__
+# include "awt.h"
+#endif
 #include "awt_p.h"
 #include "java_awt_Component.h"
 
