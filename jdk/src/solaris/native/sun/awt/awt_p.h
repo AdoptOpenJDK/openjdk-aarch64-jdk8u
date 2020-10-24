@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#ifndef HEADLESS
+#ifndef HEADLESS_Z
 #include <X11/Intrinsic.h>
 #include <X11/IntrinsicP.h>
 #include <X11/Shell.h>
@@ -49,28 +49,28 @@
 #include <X11/keysym.h>
 #include <X11/keysymdef.h>
 #include <X11/extensions/Xrender.h>
-#endif /* !HEADLESS */
+#endif /* !HEADLESS_Z */
 #include "awt.h"
 #include "awt_util.h"
 #include "color.h"
 #include "colordata.h"
 #include "gdefs.h"
 
-#ifndef HEADLESS
+#ifndef HEADLESS_Z
 #ifndef min
 #define min(a,b) ((a) <= (b)? (a):(b))
 #endif
 #ifndef max
 #define max(a,b) ((a) >= (b)? (a):(b))
 #endif
-#endif /* !HEADLESS */
+#endif // !HEADLESS_Z
 
 #define RepaintPending_NONE     0
 #define RepaintPending_REPAINT  (1 << 0)
 #define RepaintPending_EXPOSE   (1 << 1)
 #define LOOKUPSIZE 32
 
-#ifndef HEADLESS
+#ifndef HEADLESS_Z
 
 typedef XRenderPictFormat *
 XRenderFindVisualFormatFunc (Display *dpy, _Xconst Visual *visual);
@@ -130,12 +130,12 @@ extern struct FontData *awtJNI_GetFontData(JNIEnv *env,jobject font, char **errm
 
 extern AwtGraphicsConfigDataPtr getDefaultConfig(int screen);
 extern AwtScreenDataPtr getScreenData(int screen);
-#endif /* !HEADLESS */
+#endif /* !HEADLESS_Z */
 
 /* allocated and initialize a structure */
 #define ZALLOC(T)       ((struct T *)calloc(1, sizeof(struct T)))
 
-#ifndef HEADLESS
+#ifndef HEADLESS_Z
 #define XDISPLAY awt_display;
 
 extern int awt_allocate_colors(AwtGraphicsConfigDataPtr);
@@ -147,5 +147,5 @@ extern int awtJNI_GetColorForVis (JNIEnv *, jobject, AwtGraphicsConfigDataPtr);
 extern jobject awtJNI_GetColorModel(JNIEnv *, AwtGraphicsConfigDataPtr);
 extern void awtJNI_CreateColorData (JNIEnv *, AwtGraphicsConfigDataPtr, int lock);
 
-#endif /* !HEADLESS */
+#endif /* !HEADLESS_Z */
 #endif           /* _AWT_P_H_ */
