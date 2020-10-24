@@ -796,6 +796,9 @@ ifeq ($(BUILD_HEADLESS), true)
         $(foreach dir, $(LIBAWT_HEADLESS_DIRS), -I$(dir))
 
         # awt_GraphicsEnv.c \
+#        X11Renderer.c \
+#        X11PMBlitLoops.c \
+#        X11SurfaceData.c \
     LIBAWT_HEADLESS_FILES := \
         awt_AWTEvent.c \
         awt_DrawingSurface.c \
@@ -805,9 +808,6 @@ ifeq ($(BUILD_HEADLESS), true)
         fontpath.c \
         VDrawingArea.c \
         X11Color.c \
-        X11Renderer.c \
-        X11PMBlitLoops.c \
-        X11SurfaceData.c \
         X11FontScaler_md.c \
         X11TextRenderer_md.c \
         OGLBlitLoops.c \
