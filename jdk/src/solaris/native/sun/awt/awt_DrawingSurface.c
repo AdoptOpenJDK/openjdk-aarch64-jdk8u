@@ -238,6 +238,7 @@ awt_DrawingSurface_GetDrawingSurfaceInfo(JAWT_DrawingSurface* ds)
 
     /* Set drawable and display */
     px->drawable = (*env)->GetLongField(env, peer, windowID);
+/*
 #ifdef __ANDROID__
     Display fake_awt_display;
     awt_display = &fake_awt_display;
@@ -245,6 +246,7 @@ awt_DrawingSurface_GetDrawingSurfaceInfo(JAWT_DrawingSurface* ds)
     awt_display->proto_minor_version = 7;
     awt_display->vendor = "Android Xlib";
 #endif
+*/
     px->display = awt_display;
 
     /* Get window attributes to set other values */
