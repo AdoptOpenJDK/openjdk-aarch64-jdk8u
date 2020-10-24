@@ -799,6 +799,11 @@ ifeq ($(BUILD_HEADLESS), true)
 #        X11Renderer.c \
 #        X11PMBlitLoops.c \
 #        X11SurfaceData.c \
+
+# TODO: Port below to GL4ES/Android GLES renderer.
+#        GLXGraphicsConfig.c \
+#        GLXSurfaceData.c \
+
     LIBAWT_HEADLESS_FILES := \
         awt_AWTEvent.c \
         awt_DrawingSurface.c \
@@ -822,8 +827,6 @@ ifeq ($(BUILD_HEADLESS), true)
         OGLSurfaceData.c \
         OGLTextRenderer.c \
         OGLVertexCache.c \
-        GLXGraphicsConfig.c \
-        GLXSurfaceData.c \
         AccelGlyphCache.c \
         CUPSfuncs.c
 
