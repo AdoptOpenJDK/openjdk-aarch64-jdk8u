@@ -34,9 +34,9 @@
 #include "jni_util.h"
 #include "debug_util.h"
 
-#if !defined(HEADLESS) && !defined(MACOSX)
+#if defined(__ANDROID__) || (!defined(HEADLESS) && !defined(MACOSX))
 #include <X11/Intrinsic.h>
-#endif /* !HEADLESS && !MACOSX */
+#endif /* __ANDROID__ (!HEADLESS && !MACOSX) */
 
 
 /* The JVM instance: defined in awt_MToolkit.c */
