@@ -37,6 +37,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#define nullptr 0
+
 // The public ifaddrs struct is full of pointers. Rather than track several
 // different allocations, we use a maximally-sized structure with the public
 // part at offset 0, and pointers into its hidden tail.
