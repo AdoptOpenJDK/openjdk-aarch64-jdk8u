@@ -212,6 +212,9 @@ ifeq ($(OPENJDK_TARGET_OS), macosx)
   XLIBS :=
 endif
 
+# Android: clear x11 libs link flags
+XLIBS :=
+
 ifdef OPENJDK
   JAVA_RC_FLAGS += -i "$(JDK_TOPDIR)/src/windows/resource/icons"
 else

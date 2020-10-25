@@ -327,7 +327,7 @@ $(eval $(call SetupJVMTIDemo,hprof, java_crw_demo, \
 
 $(eval $(call SetupJVMTIDemo,minst, agent_util java_crw_demo))
 $(eval $(call SetupJVMTIDemo,mtrace, agent_util java_crw_demo))
-$(eval $(call SetupJVMTIDemo,waiters, agent_util, , C++))
+# $(eval $(call SetupJVMTIDemo,waiters, agent_util, , C++))
 $(eval $(call SetupJVMTIDemo,versionCheck, agent_util))
 
 ##################################################################################################
