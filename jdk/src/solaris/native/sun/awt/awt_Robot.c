@@ -23,9 +23,11 @@
  * questions.
  */
 
+/*
 #ifdef HEADLESS
     #error This file should not be included in headless library
 #endif
+*/
 
 #include "jvm_md.h"
 #include <dlfcn.h>
@@ -68,6 +70,7 @@ static void *xCompositeHandle;
 static const char* XCOMPOSITE = JNI_LIB_NAME("Xcomposite");
 static const char* XCOMPOSITE_VERSIONED = VERSIONED_JNI_LIB_NAME("Xcomposite", "1");
 
+#ifndef HEADLESS
 static Bool checkXCompositeFunctions(void) {
     return (compositeQueryExtension   != NULL   &&
             compositeQueryVersion     != NULL   &&
@@ -229,6 +232,7 @@ static XImage *getWindowImage(Display * display, Window window,
 
     return image;
 }
+#endif
 
 /*********************************************************************************************/
 
@@ -236,6 +240,7 @@ static XImage *getWindowImage(Display * display, Window window,
 JNIEXPORT void JNICALL
 Java_sun_awt_X11_XRobotPeer_setup (JNIEnv * env, jclass cls, jint numberOfButtons, jintArray buttonDownMasks)
 {
+#ifndef HEADLESS
     int32_t xtestAvailable;
     jint *tmp;
     int i;
@@ -266,6 +271,7 @@ Java_sun_awt_X11_XRobotPeer_setup (JNIEnv * env, jclass cls, jint numberOfButton
     }
 
     AWT_UNLOCK();
+#endif
 }
 
 
@@ -278,7 +284,7 @@ Java_sun_awt_X11_XRobotPeer_getRGBPixelsImpl( JNIEnv *env,
                              jint width,
                              jint height,
                              jintArray pixelArray) {
-
+#ifndef HEADLESS
     XImage *image;
     jint *ary;               /* Array of jints for sending pixel values back
                               * to parent process.
@@ -337,13 +343,14 @@ Java_sun_awt_X11_XRobotPeer_getRGBPixelsImpl( JNIEnv *env,
     XDestroyImage(image);
 
     AWT_UNLOCK();
+#endif
 }
 
 JNIEXPORT void JNICALL
 Java_sun_awt_X11_XRobotPeer_keyPressImpl (JNIEnv *env,
                          jclass cls,
                          jint keycode) {
-
+#ifndef HEADLESS
     AWT_LOCK();
 
     DTRACE_PRINTLN1("RobotPeer: keyPressImpl(%i)", keycode);
@@ -356,13 +363,14 @@ Java_sun_awt_X11_XRobotPeer_keyPressImpl (JNIEnv *env,
     XSync(awt_display, False);
 
     AWT_UNLOCK();
-
+#endif
 }
 
 JNIEXPORT void JNICALL
 Java_sun_awt_X11_XRobotPeer_keyReleaseImpl (JNIEnv *env,
                            jclass cls,
                            jint keycode) {
+#ifndef HEADLESS
     AWT_LOCK();
 
     DTRACE_PRINTLN1("RobotPeer: keyReleaseImpl(%i)", keycode);
@@ -375,6 +383,7 @@ Java_sun_awt_X11_XRobotPeer_keyReleaseImpl (JNIEnv *env,
     XSync(awt_display, False);
 
     AWT_UNLOCK();
+#endif
 }
 
 JNIEXPORT void JNICALL
@@ -383,7 +392,7 @@ Java_sun_awt_X11_XRobotPeer_mouseMoveImpl (JNIEnv *env,
                           jobject xgc,
                           jint root_x,
                           jint root_y) {
-
+#ifndef HEADLESS
     AwtGraphicsConfigDataPtr adata;
 
     AWT_LOCK();
@@ -397,6 +406,7 @@ Java_sun_awt_X11_XRobotPeer_mouseMoveImpl (JNIEnv *env,
     XSync(awt_display, False);
 
     AWT_UNLOCK();
+#endif
 }
 
 /*
@@ -407,6 +417,7 @@ void mouseAction(JNIEnv *env,
                  jint buttonMask,
                  Bool isMousePress)
 {
+#ifndef HEADLESS
     AWT_LOCK();
 
     DTRACE_PRINTLN1("RobotPeer: mouseAction(%i)", buttonMask);
@@ -444,6 +455,7 @@ void mouseAction(JNIEnv *env,
 
     XSync(awt_display, False);
     AWT_UNLOCK();
+#endif
 }
 
 JNIEXPORT void JNICALL
@@ -468,7 +480,7 @@ Java_sun_awt_X11_XRobotPeer_mouseWheelImpl (JNIEnv *env,
 /* probably could have been hacked into robot_mouseButtonEvent, but it's */
 /* cleaner to give it its own command type, in case the implementation   */
 /* needs to be changed later.  -bchristi, 6/20/01                        */
-
+#ifndef HEADLESS
     int32_t repeat = abs(wheelAmt);
     int32_t button = wheelAmt < 0 ? 4 : 5;  /* wheel up:   button 4 */
                                                  /* wheel down: button 5 */
@@ -486,9 +498,12 @@ Java_sun_awt_X11_XRobotPeer_mouseWheelImpl (JNIEnv *env,
     XSync(awt_display, False);
 
     AWT_UNLOCK();
+#endif
 }
 
 JNIEXPORT void JNICALL
 Java_sun_awt_X11_XRobotPeer_loadNativeLibraries (JNIEnv *env, jclass cls) {
+#ifndef HEADLESS
     initXCompositeFunctions();
+#endif
 }
