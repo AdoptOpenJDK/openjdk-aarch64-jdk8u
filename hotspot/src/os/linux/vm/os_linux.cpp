@@ -5631,12 +5631,17 @@ bool os::dir_is_empty(const char* path) {
 #define O_DELETE 0x10000
 #endif
 
+#ifdef __ANDROID__
+static inline int open64(const char* pathName, int flags, int mode)
+{
+  return ::open(pathName, flags, mode);
+}
+#endif
+
 // Open a file. Unlink the file immediately after open returns
 // if the specified oflag has the O_DELETE flag set.
 // O_DELETE is used only in j2se/src/share/native/java/util/zip/ZipFile.c
 
-// FIXME! Maybe revert and fix
-#ifndef __ANDROID__
 int os::open(const char *path, int oflag, int mode) {
 
   if (strlen(path) > MAX_PATH - 1) {
@@ -5646,6 +5651,7 @@ int os::open(const char *path, int oflag, int mode) {
   int fd;
   int o_delete = (oflag & O_DELETE);
   oflag = oflag & ~O_DELETE;
+
   fd = ::open64(path, oflag, mode);
   if (fd == -1) return -1;
 
@@ -5702,7 +5708,6 @@ int os::open(const char *path, int oflag, int mode) {
   }
   return fd;
 }
-#endif
 
 #ifdef __ANDROID__
 #define S_IREAD S_IRUSR
