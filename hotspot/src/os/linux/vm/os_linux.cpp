@@ -2455,6 +2455,13 @@ void os::jvm_path(char *buf, jint buflen) {
                 CAST_FROM_FN_PTR(address, os::jvm_path),
                 dli_fname, sizeof(dli_fname), NULL);
   assert(ret, "cannot locate libjvm");
+#ifdef __ANDROID__
+  char* java_home_var = ::getenv("JAVA_HOME");
+  if (java_home_var == NULL || dli_fname[0] == '\0') {
+    return;
+  }
+  snprintf(buf, buflen, "%s/lib/$s/server/%s", java_home_var, cpu_arch, dli_fname);
+#else // !__ANDROID__
   char *rp = NULL;
   if (ret && dli_fname[0] != '\0') {
     rp = realpath(dli_fname, buf);
@@ -2462,10 +2469,7 @@ void os::jvm_path(char *buf, jint buflen) {
   if (rp == NULL)
     return;
 
-// Try to locate libjvm.so on Android by use available method as below.
-#ifndef __ANDROID__
   if (Arguments::created_by_gamma_launcher()) {
-#endif // !__ANDROID__
     // Support for the gamma launcher.  Typical value for buf is
     // "<JAVA_HOME>/jre/lib/<arch>/<vmtype>/libjvm.so".  If "/jre/lib/" appears at
     // the right place in the string, then assume we are installed in a JDK and
@@ -2515,10 +2519,8 @@ void os::jvm_path(char *buf, jint buflen) {
         }
       }
     }
-#ifndef __ANDROID__
   }
-#endif // !__ANDROID__
-
+#endif  // __ANDROID__
   strncpy(saved_jvm_path, buf, MAXPATHLEN);
 }
 
