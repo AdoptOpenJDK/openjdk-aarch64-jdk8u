@@ -805,6 +805,7 @@ ifeq ($(BUILD_HEADLESS), true)
 
 #        awt_DrawingSurface.c
 #        awt_GraphicsEnv.c
+#        awt_UNIXToolkit.c
 
     LIBAWT_HEADLESS_FILES := \
         awt_AWTEvent.c \
