@@ -538,42 +538,18 @@ static ps_prochandle_ops core_ops = {
    .p_pwrite= core_write_data,
    .get_lwp_regs= core_get_lwp_regs
 };
-/*
-#if defined(__x86_64__) || defined(__i386__)
-// Use our struct to fix: dereferencing pointer to incomplete type.
 
-
-
-struct x86_prstatus_t
-  {
-    struct x86_siginfo pr_info;		// Info associated with signal.
-    short int pr_cursig;		// Current signal.
-    unsigned long int pr_sigpend;	// Set of pending signals.
-    unsigned long int pr_sighold;	// Set of held signals.
-    __pid_t pr_pid;
-    __pid_t pr_ppid;
-    __pid_t pr_pgrp;
-    __pid_t pr_sid;
-    struct timeval pr_utime;		// User time.
-    struct timeval pr_stime;		// System time.
-    struct timeval pr_cutime;		// Cumulative user time.
-    struct timeval pr_cstime;		// Cumulative system time.
-    x86_gregset_t pr_reg;		// GP registers.
-    int pr_fpvalid;			// True if math copro being used.
-  };
-#endif
-*/
 // read regs and create thread from NT_PRSTATUS entries from core file
 static bool core_handle_prstatus(struct ps_prochandle* ph, const char* buf, size_t nbytes) {
    // we have to read prstatus_t from buf
    // assert(nbytes == sizeof(prstaus_t), "size mismatch on prstatus_t");
-/*
-#if defined(__x86_64__) || defined(__i386__)
-   x86_prstatus_t* prstat = (x86_prstatus_t*) buf;
+
+#if defined(amd64) || defined(i386)
+   // for some reasons prstatus_t cause errors so skip it
+   return false;
 #else
-*/
    prstatus_t* prstat = (prstatus_t*) buf;
-// #endif
+
    thread_info* newthr;
    print_debug("got integer regset for lwp %d\n", prstat->pr_pid);
    // we set pthread_t to -1 for core dump
@@ -631,6 +607,7 @@ static bool core_handle_prstatus(struct ps_prochandle* ph, const char* buf, size
    }
 
    return true;
+#endif
 }
 
 #define ROUNDUP(x, y)  ((((x)+((y)-1))/(y))*(y))
