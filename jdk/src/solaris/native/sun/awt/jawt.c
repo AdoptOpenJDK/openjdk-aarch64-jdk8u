@@ -33,7 +33,7 @@
  */
 JNIEXPORT jboolean JNICALL JAWT_GetAWT(JNIEnv* env, JAWT* awt)
 {
-#if defined(JAVASE_EMBEDDED) && defined(HEADLESS)
+#if (!defined(__ANDROID__) || defined(JAVASE_EMBEDDED)) && defined(HEADLESS)
     /* there are no AWT libs available at all */
     return JNI_FALSE;
 #else
@@ -47,6 +47,7 @@ JNIEXPORT jboolean JNICALL JAWT_GetAWT(JNIEnv* env, JAWT* awt)
         return JNI_FALSE;
     }
 
+    // TODO still want port below to Android :v
     awt->GetDrawingSurface = awt_GetDrawingSurface;
     awt->FreeDrawingSurface = awt_FreeDrawingSurface;
     if (awt->version >= JAWT_VERSION_1_4) {
