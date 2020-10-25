@@ -1439,9 +1439,6 @@ JNIEnv *env, jobject this)
 JNIEXPORT jobject JNICALL
 Java_sun_awt_X11GraphicsConfig_pGetBounds(JNIEnv *env, jobject this, jint screen)
 {
-#ifdef HEADLESS
-    return NULL;
-#else
     jclass clazz;
     jmethodID mid;
     jobject bounds = NULL;
@@ -1454,6 +1451,7 @@ Java_sun_awt_X11GraphicsConfig_pGetBounds(JNIEnv *env, jobject this, jint screen
     CHECK_NULL_RETURN(clazz, NULL);
     mid = (*env)->GetMethodID(env, clazz, "<init>", "(IIII)V");
     if (mid != NULL) {
+#ifdef HEADLESS
         if (usingXinerama) {
             if (0 <= screen && screen < awt_numScreens) {
                 bounds = (*env)->NewObject(env, clazz, mid, fbrects[screen].x,
@@ -1479,13 +1477,16 @@ Java_sun_awt_X11GraphicsConfig_pGetBounds(JNIEnv *env, jobject this, jint screen
             bounds = (*env)->NewObject(env, clazz, mid, 0, 0,
                     xwa.width, xwa.height);
         }
+#else
+        bounds = (*env)->NewObject(env, clazz, mid, 0, 0,
+               1280, 720);
+#endif /* !HEADLESS */
 
         if ((*env)->ExceptionOccurred(env)) {
             return NULL;
         }
     }
     return bounds;
-#endif /* !HEADLESS */
 }
 
 /*
@@ -1497,6 +1498,7 @@ JNIEXPORT jlong JNICALL
 Java_sun_awt_X11GraphicsConfig_createBackBuffer
     (JNIEnv *env, jobject this, jlong window, jint swapAction)
 {
+#ifndef HEADLESS
     int32_t v1, v2;
     XdbeBackBuffer ret = (unsigned long) 0;
     Window w = (Window)window;
@@ -1511,6 +1513,9 @@ Java_sun_awt_X11GraphicsConfig_createBackBuffer
                                      (XdbeSwapAction)swapAction);
     AWT_FLUSH_UNLOCK();
     return (jlong)ret;
+#else
+    return (jlong)0;
+#endif
 }
 
 /*
@@ -1522,7 +1527,7 @@ JNIEXPORT void JNICALL
 Java_sun_awt_X11GraphicsConfig_destroyBackBuffer
     (JNIEnv *env, jobject this, jlong backBuffer)
 {
-#ifndef __ANDROID__
+#ifndef HEADLESS
     AWT_LOCK();
     XdbeDeallocateBackBufferName(awt_display, (XdbeBackBuffer)backBuffer);
     AWT_FLUSH_UNLOCK();
@@ -1539,7 +1544,7 @@ Java_sun_awt_X11GraphicsConfig_swapBuffers
     (JNIEnv *env, jobject this,
      jlong window, jint swapAction)
 {
-#ifndef __ANDROID__
+#ifndef HEADLESS
     XdbeSwapInfo swapInfo;
 
     AWT_LOCK();
