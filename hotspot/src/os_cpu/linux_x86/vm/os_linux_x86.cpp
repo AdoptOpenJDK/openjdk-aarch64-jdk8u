@@ -563,9 +563,9 @@ int os::Linux::get_fpu_control_word(void) {
 }
 
 void os::Linux::set_fpu_control_word(int fpu_control) {
-#ifndef AMD64 && !defined(__ANDROID__)
+#if !defined(AMD64) && !defined(__ANDROID__)
   _FPU_SETCW(fpu_control);
-#endif // !AMD64
+#endif // !AMD64 && !__ANDROID__
 }
 
 // Check that the linux kernel version is 2.4 or higher since earlier
