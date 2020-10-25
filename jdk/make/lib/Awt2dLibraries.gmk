@@ -809,7 +809,6 @@ ifeq ($(BUILD_HEADLESS), true)
 
     LIBAWT_HEADLESS_FILES := \
         awt_AWTEvent.c \
-        awt_DrawingSurface.c \
         awt_Event.c \
         awt_Font.c \
         awt_Insets.c \
