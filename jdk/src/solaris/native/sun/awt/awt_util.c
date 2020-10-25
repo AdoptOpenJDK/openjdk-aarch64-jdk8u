@@ -23,9 +23,11 @@
  * questions.
  */
 
+/*
 #ifdef HEADLESS
     #error This file should not be included in headless library
 #endif
+*/
 
 #include "awt_p.h"
 #include "color.h"

@@ -1522,9 +1522,11 @@ JNIEXPORT void JNICALL
 Java_sun_awt_X11GraphicsConfig_destroyBackBuffer
     (JNIEnv *env, jobject this, jlong backBuffer)
 {
+#ifndef __ANDROID__
     AWT_LOCK();
     XdbeDeallocateBackBufferName(awt_display, (XdbeBackBuffer)backBuffer);
     AWT_FLUSH_UNLOCK();
+#endif
 }
 
 /*
@@ -1537,6 +1539,7 @@ Java_sun_awt_X11GraphicsConfig_swapBuffers
     (JNIEnv *env, jobject this,
      jlong window, jint swapAction)
 {
+#ifndef __ANDROID__
     XdbeSwapInfo swapInfo;
 
     AWT_LOCK();
@@ -1550,6 +1553,7 @@ Java_sun_awt_X11GraphicsConfig_swapBuffers
     XdbeEndIdiom(awt_display);
 
     AWT_FLUSH_UNLOCK();
+#endif
 }
 
 /*
