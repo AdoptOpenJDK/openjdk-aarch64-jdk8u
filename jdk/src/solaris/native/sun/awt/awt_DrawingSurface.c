@@ -41,14 +41,27 @@
 #include <jni_util.h>
 #include <jawt_md.h>
 
+#include "awt_GraphicsEnv.h"
+
+
+// FIXME awt_TopLevel.c not found
+#ifndef __ANDROID__
 extern struct ComponentIDs componentIDs;
 
-#include "awt_GraphicsEnv.h"
 extern jfieldID windowID;
 extern jfieldID targetID;
 extern jfieldID graphicsConfigID;
 extern jfieldID drawStateID;
 extern struct X11GraphicsConfigIDs x11GraphicsConfigIDs;
+#else
+struct ComponentIDs componentIDs;
+
+jfieldID windowID;
+jfieldID targetID;
+jfieldID graphicsConfigID;
+jfieldID drawStateID;
+struct X11GraphicsConfigIDs x11GraphicsConfigIDs;
+#endif
 
 /*
  * Lock the surface of the target component for native rendering.

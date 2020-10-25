@@ -44,6 +44,8 @@
 #include "fontscalerdefs.h"
 #include <jni_util.h>
 
+U_NAMESPACE_BEGIN
+
 class FontInstanceAdapter : public LEFontInstance {
 private:
     JNIEnv *env;
@@ -183,3 +185,5 @@ public:
 };
 
 #endif
+
+U_NAMESPACE_END

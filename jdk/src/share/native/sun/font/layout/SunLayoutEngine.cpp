@@ -32,6 +32,8 @@
 #include "sun_font_SunLayoutEngine.h"
 #include "sunfontids.h"
 
+U_NAMESPACE_BEGIN
+
 void getFloat(JNIEnv* env, jobject pt, jfloat &x, jfloat &y) {
     x = env->GetFloatField(pt, sunFontIDs.xFID);
     y = env->GetFloatField(pt, sunFontIDs.yFID);
@@ -197,3 +199,5 @@ JNIEXPORT void JNICALL Java_sun_font_SunLayoutEngine_nativeLayout
   delete engine;
 
 }
+
+U_NAMESPACE_END

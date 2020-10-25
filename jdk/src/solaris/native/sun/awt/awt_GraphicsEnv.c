@@ -31,12 +31,12 @@
 #include <sun_awt_X11GraphicsEnvironment.h>
 #include <sun_awt_X11GraphicsDevice.h>
 #include <sun_awt_X11GraphicsConfig.h>
-#ifndef HEADLESS
+#if defined(__ANDROID__) || !defined(HEADLESS)
 #include <X11/extensions/Xdbe.h>
 #include <X11/XKBlib.h>
 #include "Xrandr.h"
 #include "GLXGraphicsConfig.h"
-#endif /* !HEADLESS */
+#endif /* __ANDROID__ || !HEADLESS */
 
 #include <jni.h>
 #include <jni_util.h>
@@ -57,7 +57,7 @@
 extern int awt_init_xt;
 #endif
 
-#ifndef HEADLESS
+#if defined(__ANDROID__) || !defined(HEADLESS)
 
 int awt_numScreens;     /* Xinerama-aware number of screens */
 
@@ -69,13 +69,13 @@ AwtScreenDataPtr x11Screens;
  */
 static jboolean glxRequested = JNI_FALSE;
 
-#endif /* !HEADLESS */
+#endif /* __ANDROID__ || !HEADLESS */
 
-#ifdef HEADLESS
+#if !defined(__ANDROID__) && defined(HEADLESS)
 #define Display long
-#endif /* HEADLESS */
+#endif /* !__ANDROID__ && HEADLESS */
 
-Display *awt_display = 1;
+Display *awt_display;
 
 jclass tkClass = NULL;
 jmethodID awtLockMID = NULL;
@@ -96,9 +96,9 @@ jboolean awtLockInited = JNI_FALSE;
 struct X11GraphicsConfigIDs x11GraphicsConfigIDs;
 struct X11GraphicsDeviceIDs x11GraphicsDeviceIDs;
 
-#ifndef HEADLESS
+#if defined(__ANDROID__) || !defined(HEADLESS)
 int awtCreateX11Colormap(AwtGraphicsConfigDataPtr adata);
-#endif /* HEADLESS */
+#endif /* __ANDROID__ || !HEADLESS */
 
 static char *x11GraphicsConfigClassName = "sun/awt/X11GraphicsConfig";
 
@@ -778,7 +778,17 @@ awt_init_Display(JNIEnv *env, jobject this)
 #ifndef __ANDROID__
     dpy = awt_display = XOpenDisplay(NULL);
 #else
-    dpy = awt_display = ZALLOC(Display);
+/*
+    Screen scr;
+    scr.root = 1;
+
+    Display fawt_display;
+    fawt_display.vendor = "Android Xlib";
+    fawt_display.nscreens = 1;
+    fawt_display.screens[0] = &scr;
+    scr.display = fawt_display;
+*/
+    dpy = awt_display = 1;
 #endif
 
 #ifdef NETSCAPE
@@ -865,7 +875,7 @@ static void ensureConfigsInited(JNIEnv* env, int screen) {
 }
 #endif
 
-#ifdef HEADLESS
+#if !defined(__ANDROID__) && defined(HEADLESS)
 void* getDefaultConfig(int screen) {
     return NULL;
 }
@@ -880,7 +890,7 @@ AwtScreenDataPtr
 getScreenData(int screen) {
     return &(x11Screens[screen]);
 }
-#endif /* !HEADLESS */
+#endif /* __ANDROID__ || !HEADLESS */
 
 /*
  * Class:     sun_awt_X11GraphicsEnvironment

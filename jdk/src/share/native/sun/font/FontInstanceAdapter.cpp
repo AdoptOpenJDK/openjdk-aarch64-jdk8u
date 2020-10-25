@@ -35,6 +35,8 @@
 
 #include "FontInstanceAdapter.h"
 
+U_NAMESPACE_BEGIN
+
 FontInstanceAdapter::FontInstanceAdapter(JNIEnv *theEnv,
                                          jobject theFont2D,
                                          jobject theFontStrike,
@@ -337,3 +339,5 @@ float FontInstanceAdapter::euclidianDistance(float a, float b)
 
     return root;
 }
+
+U_NAMESPACE_END
