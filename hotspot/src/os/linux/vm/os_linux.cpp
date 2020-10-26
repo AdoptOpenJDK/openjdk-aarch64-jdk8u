@@ -5631,13 +5631,6 @@ bool os::dir_is_empty(const char* path) {
 #define O_DELETE 0x10000
 #endif
 
-#ifdef __ANDROID__
-static inline int open64(const char* pathName, int flags, int mode)
-{
-  return ::open(pathName, flags, mode);
-}
-#endif
-
 // Open a file. Unlink the file immediately after open returns
 // if the specified oflag has the O_DELETE flag set.
 // O_DELETE is used only in j2se/src/share/native/java/util/zip/ZipFile.c
