@@ -22,7 +22,7 @@
  *
  */
 
-// Android SHM todo: use https://github.com/pelya/android-shmem
+// [TODO if need] Android SHM: use https://github.com/pelya/android-shmem
 
 // no precompiled headers
 #include "classfile/classLoader.hpp"
@@ -187,19 +187,11 @@ static pthread_mutex_t dl_mutex;
 static void unpackTime(timespec* absTime, bool isAbsolute, jlong time);
 
 #ifdef __ANDROID__
-
-int open64(const char* pathName, int flags, int mode)
-{
+int open64(const char* pathName, int flags, int mode) {
+  // copy from jdk9 mobile port
+  // That's weird, just seems calling to itself from os::open...
   return ::open(pathName, flags, mode);
 }
-
-int getloadavg (double __loadavg[], int __nelem)
-{
-  return -1;
-}
-
-typedef int error_t;
-
 #endif //__ANDROID__
 
 // utility functions
