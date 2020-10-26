@@ -5628,7 +5628,7 @@ bool os::dir_is_empty(const char* path) {
 #endif
 
 #ifdef __ANDROID__
-int open64(const char* pathName, int flags, int m
+int os::open64(const char* pathName, int flags, int m
   return ::open(pathName, flags, mode);
 }
 #endif //__ANDROID__
