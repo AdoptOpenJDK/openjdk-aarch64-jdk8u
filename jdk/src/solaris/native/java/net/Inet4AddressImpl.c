@@ -47,7 +47,7 @@
 
 #include "java_net_Inet4AddressImpl.h"
 
-#if defined(__GLIBC__) || (defined(__FreeBSD__) && (__FreeBSD_version >= 601104))
+#if !defined(__ANDROID__) && defined(__GLIBC__) || (defined(__FreeBSD__) && (__FreeBSD_version >= 601104))
 #define HAS_GLIBC_GETHOSTBY_R   1
 #endif
 
