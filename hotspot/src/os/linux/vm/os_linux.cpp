@@ -2456,7 +2456,7 @@ void os::jvm_path(char *buf, jint buflen) {
   if (java_home_var == NULL || dli_fname[0] == '\0') {
     return;
   }
-  snprintf(buf, buflen, "%s/lib/$s/server/%s", java_home_var, cpu_arch, dli_fname);
+  snprintf(buf, buflen, "%s/lib/%s/server/%s", java_home_var, cpu_arch, dli_fname);
 #else // !__ANDROID__
   char *rp = NULL;
   if (ret && dli_fname[0] != '\0') {
