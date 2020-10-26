@@ -283,7 +283,9 @@ endif
 # Linker flags
 
 # statically link libc++.so, work with gcc but ignored by g++
-STATIC_STDCXX = -Wl,-Bstatic --std=libc++ -Wl,-Bdynamic
+# STATIC_STDCXX = -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
+
+STATIC_STDCXX = -Wl,-Bstatic -Wl,-lc++ -Wl,-Bdynamic
 # While the VM needs the above line, adlc needs a separate setting:
 ADLC_STATIC_STDCXX = -static-libstdc++
 
