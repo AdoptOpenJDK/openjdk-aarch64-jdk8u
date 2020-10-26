@@ -186,6 +186,22 @@ static pthread_mutex_t dl_mutex;
 // Declarations
 static void unpackTime(timespec* absTime, bool isAbsolute, jlong time);
 
+#ifdef __ANDROID__
+
+int open64(const char* pathName, int flags, int mode)
+{
+  return ::open(pathName, flags, mode);
+}
+
+int getloadavg (double __loadavg[], int __nelem)
+{
+  return -1;
+}
+
+typedef int error_t;
+
+#endif //__ANDROID__
+
 // utility functions
 
 static int SR_initialize();
