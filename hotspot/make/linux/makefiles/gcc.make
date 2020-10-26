@@ -173,6 +173,7 @@ endif
 ARCHFLAG = $(ARCHFLAG/$(BUILDARCH))
 ARCHFLAG/i486    = -m32 -march=i586
 ARCHFLAG/amd64   = -m64 $(STACK_ALIGNMENT_OPT)
+ARCHFLAG/arm     =
 ARCHFLAG/aarch32 =
 ARCHFLAG/aarch64 =
 ARCHFLAG/ia64    =
@@ -284,7 +285,7 @@ endif
 # statically link libc++.so, work with gcc but ignored by g++
 STATIC_STDCXX = -Wl,-Bstatic -static-libstdc++ -Wl,-Bdynamic
 # While the VM needs the above line, adlc needs a separate setting:
-ADLC_STATIC_STDCXX = -static-libstdc++
+ADLC_STATIC_STDCXX = -std=libc++
 
 ifeq ($(USE_CLANG),)
   # statically link libgcc and/or libgcc_s, libgcc does not exist before gcc-3.x.
