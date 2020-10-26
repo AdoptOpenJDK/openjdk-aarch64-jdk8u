@@ -1112,7 +1112,9 @@ int getDefaultIPv6Interface(struct in6_addr *target_addr) {
          */
         if ( (dest_plen < 0 || dest_plen > 128)  ||
              (src_plen != 0) ||
+#ifndef __ANDROID__
              (flags & (RTF_POLICY | RTF_FLOW)) ||
+#endif
              ((flags & RTF_REJECT) && dest_plen == 0) ) {
             continue;
         }
