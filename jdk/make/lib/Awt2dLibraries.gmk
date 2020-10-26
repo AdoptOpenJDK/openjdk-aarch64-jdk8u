@@ -939,7 +939,7 @@ $(eval $(call SetupNativeCompilation,BUILD_LIBFONTMANAGER, \
         $(subst -Wl$(COMMA)-z$(COMMA)defs,,$(LDFLAGS_JDKLIB))) $(LDFLAGS_CXX_JDK) \
         $(call SET_SHARED_LIBRARY_ORIGIN), \
     LDFLAGS_SUFFIX := $(BUILD_LIBFONTMANAGER_FONTLIB), \
-    LDFLAGS_SUFFIX_linux := -lawt $(LIBM) $(LIBCXX) -ljava -ljvm -lc, \
+    LDFLAGS_SUFFIX_linux := -lawt -lawt_headless $(LIBM) $(LIBCXX) -ljava -ljvm -lc, \
     LDFLAGS_SUFFIX_solaris := -lawt -lawt_headless -lc $(LIBM) $(LIBCXX) -ljava -ljvm, \
     LDFLAGS_SUFFIX_aix := -lawt -lawt_headless $(LIBM) $(LIBCXX) -ljava -ljvm,\
     LDFLAGS_SUFFIX_macosx := -lawt $(LIBM) $(LIBCXX) -undefined dynamic_lookup \
