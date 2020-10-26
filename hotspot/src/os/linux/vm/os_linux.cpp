@@ -186,14 +186,6 @@ static pthread_mutex_t dl_mutex;
 // Declarations
 static void unpackTime(timespec* absTime, bool isAbsolute, jlong time);
 
-#ifdef __ANDROID__
-int open64(const char* pathName, int flags, int mode) {
-  // copy from jdk9 mobile port
-  // That's weird, just seems calling to itself from os::open...
-  return ::open(pathName, flags, mode);
-}
-#endif //__ANDROID__
-
 // utility functions
 
 static int SR_initialize();
@@ -5639,6 +5631,22 @@ bool os::dir_is_empty(const char* path) {
 #define O_DELETE 0x10000
 #endif
 
+// [Android port] JDK9 mobile port:
+/*
+#ifdef __ANDROID__
+int open64(const char* pathName, int flags, int m
+  return ::open(pathName, flags, mode);
+}
+#endif //__ANDROID__
+*/
+// That's weird, just seems calling to itself from os::open...
+// Also it gives error:
+/*
+openjdk/hotspot/src/os/linux/vm/os_linux.cpp:5638:51: error: no 'int os::open64(const char*, int, int)' member function declared in class 'os'
+ int os::open(const char *path, int oflag, int mode) {
+                                                   ^
+*/
+
 // Open a file. Unlink the file immediately after open returns
 // if the specified oflag has the O_DELETE flag set.
 // O_DELETE is used only in j2se/src/share/native/java/util/zip/ZipFile.c
@@ -5652,8 +5660,11 @@ int os::open(const char *path, int oflag, int mode) {
   int fd;
   int o_delete = (oflag & O_DELETE);
   oflag = oflag & ~O_DELETE;
-
+#ifndef __ANDROID__
   fd = ::open64(path, oflag, mode);
+#else
+  fd = open64(path, oflag, mode);
+#endif
   if (fd == -1) return -1;
 
   //If the open succeeded, the file might still be a directory
