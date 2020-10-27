@@ -141,11 +141,13 @@ static openat64_func* my_openat64_func = NULL;
 static fstatat64_func* my_fstatat64_func = NULL;
 static unlinkat_func* my_unlinkat_func = NULL;
 static renameat_func* my_renameat_func = NULL;
+
 #ifdef __ANDROID__
 static utimensat_func* my_utimensat_func = NULL;
 #else
 static futimesat_func* my_futimesat_func = NULL;
 #endif
+
 static fdopendir_func* my_fdopendir_func = NULL;
 
 
@@ -156,7 +158,7 @@ static fdopendir_func* my_fdopendir_func = NULL;
  * support.  Determine if the following are the most suitable alternatives.
  *
  */
-int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen, struct group** result) {
+static int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen, struct group** result) {
 
   *result = NULL;
   errno = 0;
@@ -169,7 +171,8 @@ int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen, struct gr
   return 0;
 }
 
-int getgrnam_r(const char *name, struct group* grp, char* buf, size_t buflen, struct group** result) {
+
+static int getgrnam_r(const char *name, struct group* grp, char* buf, size_t buflen, struct group** result) {
 
   *result = NULL;
   errno = 0;
@@ -183,7 +186,7 @@ int getgrnam_r(const char *name, struct group* grp, char* buf, size_t buflen, st
 
 }
 
-int do_getpw_r(int by_name, const char* name, uid_t uid,
+static int do_getpw_r(int by_name, const char* name, uid_t uid,
                       struct passwd* dst, char* buf, size_t byte_count,
                       struct passwd** result) {
   // getpwnam_r and getpwuid_r don't modify errno, but library calls we
