@@ -1,5 +1,3 @@
-// From http://hg.openjdk.java.net/mobile/jdk9/jdk/file/17bb8a98d5e3/src/java.base/unix/native/libnio/fs/UnixNativeDispatcher.c
-
 /*
  * Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -31,36 +29,21 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 #include <errno.h>
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef MACOSX
-#include <sys/param.h>
-#include <sys/mount.h>
-#else
-#ifndef __ANDROID__
+#ifndef __ANDROID__ 
 #include <sys/statvfs.h>
 #else
 #include <sys/vfs.h>
-#include <sys/syscall.h>
-#endif
 #endif
 #include <sys/time.h>
 
-/* For POSIX-compliant getpwuid_r, getgrgid_r on Solaris */
-#if defined(__solaris__)
-#define _POSIX_PTHREAD_SEMANTICS
-#endif
-#include <pwd.h>
-#include <grp.h>
-
 #ifdef __solaris__
 #include <strings.h>
-#endif
-
-#ifdef __linux__
-#include <sys/syscall.h>
 #endif
 
 #if defined(__linux__) || defined(_AIX)
@@ -71,12 +54,11 @@
 #include <string.h>
 
 #define stat64 stat
+
 #ifdef __ANDROID__
 #define statvfs64 statfs
 #else
-#ifndef MACOSX
 #define statvfs64 statvfs
-#endif
 #endif
 
 #define open64 open
@@ -91,12 +73,6 @@
 #include "jlong.h"
 
 #include "sun_nio_fs_UnixNativeDispatcher.h"
-
-#if defined(_AIX)
-  #define DIR DIR64
-  #define opendir opendir64
-  #define closedir closedir64
-#endif
 
 /**
  * Size of password or group entry when not available via sysconf
@@ -152,11 +128,13 @@ typedef int openat64_func(int, const char *, int, ...);
 typedef int fstatat64_func(int, const char *, struct stat64 *, int);
 typedef int unlinkat_func(int, const char*, int);
 typedef int renameat_func(int, const char*, int, const char*);
+
 #ifdef __ANDROID__
 typedef int utimensat_func(int, const char *, const struct timespec *, int flags);
 #else
 typedef int futimesat_func(int, const char *, const struct timeval *);
 #endif
+
 typedef DIR* fdopendir_func(int);
 
 static openat64_func* my_openat64_func = NULL;
@@ -170,6 +148,7 @@ static futimesat_func* my_futimesat_func = NULL;
 #endif
 static fdopendir_func* my_fdopendir_func = NULL;
 
+
 #ifdef __ANDROID__
 /*
  * TODO: Android lacks support for the methods listed below.  In it's place are
@@ -177,8 +156,8 @@ static fdopendir_func* my_fdopendir_func = NULL;
  * support.  Determine if the following are the most suitable alternatives.
  *
  */
-int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen, struct group** result)
-{
+int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen, struct group** result) {
+
   *result = NULL;
   errno = 0;
   grp = getgrgid(gid);
@@ -190,8 +169,8 @@ int getgrgid_r(gid_t gid, struct group* grp, char* buf, size_t buflen, struct gr
   return 0;
 }
 
-int getgrnam_r(const char *name, struct group* grp, char* buf, size_t buflen, struct group** result)
-{
+int getgrnam_r(const char *name, struct group* grp, char* buf, size_t buflen, struct group** result) {
+
   *result = NULL;
   errno = 0;
   grp = getgrnam(name);
@@ -201,8 +180,67 @@ int getgrnam_r(const char *name, struct group* grp, char* buf, size_t buflen, st
   // buf not used by caller (see below)
   *result = grp;
   return 0;
+
 }
+
+int do_getpw_r(int by_name, const char* name, uid_t uid,
+                      struct passwd* dst, char* buf, size_t byte_count,
+                      struct passwd** result) {
+  // getpwnam_r and getpwuid_r don't modify errno, but library calls we
+  // make might.
+  *result = NULL;
+
+  // Our implementation of getpwnam(3) and getpwuid(3) use thread-local
+  // storage, so we can call them as long as we copy everything out
+  // before returning.
+  const struct passwd* src = by_name ? getpwnam(name) : getpwuid(uid); // NOLINT: see above.
+
+  // POSIX allows failure to find a match to be considered a non-error.
+  // Reporting success (0) but with *result NULL is glibc's behavior.
+  if (src == NULL) {
+    return (errno == ENOENT) ? 0 : errno;
+  }
+
+  // Work out where our strings will go in 'buf', and whether we've got
+  // enough space.
+  size_t required_byte_count = 0;
+  dst->pw_name = buf;
+  required_byte_count += strlen(src->pw_name) + 1;
+  dst->pw_dir = buf + required_byte_count;
+  required_byte_count += strlen(src->pw_dir) + 1;
+  dst->pw_shell = buf + required_byte_count;
+  required_byte_count += strlen(src->pw_shell) + 1;
+  if (byte_count < required_byte_count) {
+    return ERANGE;
+  }
+
+  // Copy the strings.
+  snprintf(buf, byte_count, "%s%c%s%c%s", src->pw_name, 0, src->pw_dir, 0, src->pw_shell);
+
+  // pw_passwd is non-POSIX and unused (always NULL) in bionic.
+  // pw_gecos is non-POSIX and missing in bionic.
+  dst->pw_passwd = NULL;
+
+  // Copy the integral fields.
+  dst->pw_gid = src->pw_gid;
+  dst->pw_uid = src->pw_uid;
+
+  *result = dst;
+  return 0;
+}
+
+static inline int getpwnam_r(const char* name, struct passwd* pwd,
+               char* buf, size_t byte_count, struct passwd** result) {
+  return do_getpw_r(1, name, -1, pwd, buf, byte_count, result);
+}
+
+static inline int getpwuid_r(uid_t uid, struct passwd* pwd,
+               char* buf, size_t byte_count, struct passwd** result) {
+  return do_getpw_r(0, NULL, uid, pwd, buf, byte_count, result);
+}
+
 #endif
+
 
 /**
  * fstatat missing from glibc on Linux. Temporary workaround
@@ -220,11 +258,14 @@ static int fstatat64_wrapper(int dfd, const char *path,
 }
 #endif
 
-#if defined(__linux__) && defined(_LP64) && defined(__NR_newfstatat)
+#if defined(__linux__) && defined(__x86_64__)
 #define FSTATAT64_SYSCALL_AVAILABLE
 static int fstatat64_wrapper(int dfd, const char *path,
                              struct stat64 *statbuf, int flag)
 {
+    #ifndef __NR_newfstatat
+    #define __NR_newfstatat  262
+    #endif
     return syscall(__NR_newfstatat, dfd, path, statbuf, flag);
 }
 #endif
@@ -327,11 +368,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
 #else
     my_futimesat_func = (futimesat_func*) dlsym(RTLD_DEFAULT, "futimesat");
 #endif
-#if defined(_AIX)
-    my_fdopendir_func = (fdopendir_func*) dlsym(RTLD_DEFAULT, "fdopendir64");
-#else
     my_fdopendir_func = (fdopendir_func*) dlsym(RTLD_DEFAULT, "fdopendir");
-#endif
 
 #if defined(FSTATAT64_SYSCALL_AVAILABLE)
     /* fstatat64 missing from glibc */
@@ -340,18 +377,19 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
 #endif
 
     /* supports futimes or futimesat */
-
 #ifdef __ANDROID__
-    if (my_utimensat_func != NULL)
+    if (my_utimensat_func != NULL) {
         capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_FUTIMES;
+    }
 #else /* __ANDROID__ */
 #ifdef _ALLBSD_SOURCE
     capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_FUTIMES;
 #else
-    if (my_futimesat_func != NULL)
+    if (my_futimesat_func != NULL) {
         capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_FUTIMES;
+    }
 #endif
-#endif /* __ANDROID__ */
+#endif
 
     /* supports openat, etc. */
 
@@ -362,6 +400,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
 #else
         my_futimesat_func != NULL && my_fdopendir_func != NULL)
 #endif
+
     {
         capabilities |= sun_nio_fs_UnixNativeDispatcher_SUPPORTS_OPENAT;
     }
@@ -456,6 +495,20 @@ Java_sun_nio_fs_UnixNativeDispatcher_fclose(JNIEnv* env, jclass this, jlong stre
     }
 }
 
+JNIEXPORT void JNICALL
+Java_sun_nio_fs_UnixNativeDispatcher_rewind(JNIEnv* env, jclass this, jlong stream)
+{
+    FILE* fp = jlong_to_ptr(stream);
+    int saved_errno;
+
+    errno = 0;
+    rewind(fp);
+    saved_errno = errno;
+    if (ferror(fp)) {
+        throwUnixException(env, saved_errno);
+    }
+}
+
 JNIEXPORT jint JNICALL
 Java_sun_nio_fs_UnixNativeDispatcher_open0(JNIEnv* env, jclass this,
     jlong pathAddress, jint oflags, jint mode)
@@ -490,7 +543,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_openat0(JNIEnv* env, jclass this, jint dfd,
 }
 
 JNIEXPORT void JNICALL
-Java_sun_nio_fs_UnixNativeDispatcher_close0(JNIEnv* env, jclass this, jint fd) {
+Java_sun_nio_fs_UnixNativeDispatcher_close(JNIEnv* env, jclass this, jint fd) {
     int err;
     /* TDB - need to decide if EIO and other errors should cause exception */
     RESTARTABLE(close((int)fd), err);
@@ -562,20 +615,6 @@ Java_sun_nio_fs_UnixNativeDispatcher_stat0(JNIEnv* env, jclass this,
         throwUnixException(env, errno);
     } else {
         prepAttributes(env, &buf, attrs);
-    }
-}
-
-JNIEXPORT jint JNICALL
-Java_sun_nio_fs_UnixNativeDispatcher_stat1(JNIEnv* env, jclass this, jlong pathAddress) {
-    int err;
-    struct stat64 buf;
-    const char* path = (const char*)jlong_to_ptr(pathAddress);
-
-    RESTARTABLE(stat64(path, &buf), err);
-    if (err == -1) {
-        return 0;
-    } else {
-        return (jint)buf.st_mode;
     }
 }
 
@@ -716,13 +755,13 @@ JNIEXPORT void JNICALL
 Java_sun_nio_fs_UnixNativeDispatcher_futimes(JNIEnv* env, jclass this, jint filedes,
     jlong accessTime, jlong modificationTime)
 {
+    
     int err = 0;
-
 #ifdef __ANDROID__
     struct timespec times[2];
     times[0].tv_sec = accessTime / 1000000;
     times[0].tv_nsec = (accessTime % 1000000) * 1000;
-
+    
     times[1].tv_sec = modificationTime / 1000000;
     times[1].tv_nsec = (modificationTime % 1000000) * 1000;
 
@@ -732,7 +771,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_futimes(JNIEnv* env, jclass this, jint file
     }
 
     RESTARTABLE((*my_utimensat_func)(filedes, NULL, &times[0], 0), err);
-#else /* __ANDROID__ */
+#else //__ANDROID__
     struct timeval times[2];
     times[0].tv_sec = accessTime / 1000000;
     times[0].tv_usec = accessTime % 1000000;
@@ -749,7 +788,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_futimes(JNIEnv* env, jclass this, jint file
     }
     RESTARTABLE((*my_futimesat_func)(filedes, NULL, &times[0]), err);
 #endif
-#endif /* __ANDROID__ */
+#endif //__ANDROID__
     if (err == -1) {
         throwUnixException(env, errno);
     }
@@ -983,6 +1022,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_realpath0(JNIEnv* env, jclass this,
     struct stat64 buf;
     int err;
 #endif
+
     jbyteArray result = NULL;
     char resolved[PATH_MAX+1];
     const char* path = (const char*)jlong_to_ptr(pathAddress);
@@ -997,12 +1037,13 @@ Java_sun_nio_fs_UnixNativeDispatcher_realpath0(JNIEnv* env, jclass this,
         if (err == -1  && errno == ENOENT) {
             throwUnixException(env, errno);
         } else
-#endif
+#endif   
         {
+    
             jsize len = (jsize)strlen(resolved);
             result = (*env)->NewByteArray(env, len);
             if (result != NULL) {
-              (*env)->SetByteArrayRegion(env, result, 0, len, (jbyte*)resolved);
+                (*env)->SetByteArrayRegion(env, result, 0, len, (jbyte*)resolved);
             }
         }
     }
@@ -1022,31 +1063,16 @@ Java_sun_nio_fs_UnixNativeDispatcher_access0(JNIEnv* env, jclass this,
     }
 }
 
-JNIEXPORT jboolean JNICALL
-Java_sun_nio_fs_UnixNativeDispatcher_exists0(JNIEnv* env, jclass this, jlong pathAddress) {
-    int err;
-    const char* path = (const char*)jlong_to_ptr(pathAddress);
-    RESTARTABLE(access(path, F_OK), err);
-    return (err == 0) ? JNI_TRUE : JNI_FALSE;
-}
-
 JNIEXPORT void JNICALL
 Java_sun_nio_fs_UnixNativeDispatcher_statvfs0(JNIEnv* env, jclass this,
     jlong pathAddress, jobject attrs)
 {
     int err;
-#ifdef MACOSX
-    struct statfs buf;
-#else
     struct statvfs64 buf;
-#endif
     const char* path = (const char*)jlong_to_ptr(pathAddress);
 
-#ifdef MACOSX
-    RESTARTABLE(statfs(path, &buf), err);
-#else
+
     RESTARTABLE(statvfs64(path, &buf), err);
-#endif
     if (err == -1) {
         throwUnixException(env, errno);
     } else {
@@ -1062,11 +1088,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_statvfs0(JNIEnv* env, jclass this,
             buf.f_bavail = 0;
         }
 #endif
-#ifdef MACOSX
-        (*env)->SetLongField(env, attrs, attrs_f_frsize, long_to_jlong(buf.f_bsize));
-#else
         (*env)->SetLongField(env, attrs, attrs_f_frsize, long_to_jlong(buf.f_frsize));
-#endif
         (*env)->SetLongField(env, attrs, attrs_f_blocks, long_to_jlong(buf.f_blocks));
         (*env)->SetLongField(env, attrs, attrs_f_bfree,  long_to_jlong(buf.f_bfree));
         (*env)->SetLongField(env, attrs, attrs_f_bavail, long_to_jlong(buf.f_bavail));
@@ -1133,7 +1155,11 @@ Java_sun_nio_fs_UnixNativeDispatcher_getpwuid(JNIEnv* env, jclass this, jint uid
         int res = 0;
 
         errno = 0;
-        RESTARTABLE(getpwuid_r((uid_t)uid, &pwent, pwbuf, (size_t)buflen, &p), res);
+        #ifdef __solaris__
+            RESTARTABLE_RETURN_PTR(getpwuid_r((uid_t)uid, &pwent, pwbuf, (size_t)buflen), p);
+        #else
+            RESTARTABLE(getpwuid_r((uid_t)uid, &pwent, pwbuf, (size_t)buflen, &p), res);
+        #endif
 
         if (res != 0 || p == NULL || p->pw_name == NULL || *(p->pw_name) == '\0') {
             /* not found or error */
@@ -1178,7 +1204,11 @@ Java_sun_nio_fs_UnixNativeDispatcher_getgrgid(JNIEnv* env, jclass this, jint gid
         }
 
         errno = 0;
-        RESTARTABLE(getgrgid_r((gid_t)gid, &grent, grbuf, (size_t)buflen, &g), res);
+        #ifdef __solaris__
+            RESTARTABLE_RETURN_PTR(getgrgid_r((gid_t)gid, &grent, grbuf, (size_t)buflen), g);
+        #else
+            RESTARTABLE(getgrgid_r((gid_t)gid, &grent, grbuf, (size_t)buflen, &g), res);
+        #endif
 
         retry = 0;
         if (res != 0 || g == NULL || g->gr_name == NULL || *(g->gr_name) == '\0') {
@@ -1229,7 +1259,11 @@ Java_sun_nio_fs_UnixNativeDispatcher_getpwnam0(JNIEnv* env, jclass this,
         const char* name = (const char*)jlong_to_ptr(nameAddress);
 
         errno = 0;
-        RESTARTABLE(getpwnam_r(name, &pwent, pwbuf, (size_t)buflen, &p), res);
+        #ifdef __solaris__
+            RESTARTABLE_RETURN_PTR(getpwnam_r(name, &pwent, pwbuf, (size_t)buflen), p);
+        #else
+            RESTARTABLE(getpwnam_r(name, &pwent, pwbuf, (size_t)buflen, &p), res);
+        #endif
 
         if (res != 0 || p == NULL || p->pw_name == NULL || *(p->pw_name) == '\0') {
             /* not found or error */
@@ -1270,7 +1304,11 @@ Java_sun_nio_fs_UnixNativeDispatcher_getgrnam0(JNIEnv* env, jclass this,
         }
 
         errno = 0;
-        RESTARTABLE(getgrnam_r(name, &grent, grbuf, (size_t)buflen, &g), res);
+        #ifdef __solaris__
+            RESTARTABLE_RETURN_PTR(getgrnam_r(name, &grent, grbuf, (size_t)buflen), g);
+        #else
+            RESTARTABLE(getgrnam_r(name, &grent, grbuf, (size_t)buflen, &g), res);
+        #endif
 
         retry = 0;
         if (res != 0 || g == NULL || g->gr_name == NULL || *(g->gr_name) == '\0') {
