@@ -169,14 +169,14 @@ jint ShenandoahHeap::initialize() {
   assert((((size_t) base()) & ShenandoahHeapRegion::region_size_bytes_mask()) == 0,
          err_msg("Misaligned heap: " PTR_FORMAT, p2i(base())));
 
-#if SHENANDOAH_OPTIMIZED_OBJTASK
+#if SHENANDOAH_OPTIMIZED_MARKTASK
   // The optimized ObjArrayChunkedTask takes some bits away from the full object bits.
   // Fail if we ever attempt to address more than we can.
-  if ((uintptr_t)(heap_rs.base() + heap_rs.size()) >= ObjArrayChunkedTask::max_addressable()) {
+  if ((uintptr_t)(heap_rs.base() + heap_rs.size()) >= ShenandoahMarkTask::max_addressable()) {
     FormatBuffer<512> buf("Shenandoah reserved [" PTR_FORMAT ", " PTR_FORMAT") for the heap, \n"
                           "but max object address is " PTR_FORMAT ". Try to reduce heap size, or try other \n"
                           "VM options that allocate heap at lower addresses (HeapBaseMinAddress, AllocateHeapAt, etc).",
-                p2i(heap_rs.base()), p2i(heap_rs.base() + heap_rs.size()), ObjArrayChunkedTask::max_addressable());
+                p2i(heap_rs.base()), p2i(heap_rs.base() + heap_rs.size()), ShenandoahMarkTask::max_addressable());
     vm_exit_during_initialization("Fatal Error", buf);
   }
 #endif
