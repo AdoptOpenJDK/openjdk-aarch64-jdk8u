@@ -104,6 +104,7 @@ Java_sun_java2d_loops_GraphicsPrimitiveMgr_initIDs
     {
         return;
     }
+/*
     CHECK_NULL(RegisterID =
         (*env)->GetStaticMethodID(env, GPMgr, RegisterName, RegisterSig));
     CHECK_NULL(pNativePrimID = (*env)->GetFieldID(env, GP, "pNativePrim", "J"));
@@ -146,6 +147,7 @@ Java_sun_java2d_loops_GraphicsPrimitiveMgr_initIDs
     CHECK_NULL(fid =
         (*env)->GetStaticFieldID(env, SHints, "INTVAL_STROKE_PURE", "I"));
     sunHints_INTVAL_STROKE_PURE = (*env)->GetStaticIntField(env, SHints, fid);
+*/
 }
 
 void GrPrim_RefineBounds(SurfaceDataBounds *bounds, jint transX, jint transY,
