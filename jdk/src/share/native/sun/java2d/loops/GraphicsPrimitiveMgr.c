@@ -319,8 +319,9 @@ static jboolean InitSimpleTypes
     SurfCompHdr *pHdr;
     jfieldID field;
     jobject obj;
-/*
+
     for (pHdr = pStart; pHdr < pEnd; pHdr = PtrAddBytes(pHdr, size)) {
+/*
         field = (*env)->GetStaticFieldID(env,
                                          SimpleClass,
                                          pHdr->Name,
@@ -336,12 +337,13 @@ static jboolean InitSimpleTypes
         }
         pHdr->Object = (*env)->NewGlobalRef(env, obj);
         (*env)->DeleteLocalRef(env, obj);
+*/
         if (pHdr->Object == NULL) {
             ok = JNI_FALSE;
             break;
         }
     }
-*/
+
     if (!ok) {
         for (pHdr = pStart; pHdr < pEnd; pHdr = PtrAddBytes(pHdr, size)) {
             if (pHdr->Object != NULL) {
