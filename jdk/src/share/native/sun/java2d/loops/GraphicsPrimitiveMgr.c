@@ -341,7 +341,7 @@ static jboolean InitSimpleTypes
             break;
         }
     }
-
+*/
     if (!ok) {
         for (pHdr = pStart; pHdr < pEnd; pHdr = PtrAddBytes(pHdr, size)) {
             if (pHdr->Object != NULL) {
@@ -350,7 +350,7 @@ static jboolean InitSimpleTypes
             }
         }
     }
-*/
+
     return ok;
 }
 
