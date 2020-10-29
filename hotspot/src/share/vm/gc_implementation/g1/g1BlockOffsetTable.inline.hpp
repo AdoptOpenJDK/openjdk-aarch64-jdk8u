@@ -47,15 +47,15 @@ G1BlockOffsetTable::block_start_const(const void* addr) const {
   }
 }
 
-#define check_index(index, msg)                                                \
-  assert((index) < (_reserved.word_size() >> LogN_words),                      \
-         err_msg("%s - index: "SIZE_FORMAT", _vs.committed_size: "SIZE_FORMAT, \
-                 msg, (index), (_reserved.word_size() >> LogN_words)));        \
-  assert(G1CollectedHeap::heap()->is_in_exact(address_for_index_raw(index)),   \
-         err_msg("Index "SIZE_FORMAT" corresponding to "PTR_FORMAT             \
-                 " (%u) is not in committed area.",                            \
-                 (index),                                                      \
-                 p2i(address_for_index_raw(index)),                            \
+#define check_index(index, msg)                                                   \
+  assert((index) < (_reserved.word_size() >> LogN_words),                         \
+         err_msg("%s - index: " SIZE_FORMAT ", _vs.committed_size: " SIZE_FORMAT, \
+                 msg, (index), (_reserved.word_size() >> LogN_words)));           \
+  assert(G1CollectedHeap::heap()->is_in_exact(address_for_index_raw(index)),      \
+         err_msg("Index " SIZE_FORMAT " corresponding to " PTR_FORMAT             \
+                 " (%u) is not in committed area.",                               \
+                 (index),                                                         \
+                 p2i(address_for_index_raw(index)),                               \
                  G1CollectedHeap::heap()->addr_to_region(address_for_index_raw(index))));
 
 u_char G1BlockOffsetSharedArray::offset_array(size_t index) const {
@@ -97,13 +97,13 @@ void G1BlockOffsetSharedArray::set_offset_array(size_t left, size_t right, u_cha
 
 // Variant of index_for that does not check the index for validity.
 inline size_t G1BlockOffsetSharedArray::index_for_raw(const void* p) const {
-  return pointer_delta((char*)p, _reserved.start(), sizeof(char)) >> LogN;
+  return pointer_delta((char*) p, _reserved.start(), sizeof(char)) >> LogN;
 }
 
 inline size_t G1BlockOffsetSharedArray::index_for(const void* p) const {
   char* pc = (char*)p;
-  assert(pc >= (char*)_reserved.start() &&
-         pc <  (char*)_reserved.end(),
+  assert(pc >= (char*) _reserved.start() &&
+         pc <  (char*) _reserved.end(),
          err_msg("p (" PTR_FORMAT ") not in reserved [" PTR_FORMAT ", " PTR_FORMAT ")",
                  p2i(p), p2i(_reserved.start()), p2i(_reserved.end())));
   size_t result = index_for_raw(p);
