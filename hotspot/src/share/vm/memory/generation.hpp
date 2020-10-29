@@ -423,7 +423,7 @@ class Generation: public CHeapObj<mtGC> {
     // have to guard against non-monotonicity.
     NOT_PRODUCT(
       if (now < _time_of_last_gc) {
-        warning("time warp: "INT64_FORMAT" to "INT64_FORMAT, (int64_t) _time_of_last_gc, (int64_t) now);
+        warning("time warp: " INT64_FORMAT " to " INT64_FORMAT, (int64_t) _time_of_last_gc, (int64_t) now);
       }
     )
     return _time_of_last_gc;
