@@ -48964,7 +48964,7 @@ fi
     if test "x$TOOLCHAIN_TYPE" = xgcc; then
       LIBCXX="-lstdc++"
     elif test "x$TOOLCHAIN_TYPE" = xclang; then
-      LIBCXX="-std=libc++"
+      LIBCXX="-std=c++03" # libc++ is c++11 or latest
     fi
   fi
 
