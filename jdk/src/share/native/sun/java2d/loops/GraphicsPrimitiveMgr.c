@@ -316,7 +316,7 @@ static jboolean InitSimpleTypes
      SurfCompHdr *pStart, SurfCompHdr *pEnd, jsize size)
 {
 // FIXME: code below cause `internal compile error`.
-#ifndef __ANDROID__
+/*
     jboolean ok = JNI_TRUE;
     SurfCompHdr *pHdr;
     jfieldID field;
@@ -355,9 +355,8 @@ static jboolean InitSimpleTypes
     }
 
     return ok;
-#else
+*/
     return JNI_FALSE;
-#endif
 }
 
 static jboolean InitSurfaceTypes(JNIEnv *env, jclass ST)
