@@ -315,13 +315,13 @@ static jboolean InitSimpleTypes
     (JNIEnv *env, jclass SimpleClass, char *SimpleSig,
      SurfCompHdr *pStart, SurfCompHdr *pEnd, jsize size)
 {
+// FIXME: code below cause `internal compile error`.
+#ifndef __ANDROID__
     jboolean ok = JNI_TRUE;
     SurfCompHdr *pHdr;
     jfieldID field;
     jobject obj;
 
-// FIXME: code below cause `internal compile error`.
-#ifndef LP64
     for (pHdr = pStart; pHdr < pEnd; pHdr = PtrAddBytes(pHdr, size)) {
         field = (*env)->GetStaticFieldID(env,
                                          SimpleClass,
@@ -353,8 +353,11 @@ static jboolean InitSimpleTypes
             }
         }
     }
-#endif
+
     return ok;
+#else
+    return JNI_FALSE;
+#endif
 }
 
 static jboolean InitSurfaceTypes(JNIEnv *env, jclass ST)
