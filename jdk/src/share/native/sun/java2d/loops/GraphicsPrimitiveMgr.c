@@ -315,8 +315,6 @@ static jboolean InitSimpleTypes
     (JNIEnv *env, jclass SimpleClass, char *SimpleSig,
      SurfCompHdr *pStart, SurfCompHdr *pEnd, jsize size)
 {
-// FIXME: code below cause `internal compile error`.
-/*
     jboolean ok = JNI_TRUE;
     SurfCompHdr *pHdr;
     jfieldID field;
@@ -355,8 +353,6 @@ static jboolean InitSimpleTypes
     }
 
     return ok;
-*/
-    return JNI_FALSE;
 }
 
 static jboolean InitSurfaceTypes(JNIEnv *env, jclass ST)
