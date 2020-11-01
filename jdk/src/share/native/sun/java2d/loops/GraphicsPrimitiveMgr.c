@@ -320,8 +320,8 @@ static jboolean InitSimpleTypes
     jfieldID field;
     jobject obj;
 
-    // FIXME: code below cause `internal compile error`.
-/*
+// FIXME: code below cause `internal compile error`.
+#ifndef LP64
     for (pHdr = pStart; pHdr < pEnd; pHdr = PtrAddBytes(pHdr, size)) {
         field = (*env)->GetStaticFieldID(env,
                                          SimpleClass,
@@ -344,7 +344,7 @@ static jboolean InitSimpleTypes
             break;
         }
     }
-*/
+
     if (!ok) {
         for (pHdr = pStart; pHdr < pEnd; pHdr = PtrAddBytes(pHdr, size)) {
             if (pHdr->Object != NULL) {
@@ -353,7 +353,7 @@ static jboolean InitSimpleTypes
             }
         }
     }
-
+#endif
     return ok;
 }
 
