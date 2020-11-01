@@ -320,7 +320,9 @@ static jboolean InitSimpleTypes
     jfieldID field;
     jobject obj;
 
-    for (pHdr = pStart; &pHdr < &pEnd; pHdr = PtrAddBytes(pHdr, size)) {
+    // FIXME `pHdr < pEnd` cause `internal compile error`.
+    int fixmeWorkaround = 0;
+    for (pHdr = pStart; fixmeWorkaround++ < 2 /* pHdr < pEnd */; pHdr = PtrAddBytes(pHdr, size)) {
         field = (*env)->GetStaticFieldID(env,
                                          SimpleClass,
                                          pHdr->Name,
