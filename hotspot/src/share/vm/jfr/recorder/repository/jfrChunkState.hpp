@@ -25,6 +25,7 @@
 #ifndef SHARE_VM_JFR_RECORDER_REPOSITORY_JFRRCHUNKSTATE_HPP
 #define SHARE_VM_JFR_RECORDER_REPOSITORY_JFRRCHUNKSTATE_HPP
 
+#include "jni.h"
 #include "jfr/utilities/jfrAllocation.hpp"
 #include "jfr/utilities/jfrTypes.hpp"
 
@@ -32,11 +33,11 @@ class JfrChunkState : public JfrCHeapObj {
   friend class JfrChunkWriter;
  private:
   char* _path;
-  int64_t _start_ticks;
-  int64_t _start_nanos;
-  int64_t _previous_start_ticks;
-  int64_t _previous_start_nanos;
-  int64_t _previous_checkpoint_offset;
+  jlong _start_ticks;
+  jlong _start_nanos;
+  jlong _previous_start_ticks;
+  jlong _previous_start_nanos;
+  jlong _previous_checkpoint_offset;
 
   void update_start_ticks();
   void update_start_nanos();
@@ -46,11 +47,11 @@ class JfrChunkState : public JfrCHeapObj {
   JfrChunkState();
   ~JfrChunkState();
   void reset();
-  int64_t previous_checkpoint_offset() const;
-  void set_previous_checkpoint_offset(int64_t offset);
-  int64_t previous_start_ticks() const;
-  int64_t previous_start_nanos() const;
-  int64_t last_chunk_duration() const;
+  jlong previous_checkpoint_offset() const;
+  void set_previous_checkpoint_offset(jlong offset);
+  jlong previous_start_ticks() const;
+  jlong previous_start_nanos() const;
+  jlong last_chunk_duration() const;
   void update_time_to_now();
   void set_path(const char* path);
   const char* path() const;

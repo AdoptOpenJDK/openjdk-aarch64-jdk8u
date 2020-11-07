@@ -23,7 +23,6 @@
 
 /* @test
    @bug 6963870
-   @key headful
    @summary Tests that GTKPainter.ListTableFocusBorder.getBorderInsets()
             doesn't return null
    @author Peter Zhelezniakov

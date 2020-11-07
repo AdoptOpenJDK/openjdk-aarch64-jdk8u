@@ -213,6 +213,19 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state,
   __ restore_locals();
   __ restore_constant_pool_cache();
   __ get_method(rmethod);
+
+  // handle exceptions
+  {
+    Label L;
+    __ ldr(rscratch1, Address(rthread, Thread::pending_exception_offset()));
+    __ cbz(rscratch1, L);
+    __ call_VM(noreg,
+               CAST_FROM_FN_PTR(address,
+                                InterpreterRuntime::throw_pending_exception));
+    __ should_not_reach_here();
+    __ bind(L);
+  }
+
   __ get_dispatch();
 
   // Calculate stack limit
@@ -229,18 +242,6 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state,
   __ ldr(esp, Address(rfp, frame::interpreter_frame_last_sp_offset * wordSize));
   // NULL last_sp until next java call
   __ str(zr, Address(rfp, frame::interpreter_frame_last_sp_offset * wordSize));
-
-  // handle exceptions
-  {
-    Label L;
-    __ ldr(rscratch1, Address(rthread, Thread::pending_exception_offset()));
-    __ cbz(rscratch1, L);
-    __ call_VM(noreg,
-               CAST_FROM_FN_PTR(address,
-                                InterpreterRuntime::throw_pending_exception));
-    __ should_not_reach_here();
-    __ bind(L);
-  }
 
   __ dispatch_next(state, step);
   return entry;

@@ -70,9 +70,10 @@ static void prepare_for_emergency_dump(Thread* thread) {
     Threads_lock->unlock();
   }
 
-  if (PackageTable_lock->owned_by_self()) {
-    PackageTable_lock->unlock();
-  }
+  // XXX (Module_lock -> PackageTable_lock)
+ if (PackageTable_lock->owned_by_self()) {
+   PackageTable_lock->unlock();
+ }
 
   if (Heap_lock->owned_by_self()) {
     Heap_lock->unlock();

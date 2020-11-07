@@ -87,19 +87,7 @@ public class ForkJoinWorkerThread extends Thread {
     protected ForkJoinWorkerThread(ForkJoinPool pool) {
         // Use a placeholder until a useful name can be set in registerWorker
         super("aForkJoinWorkerThread");
-        this.pool = pool;
-        this.workQueue = pool.registerWorker(this);
-    }
-
-    /**
-     * Version for use by the default pool.  This is a separate constructor to
-     * avoid affecting the protected constructor.
-     */
-    ForkJoinWorkerThread(ForkJoinPool pool, boolean innocuous) {
-        super("aForkJoinWorkerThread");
-        if (innocuous) {
-            U.putOrderedObject(this, INHERITEDACCESSCONTROLCONTEXT, INNOCUOUS_ACC);
-        }
+        U.putOrderedObject(this, INHERITEDACCESSCONTROLCONTEXT, INNOCUOUS_ACC);
         this.pool = pool;
         this.workQueue = pool.registerWorker(this);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,7 +40,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import sun.net.NetHooks;
 import sun.net.ExtendedOptionsImpl;
-import sun.net.ExtendedOptionsHelper;
 
 /**
  * Base implementation of AsynchronousSocketChannel
@@ -513,7 +512,6 @@ abstract class AsynchronousSocketChannelImpl
             if (ExtendedOptionsImpl.flowSupported()) {
                 set.add(jdk.net.ExtendedSocketOptions.SO_FLOW_SLA);
             }
-            set.addAll(ExtendedOptionsHelper.keepAliveOptions());
             return Collections.unmodifiableSet(set);
         }
     }

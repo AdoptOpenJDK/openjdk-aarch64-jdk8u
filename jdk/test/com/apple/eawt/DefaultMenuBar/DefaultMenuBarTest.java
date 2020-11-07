@@ -25,7 +25,6 @@
  * @test
  * @bug 8007267
  * @summary [macosx] com.apple.eawt.Application.setDefaultMenuBar is not working
- * @requires (os.family == "mac")
  * @author leonid.romanov@oracle.com
  * @run main DefaultMenuBarTest
  */
@@ -33,6 +32,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import sun.awt.*;
 import java.lang.reflect.Method;
 
 
@@ -41,7 +41,7 @@ public class DefaultMenuBarTest {
 
     static volatile int listenerCallCounter = 0;
     public static void main(String[] args) throws Exception {
-        if (!System.getProperty("os.name").contains("OS X")) {
+        if (sun.awt.OSInfo.getOSType() != sun.awt.OSInfo.OSType.MACOSX) {
             System.out.println("This test is for MacOS only. Automatically passed on other platforms.");
             return;
         }
@@ -53,6 +53,7 @@ public class DefaultMenuBarTest {
             }
         });
 
+        SunToolkit toolkit = (SunToolkit) Toolkit.getDefaultToolkit();
         Robot robot = new Robot();
         robot.setAutoDelay(100);
 
@@ -61,7 +62,7 @@ public class DefaultMenuBarTest {
         robot.keyRelease(ks.getKeyCode());
         robot.keyRelease(KeyEvent.VK_META);
 
-        robot.waitForIdle();
+        toolkit.realSync();
 
         if (listenerCallCounter != 1) {
             throw new Exception("Test failed: ActionListener either wasn't called or was called more than once");

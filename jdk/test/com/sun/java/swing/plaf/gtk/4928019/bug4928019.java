@@ -24,7 +24,6 @@
 /*
  * @test
  * @bug 4928019
- * @key headful
  * @summary Makes sure all the basic classes can be created with GTK.
  * @author Scott Violet
  */

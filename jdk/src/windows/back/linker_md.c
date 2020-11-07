@@ -36,16 +36,13 @@
 
 #include "sys.h"
 
-#include "util.h"
 #include "path_md.h"
 
 static void dll_build_name(char* buffer, size_t buflen,
                            const char* paths, const char* fname) {
     char *path, *paths_copy, *next_token;
-    *buffer = '\0';
 
-    paths_copy = jvmtiAllocate((int)strlen(paths) + 1);
-    strcpy(paths_copy, paths);
+    paths_copy = strdup(paths);
     if (paths_copy == NULL) {
         return;
     }
@@ -54,18 +51,15 @@ static void dll_build_name(char* buffer, size_t buflen,
     path = strtok_s(paths_copy, PATH_SEPARATOR, &next_token);
 
     while (path != NULL) {
-        size_t result_len = (size_t)_snprintf(buffer, buflen, "%s\\%s.dll", path, fname);
-        if (result_len >= buflen) {
-            EXIT_ERROR(JVMTI_ERROR_INVALID_LOCATION, "One or more of the library paths supplied to jdwp, "
-                                                     "likely by sun.boot.library.path, is too long.");
-        } else if (_access(buffer, 0) == 0) {
+        _snprintf(buffer, buflen, "%s\\%s.dll", path, fname);
+        if (_access(buffer, 0) == 0) {
             break;
         }
         *buffer = '\0';
         path = strtok_s(NULL, PATH_SEPARATOR, &next_token);
     }
 
-    jvmtiDeallocate(paths_copy);
+    free(paths_copy);
 }
 
 /*
@@ -112,11 +106,13 @@ dbgsysBuildLibName(char *holder, int holderlen, const char *pname, const char *f
 {
     const int pnamelen = pname ? (int)strlen(pname) : 0;
 
+    *holder = '\0';
+    /* Quietly truncates on buffer overflow. Should be an error. */
+    if (pnamelen + (int)strlen(fname) + 10 > holderlen) {
+        return;
+    }
+
     if (pnamelen == 0) {
-        if (pnamelen + (int)strlen(fname) + 10 > holderlen) {
-                EXIT_ERROR(JVMTI_ERROR_INVALID_LOCATION, "One or more of the library paths supplied to jdwp, "
-                                                         "likely by sun.boot.library.path, is too long.");
-        }
         sprintf(holder, "%s.dll", fname);
     } else {
       dll_build_name(holder, holderlen, pname, fname);

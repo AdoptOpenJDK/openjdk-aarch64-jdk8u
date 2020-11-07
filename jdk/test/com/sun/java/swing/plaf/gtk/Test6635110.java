@@ -23,7 +23,6 @@
 
 /* @test
    @bug 6635110
-   @key headful
    @summary GTK icons should not throw NPE when called by non-GTK UI
    @author Peter Zhelezniakov
    @run main Test6635110

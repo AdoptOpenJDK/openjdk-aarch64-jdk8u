@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2004, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -266,7 +266,11 @@ public class Sequence {
      * @see #getTracks
      */
     public boolean deleteTrack(Track track) {
-        return tracks.removeElement(track);
+
+        synchronized(tracks) {
+
+            return tracks.removeElement(track);
+        }
     }
 
 
@@ -279,8 +283,8 @@ public class Sequence {
      * @see #deleteTrack
      */
     public Track[] getTracks() {
-        // Creation of the non-empty array will be synchronized inside toArray()
-        return tracks.toArray(new Track[0]);
+
+        return (Track[]) tracks.toArray(new Track[tracks.size()]);
     }
 
 

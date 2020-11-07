@@ -34,9 +34,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import sun.net.ExtendedOptionsImpl;
-import static jdk.net.ExtendedSocketOptions.TCP_KEEPCOUNT;
-import static jdk.net.ExtendedSocketOptions.TCP_KEEPIDLE;
-import static jdk.net.ExtendedSocketOptions.TCP_KEEPINTERVAL;
 
 
 public class Net {
@@ -282,27 +279,11 @@ public class Net {
         Class<?> type = name.type();
 
         if (type == SocketFlow.class) {
-            ExtendedOptionsImpl.checkSetOptionPermission(name);
-            ExtendedOptionsImpl.checkValueType(value, SocketFlow.class);
+            SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkPermission(new NetworkPermission("setOption.SO_FLOW_SLA"));
+            }
             ExtendedOptionsImpl.setFlowOption(fd, (SocketFlow)value);
-            return;
-        }
-        if (name == TCP_KEEPINTERVAL) {
-            ExtendedOptionsImpl.checkSetOptionPermission(name);
-            ExtendedOptionsImpl.checkValueType(value, Integer.class);
-            ExtendedOptionsImpl.setTcpKeepAliveIntvl(fd, (Integer)value);
-            return;
-        }
-        if (name == TCP_KEEPIDLE) {
-            ExtendedOptionsImpl.checkSetOptionPermission(name);
-            ExtendedOptionsImpl.checkValueType(value, Integer.class);
-            ExtendedOptionsImpl.setTcpKeepAliveTime(fd, (Integer)value);
-            return;
-        }
-        if (name == TCP_KEEPCOUNT) {
-            ExtendedOptionsImpl.checkSetOptionPermission(name);
-            ExtendedOptionsImpl.checkValueType(value, Integer.class);
-            ExtendedOptionsImpl.setTcpKeepAliveProbes(fd, (Integer)value);
             return;
         }
 
@@ -360,22 +341,13 @@ public class Net {
         Class<?> type = name.type();
 
         if (type == SocketFlow.class) {
-            ExtendedOptionsImpl.checkGetOptionPermission(name);
+            SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkPermission(new NetworkPermission("getOption.SO_FLOW_SLA"));
+            }
             SocketFlow flow = SocketFlow.create();
             ExtendedOptionsImpl.getFlowOption(fd, flow);
             return flow;
-        }
-        if (name == TCP_KEEPINTERVAL) {
-            ExtendedOptionsImpl.checkGetOptionPermission(name);
-            return ExtendedOptionsImpl.getTcpKeepAliveIntvl(fd);
-        }
-        if (name == TCP_KEEPIDLE) {
-            ExtendedOptionsImpl.checkGetOptionPermission(name);
-            return ExtendedOptionsImpl.getTcpKeepAliveTime(fd);
-        }
-        if (name == TCP_KEEPCOUNT) {
-            ExtendedOptionsImpl.checkGetOptionPermission(name);
-            return ExtendedOptionsImpl.getTcpKeepAliveProbes(fd);
         }
 
         // only simple values supported by this method
