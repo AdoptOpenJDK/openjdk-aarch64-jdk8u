@@ -114,21 +114,22 @@ ifneq (,$(findstring $(ARCH), ppc ppc64))
   HS_ARCH = ppc
 endif
 
-# arm/aarch32 and aarch64
-ifneq (,$(findstring $(ARCH), arm aarch32 aarch64))
-  ifeq ($(ARCH_DATA_MODEL), 64)
-    ARCH_DATA_MODEL  = 64
-    MAKE_ARGS        += LP64=1
-    PLATFORM         = linux-aarch64
-    VM_PLATFORM      = linux_aarch64
-    HS_ARCH          = aarch64
-  else
-    ARCH_DATA_MODEL  = 32
-    PLATFORM         = linux-aarch32
-    VM_PLATFORM      = linux_aarch32
-    HS_ARCH          = aarch32
-  endif
+# AArch32
+ifeq ($(ARCH), aarch32)
+  ARCH_DATA_MODEL  = 32
+  PLATFORM         = linux-aarch32
+  VM_PLATFORM      = linux_aarch32
+  HS_ARCH          = aarch32
 endif
+
+# AARCH64
+ifeq ($(ARCH), aarch64)
+  ARCH_DATA_MODEL  = 64
+  MAKE_ARGS        += LP64=1
+  PLATFORM         = linux-aarch64
+  VM_PLATFORM      = linux_aarch64
+  HS_ARCH          = aarch64
+endif 
 
 # On 32 bit linux we build server and client, on 64 bit just server.
 ifeq ($(JVM_VARIANTS),)
