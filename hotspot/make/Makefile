@@ -243,8 +243,8 @@ else
 endif
 
 generic_buildcore: $(HOTSPOT_SCRIPT)
-ifeq ($(HS_ARCH),ppc)
-  ifeq ($(ARCH_DATA_MODEL),64)
+ifeq ($(HS_ARCH), ppc)
+  ifeq ($(ARCH_DATA_MODEL), 64)
 	$(MKDIR) -p $(OUTPUTDIR)
 	$(CD) $(OUTPUTDIR); \
 		$(MAKE) -f $(ABS_OS_MAKEFILE) \
@@ -253,7 +253,18 @@ ifeq ($(HS_ARCH),ppc)
 	@$(ECHO) "No ($(VM_TARGET)) for ppc ARCH_DATA_MODEL=$(ARCH_DATA_MODEL)"
   endif
 else
+  ifeq ($(HS_ARCH), aarch32)
+    ifeq ($(ARCH_DATA_MODEL), 32)
+	$(MKDIR) -p $(OUTPUTDIR)
+	$(CD) $(OUTPUTDIR); \
+		$(MAKE) -f $(ABS_OS_MAKEFILE) \
+			$(MAKE_ARGS) $(VM_TARGET)
+    else
+	@$(ECHO) "No ($(VM_TARGET)) for arm ARCH_DATA_MODEL=$(ARCH_DATA_MODEL)"
+    endif
+  else
 	@$(ECHO) "No ($(VM_TARGET)) for $(HS_ARCH)"
+  endif
 endif
 
 generic_buildzero: $(HOTSPOT_SCRIPT)
