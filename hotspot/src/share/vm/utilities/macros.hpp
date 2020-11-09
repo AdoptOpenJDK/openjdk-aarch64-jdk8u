@@ -424,6 +424,14 @@
 #define NOT_ARM32(code) code
 #endif
 
+#ifdef AARCH32
+#define AARCH32_ONLY(code) code
+#define NOT_AARCH32(code)
+#else
+#define AARCH32_ONLY(code)
+#define NOT_AARCH32(code) code
+#endif
+
 #ifdef JAVASE_EMBEDDED
 #define EMBEDDED_ONLY(code) code
 #define NOT_EMBEDDED(code)
