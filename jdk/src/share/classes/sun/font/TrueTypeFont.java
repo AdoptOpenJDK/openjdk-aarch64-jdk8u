@@ -201,7 +201,8 @@ public class TrueTypeFont extends FileFont {
                  boolean javaRasterizer, boolean useFilePool)
         throws FontFormatException {
         super(platname, nativeNames);
-        useJavaRasterizer = javaRasterizer;
+        // Android AWT port: always use Java Rasterizer
+        useJavaRasterizer = true; // javaRasterizer;
         fontRank = Font2D.TTF_RANK;
         try {
             verify(useFilePool);
