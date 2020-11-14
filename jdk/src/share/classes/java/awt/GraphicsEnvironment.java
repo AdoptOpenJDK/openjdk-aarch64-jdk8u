@@ -138,7 +138,7 @@ public abstract class GraphicsEnvironment {
      * @since 1.4
      */
     public static boolean isHeadless() {
-        new Exception(new Throwable("Headless check stack trace")).printStackTrace();
+        // new Exception(new Throwable("Headless check stack trace")).printStackTrace();
         return getHeadlessProperty();
     }
 
