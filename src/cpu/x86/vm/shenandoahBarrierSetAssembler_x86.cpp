@@ -431,8 +431,15 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
   __ mov(tmp1, res);
   __ shrptr(tmp1, ShenandoahHeapRegion::region_size_bytes_shift_jint());
   __ movptr(tmp2, (intptr_t) ShenandoahHeap::in_cset_fast_test_addr());
+#ifdef _LP64
   __ movbool(tmp2, Address(tmp2, tmp1, Address::times_1));
   __ testbool(tmp2);
+#else
+  // On x86_32, C1 register allocator can give us the register without 8-bit support.
+  // Do the full-register access and test to avoid compilation failures.
+  __ movptr(tmp2, Address(tmp2, tmp1, Address::times_1));
+  __ testptr(tmp2, 0xFF);
+#endif
   __ jcc(Assembler::zero, *stub->continuation());
 
   // Test if object is resolved.
@@ -440,7 +447,14 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
   // Test if both lowest bits are set. We trick it by negating the bits
   // then test for both bits clear.
   __ notptr(tmp1);
+#ifdef _LP64
   __ testb(tmp1, markOopDesc::marked_value);
+#else
+  // On x86_32, C1 register allocator can give us the register without 8-bit support.
+  // Do the full-register access and test to avoid compilation failures.
+  __ testptr(tmp1, markOopDesc::marked_value);
+#endif
+
   __ jccb(Assembler::notZero, slow_path);
   // Clear both lower bits. It's still inverted, so set them, and then invert back.
   __ orptr(tmp1, markOopDesc::marked_value);
