@@ -1136,7 +1136,7 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
   Node_List clones;
   for (int i = phase->C->shenandoah_barriers_count() - 1; i >= 0; i--) {
     ShenandoahLoadReferenceBarrierNode* lrb = phase->C->shenandoah_barrier(i);
-    if (lrb->get_barrier_strength() == ShenandoahLoadReferenceBarrierNode::NONE) {
+    if (lrb->is_redundant()) {
       continue;
     }
 
@@ -1350,7 +1350,7 @@ void ShenandoahBarrierC2Support::pin_and_expand(PhaseIdealLoop* phase) {
   Unique_Node_List uses_to_ignore;
   for (int i = phase->C->shenandoah_barriers_count() - 1; i >= 0; i--) {
     ShenandoahLoadReferenceBarrierNode* lrb = phase->C->shenandoah_barrier(i);
-    if (lrb->get_barrier_strength() == ShenandoahLoadReferenceBarrierNode::NONE) {
+    if (lrb->is_redundant()) {
       phase->igvn().replace_node(lrb, lrb->in(ShenandoahLoadReferenceBarrierNode::ValueIn));
       continue;
     }
@@ -2883,16 +2883,15 @@ bool ShenandoahLoadReferenceBarrierNode::needs_barrier_impl(PhaseTransform* phas
   return true;
 }
 
-ShenandoahLoadReferenceBarrierNode::Strength ShenandoahLoadReferenceBarrierNode::get_barrier_strength() {
+bool ShenandoahLoadReferenceBarrierNode::is_redundant() {
   Unique_Node_List visited;
   Node_Stack stack(0);
   stack.push(this, 0);
 
-  // Look for strongest strength: go over nodes looking for STRONG ones.
-  // Stop once we encountered STRONG. Otherwise, walk until we ran out of nodes,
-  // and then the overall strength is NONE.
-  Strength strength = NONE;
-  while (strength != STRONG && stack.size() > 0) {
+  // Check if the barrier is actually useful: go over nodes looking for useful uses
+  // (e.g. memory accesses). Stop once we detected a required use. Otherwise, walk
+  // until we ran out of nodes, and then declare the barrier redundant.
+  while (stack.size() > 0) {
     Node* n = stack.node();
     if (visited.member(n)) {
       stack.pop();
@@ -2941,14 +2940,13 @@ ShenandoahLoadReferenceBarrierNode::Strength ShenandoahLoadReferenceBarrierNode:
       case Op_StrComp:
       case Op_StrIndexOf:
         // Known to require barriers
-        strength = STRONG;
-        break;
+        return false;
       case Op_CmpP: {
         if (n->in(1)->bottom_type()->higher_equal(TypePtr::NULL_PTR) ||
             n->in(2)->bottom_type()->higher_equal(TypePtr::NULL_PTR)) {
           // One of the sides is known null, no need for barrier.
         } else {
-          strength = STRONG;
+          return false;
         }
         break;
       }
@@ -2974,7 +2972,7 @@ ShenandoahLoadReferenceBarrierNode::Strength ShenandoahLoadReferenceBarrierNode:
           // Loading the constant does not require barriers: it should be handled
           // as part of GC roots already.
         } else {
-          strength = STRONG;
+          return false;
         }
         break;
       }
@@ -2995,10 +2993,10 @@ ShenandoahLoadReferenceBarrierNode::Strength ShenandoahLoadReferenceBarrierNode:
         break;
       default: {
 #ifdef ASSERT
-        fatal(err_msg("Unknown node in get_barrier_strength: %s", NodeClassNames[n->Opcode()]));
+        fatal(err_msg("Unknown node in is_redundant: %s", NodeClassNames[n->Opcode()]));
 #else
-        // Default to strong: better to have excess barriers, rather than miss some.
-        strength = STRONG;
+        // Default to have excess barriers, rather than miss some.
+        return false;
 #endif
       }
     }
@@ -3013,7 +3011,9 @@ ShenandoahLoadReferenceBarrierNode::Strength ShenandoahLoadReferenceBarrierNode:
       }
     }
   }
-  return strength;
+
+  // No need for barrier found.
+  return true;
 }
 
 CallStaticJavaNode* ShenandoahLoadReferenceBarrierNode::pin_and_expand_null_check(PhaseIterGVN& igvn) {
