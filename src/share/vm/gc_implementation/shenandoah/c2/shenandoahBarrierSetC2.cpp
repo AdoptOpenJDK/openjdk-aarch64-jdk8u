@@ -34,8 +34,14 @@ ShenandoahBarrierSetC2* ShenandoahBarrierSetC2::bsc2() {
 }
 
 bool ShenandoahBarrierSetC2::is_shenandoah_lrb_call(Node* call) {
-  return call->is_CallLeaf() &&
-         call->as_CallLeaf()->entry_point() == CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier);
+  if (!call->is_CallLeaf()) {
+    return false;
+  }
+
+  address entry_point = call->as_CallLeaf()->entry_point();
+  return (entry_point == CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier)) ||
+         (entry_point == CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup)) ||
+         (entry_point == CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_fixup_narrow));
 }
 
 bool ShenandoahBarrierSetC2::is_shenandoah_state_load(Node* n) {
