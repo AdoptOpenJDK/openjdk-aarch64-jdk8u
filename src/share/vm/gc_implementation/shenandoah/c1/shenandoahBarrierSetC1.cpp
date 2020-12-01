@@ -64,8 +64,10 @@ LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier_impl(LIRGenerator* gen, L
   assert(ShenandoahLoadRefBarrier, "Should be enabled");
   obj = ensure_in_register(gen, obj);
   assert(obj->is_register(), "must be a register at this point");
-  LIR_Opr result = gen->new_register(T_OBJECT);
+  LIR_Opr result = gen->result_register_for(obj->value_type());
   __ move(obj, result);
+  LIR_Opr tmp1 = gen->new_register(T_OBJECT);
+  LIR_Opr tmp2 = gen->new_register(T_OBJECT);
 
   LIR_Opr thrd = gen->getThreadPointer();
   LIR_Address* active_flag_addr =
@@ -89,7 +91,7 @@ LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier_impl(LIRGenerator* gen, L
   }
   __ cmp(lir_cond_notEqual, flag_val, LIR_OprFact::intConst(0));
 
-  CodeStub* slow = new ShenandoahLoadReferenceBarrierStub(obj, result);
+  CodeStub* slow = new ShenandoahLoadReferenceBarrierStub(obj, result, tmp1, tmp2);
   __ branch(lir_cond_notEqual, T_INT, slow);
   __ branch_destination(slow->continuation());
 

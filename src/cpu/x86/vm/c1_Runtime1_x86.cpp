@@ -40,6 +40,7 @@
 #include "vmreg_x86.inline.hpp"
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
 #endif
 
 
@@ -1775,6 +1776,18 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 
         __ pop(rcx);
         __ pop(rax);
+
+      }
+      break;
+    case shenandoah_lrb_slow_id:
+      {
+        StubFrame f(sasm, "shenandoah_load_reference_barrier", dont_gc_arguments);
+        // arg0 : object to be resolved
+        
+        save_live_registers(sasm, 1);
+        f.load_argument(0, c_rarg0);
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier), c_rarg0);
+        restore_live_registers_except_rax(sasm, true);
 
       }
       break;

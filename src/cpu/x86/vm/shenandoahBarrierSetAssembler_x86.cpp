@@ -412,6 +412,12 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
   Label done;
   Register obj = stub->obj()->as_register();
   Register res = stub->result()->as_register();
+  Register tmp1 = stub->tmp1()->as_register();
+  Register tmp2 = stub->tmp2()->as_register();
+
+  Label slow_path;
+
+  assert(res == rax, "result must arrive in rax");
 
   if (res != obj) {
     __ mov(res, obj);
@@ -419,11 +425,35 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
 
   // Check for null.
   __ testptr(res, res);
-  __ jcc(Assembler::zero, done);
+  __ jcc(Assembler::zero, *stub->continuation());
 
-  load_reference_barrier_not_null(ce->masm(), res);
+  // Check for object being in the collection set.
+  __ mov(tmp1, res);
+  __ shrptr(tmp1, ShenandoahHeapRegion::region_size_bytes_shift_jint());
+  __ movptr(tmp2, (intptr_t) ShenandoahHeap::in_cset_fast_test_addr());
+  __ movbool(tmp2, Address(tmp2, tmp1, Address::times_1));
+  __ testbool(tmp2);
+  __ jcc(Assembler::zero, *stub->continuation());
 
-  __ bind(done);
+  // Test if object is resolved.
+  __ movptr(tmp1, Address(res, oopDesc::mark_offset_in_bytes()));
+  // Test if both lowest bits are set. We trick it by negating the bits
+  // then test for both bits clear.
+  __ notptr(tmp1);
+  __ testb(tmp1, markOopDesc::marked_value);
+  __ jccb(Assembler::notZero, slow_path);
+  // Clear both lower bits. It's still inverted, so set them, and then invert back.
+  __ orptr(tmp1, markOopDesc::marked_value);
+  __ notptr(tmp1);
+  // At this point, tmp1 contains the decoded forwarding pointer.
+  __ mov(res, tmp1);
+
+  __ jmp(*stub->continuation());
+
+  __ bind(slow_path);
+  ce->store_parameter(res, 0);
+ __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::shenandoah_lrb_slow_id)));
+
   __ jmp(*stub->continuation());
 }
 

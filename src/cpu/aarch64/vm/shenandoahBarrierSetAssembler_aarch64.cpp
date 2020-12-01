@@ -29,6 +29,7 @@
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
 #include "gc_implementation/shenandoah/shenandoahForwarding.hpp"
 #include "gc_implementation/shenandoah/shenandoahHeap.hpp"
+#include "gc_implementation/shenandoah/shenandoahHeapRegion.hpp"
 #include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
 #include "gc_implementation/shenandoah/c1/shenandoahBarrierSetC1.hpp"
 #include "runtime/stubCodeGenerator.hpp"
@@ -240,23 +241,44 @@ void ShenandoahBarrierSetAssembler::cmpxchg_oop(MacroAssembler* masm, Register a
 #define __ ce->masm()->
 
 void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assembler* ce, ShenandoahLoadReferenceBarrierStub* stub) {
+  __ bind(*stub->entry());
 
   Register obj = stub->obj()->as_register();
   Register res = stub->result()->as_register();
+  Register tmp1 = stub->tmp1()->as_register();
+  Register tmp2 = stub->tmp2()->as_register();
 
-  Label done;
-
-  __ bind(*stub->entry());
+  assert(res == r0, "result must arrive in r0");
 
   if (res != obj) {
     __ mov(res, obj);
   }
+
   // Check for null.
-  __ cbz(res, done);
+  __ cbz(res, *stub->continuation());
 
-  load_reference_barrier_not_null(ce->masm(), res);
+  // Check for object in cset.
+  __ mov(tmp2, ShenandoahHeap::in_cset_fast_test_addr());
+  __ lsr(tmp1, res, ShenandoahHeapRegion::region_size_bytes_shift_jint());
+  __ ldrb(tmp2, Address(tmp2, tmp1));
+  __ cbz(tmp2, *stub->continuation());
 
-  __ bind(done);
+  // Check if object is already forwarded.
+  Label slow_path;
+  __ ldr(tmp1, Address(res, oopDesc::mark_offset_in_bytes()));
+  __ eon(tmp1, tmp1, zr);
+  __ ands(zr, tmp1, markOopDesc::lock_mask_in_place);
+  __ br(Assembler::NE, slow_path);
+
+  // Decode forwarded object.
+  __ orr(tmp1, tmp1, markOopDesc::marked_value);
+  __ eon(res, tmp1, zr);
+  __ b(*stub->continuation());
+
+  __ bind(slow_path);
+  ce->store_parameter(res, 0);
+  __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::shenandoah_lrb_slow_id)));
+
   __ b(*stub->continuation());
 }
 

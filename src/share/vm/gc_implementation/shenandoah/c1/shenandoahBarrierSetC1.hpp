@@ -34,23 +34,31 @@ class ShenandoahLoadReferenceBarrierStub: public CodeStub {
 private:
   LIR_Opr _obj;
   LIR_Opr _result;
+  LIR_Opr _tmp1;
+  LIR_Opr _tmp2;
 
 public:
-  ShenandoahLoadReferenceBarrierStub(LIR_Opr obj, LIR_Opr result) :
-    _obj(obj), _result(result)
+  ShenandoahLoadReferenceBarrierStub(LIR_Opr obj, LIR_Opr result, LIR_Opr tmp1, LIR_Opr tmp2) :
+    _obj(obj), _result(result), _tmp1(tmp1), _tmp2(tmp2)
   {
     assert(_obj->is_register(), "should be register");
     assert(_result->is_register(), "should be register");
+    assert(_tmp1->is_register(), "should be register");
+    assert(_tmp2->is_register(), "should be register");
   }
 
   LIR_Opr obj() const { return _obj; }
   LIR_Opr result() const { return _result; }
+  LIR_Opr tmp1() const { return _tmp1; }
+  LIR_Opr tmp2() const { return _tmp2; }
 
   virtual void emit_code(LIR_Assembler* e);
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case();
     visitor->do_input(_obj);
     visitor->do_temp(_result);
+    visitor->do_temp(_tmp1);
+    visitor->do_temp(_tmp2);
   }
 #ifndef PRODUCT
   virtual void print_name(outputStream* out) const { out->print("ShenandoahLoadReferenceBarrierStub"); }
