@@ -85,7 +85,7 @@ public:
 
 private:
   LIR_Opr load_reference_barrier_impl(LIRGenerator* gen, LIR_Opr obj, LIR_Opr addr);
-  LIR_Opr ensure_in_register(LIRGenerator* gen, LIR_Opr obj);
+  LIR_Opr ensure_in_register(LIRGenerator* gen, LIR_Opr obj, BasicType type);
 };
 
 #endif // SHARE_GC_SHENANDOAH_C1_SHENANDOAHBARRIERSETC1_HPP

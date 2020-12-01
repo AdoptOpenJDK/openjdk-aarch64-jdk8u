@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2018, 2020 Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -506,7 +506,7 @@ void ShenandoahBarrierSetAssembler::gen_load_reference_barrier_stub(LIR_Assemble
   Label done;
   Register obj = stub->obj()->as_register();
   Register res = stub->result()->as_register();
-  Register addr = stub->addr()->as_register();
+  Register addr = stub->addr()->as_pointer_register();
   Register tmp1 = stub->tmp1()->as_register();
   Register tmp2 = stub->tmp2()->as_register();
   assert_different_registers(obj, res, addr, tmp1, tmp2);

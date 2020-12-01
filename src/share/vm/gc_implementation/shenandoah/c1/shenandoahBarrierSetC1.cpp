@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2018, 2020 Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -62,14 +62,14 @@ LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier(LIRGenerator* gen, LIR_Op
 
 LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier_impl(LIRGenerator* gen, LIR_Opr obj, LIR_Opr addr) {
   assert(ShenandoahLoadRefBarrier, "Should be enabled");
-  obj = ensure_in_register(gen, obj);
+  obj = ensure_in_register(gen, obj, T_OBJECT);
   assert(obj->is_register(), "must be a register at this point");
-  addr = ensure_in_register(gen, addr);
+  addr = ensure_in_register(gen, addr, T_ADDRESS);
   assert(addr->is_register(), "must be a register at this point");
   LIR_Opr result = gen->result_register_for(obj->value_type());
   __ move(obj, result);
-  LIR_Opr tmp1 = gen->new_register(T_OBJECT);
-  LIR_Opr tmp2 = gen->new_register(T_OBJECT);
+  LIR_Opr tmp1 = gen->new_register(T_ADDRESS);
+  LIR_Opr tmp2 = gen->new_register(T_ADDRESS);
 
   LIR_Opr thrd = gen->getThreadPointer();
   LIR_Address* active_flag_addr =
@@ -100,20 +100,14 @@ LIR_Opr ShenandoahBarrierSetC1::load_reference_barrier_impl(LIRGenerator* gen, L
   return result;
 }
 
-LIR_Opr ShenandoahBarrierSetC1::ensure_in_register(LIRGenerator* gen, LIR_Opr obj) {
+LIR_Opr ShenandoahBarrierSetC1::ensure_in_register(LIRGenerator* gen, LIR_Opr obj, BasicType type) {
   if (!obj->is_register()) {
     LIR_Opr obj_reg;
     if (obj->is_constant()) {
-      obj_reg = gen->new_register(T_OBJECT);
+      obj_reg = gen->new_register(type);
       __ move(obj, obj_reg);
     } else {
-#ifdef AARCH64
-      // AArch64 expects double-size register.
       obj_reg = gen->new_pointer_register();
-#else
-      // x86 expects single-size register.
-      obj_reg = gen->new_register(T_OBJECT);
-#endif
       __ leal(obj, obj_reg);
     }
     obj = obj_reg;
@@ -123,7 +117,7 @@ LIR_Opr ShenandoahBarrierSetC1::ensure_in_register(LIRGenerator* gen, LIR_Opr ob
 
 LIR_Opr ShenandoahBarrierSetC1::storeval_barrier(LIRGenerator* gen, LIR_Opr obj, CodeEmitInfo* info, bool patch) {
   if (ShenandoahStoreValEnqueueBarrier) {
-    obj = ensure_in_register(gen, obj);
+    obj = ensure_in_register(gen, obj, T_OBJECT);
     gen->G1SATBCardTableModRef_pre_barrier(LIR_OprFact::illegalOpr, obj, false, false, NULL);
   }
   return obj;
