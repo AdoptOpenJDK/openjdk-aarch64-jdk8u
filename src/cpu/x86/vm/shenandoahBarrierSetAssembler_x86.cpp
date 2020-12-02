@@ -141,10 +141,11 @@ void ShenandoahBarrierSetAssembler::load_reference_barrier(MacroAssembler* masm,
 #ifdef _LP64
   Register thread = r15_thread;
 #else
-  Register thread = rcx;
+  Register thread = rsi;
   if (thread == dst) {
     thread = rbx;
   }
+  assert_different_registers(dst, src.base(), src.index(), thread);
   __ push(thread);
   __ get_thread(thread);
 #endif
