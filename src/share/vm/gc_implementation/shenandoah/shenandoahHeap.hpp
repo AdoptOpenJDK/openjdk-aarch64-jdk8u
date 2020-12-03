@@ -110,6 +110,7 @@ class ShenandoahHeap : public SharedHeap {
   friend class VMStructs;
   friend class ShenandoahGCSession;
   friend class ShenandoahGCStateResetter;
+  friend class ShenandoahSafepoint;
 
 // ---------- Locks that guard important data structures in Heap
 //
