@@ -979,8 +979,8 @@ void ShenandoahBarrierC2Support::test_in_cset(Node*& ctrl, Node*& not_cset_ctrl,
   Node* cset_bool      = new (phase->C) BoolNode(cset_cmp, BoolTest::ne);
 
   IfNode* cset_iff     = new (phase->C) IfNode(old_ctrl, cset_bool, PROB_UNLIKELY(0.999), COUNT_UNKNOWN);
-  ctrl                 = new IfTrueNode(cset_iff);
-  not_cset_ctrl        = new IfFalseNode(cset_iff);
+  ctrl                 = new (phase->C) IfTrueNode(cset_iff);
+  not_cset_ctrl        = new (phase->C) IfFalseNode(cset_iff);
 
   IdealLoopTree* loop = phase->get_loop(old_ctrl);
   phase->register_control(cset_iff,      loop, old_ctrl);
@@ -2042,17 +2042,7 @@ void MemoryGraphFixer::collect_memory_nodes() {
               mem = call->in(TypeFunc::Memory);
             } else if (in->Opcode() == Op_NeverBranch) {
               Node* head = in->in(0);
-              assert(head->is_Region() && head->req() == 3, "unexpected infinite loop graph shape");
-              assert(_phase->is_dominator(head, head->in(1)) || _phase->is_dominator(head, head->in(2)), "no back branch?");
-              Node* tail = _phase->is_dominator(head, head->in(1)) ? head->in(1) : head->in(2);
-              Node* c = tail;
-              while (c != head) {
-                if (c->is_SafePoint() && !c->is_CallLeaf()) {
-                  mem = c->in(TypeFunc::Memory);
-                }
-                c = _phase->idom(c);
-              }
-              assert(mem != NULL, "should have found safepoint");
+              assert(head->is_Region(), "unexpected infinite loop graph shape");
 
               Node* phi_mem = NULL;
               for (DUIterator_Fast jmax, j = head->fast_outs(jmax); j < jmax; j++) {
@@ -2069,7 +2059,28 @@ void MemoryGraphFixer::collect_memory_nodes() {
                   }
                 }
               }
-              if (phi_mem != NULL) {
+              if (phi_mem == NULL) {
+                for (uint j = 1; j < head->req(); j++) {
+                  Node* tail = head->in(j);
+                  if (!_phase->is_dominator(head, tail)) {
+                    continue;
+                  }
+                  Node* c = tail;
+                  while (c != head) {
+                    if (c->is_SafePoint() && !c->is_CallLeaf()) {
+                      Node* m =c->in(TypeFunc::Memory);
+                      if (m->is_MergeMem()) {
+                        m = m->as_MergeMem()->memory_at(_alias);
+                      }
+                      assert(mem == NULL || mem == m, "several memory states");
+                      mem = m;
+                    }
+                    c = _phase->idom(c);
+                  }
+                  assert(mem != NULL, "should have found safepoint");
+                }
+                assert(mem != NULL, "should have found safepoint");
+              } else {
                 mem = phi_mem;
               }
             }
@@ -2178,7 +2189,7 @@ void MemoryGraphFixer::collect_memory_nodes() {
           assert(m != NULL || (c->is_Loop() && j == LoopNode::LoopBackControl && iteration == 1) || _phase->C->has_irreducible_loop() || has_never_branch(_phase->C->root()), "expect memory state");
           if (m != NULL) {
             if (m == prev_region && ((c->is_Loop() && j == LoopNode::LoopBackControl) || (prev_region->is_Phi() && prev_region->in(0) == c))) {
-              assert(c->is_Loop() && j == LoopNode::LoopBackControl || _phase->C->has_irreducible_loop(), "");
+              assert(c->is_Loop() && j == LoopNode::LoopBackControl || _phase->C->has_irreducible_loop() || has_never_branch(_phase->C->root()), "");
               // continue
             } else if (unique == NULL) {
               unique = m;
