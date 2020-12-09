@@ -976,16 +976,16 @@ void ShenandoahBarrierC2Support::test_in_cset(Node*& ctrl, Node*& not_cset_ctrl,
                                                   DEBUG_ONLY(phase->C->get_adr_type(Compile::AliasIdxRaw)) NOT_DEBUG(NULL),
                                                   TypeInt::BYTE, MemNode::unordered);
   Node* cset_cmp       = new (phase->C) CmpINode(cset_load, igvn.zerocon(T_INT));
-  Node* cset_bool      = new (phase->C) BoolNode(cset_cmp, BoolTest::eq);
+  Node* cset_bool      = new (phase->C) BoolNode(cset_cmp, BoolTest::ne);
 
   IfNode* cset_iff     = new (phase->C) IfNode(old_ctrl, cset_bool, PROB_UNLIKELY(0.999), COUNT_UNKNOWN);
-  not_cset_ctrl        = new (phase->C) IfTrueNode(cset_iff);
-  ctrl                 = new (phase->C) IfFalseNode(cset_iff);
+  ctrl                 = new IfTrueNode(cset_iff);
+  not_cset_ctrl        = new IfFalseNode(cset_iff);
 
   IdealLoopTree* loop = phase->get_loop(old_ctrl);
   phase->register_control(cset_iff,      loop, old_ctrl);
-  phase->register_control(not_cset_ctrl, loop, cset_iff);
   phase->register_control(ctrl,          loop, cset_iff);
+  phase->register_control(not_cset_ctrl, loop, cset_iff);
 
   phase->set_ctrl(cset_addr_ptr, phase->C->root());
 
