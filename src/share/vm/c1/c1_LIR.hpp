@@ -2146,7 +2146,7 @@ class LIR_List: public CompilationResourceObj {
 #endif
 #if defined (TARGET_ARCH_aarch64)
   void convert(Bytecodes::Code code, LIR_Opr left, LIR_Opr dst,
-	       ConversionStub* stub = NULL, LIR_Opr tmp1 = LIR_OprDesc::illegalOpr()) {
+               ConversionStub* stub = NULL, LIR_Opr tmp1 = LIR_OprDesc::illegalOpr()) {
     append(new LIR_OpConvert(code, left, dst, stub, tmp1, LIR_OprDesc::illegalOpr()));
   }
 #else
