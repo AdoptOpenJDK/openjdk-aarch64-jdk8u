@@ -707,10 +707,10 @@ class StubGenerator: public StubCodeGenerator {
         }
         break;
 #if INCLUDE_ALL_GCS
-    case BarrierSet::ShenandoahBarrierSet:
+      case BarrierSet::ShenandoahBarrierSet:
         break;
 #endif
-    default:
+      default:
         ShouldNotReachHere();
 
     }

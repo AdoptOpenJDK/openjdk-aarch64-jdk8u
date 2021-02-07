@@ -179,9 +179,7 @@ static void do_oop_store(InterpreterMacroAssembler* _masm,
             new_val = rscratch2;
             __ mov(new_val, val);
           }
-
           __ store_heap_oop(Address(r3, 0), val);
-
           __ g1_write_barrier_post(r3 /* store_adr */,
                                    new_val /* new_val */,
                                    rthread /* thread */,

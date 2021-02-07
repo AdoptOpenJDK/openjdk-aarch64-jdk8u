@@ -1,5 +1,4 @@
 /*
-/*
  * Copyright (c) 2013, Red Hat Inc.
  * Copyright (c) 1997, 2012, Oracle and/or its affiliates.
  * All rights reserved.
@@ -2374,8 +2373,8 @@ void MacroAssembler::push_call_clobbered_fp_registers() {
   // Push v0-v7, v16-v31.
   for (int i = 30; i >= 0; i -= 2) {
     if (i <= v7->encoding() || i >= v16->encoding()) {
-      stpd(as_FloatRegister(i), as_FloatRegister(i+1),
-           Address(pre(sp, -2 * wordSize)));
+        stpd(as_FloatRegister(i), as_FloatRegister(i+1),
+             Address(pre(sp, -2 * wordSize)));
     }
   }
 }

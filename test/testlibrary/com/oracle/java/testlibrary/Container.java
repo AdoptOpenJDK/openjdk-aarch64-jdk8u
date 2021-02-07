@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2019, Red Hat Inc.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,32 +20,13 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+package com.oracle.java.testlibrary;
 
-/*
- * @test
- * @key regression
- * @bug 8020675
- * @summary make sure there is no fatal error if a class is loaded from an invalid jar file which is in the bootclasspath
- * @library /testlibrary
- * @build TestForName
- * @build LoadClassNegative
- * @run main LoadClassNegative
- */
-
-import java.io.File;
-import com.oracle.java.testlibrary.*;
-
-public class LoadClassNegative {
-
-  public static void main(String args[]) throws Exception {
-    String bootCP = "-Xbootclasspath/a:" + System.getProperty("test.src")
-                       + File.separator + "dummy.jar";
-    ProcessBuilder pb = ProcessTools.createJavaProcessBuilder(
-        bootCP,
-        "TestForName");
-
-    OutputAnalyzer output = new OutputAnalyzer(pb.start());
-    output.shouldContain("ClassNotFoundException");
-    output.shouldHaveExitValue(0);
-  }
+public class Container {
+    // Use this property to specify docker location on your system.
+    // E.g.: "/usr/local/bin/docker". We define this constant here so
+    // that it can be used in VMProps as well which checks docker support
+    // via this command
+    public static final String ENGINE_COMMAND =
+        System.getProperty("jdk.test.container.command", "docker");
 }
