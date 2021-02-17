@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2013, Red Hat Inc.
- * Copyright (c) 1997, 2010, Oracle and/or its affiliates.
- * All rights reserved.
+ * Copyright (c) 2019, Red Hat Inc.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,22 +19,14 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
+package com.oracle.java.testlibrary;
 
-#include "precompiled.hpp"
-#include "runtime/icache.hpp"
-
-extern void aarch64TestHook();
-
-void ICacheStubGenerator::generate_icache_flush(
-                ICache::flush_icache_stub_t* flush_icache_stub) {
-  // Give anyone who calls this a surprise
-  *flush_icache_stub = (ICache::flush_icache_stub_t)NULL;
-}
-
-void ICache::initialize() {
-#ifdef ASSERT
-  aarch64TestHook();
-#endif
+public class Container {
+    // Use this property to specify docker location on your system.
+    // E.g.: "/usr/local/bin/docker". We define this constant here so
+    // that it can be used in VMProps as well which checks docker support
+    // via this command
+    public static final String ENGINE_COMMAND =
+        System.getProperty("jdk.test.container.command", "docker");
 }

@@ -121,7 +121,7 @@ ifeq ($(ARCH), aarch64)
   PLATFORM         = linux-aarch64
   VM_PLATFORM      = linux_aarch64
   HS_ARCH          = aarch64
-endif 
+endif
 
 # On 32 bit linux we build server and client, on 64 bit just server.
 ifeq ($(JVM_VARIANTS),)
