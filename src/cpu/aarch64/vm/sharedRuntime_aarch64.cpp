@@ -1720,7 +1720,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
       __ biased_locking_enter(lock_reg, obj_reg, swap_reg, tmp, false, lock_done, &slow_path_lock);
     }
 
-    // Load (object->mark() | 1) into swap_reg r0
+    // Load (object->mark() | 1) into swap_reg %r0
     __ ldr(rscratch1, Address(obj_reg, 0));
     __ orr(swap_reg, rscratch1, 1);
 
