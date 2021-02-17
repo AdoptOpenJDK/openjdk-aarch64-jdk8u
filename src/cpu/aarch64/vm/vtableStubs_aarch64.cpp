@@ -238,50 +238,50 @@ int VtableStub::pd_code_size_limit(bool is_vtable_stub) {
   // The JVM98 app. _202_jess has a megamorphic interface call.
   // The itable code looks like this:
 
-  //    ldr	xmethod, [xscratch2,#CompiledICHolder::holder_klass_offset]
-  //    ldr	x0, [xscratch2]
-  //    ldr	w10, [x1,#oopDesc::klass_offset_in_bytes]
-  //    mov	xheapbase, #0x3c000000            	//   #narrow_klass_base
-  //    movk	xheapbase, #0x3f7, lsl #32
-  //    add	x10, xheapbase, x10
-  //    mov	xheapbase, #0xe7ff0000            	//   #heapbase
-  //    movk	xheapbase, #0x3f7, lsl #32
-  //    ldr	w11, [x10,#vtable_length_offset]
-  //    add	x11, x10, x11, uxtx #3
-  //    add	x11, x11, #itableMethodEntry::method_offset_in_bytes
-  //    ldr	x10, [x11]
-  //    cmp	xmethod, x10
+  //    ldr     xmethod, [xscratch2,#CompiledICHolder::holder_klass_offset]
+  //    ldr     x0, [xscratch2]
+  //    ldr     w10, [x1,#oopDesc::klass_offset_in_bytes]
+  //    mov     xheapbase, #0x3c000000                  //   #narrow_klass_base
+  //    movk    xheapbase, #0x3f7, lsl #32
+  //    add     x10, xheapbase, x10
+  //    mov     xheapbase, #0xe7ff0000                  //   #heapbase
+  //    movk    xheapbase, #0x3f7, lsl #32
+  //    ldr     w11, [x10,#vtable_length_offset]
+  //    add     x11, x10, x11, uxtx #3
+  //    add     x11, x11, #itableMethodEntry::method_offset_in_bytes
+  //    ldr     x10, [x11]
+  //    cmp     xmethod, x10
   //    b.eq    success
   // search:
-  //    cbz	x10, no_such_interface
-  //    add	x11, x11, #0x10
-  //    ldr	x10, [x11]
-  //    cmp	xmethod, x10
-  //    b.ne	search
+  //    cbz     x10, no_such_interface
+  //    add     x11, x11, #0x10
+  //    ldr     x10, [x11]
+  //    cmp     xmethod, x10
+  //    b.ne    search
   // success:
-  //    ldr	w10, [x1,#oopDesc::klass_offset_in_bytes]
-  //    mov	xheapbase, #0x3c000000            	//   #narrow_klass_base
-  //    movk	xheapbase, #0x3f7, lsl #32
-  //    add	x10, xheapbase, x10
-  //    mov	xheapbase, #0xe7ff0000            	//   #heapbase
-  //    movk	xheapbase, #0x3f7, lsl #32
-  //    ldr	w11, [x10,#vtable_length_offset]
-  //    add	x11, x10, x11, uxtx #3
-  //    add	x11, x11, #itableMethodEntry::method_offset_in_bytes
-  //    add	x10, x10, #itentry_off
-  //    ldr	xmethod, [x11]
-  //    cmp	x0, xmethod
-  //    b.eq	found_method
+  //    ldr     w10, [x1,#oopDesc::klass_offset_in_bytes]
+  //    mov     xheapbase, #0x3c000000                  //   #narrow_klass_base
+  //    movk    xheapbase, #0x3f7, lsl #32
+  //    add     x10, xheapbase, x10
+  //    mov     xheapbase, #0xe7ff0000                  //   #heapbase
+  //    movk    xheapbase, #0x3f7, lsl #32
+  //    ldr     w11, [x10,#vtable_length_offset]
+  //    add     x11, x10, x11, uxtx #3
+  //    add     x11, x11, #itableMethodEntry::method_offset_in_bytes
+  //    add     x10, x10, #itentry_off
+  //    ldr     xmethod, [x11]
+  //    cmp     x0, xmethod
+  //    b.eq    found_method
   // search2:
-  //    cbz	xmethod, 0x000003ffa872e6cc
-  //    add	x11, x11, #0x10
-  //    ldr	xmethod, [x11]
-  //    cmp	x0, xmethod
-  //    b.ne	search2
-  //    ldr	w11, [x11,#itableOffsetEntry::offset_offset_in_bytes]
-  //    ldr	xmethod, [x10,w11,uxtw]
-  //    ldr	xscratch1, [xmethod,#Method::from_compiled_offset]
-  //    br	xscratch1
+  //    cbz     xmethod, 0x000003ffa872e6cc
+  //    add     x11, x11, #0x10
+  //    ldr     xmethod, [x11]
+  //    cmp     x0, xmethod
+  //    b.ne    search2
+  //    ldr     w11, [x11,#itableOffsetEntry::offset_offset_in_bytes]
+  //    ldr     xmethod, [x10,w11,uxtw]
+  //    ldr     xscratch1, [xmethod,#Method::from_compiled_offset]
+  //    br      xscratch1
   // no_such_interface:
   //    b      throw_ICCE_entry
 
