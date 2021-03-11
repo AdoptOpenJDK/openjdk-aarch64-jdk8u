@@ -1416,8 +1416,6 @@ void LIRGenerator::do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x) {
     data = tmp;
   }
 
-  LIR_Opr src_op = src.result();
-
   LIR_Address* addr;
   if (offset->is_constant()) {
     jlong l = offset->as_jlong();
@@ -1437,7 +1435,7 @@ void LIRGenerator::do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x) {
     if (is_obj) {
       // Do the pre-write barrier, if any.
       ptr = new_pointer_register();
-      __ add(src_op, off.result(), ptr);
+      __ add(src.result(), off.result(), ptr);
       pre_barrier(ptr, LIR_OprFact::illegalOpr /* pre_val */,
                   true /* do_load */, false /* patch */, NULL);
     }

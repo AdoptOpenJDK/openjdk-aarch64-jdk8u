@@ -1545,7 +1545,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // critical natives they are offset down.
   GrowableArray<int> arg_order(2 * total_in_args);
   VMRegPair tmp_vmreg;
-  tmp_vmreg.set1(r19->as_VMReg());
+  tmp_vmreg.set2(r19->as_VMReg());
 
   if (!is_critical_native) {
     for (int i = total_in_args - 1, c_arg = total_c_args - 1; i >= 0; i--, c_arg--) {
@@ -1720,7 +1720,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
       __ biased_locking_enter(lock_reg, obj_reg, swap_reg, tmp, false, lock_done, &slow_path_lock);
     }
 
-    // Load (object->mark() | 1) into swap_reg r0
+    // Load (object->mark() | 1) into swap_reg %r0
     __ ldr(rscratch1, Address(obj_reg, 0));
     __ orr(swap_reg, rscratch1, 1);
 
