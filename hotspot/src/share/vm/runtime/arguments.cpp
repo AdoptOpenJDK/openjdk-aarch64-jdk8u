@@ -1898,6 +1898,14 @@ void Arguments::set_shenandoah_gc_flags() {
   if (FLAG_IS_DEFAULT(TLABAllocationWeight)) {
     FLAG_SET_DEFAULT(TLABAllocationWeight, 90);
   }
+
+  if (FLAG_IS_DEFAULT(ShenandoahSoftMaxHeapSize)) {
+    FLAG_SET_DEFAULT(ShenandoahSoftMaxHeapSize, MaxHeapSize);
+  } else {
+    if (ShenandoahSoftMaxHeapSize > MaxHeapSize) {
+      vm_exit_during_initialization("ShenandoahSoftMaxHeapSize must be less than or equal to the maximum heap size\n");
+    }
+  }
 #endif
 }
 

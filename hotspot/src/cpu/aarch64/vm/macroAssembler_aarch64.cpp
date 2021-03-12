@@ -3472,34 +3472,36 @@ void  MacroAssembler::set_narrow_klass(Register dst, Klass* k) {
 
 void MacroAssembler::load_heap_oop(Register dst, Address src)
 {
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    ShenandoahBarrierSetAssembler::bsasm()->load_heap_oop(this, dst, src);
+    return;
+  }
+#endif
+
   if (UseCompressedOops) {
     ldrw(dst, src);
     decode_heap_oop(dst);
   } else {
     ldr(dst, src);
   }
-
-#if INCLUDE_ALL_GCS
-  if (UseShenandoahGC) {
-    ShenandoahBarrierSetAssembler::bsasm()->load_reference_barrier(this, dst);
-  }
-#endif
 }
 
 void MacroAssembler::load_heap_oop_not_null(Register dst, Address src)
 {
+#if INCLUDE_ALL_GCS
+  if (UseShenandoahGC) {
+    ShenandoahBarrierSetAssembler::bsasm()->load_heap_oop(this, dst, src);
+    return;
+  }
+#endif
+
   if (UseCompressedOops) {
     ldrw(dst, src);
     decode_heap_oop_not_null(dst);
   } else {
     ldr(dst, src);
   }
-
-#if INCLUDE_ALL_GCS
-  if (UseShenandoahGC) {
-    ShenandoahBarrierSetAssembler::bsasm()->load_reference_barrier(this, dst);
-  }
-#endif
 }
 
 void MacroAssembler::store_heap_oop(Address dst, Register src) {

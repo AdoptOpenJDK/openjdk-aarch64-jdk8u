@@ -45,6 +45,7 @@
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/shenandoah/shenandoahBarrierSet.hpp"
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#include "gc_implementation/shenandoah/shenandoahRuntime.hpp"
 #endif
 
 
@@ -1297,6 +1298,25 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         __ pop_call_clobbered_registers();
         __ bind(done);
 
+      }
+      break;
+    case shenandoah_lrb_slow_id:
+      {
+        StubFrame f(sasm, "shenandoah_load_reference_barrier", dont_gc_arguments);
+        // arg0 : object to be resolved
+        
+        __ push_call_clobbered_registers();
+        f.load_argument(0, r0);
+        f.load_argument(1, r1);
+        if (UseCompressedOops) {
+          __ mov(lr, CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier_narrow));
+        } else {
+          __ mov(lr, CAST_FROM_FN_PTR(address, ShenandoahRuntime::load_reference_barrier));
+        }
+        __ blr(lr);
+        __ mov(rscratch1, r0);
+        __ pop_call_clobbered_registers();
+        __ mov(r0, rscratch1);
       }
       break;
 #endif

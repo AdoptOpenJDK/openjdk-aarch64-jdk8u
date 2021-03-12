@@ -202,6 +202,7 @@ void Runtime1::generate_blob_for(BufferBlob* buffer_blob, StubID id) {
     case dtrace_object_alloc_id:
     case g1_pre_barrier_slow_id:
     case g1_post_barrier_slow_id:
+    case shenandoah_lrb_slow_id:
     case slow_subtype_check_id:
     case fpu2long_stub_id:
     case unwind_exception_id:
