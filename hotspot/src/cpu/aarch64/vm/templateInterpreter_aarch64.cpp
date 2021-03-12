@@ -709,12 +709,18 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
     // Generate the G1 pre-barrier code to log the value of
     // the referent field in an SATB buffer.
     __ enter(); // g1_write may call runtime
+    if (UseShenandoahGC) {
+      __ push_call_clobbered_registers();
+    }
     __ g1_write_barrier_pre(noreg /* obj */,
                             local_0 /* pre_val */,
                             rthread /* thread */,
                             rscratch2 /* tmp */,
                             true /* tosca_live */,
                             true /* expand_call */);
+    if (UseShenandoahGC) {
+      __ pop_call_clobbered_registers();
+    }
     __ leave();
     // areturn
     __ andr(sp, r19, -16);  // done with stack

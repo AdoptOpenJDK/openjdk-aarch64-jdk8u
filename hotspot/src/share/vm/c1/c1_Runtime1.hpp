@@ -70,6 +70,7 @@ class StubAssembler;
   stub(load_appendix_patching)       \
   stub(g1_pre_barrier_slow)          \
   stub(g1_post_barrier_slow)         \
+  stub(shenandoah_lrb_slow)          \
   stub(fpu2long_stub)                \
   stub(counter_overflow)             \
   stub(predicate_failed_trap)        \

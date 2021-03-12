@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -21,14 +21,20 @@
  *
  */
 
-#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHTRACER_HPP
-#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHTRACER_HPP
+#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHJFRSUPPORT_HPP
+#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHJFRSUPPORT_HPP
 
-#include "gc_implementation/shared/gcTrace.hpp"
+#include "runtime/vm_operations.hpp"
 
-class ShenandoahTracer : public GCTracer {
+class VM_ShenandoahSendHeapRegionInfoEvents : public VM_Operation {
 public:
-  ShenandoahTracer() : GCTracer(Shenandoah) {}
+  virtual void doit();
+  virtual VMOp_Type type() const { return VMOp_HeapIterateOperation; }
 };
 
-#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHTRACER_HPP
+class ShenandoahJFRSupport {
+public:
+  static void register_jfr_type_serializers();
+};
+
+#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHJFRSUPPORT_HPP
