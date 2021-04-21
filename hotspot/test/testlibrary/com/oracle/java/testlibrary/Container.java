@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2018, Red Hat, Inc. All rights reserved.
+ * Copyright (c) 2019, Red Hat Inc.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
@@ -18,17 +19,14 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
+package com.oracle.java.testlibrary;
 
-#ifndef SHARE_VM_GC_SHENANDOAH_SHENANDOAHTRACER_HPP
-#define SHARE_VM_GC_SHENANDOAH_SHENANDOAHTRACER_HPP
-
-#include "gc_implementation/shared/gcTrace.hpp"
-
-class ShenandoahTracer : public GCTracer {
-public:
-  ShenandoahTracer() : GCTracer(Shenandoah) {}
-};
-
-#endif // SHARE_VM_GC_SHENANDOAH_SHENANDOAHTRACER_HPP
+public class Container {
+    // Use this property to specify docker location on your system.
+    // E.g.: "/usr/local/bin/docker". We define this constant here so
+    // that it can be used in VMProps as well which checks docker support
+    // via this command
+    public static final String ENGINE_COMMAND =
+        System.getProperty("jdk.test.container.command", "docker");
+}

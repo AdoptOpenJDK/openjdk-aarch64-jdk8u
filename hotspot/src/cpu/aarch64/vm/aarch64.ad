@@ -1828,16 +1828,20 @@ void BoxLockNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
   int offset = ra_->reg2offset(in_RegMask(0).find_first_elem());
   int reg    = ra_->get_encode(this);
 
-  if (Assembler::operand_valid_for_add_sub_immediate(offset)) {
-    __ add(as_Register(reg), sp, offset);
-  } else {
-    ShouldNotReachHere();
-  }
+  // This add will handle any 24-bit signed offset. 24 bits allows an
+  // 8 megabyte stack frame.
+  __ add(as_Register(reg), sp, offset);
 }
 
 uint BoxLockNode::size(PhaseRegAlloc *ra_) const {
   // BoxLockNode is not a MachNode, so we can't just call MachNode::size(ra_).
-  return 4;
+  int offset = ra_->reg2offset(in_RegMask(0).find_first_elem());
+
+  if (Assembler::operand_valid_for_add_sub_immediate(offset)) {
+    return NativeInstruction::instruction_size;
+  } else {
+    return 2 * NativeInstruction::instruction_size;
+  }
 }
 
 //=============================================================================
@@ -3374,7 +3378,7 @@ encode %{
     // markOop of object (disp_hdr) with the stack pointer.
     __ mov(rscratch1, sp);
     __ sub(disp_hdr, disp_hdr, rscratch1);
-    __ mov(tmp, (address) (~(os::vm_page_size()-1) | markOopDesc::lock_mask_in_place));
+    __ mov(tmp, (address) (~(os::vm_page_size()-1) | (uintptr_t)markOopDesc::lock_mask_in_place));
     // If condition is true we are cont and hence we can store 0 as the
     // displaced header in the box, which indicates that it is a recursive lock.
     __ ands(tmp/*==0?*/, disp_hdr, tmp);
@@ -6946,7 +6950,6 @@ instruct storeP(iRegP src, memory mem)
     default:
       scale = Address::lsl(size);
     }
-
     Address adr;
     if (index == -1) {
       adr = Address(base, disp);
@@ -7809,6 +7812,7 @@ instruct convN2I(iRegINoSp dst, iRegN src)
 
   ins_pipe(ialu_reg);
 %}
+
 
 // Convert oop pointer into compressed form
 instruct encodeHeapOop(iRegNNoSp dst, iRegP src, rFlagsReg cr) %{
@@ -12582,7 +12586,7 @@ instruct overflowMulL_reg(rFlagsReg cr, iRegL op1, iRegL op2)
 
   format %{ "mul   rscratch1, $op1, $op2\t#overflow check long\n\t"
             "smulh rscratch2, $op1, $op2\n\t"
-            "cmp   rscratch2, rscratch1, ASR #31\n\t"
+            "cmp   rscratch2, rscratch1, ASR #63\n\t"
             "movw  rscratch1, #0x80000000\n\t"
             "cselw rscratch1, rscratch1, zr, NE\n\t"
             "cmpw  rscratch1, #1" %}
@@ -12590,7 +12594,7 @@ instruct overflowMulL_reg(rFlagsReg cr, iRegL op1, iRegL op2)
   ins_encode %{
     __ mul(rscratch1, $op1$$Register, $op2$$Register);   // Result bits 0..63
     __ smulh(rscratch2, $op1$$Register, $op2$$Register); // Result bits 64..127
-    __ cmp(rscratch2, rscratch1, Assembler::ASR, 31);    // Top is pure sign ext
+    __ cmp(rscratch2, rscratch1, Assembler::ASR, 63);    // Top is pure sign ext
     __ movw(rscratch1, 0x80000000);                    // Develop 0 (EQ),
     __ cselw(rscratch1, rscratch1, zr, Assembler::NE); // or 0x80000000 (NE)
     __ cmpw(rscratch1, 1);                             // 0x80000000 - 1 => VS
@@ -12608,7 +12612,7 @@ instruct overflowMulL_reg_branch(cmpOp cmp, iRegL op1, iRegL op2, label labl, rF
 
   format %{ "mul   rscratch1, $op1, $op2\t#overflow check long\n\t"
             "smulh rscratch2, $op1, $op2\n\t"
-            "cmp   rscratch2, rscratch1, ASR #31\n\t"
+            "cmp   rscratch2, rscratch1, ASR #63\n\t"
             "b$cmp $labl" %}
   ins_cost(4 * INSN_COST); // Branch is rare so treat as INSN_COST
   ins_encode %{
@@ -12616,7 +12620,7 @@ instruct overflowMulL_reg_branch(cmpOp cmp, iRegL op1, iRegL op2, label labl, rF
     Assembler::Condition cond = (Assembler::Condition)$cmp$$cmpcode;
     __ mul(rscratch1, $op1$$Register, $op2$$Register);   // Result bits 0..63
     __ smulh(rscratch2, $op1$$Register, $op2$$Register); // Result bits 64..127
-    __ cmp(rscratch2, rscratch1, Assembler::ASR, 31);    // Top is pure sign ext
+    __ cmp(rscratch2, rscratch1, Assembler::ASR, 63);    // Top is pure sign ext
     __ br(cond == Assembler::VS ? Assembler::NE : Assembler::EQ, *L);
   %}
 
